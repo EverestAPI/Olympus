@@ -32,7 +32,9 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     root = uie.group({
-        uie.label():as("debug"),
+        uie.window("Debug", uie.column({
+            uie.label():as("info")
+        })):with({ x = 16, y = 16 }):as("debug"),
 
         uie.window("Hello, World!", uie.column({
             uie.label("This is a one-line label."),
@@ -54,7 +56,7 @@ function love.load(args)
                 btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
             end)
 
-        })):with({ x = 32, y = 64 }):as("main")
+        })):with({ x = 32, y = 64 }):as("main"),
 
     }):as("root")
     ui.root = root
@@ -71,24 +73,25 @@ function love.update()
 
     if profile then
         if love.frame % 100 == 0 then
-            root._debug.text = profile.report(10)
-            root._debug:invalidate()
+            root._debug._inner._info.text = profile.report(10)
             profile.reset()
         end
 
         profile.start()
     else
-        root._debug.text =
+        root._debug._inner._info.text =
             "FPS: " .. love.timer.getFPS() .. "\n" ..
             "hovering: " .. (ui.hovering and (ui.hovering.path or tostring(ui.hovering)) or "-") .. "\n" ..
             "dragging: " .. (ui.dragging and (ui.dragging.path or tostring(ui.dragging)) or "-")
-        root._debug:invalidate()
     end
 
     root._main._inner._info.text =
         "FPS: " .. love.timer.getFPS() .. "\n" ..
         "Delta: " .. love.timer.getDelta().. "\n" ..
         "test: " .. tostring((0 and true) or false)
+
+    root.fixWidth = love.graphics.getWidth()
+    root.fixHeight = love.graphics.getHeight()
 
     ui.update()
 

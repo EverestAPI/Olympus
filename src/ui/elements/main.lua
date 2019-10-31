@@ -19,7 +19,7 @@ uie.__default = {
     getPath = function(self)
         local id = self.id
         if not id then
-            id = self.__type .. "[" .. self.__rawid .. "]"
+            id = "(" .. self.__type .. ":" .. self.__rawid .. ")"
         end
 
         local parent = self.parent
@@ -240,7 +240,7 @@ uie.__default = {
 
     getChildAt = function(self, mx, my)
         local interactive = self.interactive
-        if interactive == -1 then
+        if interactive == -2 then
             return nil
         end
     
@@ -258,8 +258,8 @@ uie.__default = {
                 end
             end
         end
-    
-        if interactive == 0 then
+
+        if interactive == -1 then
             return nil
         end
     

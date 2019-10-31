@@ -23,6 +23,26 @@ function ui.draw()
 end
 
 
+function ui.interactiveIterate(el, funcid, ...)
+    if not el then
+        return nil
+    end
+
+    local parent = el.parent
+    if parent then
+        ui.interactiveIterate(parent, funcid, ...)
+    end
+
+    if funcid then
+        el[funcid](el, ...)
+    end
+    
+    if el.interactive == 0 then
+        return parent
+    end
+    return el
+end
+
 function ui.mousemoved(x, y, dx, dy, istouch)
     local ui = ui
     local root = ui.root
@@ -61,10 +81,9 @@ function ui.mousepressed(x, y, button, istouch)
     local hovering = root:getChildAt(x, y)
     if hovering then
         if ui.dragging == nil or ui.dragging == hovering then
-            ui.dragging = hovering
-            hovering:onPress(x, y, button, true)
+            ui.dragging = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
         else
-            hovering:onPress(x, y, button, false)
+            ui.interactiveIterate(hovering, "onPress", x, y, button, false)
         end
     end
 end
@@ -82,17 +101,17 @@ function ui.mousereleased(x, y, button, istouch)
     if dragging then
         if ui.draggingCounter == 0 then
             ui.dragging = nil
-            dragging:onRelease(x, y, button, true)
-            if dragging == root:getChildAt(x, y) then
-                dragging:onClick(x, y, button)
+            ui.interactiveIterate(dragging, "onRelease", x, y, button, false)
+            if dragging == ui.interactiveIterate(root:getChildAt(x, y)) then
+                ui.interactiveIterate(dragging, "onClick", x, y, button)
             end
         else
-            dragging:onRelease(x, y, button, true)
+            ui.interactiveIterate(dragging, "onRelease", x, y, button, true)
         end
     else
         local hovering = root:getChildAt(x, y)
         if hovering then
-            hovering:onRelease(x, y, button, false)
+            ui.interactiveIterate(dragging, "onRelease", x, y, button, false)
         end
     end
 end

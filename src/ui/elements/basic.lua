@@ -133,9 +133,10 @@ uie.add("group", {
 
 -- Basic label.
 uie.add("label", {
+    dynamic = false,
+
     init = function(self, text)
         self.text = text or ""
-        self.dynamic = text == nil or text == ""
     end,
 
     getText = function(self)
