@@ -1,0 +1,46 @@
+{
+    // Verwendet IntelliSense zum Ermitteln möglicher Attribute.
+    // Zeigen Sie auf vorhandene Attribute, um die zugehörigen Beschreibungen anzuzeigen.
+    // Weitere Informationen finden Sie unter https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run (Windows)",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "${workspaceFolder}/love/love.exe",
+            },
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "${workspaceFolder}/src"
+            ]
+        },
+        {
+            "name": "Debug (Windows)",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "${workspaceFolder}/love/love.exe",
+            },
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "${workspaceFolder}/src",
+                "--debug"
+            ]
+        },
+        {
+            "name": "Profile (Windows)",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "${workspaceFolder}/love/love.exe",
+            },
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "${workspaceFolder}/src",
+                "--profile"
+            ]
+        }
+    ]
+}
