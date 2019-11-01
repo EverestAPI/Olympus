@@ -83,7 +83,25 @@ uie.__default = {
     end,
 
     getHovered = function(self)
-        return ui.hovering == self
+        local hovering = ui.hovering
+        while hovering do
+            if hovering == self then
+                return true
+            end
+            hovering = hovering.parent
+        end
+        return false
+    end,
+
+    getPressed = function(self)
+        local dragging = ui.dragging
+        while dragging do
+            if dragging == self then
+                return self.hovered
+            end
+            dragging = dragging.parent
+        end
+        return false
     end,
 
     init = function(self)

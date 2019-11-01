@@ -3,10 +3,13 @@ local ui = {}
 ui.hovering = nil
 ui.dragging = nil
 ui.draggingCounter = 0
+ui.focused = nil
 
 function ui.update()
     local root = ui.root
     
+    ui.delta = love.timer.getDelta()
+
     root:update()
     root:layout()
 
@@ -30,7 +33,7 @@ function ui.interactiveIterate(el, funcid, ...)
 
     local parent = el.parent
     if parent then
-        ui.interactiveIterate(parent, funcid, ...)
+        parent = ui.interactiveIterate(parent, funcid, ...)
     end
 
     if funcid then
@@ -81,7 +84,9 @@ function ui.mousepressed(x, y, button, istouch)
     local hovering = root:getChildAt(x, y)
     if hovering then
         if ui.dragging == nil or ui.dragging == hovering then
-            ui.dragging = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
+            local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
+            ui.dragging = el
+            ui.focused = el
         else
             ui.interactiveIterate(hovering, "onPress", x, y, button, false)
         end

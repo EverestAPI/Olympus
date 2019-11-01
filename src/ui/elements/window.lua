@@ -8,6 +8,8 @@ require("ui.elements.form")
 uie.add("window", {
     base = "column",
 
+    interactive = 2,
+
     style = {
         border = { 0.15, 0.15, 0.15, 1 },
         padding = 1,

@@ -54,7 +54,11 @@ function love.load(args)
                 end
                 btn.counter = btn.counter + 1
                 btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
-            end)
+            end),
+
+            uie.button("Disabled"):with({ enabled = false }),
+
+            uie.button("Useless")
 
         })):with({ x = 32, y = 64 }):as("main"),
 
@@ -81,8 +85,9 @@ function love.update()
     else
         root._debug._inner._info.text =
             "FPS: " .. love.timer.getFPS() .. "\n" ..
-            "hovering: " .. (ui.hovering and (ui.hovering.path or tostring(ui.hovering)) or "-") .. "\n" ..
-            "dragging: " .. (ui.dragging and (ui.dragging.path or tostring(ui.dragging)) or "-")
+            "hovering: " .. (ui.hovering and tostring(ui.hovering) or "-") .. "\n" ..
+            "dragging: " .. (ui.dragging and tostring(ui.dragging) or "-") .. "\n" ..
+            "focused: " .. (ui.focused and tostring(ui.focused) or "-")
     end
 
     root._main._inner._info.text =
