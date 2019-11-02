@@ -16,7 +16,7 @@ uie.add("panel", {
     end,
 
     style = {
-        bg = { 0.1, 0.1, 0.1, 1 },
+        bg = { 0.08, 0.08, 0.08, 1 },
         border = { 0, 0, 0, 0 },
         padding = 8,
         radius = 3
@@ -135,6 +135,10 @@ uie.add("group", {
 uie.add("label", {
     dynamic = false,
 
+    style = {
+        color = { 1, 1, 1, 1}
+    },
+
     init = function(self, text)
         self.text = text or ""
     end,
@@ -173,7 +177,7 @@ uie.add("label", {
     end,
 
     draw = function(self)
-        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setColor(self.style.color)
         love.graphics.draw(self._text, self.screenX, self.screenY)
     end
 })

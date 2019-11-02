@@ -10,11 +10,24 @@ uie.add("button", {
     style = {
         padding = 8,
         spacing = 8,
-        normalBG = { 0.3, 0.3, 0.3, 1 },
-        disabledBG = { 0.225, 0.225, 0.225, 1 },
-        hoveredBG = { 0.325, 0.325, 0.325, 1 },
-        pressedBG = { 0.275, 0.275, 0.275, 1 },
-        bgFadeDuration = 0.2
+
+        normalBG = { 0.26, 0.26, 0.26, 1 },
+        normalFG = { 1, 1, 1, 1 },
+        normalBorder = { 0.46, 0.46, 0.46, 1 },
+
+        disabledBG = { 0.1, 0.1, 0.1, 1 },
+        disabledFG = { 0.8, 0.8, 0.8, 1 },
+        disabledBorder = { 0.2, 0.2, 0.2, 1 },
+
+        hoveredBG = { 0.22, 0.22, 0.22, 1 },
+        hoveredFG = { 1, 1, 1, 1 },
+        hoveredBorder = { 0.42, 0.42, 0.42, 1 },
+
+        pressedBG = { 0.17, 0.17, 0.17, 1 },
+        pressedFG = { 1, 1, 1, 1 },
+        pressedBorder = { 0.37, 0.37, 0.37, 1 },
+
+        fadeDuration = 0.2
     },
 
     init = function(self, text, cb)
@@ -22,6 +35,7 @@ uie.add("button", {
         self.cb = cb
         self.enabled = true
         self.style.bg = {}
+        self._label.style.color = {}
     end,
 
     getEnabled = function(self)
@@ -47,43 +61,72 @@ uie.add("button", {
 
     update = function(self)
         local style = self.style
+        local label = self._label
+        local labelStyle = label.style
         local bgPrev = style.bg
+        local fgPrev = labelStyle.color
+        local borderPrev = style.border
         local bg = bgPrev
+        local fg = fgPrev
+        local border = borderPrev
 
         if not self.enabled then
             bg = style.disabledBG
+            fg = style.disabledFG
+            border = style.disabledBorder
         elseif self.pressed then
             bg = style.pressedBG
+            fg = style.pressedFG
+            border = style.pressedBorder
         elseif self.hovered then
             bg = style.hoveredBG
+            fg = style.hoveredFG
+            border = style.hoveredBorder
         else
             bg = style.normalBG
+            fg = style.normalFG
+            border = style.normalBorder
         end
 
-        local bgTime
+        local fadeTime
 
-        if self.__bg ~= bg then
-            self.__bgPrev = bgPrev or bg
+        if self.__bg ~= bg or self.__fg ~= fg or self.__border ~= border then
             self.__bg = bg
-            bgTime = 0
+            self.__fg = fg
+            self.__border = border
+            fadeTime = 0
         else
-            bgTime = self.__bgTime
+            fadeTime = self.__fadeTime
         end
 
-        local bgFadeDuration = style.bgFadeDuration
-        if #bgPrev ~= 0 and bgTime < bgFadeDuration then
-            local f = bgTime / bgFadeDuration
+        local fadeDuration = style.fadeDuration
+        if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            local f = fadeTime / fadeDuration
             bg = {
                 bgPrev[1] + (bg[1] - bgPrev[1]) * f,
                 bgPrev[2] + (bg[2] - bgPrev[2]) * f,
                 bgPrev[3] + (bg[3] - bgPrev[3]) * f,
                 bgPrev[4] + (bg[4] - bgPrev[4]) * f,
             }
-            bgTime = bgTime + ui.delta
+            fg = {
+                fgPrev[1] + (fg[1] - fgPrev[1]) * f,
+                fgPrev[2] + (fg[2] - fgPrev[2]) * f,
+                fgPrev[3] + (fg[3] - fgPrev[3]) * f,
+                fgPrev[4] + (fg[4] - fgPrev[4]) * f,
+            }
+            border = {
+                borderPrev[1] + (border[1] - borderPrev[1]) * f,
+                borderPrev[2] + (border[2] - borderPrev[2]) * f,
+                borderPrev[3] + (border[3] - borderPrev[3]) * f,
+                borderPrev[4] + (border[4] - borderPrev[4]) * f,
+            }
+            fadeTime = fadeTime + ui.delta
         end
 
-        self.__bgTime = bgTime
+        self.__fadeTime = fadeTime
         style.bg = bg
+        labelStyle.color = fg
+        style.border = border
     end,
 
     onClick = function(self, x, y, button)

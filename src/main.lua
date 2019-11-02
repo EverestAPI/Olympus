@@ -24,7 +24,7 @@ function love.load(args)
         lldb.start()
     end
 
-    love.graphics.setBackgroundColor(0.05, 0.05, 0.05)
+    love.graphics.setBackgroundColor(0.03, 0.03, 0.03)
 
     love.graphics.setFont(love.graphics.newFont(16))
 

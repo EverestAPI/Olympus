@@ -95,7 +95,7 @@ uie.add("titlebar", {
     id = "titlebar",
 
     style = {
-        bg = { 0.15, 0.15, 0.15, 1 },
+        bg = { 0.12, 0.12, 0.12, 1 },
         border = { 0, 0, 0, 0 },
         radius = 0
     },
