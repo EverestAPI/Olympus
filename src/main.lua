@@ -32,35 +32,46 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     root = uie.group({
-        uie.window("Debug", uie.column({
-            uie.label():as("info")
-        })):with({ x = 16, y = 16 }):as("debug"),
+        uie.window("Debug",
+            uie.column({
+                uie.label():as("info")
+            })
+        ):with({ x = 10, y = 10 }):as("debug"),
 
-        uie.window("Hello, World!", uie.column({
-            uie.label("This is a one-line label."),
-            
-            -- Labels use Löve2D Text objects under the hood.
-            uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
+        uie.window("Windowception",
+            uie.group({
+                uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
+                uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
+            }):with({ width = 400, height = 400 })
+        ):with({ x = 50, y = 100 }),
 
-            -- Multi-line labels aren't subjected to the parent element's spacing property.
-            uie.label("This is a two-line label.\nThe following label is updated dynamically."),
+        uie.window("Hello, World!",
+            uie.column({
+                uie.label("This is a one-line label."),
+                
+                -- Labels use Löve2D Text objects under the hood.
+                uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
 
-            -- Dynamically updated label.
-            uie.label():as("info"),
+                -- Multi-line labels aren't subjected to the parent element's spacing property.
+                uie.label("This is a two-line label.\nThe following label is updated dynamically."),
 
-            uie.button("This is a button.", function(btn)
-                if btn.counter == nil then
-                    btn.counter = 0
-                end
-                btn.counter = btn.counter + 1
-                btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
-            end),
+                -- Dynamically updated label.
+                uie.label():as("info"),
 
-            uie.button("Disabled"):with({ enabled = false }),
+                uie.button("This is a button.", function(btn)
+                    if btn.counter == nil then
+                        btn.counter = 0
+                    end
+                    btn.counter = btn.counter + 1
+                    btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
+                end),
 
-            uie.button("Useless")
+                uie.button("Disabled"):with({ enabled = false }),
 
-        })):with({ x = 32, y = 64 }):as("main"),
+                uie.button("Useless")
+
+            })
+        ):with({ x = 200, y = 50 }):as("main"),
 
     }):as("root")
     ui.root = root
@@ -98,9 +109,7 @@ function love.update()
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
     root.width = width
-    root.fixWidth = width
     root.height = height
-    root.fixHeight = height
 
     ui.update()
 

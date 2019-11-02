@@ -6,12 +6,14 @@ local uie = require("ui.elements.main")
 uie.add("panel", {
     init = function(self, children)
         self.children = children or {}
+        self.width = -1
+        self.height = -1
         self.minWidth = -1
         self.minHeight = -1
         self.maxWidth = -1
         self.maxHeight = -1
-        self.fixWidth = -1
-        self.fixHeight = -1
+        self.forceWidth = -1
+        self.forceHeight = -1
         self.clip = true
     end,
 
@@ -23,8 +25,29 @@ uie.add("panel", {
     },
 
     calcSize = function(self, width, height)
-        width = self.fixWidth < 0 and width or self.fixWidth
-        height = self.fixHeight < 0 and height or self.fixHeight
+        local manualWidth = self.width
+        manualWidth = manualWidth ~= -1 and manualWidth or nil
+        local manualHeight = self.height
+        manualHeight = manualHeight ~= -1 and manualHeight or nil
+
+        local forceWidth
+        if self.__autoWidth ~= manualWidth then
+            forceWidth = manualWidth
+            self.forceWidth = forceWidth
+        else
+            forceWidth = self.forceWidth
+        end
+
+        local forceHeight
+        if self.__autoHeight ~= manualHeight then
+            forceHeight = manualHeight
+            self.forceHeight = forceHeight
+        else
+            forceHeight = self.forceHeight
+        end
+
+        width = forceWidth >= 0 and forceWidth or width or -1
+        height = forceHeight >= 0 and forceHeight or height or -1
 
         if width < 0 and height < 0 then
             local children = self.children
@@ -66,6 +89,8 @@ uie.add("panel", {
         width = width + self.style.padding * 2
         height = height + self.style.padding * 2
 
+        self.__autoWidth = width
+        self.__autoHeight = height
         self.width = width
         self.height = height
     end,
