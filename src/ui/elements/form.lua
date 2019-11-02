@@ -13,19 +13,19 @@ uie.add("button", {
 
         normalBG = { 0.26, 0.26, 0.26, 1 },
         normalFG = { 1, 1, 1, 1 },
-        normalBorder = { 0.46, 0.46, 0.46, 1 },
+        normalBorder = { 0, 0, 0, 0 },
 
-        disabledBG = { 0.1, 0.1, 0.1, 1 },
-        disabledFG = { 0.8, 0.8, 0.8, 1 },
-        disabledBorder = { 0.2, 0.2, 0.2, 1 },
+        disabledBG = { 0.14, 0.14, 0.14, 1 },
+        disabledFG = { 0.7, 0.7, 0.7, 1 },
+        disabledBorder = { 0, 0, 0, 0 },
 
         hoveredBG = { 0.22, 0.22, 0.22, 1 },
         hoveredFG = { 1, 1, 1, 1 },
-        hoveredBorder = { 0.42, 0.42, 0.42, 1 },
+        hoveredBorder = { 0, 0, 0, 0 },
 
         pressedBG = { 0.17, 0.17, 0.17, 1 },
         pressedFG = { 1, 1, 1, 1 },
-        pressedBorder = { 0.37, 0.37, 0.37, 1 },
+        pressedBorder = { 0, 0, 0, 0 },
 
         fadeDuration = 0.2
     },
