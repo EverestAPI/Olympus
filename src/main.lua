@@ -95,8 +95,12 @@ function love.update()
         "Delta: " .. love.timer.getDelta().. "\n" ..
         "test: " .. tostring((0 and true) or false)
 
-    root.fixWidth = love.graphics.getWidth()
-    root.fixHeight = love.graphics.getHeight()
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+    root.width = width
+    root.fixWidth = width
+    root.height = height
+    root.fixHeight = height
 
     ui.update()
 

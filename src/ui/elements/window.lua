@@ -35,6 +35,38 @@ uie.add("window", {
         self._titlebar._title.text = value
     end,
 
+    layout = function(self)
+        uie.__column.layout(self)
+
+        local x = self.x
+        local y = self.y
+        local width = self.width
+        local height = self.height
+        local parent = self.parent
+        local parentWidth = parent.width
+        local parentHeight = parent.height
+        
+        local max
+        max = x + width
+        if parentWidth < max then
+            x = parentWidth - width
+        end
+        max = y + height
+        if parentHeight < max then
+            y = parentHeight - height
+        end
+
+        if x < 0 then
+            x = 0
+        end
+        if y < 0 then
+            y = 0
+        end
+
+        self.x = x
+        self.y = y
+    end,
+
     onPress = function(self, x, y, button, dragging)
         local parent = self.parent
         if not parent then
