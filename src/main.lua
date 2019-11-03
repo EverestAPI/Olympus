@@ -39,10 +39,12 @@ function love.load(args)
         ):with({ x = 10, y = 10 }):as("debug"),
 
         uie.window("Windowception",
-            uie.group({
-                uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
-                uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
-            }):with({ width = 400, height = 400 })
+            uie.scrollbox(
+                uie.group({
+                    uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
+                    uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
+                }):with({ width = 200, height = 250 })
+            ):with({ width = 200, height = 200 })
         ):with({ x = 50, y = 100 }),
 
         uie.window("Hello, World!",

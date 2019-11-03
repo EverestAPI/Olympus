@@ -35,8 +35,8 @@ uie.add("window", {
         self._titlebar._title.text = value
     end,
 
-    layout = function(self)
-        uie.__column.layout(self)
+    recalc = function(self)
+        uie.__column.recalc(self)
 
         local x = self.x
         local y = self.y

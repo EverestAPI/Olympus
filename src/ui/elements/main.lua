@@ -16,6 +16,8 @@ uie.__default = {
     parent = nil,
     id = nil,
 
+    ____cachedTextureTODO = nil,
+
     getPath = function(self)
         local id = self.id
         if not id then
@@ -141,6 +143,7 @@ uie.__default = {
         if children then
             for i = 1, #children do
                 local c = children[i]
+                c.parent = self
                 c:update()
             end
         end
@@ -160,11 +163,12 @@ uie.__default = {
         if self.invalidated == 0 then
             return false
         end
-        self.invalidated = 1
+        self.invalidated = 0
 
         self:layoutBeforeChildren()
         self:layoutChildren()
         self:layoutAfterChildren()
+        self:layoutLateChildren()
 
         return true
     end,
@@ -174,6 +178,7 @@ uie.__default = {
         if children then
             for i = 1, #children do
                 local c = children[i]
+                c.parent = self
                 c:layout()
             end
         end
@@ -184,6 +189,19 @@ uie.__default = {
 
     layoutAfterChildren = function(self)
         self:recalc()
+    end,
+
+    layoutLate = function(self)
+    end,
+
+    layoutLateChildren = function(self)
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                c:layoutLate()
+            end
+        end
     end,
 
     recalc = function(self)
@@ -211,35 +229,6 @@ uie.__default = {
             end
             eltypeBase = default.base
         end
-    end,
-
-    layoutLate = function(self)
-        if self.invalidated == 0 then
-            return false
-        end
-        self.invalidated = 0
-
-        self:layoutLateBeforeChildren()
-        self:layoutLateChildren()
-        self:layoutLateAfterChildren()
-
-        return true
-    end,
-
-    layoutLateChildren = function(self)
-        local children = self.children
-        if children then
-            for i = 1, #children do
-                local c = children[i]
-                c:layoutLate()
-            end
-        end
-    end,
-
-    layoutLateBeforeChildren = function(self)
-    end,
-
-    layoutLateAfterChildren = function(self)
     end,
 
     draw = function(self)
@@ -311,17 +300,18 @@ local mtStyle = {
         local el = rawget(self, "el")
         local eltype = el.__type
 
-        local default = el.__default
-        if el ~= default then
-            v = default.style[key]
+        local defaultStyle = el.__default.style
+        if defaultStyle then
+            v = defaultStyle[key]
             if v ~= nil then
                 return v
             end
         end
 
         local template = el.__template
-        if template then
-            v = template.style[key]
+        local templateStyle = template and template.style
+        if templateStyle then
+            v = templateStyle[key]
             if v ~= nil then
                 return v
             end
