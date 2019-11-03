@@ -285,6 +285,8 @@ uie.__default = {
     end,
     onDrag = function(self, x, y, dx, dy)
     end,
+    onScroll = function(self, dx, dy)
+    end,
 }
 
 -- Shared metatable for all style helper tables.

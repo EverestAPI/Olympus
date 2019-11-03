@@ -135,3 +135,7 @@ end
 function love.mousereleased(x, y, button, istouch, presses)
     ui.mousereleased(x, y, button, istouch)
 end
+
+function love.wheelmoved(x, y)
+    ui.wheelmoved(x, y)
+end

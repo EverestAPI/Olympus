@@ -119,5 +119,18 @@ function ui.mousereleased(x, y, button, istouch)
     end
 end
 
+function ui.wheelmoved(dx, dy)
+    local ui = ui
+    local root = ui.root
+    if not root then
+        return
+    end
+
+    local hovering = ui.hovering
+    if hovering then
+        ui.interactiveIterate(hovering, "onScroll", dx, dy)
+    end
+end
+
 
 return ui

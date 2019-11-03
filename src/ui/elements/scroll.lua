@@ -7,6 +7,8 @@ require("ui.elements.layout")
 uie.add("scrollbox", {
     base = "group",
     
+    interactive = 2,
+
     init = function(self, inner)
         if inner and (inner.id == nil or inner.id == "") then
             inner = inner:as("inner")
@@ -17,8 +19,44 @@ uie.add("scrollbox", {
             uie.scrollhandleX():as("handleX"),
             uie.scrollhandleY():as("handleY")
         })
+
+        self.clip = true
     end,
 
+    onScroll = function(self, dx, dy, raw)
+        local inner = self._inner
+
+        if raw then
+
+        else
+            dx = dx * -8
+            dy = dy * -8
+        end
+
+        local x = -inner.x
+        local boxWidth = self.width
+        local innerWidth = inner.width
+        x = x + dx
+        if x < 0 then
+            x = 0
+        elseif innerWidth < x + boxWidth then
+            x = innerWidth - boxWidth
+        end
+        inner.x = -x
+
+        local y = -inner.y
+        local boxHeight = self.height
+        local innerHeight = inner.height
+        y = y + dy
+        if y < 0 then
+            y = 0
+        elseif innerHeight < y + boxHeight then
+            y = innerHeight - boxHeight
+        end
+        inner.y = -y
+
+        self:invalidate()
+    end
 })
 
 
@@ -146,27 +184,38 @@ uie.add("scrollhandleX", {
         self.height = self.style.thickness
     end,
 
-    getIsNeeded = function(self)
-        local box = self.parent
-        local inner = box._inner
-        return box.width < inner.width
-    end,
-
     layoutLate = function(self)
         local thickness = self.style.thickness
         local box = self.parent
         local inner = box._inner
-        
-        local size = box.width
+
+        local boxSize = box.width
         local innerSize = inner.width
-        local pos = inner.x
+        local pos = -inner.x
 
-        pos = size * pos / innerSize
-        size = math.max(0, math.min(size, size * size / innerSize + pos) - pos)
+        pos = boxSize * pos / innerSize
+        local size = boxSize * boxSize / innerSize
+        local tail = pos + size
 
+        if pos < 1 then
+            pos = 1
+        elseif tail > boxSize - 1 then
+            tail = boxSize - 1
+            if pos > tail then
+                pos = tail - 1
+            end
+        end
+
+        size = math.max(1, tail - pos)
+
+        self.isNeeded = size + 1 < innerSize
         self.realX = pos
-        self.realY = box.height - thickness
+        self.realY = box.height - thickness - 1
         self.width = size
+    end,
+
+    onDrag = function(self, x, y, dx, dy)
+        self.parent:onScroll(dx, 0, true)
     end
 })
 
@@ -181,27 +230,38 @@ uie.add("scrollhandleY", {
         self.height = 0
     end,
 
-    getIsNeeded = function(self)
-        local box = self.parent
-        local inner = box._inner
-        return box.height < inner.height
-    end,
-
     layoutLate = function(self)
         local thickness = self.style.thickness
         local box = self.parent
         local inner = box._inner
-        
-        local size = box.height
+
+        local boxSize = box.height
         local innerSize = inner.height
-        local pos = inner.y
+        local pos = -inner.y
 
-        pos = size * pos / innerSize
-        size = math.max(0, math.min(size, size * size / innerSize + pos) - pos)
+        pos = boxSize * pos / innerSize
+        local size = boxSize * boxSize / innerSize
+        local tail = pos + size
 
-        self.realX = box.width - thickness
+        if pos < 1 then
+            pos = 1
+        elseif tail > boxSize - 1 then
+            tail = boxSize - 1
+            if pos > tail then
+                pos = tail - 1
+            end
+        end
+
+        size = math.max(1, tail - pos)
+        
+        self.isNeeded = size + 1 < innerSize
+        self.realX = box.width - thickness - 1
         self.realY = pos
         self.height = size
+    end,
+
+    onDrag = function(self, x, y, dx, dy)
+        self.parent:onScroll(0, dy, true)
     end
 })
 
