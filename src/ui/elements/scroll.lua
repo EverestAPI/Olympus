@@ -241,7 +241,9 @@ uie.add("scrollhandleX", {
     end,
 
     onDrag = function(self, x, y, dx, dy)
-        self.parent:onScroll(dx, 0, true)
+        local box = self.parent
+        local inner = box._inner
+        self.parent:onScroll(dx * inner.width / box.width, 0, true)
     end
 })
 
@@ -287,7 +289,9 @@ uie.add("scrollhandleY", {
     end,
 
     onDrag = function(self, x, y, dx, dy)
-        self.parent:onScroll(0, dy, true)
+        local box = self.parent
+        local inner = box._inner
+        self.parent:onScroll(0, dy * inner.height / box.height, true)
     end
 })
 
