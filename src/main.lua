@@ -7,6 +7,10 @@ local ui
 local uie
 local root
 
+function math.round(x)
+    return x + 0.5 - (x + 0.5) % 1
+end
+
 function love.load(args)
     for i = 1, #args do
         local arg = args[i]
@@ -43,7 +47,7 @@ function love.load(args)
                 uie.group({
                     uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
                     uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
-                }):with({ width = 200, height = 250 })
+                }):with({ width = 200, height = 400 })
             ):with({ width = 200, height = 200 })
         ):with({ x = 50, y = 100 }),
 

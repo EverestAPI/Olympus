@@ -106,6 +106,17 @@ uie.__default = {
         return false
     end,
 
+    getDragged = function(self)
+        local dragging = ui.dragging
+        while dragging do
+            if dragging == self then
+                return true
+            end
+            dragging = dragging.parent
+        end
+        return false
+    end,
+
     init = function(self)
     end,
 

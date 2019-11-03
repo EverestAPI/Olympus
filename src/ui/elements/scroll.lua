@@ -21,16 +21,42 @@ uie.add("scrollbox", {
         })
 
         self.clip = true
+
+        self.__dx = 0
+        self.__dy = 0
+    end,
+
+    update = function(self)
+        uie.__group.update(self)
+
+        local dx = self.__dx
+        local dy = self.__dy
+        if dx ~= 0 or dy ~= 0 then
+            dx = dx * 0.45
+            dy = dy * 0.45
+
+            self:onScroll(dx, dy, true)
+
+            if math.abs(dx) < 0.01 then
+                dx = 0
+            end
+            if math.abs(dy) < 0.01 then
+                dy = 0
+            end
+
+            self.__dx = dx
+            self.__dy = dy
+        end
     end,
 
     onScroll = function(self, dx, dy, raw)
         local inner = self._inner
 
-        if raw then
-
-        else
-            dx = dx * -8
-            dy = dy * -8
+        if not raw then
+            dx = dx * -16
+            dy = dy * -16
+            self.__dx = self.__dx + dx
+            self.__dy = self.__dy + dy
         end
 
         local x = -inner.x
@@ -42,7 +68,7 @@ uie.add("scrollbox", {
         elseif innerWidth < x + boxWidth then
             x = innerWidth - boxWidth
         end
-        inner.x = -x
+        inner.x = math.round(-x)
 
         local y = -inner.y
         local boxHeight = self.height
@@ -53,7 +79,7 @@ uie.add("scrollbox", {
         elseif innerHeight < y + boxHeight then
             y = innerHeight - boxHeight
         end
-        inner.y = -y
+        inner.y = math.round(-y)
 
         self:invalidate()
     end
@@ -113,7 +139,7 @@ uie.add("scrollhandle", {
         local color = colorPrev
         local border = borderPrev
 
-        if self.pressed then
+        if self.dragged then
             color = style.pressedColor
             border = style.pressedBorder
         elseif self.hovered then
