@@ -130,12 +130,10 @@ uie.add("titlebar", {
     end,
 
     onDrag = function(self, x, y, dx, dy)
-        if self.dragging then
-            local parent = self.parent
-            parent.x = parent.x + dx
-            parent.y = parent.y + dy
-            parent:invalidate()
-        end
+        local parent = self.parent
+        parent.x = parent.x + dx
+        parent.y = parent.y + dy
+        parent:invalidate()
     end
 })
 

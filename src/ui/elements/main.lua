@@ -296,7 +296,7 @@ uie.__default = {
     end,
     onDrag = function(self, x, y, dx, dy)
     end,
-    onScroll = function(self, dx, dy)
+    onScroll = function(self, x, y, dx, dy)
     end,
 }
 

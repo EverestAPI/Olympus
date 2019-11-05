@@ -1,11 +1,16 @@
 local debugmode = "" -- "debug" "profile" ""
 
+local sdlext
+
 local lldb
 local profile
 
 local ui
 local uie
 local root
+
+local windowDragX = nil
+local windowDragY = nil
 
 function math.round(x)
     return x + 0.5 - (x + 0.5) % 1
@@ -28,7 +33,9 @@ function love.load(args)
         lldb.start()
     end
 
-    love.graphics.setBackgroundColor(0.03, 0.03, 0.03)
+    sdlext = require("sdlext")
+
+    love.graphics.setBackgroundColor(0.06, 0.06, 0.06)
 
     love.graphics.setFont(love.graphics.newFont(16))
 
@@ -36,6 +43,22 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     root = uie.group({
+        uie.titlebar({ uie.label("oh no"):as("title") }):with({
+            onPress = function(self, x, y, button)
+                windowDragX = x
+                windowDragY = y
+            end,
+
+            onRelease = function(self, x, y, button)
+                windowDragX = nil
+                windowDragY = nil
+            end,
+
+            onDrag = function(self, x, y, dx, dy)
+
+            end
+        }),
+
         uie.window("Debug",
             uie.column({
                 uie.label():as("info")
@@ -107,17 +130,27 @@ function love.update()
             "focused: " .. (ui.focused and tostring(ui.focused) or "-")
     end
 
-    root._main._inner._info.text =
-        "FPS: " .. love.timer.getFPS() .. "\n" ..
-        "Delta: " .. love.timer.getDelta().. "\n" ..
-        "test: " .. tostring((0 and true) or false)
-
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
     root.width = width
     root.height = height
 
+    local wx, wy = love.window.getPosition()
+    local gmx, gmy = sdlext.getGlobalMouseState()
+    local mx = gmx - wx
+    local my = gmy - wy
+
+    root._main._inner._info.text =
+        "FPS: " .. love.timer.getFPS() .. "\n" ..
+        "Delta: " .. love.timer.getDelta().. "\n" ..
+        "mouse: " .. tostring(mx) .. ", " .. tostring(my)
+
+    ui.mousemoved(mx, my)
     ui.update()
+
+    if windowDragX and windowDragY then
+        love.window.setPosition(gmx - windowDragX, gmy - windowDragY)
+    end
 
     if profile then
         profile.stop()
@@ -129,15 +162,15 @@ function love.draw()
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
-    ui.mousemoved(x, y, dx, dy, istouch)
+    -- ui.mousemoved(x, y, dx, dy)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    ui.mousepressed(x, y, button, istouch)
+    ui.mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
-    ui.mousereleased(x, y, button, istouch)
+    ui.mousereleased(x, y, button)
 end
 
 function love.wheelmoved(x, y)

@@ -11,7 +11,7 @@ uie.add("button", {
         padding = 8,
         spacing = 8,
 
-        normalBG = { 0.26, 0.26, 0.26, 1 },
+        normalBG = { 0.22, 0.22, 0.22, 1 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0 },
 
@@ -19,7 +19,7 @@ uie.add("button", {
         disabledFG = { 0.7, 0.7, 0.7, 1 },
         disabledBorder = { 0, 0, 0, 0 },
 
-        hoveredBG = { 0.22, 0.22, 0.22, 1 },
+        hoveredBG = { 0.26, 0.26, 0.26, 1 },
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0 },
 

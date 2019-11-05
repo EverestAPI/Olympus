@@ -44,12 +44,20 @@ function ui.interactiveIterate(el, funcid, ...)
     return el
 end
 
-function ui.mousemoved(x, y, dx, dy, istouch)
+function ui.mousemoved(x, y)
     local ui = ui
     local root = ui.root
     if not root then
         return
     end
+
+    local prevX = ui.mouseX or x
+    local prevY = ui.mouseY or y
+    ui.mouseX = x
+    ui.mouseY = y
+
+    local dx = x - prevX
+    local dy = y - prevY
 
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
@@ -70,7 +78,7 @@ function ui.mousemoved(x, y, dx, dy, istouch)
     end
 end
 
-function ui.mousepressed(x, y, button, istouch)
+function ui.mousepressed(x, y, button)
     local ui = ui
     local root = ui.root
     if not root then
@@ -91,7 +99,7 @@ function ui.mousepressed(x, y, button, istouch)
     end
 end
 
-function ui.mousereleased(x, y, button, istouch)
+function ui.mousereleased(x, y, button)
     local ui = ui
     local root = ui.root
     if not root then
@@ -101,6 +109,8 @@ function ui.mousereleased(x, y, button, istouch)
     ui.draggingCounter = ui.draggingCounter - 1
 
     local dragging = ui.dragging
+    local x = ui.mouseX
+    local y = ui.mouseY
     if dragging then
         if ui.draggingCounter == 0 then
             ui.dragging = nil
@@ -128,7 +138,7 @@ function ui.wheelmoved(dx, dy)
 
     local hovering = ui.hovering
     if hovering then
-        ui.interactiveIterate(hovering, "onScroll", dx, dy)
+        ui.interactiveIterate(hovering, "onScroll", ui.mouseX, ui.mouseY, dx, dy)
     end
 end
 

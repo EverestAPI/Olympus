@@ -35,7 +35,7 @@ uie.add("scrollbox", {
             dx = dx * 0.45
             dy = dy * 0.45
 
-            self:onScroll(dx, dy, true)
+            self:onScroll(nil, nil, dx, dy, true)
 
             if math.abs(dx) < 0.01 then
                 dx = 0
@@ -49,7 +49,7 @@ uie.add("scrollbox", {
         end
     end,
 
-    onScroll = function(self, dx, dy, raw)
+    onScroll = function(self, x, y, dx, dy, raw)
         local inner = self._inner
 
         if not raw then
@@ -243,7 +243,7 @@ uie.add("scrollhandleX", {
     onDrag = function(self, x, y, dx, dy)
         local box = self.parent
         local inner = box._inner
-        self.parent:onScroll(dx * inner.width / box.width, 0, true)
+        self.parent:onScroll(x, y, dx * inner.width / box.width, 0, true)
     end
 })
 
@@ -291,7 +291,7 @@ uie.add("scrollhandleY", {
     onDrag = function(self, x, y, dx, dy)
         local box = self.parent
         local inner = box._inner
-        self.parent:onScroll(0, dy * inner.height / box.height, true)
+        self.parent:onScroll(x, y, 0, dy * inner.height / box.height, true)
     end
 })
 
