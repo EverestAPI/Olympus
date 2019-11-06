@@ -94,7 +94,6 @@ function love.load(args)
 
     if debugmode:match("profile") then
         profile = require("profile")
-        root._debug.y = 290
     end
 
     sdlx.setWindowHitTest(function(win, area)

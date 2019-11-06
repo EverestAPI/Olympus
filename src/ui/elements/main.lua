@@ -160,25 +160,14 @@ uie.__default = {
         end
     end,
 
-    updateLate = function(self)
-        local children = self.children
-        if children then
-            for i = 1, #children do
-                local c = children[i]
-                c:updateLate()
-            end
-        end
-    end,
-
     layout = function(self)
         if self.invalidated == 0 then
             return false
         end
         self.invalidated = 0
 
-        self:layoutBeforeChildren()
         self:layoutChildren()
-        self:layoutAfterChildren()
+        self:recalc()
         self:layoutLateChildren()
 
         return true
@@ -193,13 +182,6 @@ uie.__default = {
                 c:layout()
             end
         end
-    end,
-
-    layoutBeforeChildren = function(self)
-    end,
-
-    layoutAfterChildren = function(self)
-        self:recalc()
     end,
 
     layoutLate = function(self)

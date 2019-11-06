@@ -12,7 +12,6 @@ function ui.update()
 
     root:update()
     root:layout()
-    root:updateLate()
 
 end
 
