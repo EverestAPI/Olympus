@@ -3,7 +3,7 @@ local lldb
 local profile
 
 local utils
-local sdlx
+local native
 
 local ui
 local uie
@@ -29,9 +29,14 @@ function love.load(args)
     end
 
     utils = require("utils")
-    sdlx = require("sdlx")
+    native = require("native")
+    
+    if native.os == "Windows" then
+        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.7)
+    else
+        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
+    end
 
-    love.graphics.setBackgroundColor(0.06, 0.06, 0.06)
     love.graphics.setFont(love.graphics.newFont(16))
 
     ui = require("ui.main")
@@ -88,7 +93,7 @@ function love.load(args)
             ):with({ x = 200, y = 50 }):as("test"),
 
         }):with({ clip = true }):as("main")
-    }):with({ style = { padding = 0, spacing = 0 } }):as("root")
+    }):with({ style = { bg = { 0, 0, 0, 0 }, padding = 0, spacing = 0, radius = 0 } }):as("root")
     ui.root = root
     main = root._main
 
@@ -96,13 +101,15 @@ function love.load(args)
         profile = require("profile")
     end
 
-    sdlx.setWindowHitTest(function(win, area)
+    native.setWindowHitTest(function(win, area)
         if area.y <= root._titlebar.height then
             return 1 -- Draggable
         end
 
         return 0
     end)
+
+    native.prepareWindow()
 end
 
 love.frame = 0
@@ -157,7 +164,7 @@ end
 
 function love.mousepressed(x, y, button, istouch, presses)
     if mousePresses == 0 then
-        sdlx.captureMouse(true)
+        native.captureMouse(true)
     end
     mousePresses = mousePresses + presses
     ui.mousepressed(x, y, button)
@@ -167,7 +174,7 @@ function love.mousereleased(x, y, button, istouch, presses)
     mousePresses = mousePresses - presses
     ui.mousereleased(x, y, button)
     if mousePresses == 0 then
-        sdlx.captureMouse(false)
+        native.captureMouse(false)
     end
 end
 
