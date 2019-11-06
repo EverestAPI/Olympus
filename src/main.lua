@@ -39,22 +39,7 @@ function love.load(args)
 
     local root = uie.column({
         uie.titlebar({ uie.label("Everest.Olympus"):as("title") }):with({
-            onPress = function(self, x, y, button)
-                self.startX = x
-                self.startY = y
-                local wx, wy = love.window.getPosition()
-                self.wx = wx
-                self.wy = wy
-            end,
-
             onDrag = function(self, x, y, dx, dy)
-                -- dx and dy will keep flickering while moving the window.
-                -- Let's abuse the fact that the cursor should stay at same X and Y inside of the window.
-                local wx = self.wx + (x - self.startX)
-                local wy = self.wy + (y - self.startY)
-                love.window.setPosition(wx, wy)
-                self.wx = wx
-                self.wy = wy
             end
         }),
 
@@ -111,6 +96,14 @@ function love.load(args)
         profile = require("profile")
         root._debug.y = 290
     end
+
+    sdlx.setWindowHitTest(function(win, area)
+        if area.y <= root._titlebar.height then
+            return 1 -- Draggable
+        end
+
+        return 0
+    end)
 end
 
 love.frame = 0
