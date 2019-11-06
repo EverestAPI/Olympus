@@ -38,11 +38,15 @@ uie.add("window", {
     recalc = function(self)
         uie.__column.recalc(self)
 
+        local parent = self.parent
+        if not parent then
+            return
+        end
+
         local x = self.x
         local y = self.y
         local width = self.width
         local height = self.height
-        local parent = self.parent
         local parentWidth = parent.width
         local parentHeight = parent.height
         

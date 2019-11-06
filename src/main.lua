@@ -7,7 +7,7 @@ local sdlx
 
 local ui
 local uie
-local root
+local main
 
 local mousePresses = 0
 
@@ -37,8 +37,8 @@ function love.load(args)
     ui = require("ui.main")
     uie = require("ui.elements.all")
 
-    root = uie.group({
-        uie.titlebar({ uie.label("oh no"):as("title") }):with({
+    local root = uie.column({
+        uie.titlebar({ uie.label("Everest.Olympus"):as("title") }):with({
             onPress = function(self, x, y, button)
                 self.startX = x
                 self.startY = y
@@ -58,51 +58,54 @@ function love.load(args)
             end
         }),
 
-        uie.window("Debug",
-            uie.column({
-                uie.label():as("info")
-            })
-        ):with({ x = 10, y = 10 }):as("debug"),
+        uie.group({
+            uie.window("Debug",
+                uie.column({
+                    uie.label():as("info")
+                })
+            ):with({ x = 10, y = 10 }):as("debug"),
 
-        uie.window("Windowception",
-            uie.scrollbox(
-                uie.group({
-                    uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
-                    uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
-                }):with({ width = 200, height = 400 })
-            ):with({ width = 200, height = 200 })
-        ):with({ x = 50, y = 100 }),
+            uie.window("Windowception",
+                uie.scrollbox(
+                    uie.group({
+                        uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
+                        uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
+                    }):with({ width = 200, height = 400 })
+                ):with({ width = 200, height = 200 })
+            ):with({ x = 50, y = 100 }),
 
-        uie.window("Hello, World!",
-            uie.column({
-                uie.label("This is a one-line label."),
-                
-                -- Labels use Löve2D Text objects under the hood.
-                uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
+            uie.window("Hello, World!",
+                uie.column({
+                    uie.label("This is a one-line label."),
+                    
+                    -- Labels use Löve2D Text objects under the hood.
+                    uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
 
-                -- Multi-line labels aren't subjected to the parent element's spacing property.
-                uie.label("This is a two-line label.\nThe following label is updated dynamically."),
+                    -- Multi-line labels aren't subjected to the parent element's spacing property.
+                    uie.label("This is a two-line label.\nThe following label is updated dynamically."),
 
-                -- Dynamically updated label.
-                uie.label():as("info"),
+                    -- Dynamically updated label.
+                    uie.label():as("info"),
 
-                uie.button("This is a button.", function(btn)
-                    if btn.counter == nil then
-                        btn.counter = 0
-                    end
-                    btn.counter = btn.counter + 1
-                    btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
-                end),
+                    uie.button("This is a button.", function(btn)
+                        if btn.counter == nil then
+                            btn.counter = 0
+                        end
+                        btn.counter = btn.counter + 1
+                        btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
+                    end),
 
-                uie.button("Disabled"):with({ enabled = false }),
+                    uie.button("Disabled"):with({ enabled = false }),
 
-                uie.button("Useless")
+                    uie.button("Useless")
 
-            })
-        ):with({ x = 200, y = 50 }):as("main"),
+                })
+            ):with({ x = 200, y = 50 }):as("test"),
 
-    }):as("root")
+        }):with({ clip = true }):as("main")
+    }):with({ style = { padding = 0, spacing = 0 } }):as("root")
     ui.root = root
+    main = root._main
 
     if debugmode:match("profile") then
         profile = require("profile")
@@ -113,16 +116,19 @@ end
 love.frame = 0
 function love.update()
     love.frame = love.frame + 1
+    
+    local root = ui.root
+    local main = main
 
     if profile then
         if love.frame % 100 == 0 then
-            root._debug._inner._info.text = profile.report(10)
+            main._debug._inner._info.text = profile.report(10)
             profile.reset()
         end
 
         profile.start()
     else
-        root._debug._inner._info.text =
+        main._debug._inner._info.text =
             "FPS: " .. love.timer.getFPS() .. "\n" ..
             "hovering: " .. (ui.hovering and tostring(ui.hovering) or "-") .. "\n" ..
             "dragging: " .. (ui.dragging and tostring(ui.dragging) or "-") .. "\n" ..
@@ -131,10 +137,14 @@ function love.update()
 
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
+    
     root.width = width
     root.height = height
 
-    root._main._inner._info.text =
+    main.width = width
+    main.height = height - root._titlebar.height
+
+    main._test._inner._info.text =
         "FPS: " .. love.timer.getFPS() .. "\n" ..
         "Delta: " .. love.timer.getDelta()
 
