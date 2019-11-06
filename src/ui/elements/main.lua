@@ -134,6 +134,11 @@ uie.__default = {
         return self
     end,
 
+    run = function(self, cb, ...)
+        local rv = cb(self, ...)
+        return rv or self
+    end,
+
     reflow = function(self, recursive)
         local el = self
         while el ~= nil do

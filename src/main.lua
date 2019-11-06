@@ -30,12 +30,6 @@ function love.load(args)
 
     utils = require("utils")
     native = require("native")
-    
-    if native.os == "Windows" then
-        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.7)
-    else
-        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
-    end
 
     love.graphics.setFont(love.graphics.newFont(16))
 
@@ -44,8 +38,7 @@ function love.load(args)
 
     local root = uie.column({
         uie.titlebar({ uie.label("Everest.Olympus"):as("title") }):with({
-            onDrag = function(self, x, y, dx, dy)
-            end
+            style = { bg = { 0.3, 0.3, 0.3, 0.6 } }, onDrag = utils.nop
         }),
 
         uie.group({
@@ -109,7 +102,12 @@ function love.load(args)
         return 0
     end)
 
-    native.prepareWindow()
+    local windowStatus = native.prepareWindow()
+    if windowStatus.transparent then
+        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.87)
+    else
+        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
+    end
 end
 
 love.frame = 0
