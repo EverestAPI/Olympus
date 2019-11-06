@@ -144,8 +144,7 @@ function love.update()
     main.height = height - root._titlebar.height
 
     main._test._inner._info.text =
-        "FPS: " .. love.timer.getFPS() .. "\n" ..
-        "Delta: " .. love.timer.getDelta()
+        "FPS: " .. love.timer.getFPS()
 
     ui.update()
 

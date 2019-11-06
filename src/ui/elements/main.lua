@@ -9,14 +9,15 @@ uie.__default = {
     y = 0,
     width = 0,
     height = 0,
-    invalidated = 2,
+    reflowing = 2,
 
     interactive = 0,
 
     parent = nil,
     id = nil,
 
-    ____cachedTextureTODO = nil,
+    cacheable = true,
+    cachedCanvas = nil,
 
     getPath = function(self)
         local id = self.id
@@ -129,22 +130,43 @@ uie.__default = {
         for k, v in pairs(props) do
             self[k] = v
         end
-        self:invalidate()
+        self:reflow()
         return self
     end,
 
-    invalidate = function(self)
+    reflow = function(self, recursive)
         local el = self
         while el ~= nil do
-            el.invalidated = 2
+            el.reflowing = 2
+            el.cachedCanvas = nil
             el = el.parent
         end
 
-        local children = self.children
-        if children then
-            for i = 1, #children do
-                local c = children[i]
-                c:invalidate()
+        if recursive then
+            local children = self.children
+            if children then
+                for i = 1, #children do
+                    local c = children[i]
+                    c:reflow(recursive)
+                end
+            end
+        end
+    end,
+
+    repaint = function(self, recursive)
+        local el = self
+        while el ~= nil do
+            el.cachedCanvas = nil
+            el = el.parent
+        end
+
+        if recursive then
+            local children = self.children
+            if children then
+                for i = 1, #children do
+                    local c = children[i]
+                    c:repaint(recursive)
+                end
             end
         end
     end,
@@ -161,10 +183,10 @@ uie.__default = {
     end,
 
     layout = function(self)
-        if self.invalidated == 0 then
+        if self.reflowing == 0 then
             return false
         end
-        self.invalidated = 0
+        self.reflowing = 0
 
         self:layoutChildren()
         self:recalc()
@@ -229,13 +251,47 @@ uie.__default = {
         if children then
             for i = 1, #children do
                 local c = children[i]
-                c:draw()
+                c:drawCached()
             end
         end
     end,
 
-    getChild = function(self, id)
+    drawCached = function(self)
+        if not self.cacheable then
+            self:draw()
+        end
 
+        local canvas = self.cachedCanvas
+        if not canvas then
+            canvas = self.__cachedCanvas
+
+            local width = self.width
+            local height = self.height
+
+            if canvas then
+                if width ~= canvas:getWidth() or height ~= canvas:getHeight() then
+                    canvas:release()
+                    canvas = nil
+                end
+            end
+
+            if not canvas then
+                canvas = love.graphics.newCanvas(width, height)
+                self.__cachedCanvas = canvas
+            end
+
+            local canvasPrev = love.graphics.getCanvas()
+            love.graphics.setCanvas(canvas)
+
+            love.graphics.clear(0, 0, 0, 0)
+            self:draw()
+
+            love.graphics.setCanvas(canvasPrev)
+            self.cachedCanvas = canvas
+        end
+
+        love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.draw(canvas, self.screenX, self.screenY)
     end,
 
     getChildAt = function(self, mx, my)

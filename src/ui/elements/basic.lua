@@ -158,14 +158,13 @@ uie.add("group", {
 
 -- Basic label.
 uie.add("label", {
-    dynamic = false,
-
     style = {
         color = { 1, 1, 1, 1}
     },
 
     init = function(self, text)
         self.text = text or ""
+        self.dynamic = false
     end,
 
     getText = function(self)
@@ -189,7 +188,7 @@ uie.add("label", {
         end
 
         if not self.dynamic then
-            self:invalidate()
+            self:reflow()
         end
     end,
 

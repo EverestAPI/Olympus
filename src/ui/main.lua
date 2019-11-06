@@ -19,7 +19,7 @@ end
 function ui.draw()
     local root = ui.root
     
-    root:draw()
+    root:drawCached()
 end
 
 

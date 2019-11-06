@@ -81,7 +81,7 @@ uie.add("scrollbox", {
         end
         inner.y = math.round(-y)
 
-        self:invalidate()
+        self:reflow()
     end
 })
 

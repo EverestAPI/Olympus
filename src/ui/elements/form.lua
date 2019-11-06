@@ -121,6 +121,7 @@ uie.add("button", {
                 borderPrev[4] + (border[4] - borderPrev[4]) * f,
             }
             fadeTime = fadeTime + ui.delta
+            self:repaint()
         end
 
         self.__fadeTime = fadeTime
