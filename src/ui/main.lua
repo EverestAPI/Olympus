@@ -44,20 +44,12 @@ function ui.interactiveIterate(el, funcid, ...)
     return el
 end
 
-function ui.mousemoved(x, y)
+function ui.mousemoved(x, y, dx, dy)
     local ui = ui
     local root = ui.root
     if not root then
         return
     end
-
-    local prevX = ui.mouseX or x
-    local prevY = ui.mouseY or y
-    ui.mouseX = x
-    ui.mouseY = y
-
-    local dx = x - prevX
-    local dy = y - prevY
 
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
@@ -109,8 +101,6 @@ function ui.mousereleased(x, y, button)
     ui.draggingCounter = ui.draggingCounter - 1
 
     local dragging = ui.dragging
-    local x = ui.mouseX
-    local y = ui.mouseY
     if dragging then
         if ui.draggingCounter == 0 then
             ui.dragging = nil

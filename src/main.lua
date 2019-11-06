@@ -1,20 +1,15 @@
 local debugmode = "" -- "debug" "profile" ""
-
-local sdlext
-
 local lldb
 local profile
+
+local utils
+local sdlx
 
 local ui
 local uie
 local root
 
-local windowDragX = nil
-local windowDragY = nil
-
-function math.round(x)
-    return x + 0.5 - (x + 0.5) % 1
-end
+local mousePresses = 0
 
 function love.load(args)
     for i = 1, #args do
@@ -33,10 +28,10 @@ function love.load(args)
         lldb.start()
     end
 
-    sdlext = require("sdlext")
+    utils = require("utils")
+    sdlx = require("sdlx")
 
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06)
-
     love.graphics.setFont(love.graphics.newFont(16))
 
     ui = require("ui.main")
@@ -45,17 +40,21 @@ function love.load(args)
     root = uie.group({
         uie.titlebar({ uie.label("oh no"):as("title") }):with({
             onPress = function(self, x, y, button)
-                windowDragX = x
-                windowDragY = y
-            end,
-
-            onRelease = function(self, x, y, button)
-                windowDragX = nil
-                windowDragY = nil
+                self.startX = x
+                self.startY = y
+                local wx, wy = love.window.getPosition()
+                self.wx = wx
+                self.wy = wy
             end,
 
             onDrag = function(self, x, y, dx, dy)
-
+                -- dx and dy will keep flickering while moving the window.
+                -- Let's abuse the fact that the cursor should stay at same X and Y inside of the window.
+                local wx = self.wx + (x - self.startX)
+                local wy = self.wy + (y - self.startY)
+                love.window.setPosition(wx, wy)
+                self.wx = wx
+                self.wy = wy
             end
         }),
 
@@ -135,22 +134,11 @@ function love.update()
     root.width = width
     root.height = height
 
-    local wx, wy = love.window.getPosition()
-    local gmx, gmy = sdlext.getGlobalMouseState()
-    local mx = gmx - wx
-    local my = gmy - wy
-
     root._main._inner._info.text =
         "FPS: " .. love.timer.getFPS() .. "\n" ..
-        "Delta: " .. love.timer.getDelta().. "\n" ..
-        "mouse: " .. tostring(mx) .. ", " .. tostring(my)
+        "Delta: " .. love.timer.getDelta()
 
-    ui.mousemoved(mx, my)
     ui.update()
-
-    if windowDragX and windowDragY then
-        love.window.setPosition(gmx - windowDragX, gmy - windowDragY)
-    end
 
     if profile then
         profile.stop()
@@ -162,15 +150,23 @@ function love.draw()
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
-    -- ui.mousemoved(x, y, dx, dy)
+    ui.mousemoved(x, y, dx, dy)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
+    if mousePresses == 0 then
+        sdlx.captureMouse(true)
+    end
+    mousePresses = mousePresses + presses
     ui.mousepressed(x, y, button)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
+    mousePresses = mousePresses - presses
     ui.mousereleased(x, y, button)
+    if mousePresses == 0 then
+        sdlx.captureMouse(false)
+    end
 end
 
 function love.wheelmoved(x, y)
