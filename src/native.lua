@@ -190,11 +190,18 @@ function native.prepareWindow()
 		dwm.DwmIsCompositionEnabled(dwmEnabled)
 		if dwmEnabled[0] then
 			local verP = io.popen("ver")
-			local ver = verP:read("*a")
+			local verS = verP:read("*a")
 			verP:close()
-			ver = tonumber(ver:sub(ver:find("%[Version ") + 9, ver:find("%.") - 1))
+			local verMajIndex = verS:find("%[Version ") + 8
+			local verMinIndex = verS:find("%.", verMajIndex)
+			local verMinEndIndex = verS:find("%.", verMinIndex + 1)
+			local verMaj = tonumber(verS:sub(verMajIndex + 1, verMinIndex - 1))
+			local verMin = tonumber(verS:sub(verMinIndex + 1, verMinEndIndex - 1))
+			if verMaj == 2000 then
+				verMaj = 5
+			end
 
-			if ver ~= 2000 and ver >= 10 then
+			if verMaj >= 10 then
 				-- Windows 10+
 				status.transparent = true
 
@@ -211,9 +218,15 @@ function native.prepareWindow()
 		
 				sys.SetWindowCompositionAttribute(hwnd, attrData)
 
-			else
+			elseif verMaj >= 5 then
 				-- Windows Vista+
-				status.transparent = ver ~= 8
+
+				if verMaj == 8 or (verMaj == 6 and verMin >= 2) then
+					-- Windows 8 lacks Aero.
+					status.transparent = false
+				else
+					status.transparent = true
+				end
 
 				local ncRenderingPolicy = ffi.new("int[1]", 2)
 				dwm.DwmSetWindowAttribute(hwnd, 2, ncRenderingPolicy, ffi.sizeof("int"))
