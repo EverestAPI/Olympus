@@ -3,7 +3,7 @@ local ui = {}
 ui.hovering = nil
 ui.dragging = nil
 ui.draggingCounter = 0
-ui.focused = nil
+ui.focusing = nil
 
 function ui.update()
     local root = ui.root
@@ -83,7 +83,7 @@ function ui.mousepressed(x, y, button)
         if ui.dragging == nil or ui.dragging == hovering then
             local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
             ui.dragging = el
-            ui.focused = el
+            ui.focusing = el
         else
             ui.interactiveIterate(hovering, "onPress", x, y, button, false)
         end

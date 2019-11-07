@@ -118,6 +118,17 @@ uie.__default = {
         return false
     end,
 
+    getFocused = function(self)
+        local focusing = ui.focusing
+        while focusing do
+            if focusing == self then
+                return true
+            end
+            focusing = focusing.parent
+        end
+        return false
+    end,
+
     init = function(self)
     end,
 

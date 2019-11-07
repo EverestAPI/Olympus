@@ -37,8 +37,8 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     local root = uie.column({
-        uie.titlebar({ uie.label("Everest.Olympus"):as("title") }):with({
-            style = { bg = { 0.3, 0.3, 0.3, 0.6 } }, onDrag = utils.nop
+        uie.titlebar({ uie.label("Everest.Olympus"):as("label") }):with({
+            style = { focusedBG = { 0.3, 0.3, 0.3, 0.6 }, unfocusedBG = { 0.4, 0.4, 0.4, 0.3 } }, onDrag = utils.nop
         }),
 
         uie.group({
@@ -127,13 +127,15 @@ function love.update()
     else
         main._debug._inner._info.text =
             "FPS: " .. love.timer.getFPS() .. "\n" ..
-            "hovering: " .. (ui.hovering and tostring(ui.hovering) or "-") .. "\n" ..
-            "dragging: " .. (ui.dragging and tostring(ui.dragging) or "-") .. "\n" ..
-            "focused: " .. (ui.focused and tostring(ui.focused) or "-")
+            "hovering: " .. tostring(ui.hovering) .. "\n" ..
+            "dragging: " .. tostring(ui.dragging) .. "\n" ..
+            "focusing: " .. tostring(ui.focusing)
     end
 
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
+
+    root.focused = love.window.hasFocus()
     
     root.width = width
     root.height = height
@@ -141,8 +143,10 @@ function love.update()
     main.width = width
     main.height = height - root._titlebar.height
 
+    local mouseX, mouseY = love.mouse.getPosition()
     main._test._inner._info.text =
-        "FPS: " .. love.timer.getFPS()
+        "FPS: " .. love.timer.getFPS() .. "\n" ..
+        "Mouse: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
 
     ui.update()
 
