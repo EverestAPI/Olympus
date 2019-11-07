@@ -299,16 +299,24 @@ uie.__default = {
 
             local canvasPrev = love.graphics.getCanvas()
             love.graphics.setCanvas(canvas)
-
             love.graphics.clear(0, 0, 0, 0)
+
+            love.graphics.push()
+            love.graphics.origin()
+            love.graphics.translate(-self.screenX, -self.screenY)
+
             self:draw()
+
+            love.graphics.pop()
 
             love.graphics.setCanvas(canvasPrev)
             self.cachedCanvas = canvas
         end
 
         love.graphics.setColor(1, 1, 1, 1)
+        love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(canvas, self.screenX, self.screenY)
+        love.graphics.setBlendMode("alpha", "alphamultiply")
     end,
 
     getChildAt = function(self, mx, my)

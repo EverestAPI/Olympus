@@ -52,7 +52,7 @@ function love.load(args)
 
     local root = uie.column({
         uie.titlebar("Everest.Olympus"):with({
-            style = { focusedBG = { 1, 1, 1, 0.25 }, unfocusedBG = { 0.4, 0.4, 0.4, 0.3 } }, onDrag = utils.nop
+            style = { focusedBG = { 0.4, 0.4, 0.4, 0.25 }, unfocusedBG = { 0.2, 0.2, 0.2, 0.3 } }, onDrag = utils.nop
         }),
 
         uie.group({
@@ -152,11 +152,11 @@ function love.load(args)
 
     -- Shamelessly based off of how FNA force-repaints the window on resize.
     native.setEventFilter(function(userdata, event)
-        if event[0].type == 0x200 then
-            if event[0].window.event == 3 then
+        if event[0].type == 0x200 then -- SDL_WINDOWEVENT
+            if event[0].window.event == 3 then -- SDL_WINDOWEVENT_EXPOSED
                 _love_runStep()
                 love.graphics = nil -- Don't redraw, we've already redrawn.
-                return 1
+                return 0
             end
         end
         return 1

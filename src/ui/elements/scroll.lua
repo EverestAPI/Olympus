@@ -82,6 +82,8 @@ uie.add("scrollbox", {
         inner.y = math.round(-y)
 
         self:reflow()
+        self._handleX:repaint()
+        self._handleY:repaint()
     end
 })
 
@@ -176,6 +178,7 @@ uie.add("scrollhandle", {
                 borderPrev[4] + (border[4] - borderPrev[4]) * f,
             }
             fadeTime = fadeTime + ui.delta
+            self:repaint()
         end
 
         self.__fadeTime = fadeTime

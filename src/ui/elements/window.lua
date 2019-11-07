@@ -97,6 +97,7 @@ uie.add("titlebar", {
     base = "row",
 
     interactive = true,
+    cacheable = false, -- TODO: Fix issue with width in cached mode!
 
     id = "titlebar",
 
@@ -104,17 +105,20 @@ uie.add("titlebar", {
         border = { 0, 0, 0, 0 },
         radius = 0,
 
-        focusedBG = { 0.12, 0.12, 0.12, 1 },
+        focusedBG = { 0.15, 0.15, 0.15, 1 },
         focusedFG = { 1, 1, 1, 1 },
 
-        unfocusedBG = { 0.095, 0.095, 0.095, 1 },
-        unfocusedFG = { 0.9, 0.9, 0.9, 1 },
+        unfocusedBG = { 0.1, 0.1, 0.1, 1 },
+        unfocusedFG = { 0.7, 0.7, 0.7, 1 },
 
-        fadeDuration = 0.2
+        fadeDuration = 0.3
     },
 
     init = function(self, title)
-        uie.__row.init(self, { uie.label(title):as("label") })
+        uie.__row.init(self, {
+            uie.label(title):as("label"),
+            -- uie.button("X"):as("close")
+        })
     end,
 
     update = function(self)
