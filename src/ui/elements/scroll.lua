@@ -125,6 +125,8 @@ uie.add("scrollhandle", {
     end,
 
     update = function(self)
+        uie.__default.update(self)
+
         local enabled = self.enabled
         if enabled == nil then
             enabled = self.isNeeded

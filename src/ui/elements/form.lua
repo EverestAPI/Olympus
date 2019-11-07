@@ -60,6 +60,8 @@ uie.add("button", {
     end,
 
     update = function(self)
+        uie.__row.update(self)
+
         local style = self.style
         local label = self._label
         local labelStyle = label.style

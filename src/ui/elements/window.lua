@@ -117,11 +117,13 @@ uie.add("titlebar", {
     init = function(self, title)
         uie.__row.init(self, {
             uie.label(title):as("label"),
-            -- uie.button("X"):as("close")
+            uie.button("X"):as("close")
         })
     end,
 
     update = function(self)
+        uie.__row.update(self)
+
         local style = self.style
         local label = self._label
         local labelStyle = label.style

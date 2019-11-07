@@ -9,7 +9,7 @@ uie.__default = {
     y = 0,
     width = 0,
     height = 0,
-    reflowing = 2,
+    reflowing = true,
 
     interactive = 0,
 
@@ -18,6 +18,7 @@ uie.__default = {
 
     cacheable = true,
     cachedCanvas = nil,
+    cachePadding = 4,
 
     getPath = function(self)
         local id = self.id
@@ -153,7 +154,7 @@ uie.__default = {
     reflow = function(self, recursive)
         local el = self
         while el ~= nil do
-            el.reflowing = 2
+            el.reflowing = true
             el.cachedCanvas = nil
             el = el.parent
         end
@@ -199,10 +200,10 @@ uie.__default = {
     end,
 
     layout = function(self)
-        if self.reflowing == 0 then
+        if not self.reflowing then
             return false
         end
-        self.reflowing = 0
+        self.reflowing = false
 
         self:layoutChildren()
         self:recalc()
@@ -278,12 +279,14 @@ uie.__default = {
             return
         end
 
+        local padding = self.cachePadding
+
         local canvas = self.cachedCanvas
         if not canvas then
             canvas = self.__cachedCanvas
 
-            local width = self.width
-            local height = self.height
+            local width = self.width + padding * 2
+            local height = self.height + padding * 2
 
             if canvas then
                 if width ~= canvas:getWidth() or height ~= canvas:getHeight() then
@@ -303,7 +306,7 @@ uie.__default = {
 
             love.graphics.push()
             love.graphics.origin()
-            love.graphics.translate(-self.screenX, -self.screenY)
+            love.graphics.translate(-self.screenX + padding, -self.screenY + padding)
 
             self:draw()
 
@@ -315,7 +318,7 @@ uie.__default = {
 
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.setBlendMode("alpha", "premultiplied")
-        love.graphics.draw(canvas, self.screenX, self.screenY)
+        love.graphics.draw(canvas, self.screenX - padding, self.screenY - padding)
         love.graphics.setBlendMode("alpha", "alphamultiply")
     end,
 

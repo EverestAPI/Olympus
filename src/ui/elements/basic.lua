@@ -117,19 +117,19 @@ uie.add("panel", {
         local w = self.width
         local h = self.height
 
-        local sX, sY, sW, sH
-        local clip = self.clip and not self.cacheable
-        if clip then
-            sX, sY, sW, sH = love.graphics.getScissor()
-            local scissorX, scissorY = love.graphics.transformPoint(x, y)
-            love.graphics.intersectScissor(scissorX, scissorY, w, h)
-        end
-
         local radius = self.style.radius
         love.graphics.setColor(self.style.bg)
         love.graphics.rectangle("fill", x, y, w, h, radius, radius)
         love.graphics.setColor(self.style.border)
         love.graphics.rectangle("line", x, y, w, h, radius, radius)
+
+        local sX, sY, sW, sH
+        local clip = self.clip
+        if clip then
+            sX, sY, sW, sH = love.graphics.getScissor()
+            local scissorX, scissorY = love.graphics.transformPoint(x, y)
+            love.graphics.intersectScissor(scissorX - 1, scissorY - 1, w + 2, h + 2)
+        end
 
         local children = self.children
         for i = 1, #children do
