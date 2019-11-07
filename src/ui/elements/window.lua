@@ -22,7 +22,7 @@ uie.add("window", {
             inner.style.radius = 0
         end
         uie.__column.init(self, {
-            uie.titlebar({ uie.label(title):as("label") }),
+            uie.titlebar(title),
             inner
         })
     end,
@@ -35,8 +35,8 @@ uie.add("window", {
         self._titlebar._title.text = value
     end,
 
-    recalc = function(self)
-        uie.__column.recalc(self)
+    update = function(self)
+        uie.__column.update(self)
 
         local parent = self.parent
         if not parent then
@@ -112,6 +112,10 @@ uie.add("titlebar", {
 
         fadeDuration = 0.2
     },
+
+    init = function(self, title)
+        uie.__row.init(self, { uie.label(title):as("label") })
+    end,
 
     update = function(self)
         local style = self.style

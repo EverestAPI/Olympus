@@ -159,7 +159,7 @@ uie.add("group", {
 -- Basic label.
 uie.add("label", {
     style = {
-        color = { 1, 1, 1, 1}
+        color = { 1, 1, 1, 1 }
     },
 
     init = function(self, text)
@@ -203,6 +203,49 @@ uie.add("label", {
     draw = function(self)
         love.graphics.setColor(self.style.color)
         love.graphics.draw(self._text, self.screenX, self.screenY)
+    end
+})
+
+
+-- Basic image.
+uie.add("image", {
+    cacheable = false,
+    color = { 1, 1, 1, 1 },
+    quad = nil,
+    transform = nil,
+
+    init = function(self, image)
+        self.image = image
+    end,
+
+    calcWidth = function(self)
+        return self.image:getWidth()
+    end,
+
+    calcHeight = function(self)
+        return self.image:getHeight()
+    end,
+
+    draw = function(self)
+        love.graphics.setColor(self.color)
+
+        local transform = self.transform
+        local quad = self.quad
+        if quad then
+            if transform then
+                love.graphics.draw(self.image, quad, transform)
+            else
+                love.graphics.draw(self.image, quad, self.screenX, self.screenY)
+            end
+
+        else
+            if transform then
+                love.graphics.draw(self.image, transform)
+
+            else
+                love.graphics.draw(self.image, self.screenX, self.screenY)
+            end
+        end
     end
 })
 

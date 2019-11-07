@@ -275,6 +275,7 @@ uie.__default = {
     drawCached = function(self)
         if not self.cacheable then
             self:draw()
+            return
         end
 
         local canvas = self.cachedCanvas

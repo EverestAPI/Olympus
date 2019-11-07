@@ -1,4 +1,3 @@
-local debugmode = "" -- "debug" "profile" ""
 local lldb
 local profile
 
@@ -11,21 +10,36 @@ local main
 
 local mousePresses = 0
 
+local _love_timer = love.timer
+local _love_graphics = love.graphics
+local _love_run = love.run
+local _love_runStep
+function love.run()
+    local orig = _love_run()
+    
+    local function step()
+        love.timer = _love_timer
+        love.graphics = _love_graphics
+        orig()
+        love.timer = _love_timer
+        love.graphics = _love_graphics
+    end
+
+    _love_runStep = step
+    return step
+end
+
 function love.load(args)
     for i = 1, #args do
         local arg = args[i]
 
-        if arg == "--debug" then
-            debugmode = debugmode .. " debug"
+        if arg == "--debug" and os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+            lldb = lldb or require("lldebugger")
+            lldb.start()
 
         elseif arg == "--profile" then
-            debugmode = debugmode .. " profile"
+            profile = profile or require("profile")
         end
-    end
-
-    if debugmode:match("debug") and os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
-        lldb = require("lldebugger")
-        lldb.start()
     end
 
     utils = require("utils")
@@ -37,11 +51,13 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     local root = uie.column({
-        uie.titlebar({ uie.label("Everest.Olympus"):as("label") }):with({
-            style = { focusedBG = { 0.3, 0.3, 0.3, 0.6 }, unfocusedBG = { 0.4, 0.4, 0.4, 0.3 } }, onDrag = utils.nop
+        uie.titlebar("Everest.Olympus"):with({
+            style = { focusedBG = { 1, 1, 1, 0.25 }, unfocusedBG = { 0.4, 0.4, 0.4, 0.3 } }, onDrag = utils.nop
         }),
 
         uie.group({
+            uie.image(utils.image("header")):as("header"),
+
             uie.window("Debug",
                 uie.column({
                     uie.label():as("info")
@@ -90,16 +106,60 @@ function love.load(args)
     ui.root = root
     main = root._main
 
-    if debugmode:match("profile") then
-        profile = require("profile")
-    end
-
     native.setWindowHitTest(function(win, area)
-        if area.y <= root._titlebar.height then
-            return 1 -- Draggable
+        local border = 8
+        local corner = 12
+
+        local x = area.x
+        local y = area.y
+
+        local w, h = love.window.getMode()
+
+        if y < border then
+            if x < border then
+                return 2
+            end
+            if w - corner <= x then
+                return 4
+            end
+            return 3
+        end
+
+        if h - border <= y then
+            if x < border then
+                return 8
+            end
+            if w - corner < x then
+                return 6
+            end
+            return 7
+        end
+
+        if x < border then
+            return 9
+        end
+
+        if w - border <= x then
+            return 5
+        end
+
+        if y < root._titlebar.height then
+            return 1
         end
 
         return 0
+    end)
+
+    -- Shamelessly based off of how FNA force-repaints the window on resize.
+    native.setEventFilter(function(userdata, event)
+        if event[0].type == 0x200 then
+            if event[0].window.event == 3 then
+                _love_runStep()
+                love.graphics = nil -- Don't redraw, we've already redrawn.
+                return 1
+            end
+        end
+        return 1
     end)
 
     local windowStatus = native.prepareWindow()
@@ -111,7 +171,11 @@ function love.load(args)
 end
 
 love.frame = 0
-function love.update()
+function love.update(dt)
+    if not love.graphics then
+        return
+    end
+
     love.frame = love.frame + 1
     
     local root = ui.root
@@ -137,12 +201,16 @@ function love.update()
 
     root.focused = love.window.hasFocus()
     
-    root.width = width
-    root.height = height
+    if root.width ~= width or root.height ~= height then
+        root.width = width
+        root.height = height
 
-    main.width = width
-    main.height = height - root._titlebar.height
+        main.width = width
+        main.height = height - root._titlebar.height
 
+        main:reflow()
+    end
+    
     local mouseX, mouseY = love.mouse.getPosition()
     main._test._inner._info.text =
         "FPS: " .. love.timer.getFPS() .. "\n" ..
@@ -156,7 +224,13 @@ function love.update()
 end
 
 function love.draw()
+    if love.frame == 0 then
+        return
+    end
+
     ui.draw()
+
+    love.timer = nil
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
