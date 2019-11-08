@@ -295,7 +295,7 @@ function native.prepareWindow()
                 verMaj = 5
             end
 
-            if verMaj >= 10 then
+            if verMaj >= 10 and false then -- Dragging the window lags no matter the accentState on some machines.
                 -- Windows 10+
                 status.transparent = true
 
@@ -315,8 +315,8 @@ function native.prepareWindow()
             elseif verMaj >= 5 then
                 -- Windows Vista+
 
-                if verMaj == 8 or (verMaj == 6 and verMin >= 2) then
-                    -- Windows 8 lacks Aero.
+                if verMaj >= 8 or (verMaj == 6 and verMin >= 2) then
+                    -- Windows 8+ lacks Aero.
                     status.transparent = false
                 else
                     status.transparent = true

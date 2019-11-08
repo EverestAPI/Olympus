@@ -32,18 +32,18 @@ uie.add("panel", {
 
         local forceWidth
         if self.__autoWidth ~= manualWidth then
-            forceWidth = manualWidth
+            forceWidth = manualWidth or -1
             self.forceWidth = forceWidth
         else
-            forceWidth = self.forceWidth
+            forceWidth = self.forceWidth or -1
         end
 
         local forceHeight
         if self.__autoHeight ~= manualHeight then
-            forceHeight = manualHeight
+            forceHeight = manualHeight or -1
             self.forceHeight = forceHeight
         else
-            forceHeight = self.forceHeight
+            forceHeight = self.forceHeight or -1
         end
 
         width = forceWidth >= 0 and forceWidth or width or -1
@@ -124,7 +124,7 @@ uie.add("panel", {
         love.graphics.rectangle("line", x, y, w, h, radius, radius)
 
         local sX, sY, sW, sH
-        local clip = self.clip
+        local clip = false -- self.clip -- FIXME: CLIPPING!
         if clip then
             sX, sY, sW, sH = love.graphics.getScissor()
             local scissorX, scissorY = love.graphics.transformPoint(x, y)
@@ -147,6 +147,8 @@ uie.add("panel", {
 -- Panel which doesn't display as one by default.
 uie.add("group", {
     base = "panel",
+
+    cachePadding = 0,
 
     style = {
         bg = { 0, 0, 0 , 0 },

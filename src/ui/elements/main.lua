@@ -285,8 +285,15 @@ uie.__default = {
         if not canvas then
             canvas = self.__cachedCanvas
 
-            local width = self.width + padding * 2
-            local height = self.height + padding * 2
+            local width = self.width
+            local height = self.height
+
+            if width <= 0 or height <= 0 then
+                return
+            end
+
+            width = width + padding * 2
+            height = height + padding * 2
 
             if canvas then
                 if width ~= canvas:getWidth() or height ~= canvas:getHeight() then
