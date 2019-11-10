@@ -196,6 +196,10 @@ uie.add("listItem", {
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0 },
 
+        pressedBG = { 0.1, 0.26, 0.47, 1 },
+        pressedFG = { 1, 1, 1, 1 },
+        pressedBorder = { 0, 0, 0, 0 },
+
         selectedBG = { 0.1, 0.3, 0.5, 1 },
         selectedFG = { 1, 1, 1, 1 },
         selectedBorder = { 0, 0, 0, 0 },
@@ -278,7 +282,11 @@ uie.add("listItem", {
             bg = style.disabledBG
             fg = style.disabledFG
             border = style.disabledBorder
-        elseif self.selected or self.pressed then
+        elseif self.pressed then
+            bg = style.pressedBG
+            fg = style.pressedFG
+            border = style.pressedBorder
+        elseif self.selected then
             bg = style.selectedBG
             fg = style.selectedFG
             border = style.selectedBorder
