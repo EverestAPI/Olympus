@@ -2,7 +2,7 @@ local ui = require("ui.main")
 local uie = require("ui.elements.main")
 require("ui.elements.basic")
 require("ui.elements.layout")
-require("ui.elements.form")
+require("ui.elements.input")
 
 -- Basic window.
 uie.add("window", {
@@ -47,8 +47,8 @@ uie.add("window", {
         local y = self.y
         local width = self.width
         local height = self.height
-        local parentWidth = parent.width
-        local parentHeight = parent.height
+        local parentWidth = parent.innerWidth
+        local parentHeight = parent.innerHeight
         
         local max
         max = x + width
@@ -180,8 +180,9 @@ uie.add("titlebar", {
     end,
 
     layoutLate = function(self)
-        local parent = self.parent
-        self.width = parent.width - parent.style.padding * 2
+        local width = self.parent.innerWidth
+        self.width = width
+        self.innerWidth = width - self.style.padding * 2
         uie.__row.layoutLate(self)
     end,
 

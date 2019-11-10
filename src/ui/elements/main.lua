@@ -75,6 +75,14 @@ uie.__default = {
         return uie.__default.__screenPos(self, "y")
     end,
 
+    getInnerWidth = function(self)
+        return self.width
+    end,
+
+    getInnerHeight = function(self)
+        return self.height
+    end,
+
     contains = function(self, mx, my)
         local ex = self.screenX
         local ey = self.screenY
@@ -207,7 +215,6 @@ uie.__default = {
 
         self:layoutChildren()
         self:recalc()
-        self:layoutLateChildren()
 
         return true
     end,
@@ -224,6 +231,7 @@ uie.__default = {
     end,
 
     layoutLate = function(self)
+        self:layoutLateChildren()
     end,
 
     layoutLateChildren = function(self)

@@ -1,5 +1,6 @@
 local ui = require("ui.main")
 local uie = require("ui.elements.main")
+local uiu = require("ui.utils")
 
 
 -- Basic panel with children elements.
@@ -86,6 +87,9 @@ uie.add("panel", {
             height = self.maxHeight
         end
 
+        self.innerWidth = width
+        self.innerHeight = height
+
         width = width + self.style.padding * 2
         height = height + self.style.padding * 2
 
@@ -120,8 +124,6 @@ uie.add("panel", {
         local radius = self.style.radius
         love.graphics.setColor(self.style.bg)
         love.graphics.rectangle("fill", x, y, w, h, radius, radius)
-        love.graphics.setColor(self.style.border)
-        love.graphics.rectangle("line", x, y, w, h, radius, radius)
 
         local sX, sY, sW, sH
         local clip = false -- self.clip -- FIXME: CLIPPING!
@@ -140,6 +142,9 @@ uie.add("panel", {
         if clip then
             love.graphics.setScissor(sX, sY, sW, sH)
         end
+
+        love.graphics.setColor(self.style.border)
+        love.graphics.rectangle("line", x, y, w, h, radius, radius)
     end
 })
 
@@ -226,15 +231,19 @@ uie.add("image", {
     transform = nil,
 
     init = function(self, image)
-        self.image = image
+        if type(image) == "string" then
+            self.id = image
+            image = uiu.image(image)
+        end
+        self._image = image
     end,
 
     calcWidth = function(self)
-        return self.image:getWidth()
+        return self._image:getWidth()
     end,
 
     calcHeight = function(self)
-        return self.image:getHeight()
+        return self._image:getHeight()
     end,
 
     draw = function(self)
@@ -244,17 +253,17 @@ uie.add("image", {
         local quad = self.quad
         if quad then
             if transform then
-                love.graphics.draw(self.image, quad, transform)
+                love.graphics.draw(self._image, quad, transform)
             else
-                love.graphics.draw(self.image, quad, self.screenX, self.screenY)
+                love.graphics.draw(self._image, quad, self.screenX, self.screenY)
             end
 
         else
             if transform then
-                love.graphics.draw(self.image, transform)
+                love.graphics.draw(self._image, transform)
 
             else
-                love.graphics.draw(self.image, self.screenX, self.screenY)
+                love.graphics.draw(self._image, self.screenX, self.screenY)
             end
         end
     end

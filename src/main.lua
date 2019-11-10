@@ -10,6 +10,8 @@ local main
 
 local mousePresses = 0
 
+-- Needed to avoid running the same frame twice on resize
+-- and to avoid Löve2D's default sleep throttle.
 local _love_timer = love.timer
 local _love_graphics = love.graphics
 local _love_run = love.run
@@ -20,9 +22,10 @@ function love.run()
     local function step()
         love.timer = _love_timer
         love.graphics = _love_graphics
-        orig()
+        local rv = orig()
         love.timer = _love_timer
         love.graphics = _love_graphics
+        return rv
     end
 
     _love_runStep = step
@@ -42,7 +45,7 @@ function love.load(args)
         end
     end
 
-    utils = require("utils")
+    utils = require("ui.utils")
     native = require("native")
 
     love.graphics.setFont(love.graphics.newFont(16))
@@ -56,7 +59,7 @@ function love.load(args)
         }),
 
         uie.group({
-            uie.image(utils.image("header")):as("header"),
+            uie.image("header"),
 
             uie.window("Debug",
                 uie.column({
@@ -96,7 +99,14 @@ function love.load(args)
 
                     uie.button("Disabled"):with({ enabled = false }),
 
-                    uie.button("Useless")
+                    uie.button("Useless"),
+
+                    uie.label("Select an item from the list below."):as("selected"),
+                    uie.list(utils.map(utils.listRange(1, 3), function(i)
+                        return { text = string.format("Item %i!", i), data = i }
+                    end), function(list, item)
+                        list.parent._selected.text = "Selected " .. tostring(item)
+                    end)
 
                 })
             ):with({ x = 200, y = 50 }):as("test"),
@@ -231,6 +241,12 @@ function love.draw()
     ui.draw()
 
     love.timer = nil
+end
+
+function love.keypressed(key, scancode, isrepeat)
+    if key == "escape" then
+        love.event.quit()
+    end
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)

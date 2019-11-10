@@ -1,5 +1,6 @@
 local ui = require("ui.main")
 local uie = require("ui.elements.main")
+local uiu = require("ui.utils")
 require("ui.elements.basic")
 require("ui.elements.layout")
 
@@ -68,7 +69,7 @@ uie.add("scrollbox", {
         elseif innerWidth < x + boxWidth then
             x = innerWidth - boxWidth
         end
-        inner.x = math.round(-x)
+        inner.x = uiu.round(-x)
 
         local y = -inner.y
         local boxHeight = self.height
@@ -79,7 +80,7 @@ uie.add("scrollbox", {
         elseif innerHeight < y + boxHeight then
             y = innerHeight - boxHeight
         end
-        inner.y = math.round(-y)
+        inner.y = uiu.round(-y)
 
         self:reflow()
         self._handleX:repaint()
