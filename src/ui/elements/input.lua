@@ -31,8 +31,11 @@ uie.add("button", {
         fadeDuration = 0.2
     },
 
-    init = function(self, text, cb)
-        uie.__row.init(self, { uie.label(text):as("label") })
+    init = function(self, label, cb)
+        if not label or not label.__ui then
+            label = uie.label(label)
+        end
+        uie.__row.init(self, { label:as("label") })
         self.cb = cb
         self.enabled = true
         self.style.bg = {}

@@ -226,7 +226,10 @@ uie.add("label", {
 uie.add("image", {
     cacheable = false,
 
-    color = { 1, 1, 1, 1 },
+    style = {
+        color = { 1, 1, 1, 1 }
+    },
+
     quad = nil,
     transform = nil,
 
@@ -247,7 +250,7 @@ uie.add("image", {
     end,
 
     draw = function(self)
-        love.graphics.setColor(self.color)
+        love.graphics.setColor(self.style.color)
 
         local transform = self.transform
         local quad = self.quad

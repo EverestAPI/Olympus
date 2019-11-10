@@ -96,7 +96,7 @@ uie.add("window", {
 uie.add("titlebar", {
     base = "row",
 
-    interactive = true,
+    interactive = 1,
     cacheable = false, -- TODO: Fix issue with width in cached mode!
 
     id = "titlebar",
@@ -114,11 +114,14 @@ uie.add("titlebar", {
         fadeDuration = 0.3
     },
 
-    init = function(self, title)
-        uie.__row.init(self, {
-            uie.label(title):as("label"),
-            uie.button("X"):as("close")
-        })
+    init = function(self, title, closeable)
+        local children = {
+            uie.label(title):as("label")
+        }
+        if closeable then
+            table.insert(children, uie.buttonClose())
+        end
+        uie.__row.init(self, children)
         self.style.bg = {}
     end,
 
@@ -210,6 +213,34 @@ uie.add("titlebar", {
         parent.x = parent.x + dx
         parent.y = parent.y + dy
         parent:reflow()
+    end
+})
+
+uie.add("buttonClose", {
+    base = "button",
+    id = "close",
+
+    interactive = 1,
+
+    style = {
+        padding = 6,
+        normalBG = { 0.9, 0.1, 0.2, 1 },
+        hoveredBG = { 0.85, 0.25, 0.25, 1 },
+        pressedBG = { 0.6, 0.08, 0.14, 1 }
+    },
+
+    init = function(self)
+       uie.__button.init(self, uie.image("ui/close"))
+    end,
+
+    layoutLateLazy = function(self)
+        -- Always reflow this child whenever its parent gets reflowed.
+        self:layoutLate()
+    end,
+
+    layoutLate = function(self)
+        local parent = self.parent
+        self.realX = parent.width - parent.style.padding - self.width
     end
 })
 

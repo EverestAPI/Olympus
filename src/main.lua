@@ -54,7 +54,7 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     local root = uie.column({
-        uie.titlebar("Everest.Olympus"):with({
+        uie.titlebar("Everest.Olympus", true):with({
             style = { focusedBG = { 0.4, 0.4, 0.4, 0.25 }, unfocusedBG = { 0.2, 0.2, 0.2, 0.3 } }, onDrag = utils.nop
         }),
 
@@ -116,12 +116,20 @@ function love.load(args)
     ui.root = root
     main = root._main
 
+    function root._titlebar._close:cb()
+        love.event.quit()
+    end
+
     native.setWindowHitTest(function(win, area)
         local border = 8
         local corner = 12
 
         local x = area.x
         local y = area.y
+
+        if root._titlebar._close:contains(x, y) then
+            return 0
+        end
 
         local w, h = love.window.getMode()
 
@@ -211,7 +219,7 @@ function love.update(dt)
 
     root.focused = love.window.hasFocus()
     
-    if root.width ~= width or root.height ~= height then
+    if main.width ~= width or main.height ~= height - root._titlebar.height then
         root.width = width
         root.height = height
 
