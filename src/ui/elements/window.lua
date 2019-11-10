@@ -119,6 +119,7 @@ uie.add("titlebar", {
             uie.label(title):as("label"),
             uie.button("X"):as("close")
         })
+        self.style.bg = {}
     end,
 
     update = function(self)
@@ -174,9 +175,15 @@ uie.add("titlebar", {
         labelStyle.color = fg
     end,
 
-    layout = function(self)
-        uie.__row.layout(self)
+    layoutLazy = function(self)
+        -- Required to allow the container to shrink again.
+        uie.__row.layoutLazy(self)
         self.width = 0
+    end,
+
+    layoutLateLazy = function(self)
+        -- Always reflow this child whenever its parent gets reflowed.
+        self:layoutLate()
     end,
 
     layoutLate = function(self)

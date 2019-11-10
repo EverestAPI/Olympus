@@ -109,7 +109,7 @@ uie.add("panel", {
         for i = 1, #children do
             local c = children[i]
             c.parent = self
-            c:layout()
+            c:layoutLazy()
             c.realX = c.x + padding
             c.realY = c.y + padding
         end

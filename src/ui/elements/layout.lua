@@ -35,7 +35,7 @@ uie.add("column", {
         for i = 1, #children do
             local c = children[i]
             c.parent = self
-            c:layout()
+            c:layoutLazy()
             y = y + c.y
             c.realX = c.x + padding
             c.realY = y
@@ -77,7 +77,7 @@ uie.add("row", {
         for i = 1, #children do
             local c = children[i]
             c.parent = self
-            c:layout()
+            c:layoutLazy()
             x = x + c.x
             c.realX = x
             c.realY = c.y + padding

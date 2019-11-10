@@ -154,9 +154,15 @@ uie.add("list", {
         self.enabled = true
     end,
 
-    layout = function(self)
-        uie.__column.layout(self)
+    layoutLazy = function(self)
+        -- Required to allow the container to shrink again.
+        uie.__column.layoutLazy(self)
         self.width = 0
+    end,
+
+    layoutLateLazy = function(self)
+        -- Always reflow this child whenever its parent gets reflowed.
+        self:layoutLate()
     end,
 
     layoutLate = function(self)
@@ -206,9 +212,15 @@ uie.add("listItem", {
         self._label.style.color = {}
     end,
 
-    layout = function(self)
-        uie.__row.layout(self)
+    layoutLazy = function(self)
+        -- Required to allow the container to shrink again.
+        uie.__row.layoutLazy(self)
         self.width = 0
+    end,
+
+    layoutLateLazy = function(self)
+        -- Always reflow this child whenever its parent gets reflowed.
+        self:layoutLate()
     end,
 
     layoutLate = function(self)

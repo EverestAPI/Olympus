@@ -10,6 +10,7 @@ uie.__default = {
     width = 0,
     height = 0,
     reflowing = true,
+    reflowingLate = true,
 
     interactive = 0,
 
@@ -163,6 +164,7 @@ uie.__default = {
         local el = self
         while el ~= nil do
             el.reflowing = true
+            el.reflowingLate = true
             el.cachedCanvas = nil
             el = el.parent
         end
@@ -207,16 +209,20 @@ uie.__default = {
         end
     end,
 
-    layout = function(self)
+    layoutLazy = function(self)        
         if not self.reflowing then
             return false
         end
         self.reflowing = false
 
-        self:layoutChildren()
-        self:recalc()
+        self:layout()
 
         return true
+    end,
+
+    layout = function(self)
+        self:layoutChildren()
+        self:recalc()
     end,
 
     layoutChildren = function(self)
@@ -225,9 +231,20 @@ uie.__default = {
             for i = 1, #children do
                 local c = children[i]
                 c.parent = self
-                c:layout()
+                c:layoutLazy()
             end
         end
+    end,
+
+    layoutLateLazy = function(self)
+        if not self.reflowingLate then
+            return false
+        end
+        self.reflowingLate = false
+
+        self:layoutLate()
+
+        return true
     end,
 
     layoutLate = function(self)
@@ -239,7 +256,8 @@ uie.__default = {
         if children then
             for i = 1, #children do
                 local c = children[i]
-                c:layoutLate()
+                c.parent = self
+                c:layoutLateLazy()
             end
         end
     end,

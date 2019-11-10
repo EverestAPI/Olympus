@@ -11,8 +11,8 @@ function ui.update()
     ui.delta = love.timer.getDelta()
 
     root:update()
-    root:layout()
-    root:layoutLate()
+    root:layoutLazy()
+    root:layoutLateLazy()
 
 end
 
