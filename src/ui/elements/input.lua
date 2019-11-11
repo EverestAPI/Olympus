@@ -7,24 +7,25 @@ require("ui.elements.layout")
 -- Basic button, behaving like a row with a label.
 uie.add("button", {
     base = "row",
+    cacheable = false,
 
     style = {
         padding = 8,
-        spacing = 8,
+        spacing = 4,
 
-        normalBG = { 0.22, 0.22, 0.22, 1 },
+        normalBG = { 0.1, 0.1, 0.1, 0.6 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0 },
 
-        disabledBG = { 0.14, 0.14, 0.14, 1 },
-        disabledFG = { 0.7, 0.7, 0.7, 1 },
+        disabledBG = { 0.05, 0.05, 0.05, 0.7 },
+        disabledFG = { 0.7, 0.7, 0.7, 0.7 },
         disabledBorder = { 0, 0, 0, 0 },
 
-        hoveredBG = { 0.26, 0.26, 0.26, 1 },
+        hoveredBG = { 0.36, 0.36, 0.36, 0.7 },
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0 },
 
-        pressedBG = { 0.17, 0.17, 0.17, 1 },
+        pressedBG = { 0.17, 0.17, 0.17, 0.7 },
         pressedFG = { 1, 1, 1, 1 },
         pressedBorder = { 0, 0, 0, 0 },
 
@@ -147,7 +148,7 @@ uie.add("list", {
 
     style = {
         padding = 0,
-        spacing = 2,
+        spacing = 1,
         -- border = { 0.3, 0.3, 0.3, 1 }
     },
 
@@ -178,29 +179,30 @@ uie.add("list", {
 
 uie.add("listItem", {
     base = "row",
+    cacheable = false,
 
     style = {
-        padding = 8,
-        spacing = 8,
+        padding = 4,
+        spacing = 4,
         radius = 0,
         
-        normalBG = { 0.16, 0.16, 0.16, 1 },
+        normalBG = { 0.1, 0.1, 0.1, 0.6 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0 },
 
-        disabledBG = { 0.10, 0.10, 0.10, 1 },
-        disabledFG = { 0.7, 0.7, 0.7, 1 },
+        disabledBG = { 0.05, 0.05, 0.05, 1 },
+        disabledFG = { 0.7, 0.7, 0.7, 0.7 },
         disabledBorder = { 0, 0, 0, 0 },
 
-        hoveredBG = { 0.26, 0.26, 0.26, 1 },
+        hoveredBG = { 0.36, 0.36, 0.36, 0.7 },
         hoveredFG = { 1, 1, 1, 1 },
         hoveredBorder = { 0, 0, 0, 0 },
 
-        pressedBG = { 0.1, 0.26, 0.47, 1 },
+        pressedBG = { 0.1, 0.3, 0.6, 0.7 },
         pressedFG = { 1, 1, 1, 1 },
         pressedBorder = { 0, 0, 0, 0 },
 
-        selectedBG = { 0.1, 0.3, 0.5, 1 },
+        selectedBG = { 0.2, 0.5, 0.7, 0.7 },
         selectedFG = { 1, 1, 1, 1 },
         selectedBorder = { 0, 0, 0, 0 },
 

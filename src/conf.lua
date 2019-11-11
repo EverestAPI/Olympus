@@ -1,6 +1,6 @@
 function love.conf(t)
-    t.window.width = 800
-    t.window.height = 600
+    t.window.width = 540
+    t.window.height = 700
     t.window.borderless = true
     t.window.resizable = true -- true causes a flickering border to appear on some machines
     t.window.vsync = 0

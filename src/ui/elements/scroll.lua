@@ -27,21 +27,25 @@ uie.add("scrollbox", {
         self.__dy = 0
     end,
 
+    calcSize = function(self, width, height)
+
+    end,
+
     update = function(self)
         uie.__group.update(self)
 
         local dx = self.__dx
         local dy = self.__dy
         if dx ~= 0 or dy ~= 0 then
-            dx = dx * 0.45
-            dy = dy * 0.45
+            dx = dx * 0.475
+            dy = dy * 0.475
 
             self:onScroll(nil, nil, dx, dy, true)
 
-            if math.abs(dx) < 0.01 then
+            if math.abs(dx) < 0.001 then
                 dx = 0
             end
-            if math.abs(dy) < 0.01 then
+            if math.abs(dy) < 0.001 then
                 dy = 0
             end
 
@@ -54,8 +58,8 @@ uie.add("scrollbox", {
         local inner = self._inner
 
         if not raw then
-            dx = dx * -16
-            dy = dy * -16
+            dx = dx * -32
+            dy = dy * -32
             self.__dx = self.__dx + dx
             self.__dy = self.__dy + dy
         end
@@ -91,6 +95,7 @@ uie.add("scrollbox", {
 
 -- Shared scroll bar handle code.
 uie.add("scrollhandle", {
+    cacheable = false,
     interactive = 1,
 
     style = {
@@ -100,14 +105,14 @@ uie.add("scrollhandle", {
         thickness = 6,
         radius = 3,
 
-        normalColor = { 0.26, 0.26, 0.26, 0.5 },
-        normalBorder = { 0.26, 0.26, 0.26, 1 },
+        normalColor = { 0.5, 0.5, 0.5, 0.6 },
+        normalBorder = { 0.5, 0.5, 0.5, 1 },
 
-        hoveredColor = { 0.22, 0.22, 0.22, 1 },
-        hoveredBorder = { 0.22, 0.22, 0.22, 0.5 },
+        hoveredColor = { 0.6, 0.6, 0.6, 1 },
+        hoveredBorder = { 0.6, 0.6, 0.6, 0.7 },
 
-        pressedColor = { 0.17, 0.17, 0.17, 1 },
-        pressedBorder = { 0.17, 0.17, 0.17, 0.5 },
+        pressedColor = { 0.55, 0.55, 0.55, 1 },
+        pressedBorder = { 0.55, 0.55, 0.55, 0.7 },
 
         fadeDuration = 0.2
     },
@@ -245,10 +250,17 @@ uie.add("scrollhandleX", {
 
         size = math.max(1, tail - pos)
 
-        self.isNeeded = size + 1 < innerSize
-        self.realX = pos
-        self.realY = box.height - thickness - 1
-        self.width = size
+        if size + 1 < innerSize then
+            self.isNeeded = true
+            self.realX = math.round(pos)
+            self.realY = box.height - thickness - 1
+            self.width = math.round(size)
+        else
+            self.isNeeded = false
+            self.realX = 0
+            self.realY = 0
+            self.width = 0
+        end
     end,
 
     onDrag = function(self, x, y, dx, dy)
@@ -293,10 +305,17 @@ uie.add("scrollhandleY", {
 
         size = math.max(1, tail - pos)
         
-        self.isNeeded = size + 1 < innerSize
-        self.realX = box.width - thickness - 1
-        self.realY = pos
-        self.height = size
+        if size + 1 < innerSize then
+            self.isNeeded = true
+            self.realX = box.width - thickness - 1
+            self.realY = math.round(pos)
+            self.height = math.round(size)
+        else
+            self.isNeeded = false
+            self.realX = 0
+            self.realY = 0
+            self.height = 0
+        end
     end,
 
     onDrag = function(self, x, y, dx, dy)

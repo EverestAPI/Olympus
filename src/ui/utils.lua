@@ -82,7 +82,7 @@ function uiu.magic(fn, ...)
         end
 
         for i = ii, #input do
-            table.insert(args, input[ii])
+            table.insert(args, input[i])
         end
 
         return fn(table.unpack(args))

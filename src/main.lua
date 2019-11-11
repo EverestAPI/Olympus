@@ -54,19 +54,98 @@ function love.load(args)
     uie = require("ui.elements.all")
 
     local root = uie.column({
+        uie.group({
+            uie.image("background"):as("bg"):run(function(bg)
+                local transform = love.math.newTransform()
+                transform:scale(10, 10)
+                bg.transform = transform
+            end)
+        }):with({
+            width = 0,
+            height = 0,
+            clip = false,
+            cacheable = false
+        }),
+
         uie.titlebar("Everest.Olympus", true):with({
             style = { focusedBG = { 0.4, 0.4, 0.4, 0.25 }, unfocusedBG = { 0.2, 0.2, 0.2, 0.3 } }, onDrag = utils.nop
         }),
 
         uie.group({
-            uie.image("header"),
+            uie.column({
+                uie.image("header"),
 
-            uie.window("Debug",
-                uie.column({
-                    uie.label():as("info")
-                })
-            ):with({ x = 10, y = 10 }):as("debug"),
+                uie.label("Step 1: Select Celeste.exe"),
+                uie.row({
+                    uie.label("<TODO: TEXT INPUT>"),
+                    uie.button("...")
+                }):with({ style = { padding = 0, bg = {} }}),
+                uie.label("Celeste <version> + Everest <version>"),
 
+                uie.label("Step 2: Select Everest Version"),
+                uie.scrollbox(
+                    uie.list(
+                        utils.map(utils.listRange(100, 1, -1), function(i)
+                            return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
+                        end)
+                    )
+                ):with({
+                    height = 300,
+                    layoutLazy = function(self)
+                        -- Required to allow the container to shrink again.
+                        uie.__scrollbox.layoutLazy(self)
+                        self.width = 0
+                    end,
+                
+                    layoutLateLazy = function(self)
+                        -- Always reflow this child whenever its parent gets reflowed.
+                        self:layoutLate()
+                    end,
+                
+                    layoutLate = function(self)
+                        local width = self.parent.innerWidth
+                        self.width = width
+                        self.innerWidth = width - self.style.padding * 2
+                        uie.__row.layoutLate(self)
+                    end,
+                }),
+
+                uie.row({
+                    uie.button("Step 3: Install"),
+                    uie.button("Uninstall"),
+                    uie.button("???", utils.magic(print, "pressed"))
+                }):with({ style = { padding = 0, bg = {} }})
+
+            }):with({
+                style = {
+                    padding = 32,
+                    bg = {}
+                },
+
+                clip = false,
+
+                layoutLazy = function(self)
+                    -- Required to allow the container to shrink again.
+                    uie.__scrollbox.layoutLazy(self)
+                    self.width = 0
+                end,
+            
+                layoutLateLazy = function(self)
+                    -- Always reflow this child whenever its parent gets reflowed.
+                    self:layoutLate()
+                end,
+            
+                layoutLate = function(self)
+                    local width = self.parent.innerWidth
+                    self.width = width
+                    self.innerWidth = width - self.style.padding * 2
+                    uie.__row.layoutLate(self)
+                end,
+            }):as("installer"),
+
+            uie.label():as("debug"),
+
+            --[[
             uie.window("Windowception",
                 uie.scrollbox(
                     uie.group({
@@ -110,6 +189,7 @@ function love.load(args)
 
                 })
             ):with({ x = 200, y = 50 }):as("test"),
+            --]]
 
         }):with({ clip = true }):as("main")
     }):with({ style = { bg = { 0, 0, 0, 0 }, padding = 0, spacing = 0, radius = 0 } }):as("root")
@@ -131,34 +211,36 @@ function love.load(args)
             return 0
         end
 
-        local w, h = love.window.getMode()
+        local w, h, flags = love.window.getMode()
 
-        if y < border then
+        if flags.resizable then
+            if y < border then
+                if x < border then
+                    return 2
+                end
+                if w - corner <= x then
+                    return 4
+                end
+                return 3
+            end
+
+            if h - border <= y then
+                if x < border then
+                    return 8
+                end
+                if w - corner < x then
+                    return 6
+                end
+                return 7
+            end
+
             if x < border then
-                return 2
+                return 9
             end
-            if w - corner <= x then
-                return 4
-            end
-            return 3
-        end
 
-        if h - border <= y then
-            if x < border then
-                return 8
+            if w - border <= x then
+                return 5
             end
-            if w - corner < x then
-                return 6
-            end
-            return 7
-        end
-
-        if x < border then
-            return 9
-        end
-
-        if w - border <= x then
-            return 5
         end
 
         if y < root._titlebar.height then
@@ -181,11 +263,14 @@ function love.load(args)
     end)
 
     local windowStatus = native.prepareWindow()
+    --[[
     if windowStatus.transparent then
         love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.87)
     else
         love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
     end
+    ]]--
+    love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
 end
 
 love.frame = 0
@@ -199,19 +284,22 @@ function love.update(dt)
     local root = ui.root
     local main = main
 
+    local mouseX, mouseY = love.mouse.getPosition()
+
     if profile then
         if love.frame % 100 == 0 then
-            main._debug._inner._info.text = profile.report(10)
+            main._debug.text = profile.report(10)
             profile.reset()
         end
 
         profile.start()
     else
-        main._debug._inner._info.text =
+        main._debug.text =
             "FPS: " .. love.timer.getFPS() .. "\n" ..
             "hovering: " .. tostring(ui.hovering) .. "\n" ..
             "dragging: " .. tostring(ui.dragging) .. "\n" ..
-            "focusing: " .. tostring(ui.focusing)
+            "focusing: " .. tostring(ui.focusing) .. "\n" ..
+            "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
     end
 
     local width = love.graphics.getWidth()
@@ -226,13 +314,16 @@ function love.update(dt)
         main.width = width
         main.height = height - root._titlebar.height
 
+        root._titlebar:reflow()
         main:reflow()
+        main._installer:reflow()
     end
     
-    local mouseX, mouseY = love.mouse.getPosition()
-    main._test._inner._info.text =
-        "FPS: " .. love.timer.getFPS() .. "\n" ..
-        "Mouse: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
+    if main._test then
+        main._test.text =
+            "FPS: " .. love.timer.getFPS() .. "\n" ..
+            "Mouse: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
+    end
 
     ui.update()
 
@@ -258,6 +349,7 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
+    ui.mousemoving = false
     ui.mousemoved(x, y, dx, dy)
 end
 

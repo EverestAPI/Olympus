@@ -11,6 +11,7 @@ uie.__default = {
     height = 0,
     reflowing = true,
     reflowingLate = true,
+    visible = true,
 
     interactive = 0,
 
@@ -20,6 +21,9 @@ uie.__default = {
     cacheable = true,
     cachedCanvas = nil,
     cachePadding = 4,
+    __cacheSkip = 0,
+    __cachedWidth = 0,
+    __cachedHeight = 0,
 
     getPath = function(self)
         local id = self.id
@@ -33,23 +37,6 @@ uie.__default = {
         end
 
         return id
-    end,
-
-    __screenPos = function(self, axis)
-        local AXIS = axis:upper()
-        local pos = 0
-        local el = self
-        while el ~= nil do
-            pos = pos + el["real" .. AXIS]
-            el = el.parent
-            if el ~= nil then
-                local padding = el["padding" .. AXIS] or el.padding
-                if padding then
-                    pos = pos + padding
-                end
-            end
-        end
-        return pos
     end,
 
     getRealX = function(self)
@@ -69,11 +56,35 @@ uie.__default = {
     end,
 
     getScreenX = function(self)
-        return uie.__default.__screenPos(self, "x")
+        local pos = 0
+        local el = self
+        while el ~= nil do
+            pos = pos + el.realX
+            el = el.parent
+            if el ~= nil then
+                local padding = el.padding
+                if padding then
+                    pos = pos + padding
+                end
+            end
+        end
+        return pos
     end,
 
     getScreenY = function(self)
-        return uie.__default.__screenPos(self, "y")
+        local pos = 0
+        local el = self
+        while el ~= nil do
+            pos = pos + el.realY
+            el = el.parent
+            if el ~= nil then
+                local padding = el.padding
+                if padding then
+                    pos = pos + padding
+                end
+            end
+        end
+        return pos
     end,
 
     getInnerWidth = function(self)
@@ -160,7 +171,7 @@ uie.__default = {
         return rv or self
     end,
 
-    reflow = function(self, recursive)
+    reflow = function(self)
         local el = self
         while el ~= nil do
             el.reflowing = true
@@ -169,31 +180,37 @@ uie.__default = {
             el = el.parent
         end
 
-        if recursive then
-            local children = self.children
-            if children then
-                for i = 1, #children do
-                    local c = children[i]
-                    c:reflow(recursive)
-                end
+        self:repaintDown()
+    end,
+
+    reflowDown = function(self)
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                c.reflowing = true
+                c.reflowingLate = true
+                c.cachedCanvas = nil
+                c:reflowDown()
             end
         end
     end,
 
-    repaint = function(self, recursive)
+    repaint = function(self)
         local el = self
         while el ~= nil do
             el.cachedCanvas = nil
             el = el.parent
         end
+    end,
 
-        if recursive then
-            local children = self.children
-            if children then
-                for i = 1, #children do
-                    local c = children[i]
-                    c:repaint(recursive)
-                end
+    repaintDown = function(self)
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
+                c.cachedCanvas = nil
+                c:repaintDown()
             end
         end
     end,
@@ -294,7 +311,9 @@ uie.__default = {
         if children then
             for i = 1, #children do
                 local c = children[i]
-                c:drawCached()
+                if c.visible then
+                    c:drawCached()
+                end
             end
         end
     end,
@@ -305,33 +324,65 @@ uie.__default = {
             return
         end
 
+        local width = self.width
+        local height = self.height
+
+        if width <= 0 or height <= 0 then
+            return
+        end
+
         local padding = self.cachePadding
+        width = width + padding * 2
+        height = height + padding * 2
+
+        if width ~= self.__cachedWidth or height ~= self.__cachedHeight then
+            local canvas = self.__cachedCanvas
+            if canvas then
+                canvas:release()
+                canvas = nil
+                self.__cachedCanvas = nil
+            end
+
+            print(self, width, height, self.__cachedWidth, self.__cachedHeight)
+            self.__cachedWidth = width
+            self.__cachedHeight = height
+            self.__cacheSkip = 4
+        end
+
+        local cacheSkip = self.__cacheSkip
+        if cacheSkip > 0 then
+            cacheSkip = cacheSkip - 1
+            self.__cacheSkip = cacheSkip
+
+            local sX, sY, sW, sH = love.graphics.getScissor()
+            local scissorX, scissorY = love.graphics.transformPoint(self.screenX, self.screenY)
+            love.graphics.intersectScissor(scissorX - padding, scissorY - padding, width + padding * 2, height + padding * 2)
+
+            self:draw()
+
+            love.graphics.setScissor(sX, sY, sW, sH)
+
+            local el = self
+            while el ~= nil do
+                local elCacheSkip = el.__cacheSkip
+                if elCacheSkip > cacheSkip then
+                    cacheSkip = elCacheSkip
+                end
+                el.__cacheSkip = cacheSkip
+                el = el.parent
+            end
+            return
+        end
 
         local canvas = self.cachedCanvas
         if not canvas then
             canvas = self.__cachedCanvas
 
-            local width = self.width
-            local height = self.height
-
-            if width <= 0 or height <= 0 then
-                return
-            end
-
-            width = width + padding * 2
-            height = height + padding * 2
-
-            if canvas then
-                if width ~= canvas:getWidth() or height ~= canvas:getHeight() then
-                    canvas:release()
-                    canvas = nil
-                end
-            end
-
             if not canvas then
                 canvas = love.graphics.newCanvas(width, height)
                 self.__cachedCanvas = canvas
             end
+            self.cachedCanvas = canvas
 
             local canvasPrev = love.graphics.getCanvas()
             love.graphics.setCanvas(canvas)
@@ -346,7 +397,6 @@ uie.__default = {
             love.graphics.pop()
 
             love.graphics.setCanvas(canvasPrev)
-            self.cachedCanvas = canvas
         end
 
         love.graphics.setColor(1, 1, 1, 1)

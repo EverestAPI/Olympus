@@ -19,7 +19,7 @@ uie.add("panel", {
     end,
 
     style = {
-        bg = { 0.08, 0.08, 0.08, 1 },
+        bg = { 0.08, 0.08, 0.08, 0.2 },
         border = { 0, 0, 0, 0 },
         padding = 8,
         radius = 3
@@ -122,11 +122,14 @@ uie.add("panel", {
         local h = self.height
 
         local radius = self.style.radius
-        love.graphics.setColor(self.style.bg)
-        love.graphics.rectangle("fill", x, y, w, h, radius, radius)
+        local bg = self.style.bg
+        if bg and #bg ~= 0 and bg[4] ~= 0 then
+            love.graphics.setColor(bg)
+            love.graphics.rectangle("fill", x, y, w, h, radius, radius)
+        end
 
         local sX, sY, sW, sH
-        local clip = false -- self.clip -- FIXME: CLIPPING!
+        local clip = self.clip and not self.cachedCanvas
         if clip then
             sX, sY, sW, sH = love.graphics.getScissor()
             local scissorX, scissorY = love.graphics.transformPoint(x, y)
@@ -136,15 +139,20 @@ uie.add("panel", {
         local children = self.children
         for i = 1, #children do
             local c = children[i]
-            c:drawCached()
+            if c.visible then
+                c:drawCached()
+            end
         end
 
         if clip then
             love.graphics.setScissor(sX, sY, sW, sH)
         end
 
-        love.graphics.setColor(self.style.border)
-        love.graphics.rectangle("line", x, y, w, h, radius, radius)
+        local border = self.style.border
+        if border and #border ~= 0 and border[4] ~= 0 then
+            love.graphics.setColor(border)
+            love.graphics.rectangle("line", x, y, w, h, radius, radius)
+        end
     end
 })
 
@@ -156,8 +164,8 @@ uie.add("group", {
     cachePadding = 0,
 
     style = {
-        bg = { 0, 0, 0 , 0 },
-        border = { 0, 0, 0, 0 },
+        bg = {},
+        border = {},
         padding = 0,
         radius = 0
     },
@@ -208,11 +216,11 @@ uie.add("label", {
     end,
 
     calcWidth = function(self)
-        return self._text:getWidth()
+        return math.ceil(self._text:getWidth())
     end,
 
     calcHeight = function(self)
-        return self._text:getHeight()
+        return math.ceil(self._text:getHeight())
     end,
 
     draw = function(self)
@@ -241,12 +249,18 @@ uie.add("image", {
         self._image = image
     end,
 
-    calcWidth = function(self)
-        return self._image:getWidth()
-    end,
+    calcSize = function(self)
+        local image = self._image
+        local width = image:getWidth()
+        local height = image:getHeight()
 
-    calcHeight = function(self)
-        return self._image:getHeight()
+        local transform = self.transform
+        if transform then
+            width, height = transform:transformPoint(width, height)
+        end
+
+        self.width = width
+        self.height = height
     end,
 
     draw = function(self)

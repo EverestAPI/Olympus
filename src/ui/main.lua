@@ -4,10 +4,17 @@ ui.hovering = nil
 ui.dragging = nil
 ui.draggingCounter = 0
 ui.focusing = nil
+ui.mousemoving = false
 
 function ui.update()
     local root = ui.root
-    
+
+    if not ui.mousemoving then
+        local mouseX, mouseY = love.mouse.getPosition()
+        ui.mousemoved(mouseX, mouseY, 0, 0)
+    end
+    ui.mousemoving = false
+
     ui.delta = love.timer.getDelta()
 
     root:update()
@@ -51,6 +58,11 @@ function ui.mousemoved(x, y, dx, dy)
         return
     end
 
+    if ui.mousemoving then
+        return
+    end
+    ui.mousemoving = true
+
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
     ui.hovering = hoveringNext
@@ -64,9 +76,11 @@ function ui.mousemoved(x, y, dx, dy)
         end
     end
 
-    local dragging = ui.dragging
-    if dragging then
-        dragging:onDrag(x, y, dx, dy)
+    if dx ~= 0 or dy ~= 0 then
+        local dragging = ui.dragging
+        if dragging then
+            dragging:onDrag(x, y, dx, dy)
+        end
     end
 end
 

@@ -95,9 +95,8 @@ uie.add("window", {
 
 uie.add("titlebar", {
     base = "row",
-
+    cacheable = false,
     interactive = 1,
-    cacheable = false, -- TODO: Fix issue with width in cached mode!
 
     id = "titlebar",
 
