@@ -3,6 +3,132 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
+uie.add("root", {
+    id = "root",
+    cacheable = false,
+    init = function(self, children)
+        self.children = children or {}
+    end,
+
+    calcSize = function(self)
+        local width = 0
+        local height = 0
+
+        local children = self.children
+        for i = 1, #children do
+            local c = children[i]
+            width = math.max(width, c.x + c.width)
+            height = math.max(height, c.y + c.height)
+        end
+
+        self.innerWidth = width
+        self.innerHeight = height
+        self.width = width
+        self.height = height
+    end,
+
+    layoutLate = function(self)
+        self:layoutLateChildren()
+
+        local all = {}
+
+        local function collectAll(el)
+            local children = el.children
+            if children then
+                for i = 1, #children do
+                    local c = children[i]
+                    table.insert(all, c)
+                    c.visible = false
+                    collectAll(c)
+                end
+            end
+        end
+
+        collectAll(self)
+        self.all = all
+
+        local allI = {}
+
+        local function collectAllI(el, pl, pt, pr, pb, pi)
+            local children = el.children
+            if children then
+                local erl = el.screenX
+                local ert = el.screenY
+                local err = erl + el.width
+                local erb = ert + el.height
+
+                local bl = math.max(erl, pl)
+                local bt = math.max(ert, pt)
+                local br = math.min(err, pr)
+                local bb = math.min(erb, pb)
+
+                for i = 1, #children do
+                    local c = children[i]
+                    if c:intersects(bl, bt, br - bl, bb - bt) then
+                        c.visible = true
+
+                        local interactive = c.interactive
+
+                        if pi and interactive >= 0 then
+                            local insertAt = #allI
+                            collectAllI(c, bl, bt, br, bb, true)
+
+                            if interactive >= 1 then
+                                table.insert(allI, insertAt, c)
+                            end
+
+                        else
+                            collectAllI(c, bl, bt, br, bb, false)
+                        end
+                    end
+                end
+            end
+        end
+        
+        collectAllI(self, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
+        self.allI = allI
+    end,
+
+    getChildAt = function(self, mx, my)
+        local allI = self.allI
+        if allI ~= nil then
+            for i = #allI, 1, -1 do
+                local retc = allI[i]
+
+                local c = retc
+                retc = nil
+                while c ~= nil do
+                    local ex = c.screenX
+                    local ey = c.screenY
+                    local ew = c.width
+                    local eh = c.height
+            
+                    if
+                        mx < ex or ex + ew < mx or
+                        my < ey or ey + eh < my
+                    then
+                        retc = nil
+                        break
+                    end
+
+                    if retc == nil then
+                        retc = c
+                    end
+
+                    c = c.parent
+                end
+
+                if retc ~= nil then
+                    return retc
+                end
+            end
+        end
+
+        return nil
+    end,
+})
+
+
 -- Basic panel with children elements.
 uie.add("panel", {
     init = function(self, children)
@@ -99,10 +225,6 @@ uie.add("panel", {
         self.height = height
     end,
 
-    add = function(self, child)
-        table.insert(self.children, child)
-    end,
-
     layoutChildren = function(self)
         local padding = self.style.padding
         local children = self.children
@@ -110,6 +232,17 @@ uie.add("panel", {
             local c = children[i]
             c.parent = self
             c:layoutLazy()
+            c.realX = c.x + padding
+            c.realY = c.y + padding
+        end
+    end,
+
+    repositionChildren = function(self)
+        local padding = self.style.padding
+        local children = self.children
+        for i = 1, #children do
+            local c = children[i]
+            c.parent = self
             c.realX = c.x + padding
             c.realY = c.y + padding
         end
@@ -128,26 +261,28 @@ uie.add("panel", {
             love.graphics.rectangle("fill", x, y, w, h, radius, radius)
         end
 
-        local sX, sY, sW, sH
-        -- FIXME: SCISSORING MACHINE BROKE
-        local clip = false -- self.clip and not self.cachedCanvas
-        if clip then
-            sX, sY, sW, sH = love.graphics.getScissor()
-            local scissorX, scissorY = love.graphics.transformPoint(x, y)
-            love.graphics.intersectScissor(scissorX - 1, scissorY - 1, w + 2, h + 2)
-        end
+        if w >= 0 and h >= 0 then
+            local sX, sY, sW, sH
+            local clip = self.clip and not self.cachedCanvas
+            if clip then
+                sX, sY, sW, sH = love.graphics.getScissor()
+                local scissorX, scissorY = love.graphics.transformPoint(x, y)
+                love.graphics.intersectScissor(scissorX - 1, scissorY - 1, w + 2, h + 2)
+            end
 
-        local children = self.children
-        for i = 1, #children do
-            local c = children[i]
-            if c.visible then
-                c:drawLazy()
+            local children = self.children
+            for i = 1, #children do
+                local c = children[i]
+                if c.visible then
+                    c:drawLazy()
+                end
+            end
+
+            if clip then
+                love.graphics.setScissor(sX, sY, sW, sH)
             end
         end
 
-        if clip then
-            love.graphics.setScissor(sX, sY, sW, sH)
-        end
 
         local border = self.style.border
         if border and #border ~= 0 and border[4] ~= 0 then

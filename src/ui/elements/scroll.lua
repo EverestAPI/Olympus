@@ -7,7 +7,7 @@ require("ui.elements.layout")
 -- Basic view box.
 uie.add("scrollbox", {
     base = "group",
-    
+    cacheable = false,
     interactive = 2,
 
     init = function(self, inner)
@@ -86,9 +86,13 @@ uie.add("scrollbox", {
         end
         inner.y = uiu.round(-y)
 
-        self:reflow()
+        self:repositionChildren()
+        ui.root:reflow()
         self._handleX:repaint()
+        self._handleX:layoutLate()
         self._handleY:repaint()
+        self._handleY:layoutLate()
+        self:repaint()
     end
 })
 

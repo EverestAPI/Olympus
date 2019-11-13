@@ -49,7 +49,7 @@ uie.add("button", {
 
     setEnabled = function(self, value)
         self.__enabled = value
-        self.interactive = value
+        self.interactive = value and 1 or -1
     end,
 
     getText = function(self)
@@ -145,6 +145,7 @@ uie.add("button", {
 -- Basic list, consisting of multiple list items.
 uie.add("list", {
     base = "column",
+    cacheable = false,
 
     style = {
         padding = 0,
@@ -180,6 +181,7 @@ uie.add("list", {
 uie.add("listItem", {
     base = "row",
     cacheable = false,
+    interactive = 1,
 
     style = {
         padding = 4,

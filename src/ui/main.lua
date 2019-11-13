@@ -42,7 +42,10 @@ function ui.interactiveIterate(el, funcid, ...)
     end
 
     if funcid then
-        el[funcid](el, ...)
+        local func = el[funcid]
+        if func then
+            func(el, ...)
+        end
     end
     
     if el.interactive == 0 then
@@ -69,17 +72,26 @@ function ui.mousemoved(x, y, dx, dy)
     
     if hoveringPrev ~= hoveringNext then
         if hoveringPrev then
-            hoveringPrev:onEnter()
+            local cb = hoveringPrev.onEnter
+            if cb then
+                cb(hoveringPrev)
+            end
         end
         if hoveringNext then
-            hoveringNext:onLeave()
+            local cb = hoveringNext.onLeave
+            if cb then
+                cb(hoveringNext)
+            end
         end
     end
 
     if dx ~= 0 or dy ~= 0 then
         local dragging = ui.dragging
         if dragging then
-            dragging:onDrag(x, y, dx, dy)
+            local cb = dragging.onDrag
+            if cb then
+                cb(dragging, x, y, dx, dy)
+            end
         end
     end
 end

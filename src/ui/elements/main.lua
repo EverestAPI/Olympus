@@ -21,7 +21,6 @@ uie.__default = {
     cacheable = true,
     cachedCanvas = nil,
     cachePadding = 4,
-    __cacheSkip = 0,
     __cachedWidth = 0,
     __cachedHeight = 0,
 
@@ -101,25 +100,26 @@ uie.__default = {
         local ew = self.width
         local eh = self.height
     
-        return
-            ex <= mx and mx <= ex + ew and
-            ey <= my and my <= ey + eh
+        return not (
+            mx < ex or ex + ew < mx or
+            my < ey or ey + eh < my
+        )
     end,
 
     intersects = function(self, mx, my, mw, mh)
-        local selfL = self.screenX
-        local selfR = selfL + self.width
-        local selfT = self.screenY
-        local selfB = selfT + self.height
+        local el = self.screenX
+        local er = el + self.width
+        local et = self.screenY
+        local eb = et + self.height
 
-        local mL = mx
-        local mR = mL + mw
-        local mT = my
-        local mB = mT + mh
+        local ml = mx
+        local mr = ml + mw
+        local mt = my
+        local mb = mt + mh
 
         return not (
-            mR < selfL or selfR < mL or
-            mB < selfT or selfB < mT
+            mr < el or er < ml or
+            mb < et or eb < mt
         )
     end,
 
@@ -362,36 +362,6 @@ uie.__default = {
 
             self.__cachedWidth = width
             self.__cachedHeight = height
-            --self.__cacheSkip = 4
-        end
-
-        local cacheSkip = self.__cacheSkip
-        if cacheSkip > 0 then
-            cacheSkip = cacheSkip - 1
-            self.__cacheSkip = cacheSkip
-
-            local sX, sY, sW, sH = love.graphics.getScissor()
-            local scissorX, scissorY = love.graphics.transformPoint(self.screenX, self.screenY)
-            -- FIXME: SCISSORING MACHINE BROKE
-            --love.graphics.setScissor(scissorX - padding, scissorY - padding, width, height)
-
-            self:draw()
-
-            --love.graphics.setScissor(sX, sY, sW, sH)
-
-            --[[
-            local el = self.parent
-            while el ~= nil do
-                local elCacheSkip = el.__cacheSkip
-                if elCacheSkip > cacheSkip then
-                    cacheSkip = elCacheSkip
-                end
-                el.__cacheSkip = cacheSkip
-                el = el.parent
-            end
-            --]]
-
-            return
         end
 
         local canvas = self.cachedCanvas
@@ -404,16 +374,27 @@ uie.__default = {
             end
             self.cachedCanvas = canvas
 
+            local sX, sY, sW, sH = love.graphics.getScissor()
+
             local canvasPrev = love.graphics.getCanvas()
             love.graphics.setCanvas(canvas)
+            love.graphics.setScissor()
             love.graphics.clear(0, 0, 0, 0)
 
             love.graphics.push()
             love.graphics.origin()
             love.graphics.translate(-self.screenX + padding, -self.screenY + padding)
 
+            if sX then
+                love.graphics.setScissor(sX - self.realX, sY - self.realY, sW + padding, sH + padding)
+            end
+
             self:draw()
 
+            if sX then
+                love.graphics.setScissor(sX, sY, sW, sH)
+            end
+            
             love.graphics.pop()
 
             love.graphics.setCanvas(canvasPrev)
@@ -442,10 +423,10 @@ uie.__default = {
         local ew = self.width
         local eh = self.height
 
-        if not (
-            ex <= mx and mx <= ex + ew and
-            ey <= my and my <= ey + eh
-        ) then
+        if
+            mx < ex or ex + ew < mx or
+            my < ey or ey + eh < my
+        then
             return nil
         end
     
@@ -467,6 +448,7 @@ uie.__default = {
         return self
     end,
 
+    --[[
     onEnter = function(self)
     end,
     onLeave = function(self)
@@ -481,6 +463,7 @@ uie.__default = {
     end,
     onScroll = function(self, x, y, dx, dy)
     end,
+    --]]
 }
 
 -- Shared metatable for all style helper tables.
@@ -600,7 +583,7 @@ local mtEl = {
                 end
 
                 v = base[key]
-                if v then
+                if v ~= nil then
                     return v
                 end
             end
@@ -612,14 +595,14 @@ local mtEl = {
         
         if keyGet then
             v = uie.__default[keyGet]
-            if v then
+            if v ~= nil then
                 propcache[key] = { type = "get", value = v }
                 return v(self)
             end
         end
 
         v = uie.__default[key]
-        if v then
+        if v ~= nil then
             return v
         end
 

@@ -143,7 +143,7 @@ function love.load(args)
                 end,
             }):as("installer"),
 
-            uie.label():as("debug"),
+            uie.label():with({ style = { color = { 0, 0, 0, 1 } } }):as("debug"),
 
             --[[
             uie.window("Windowception",
@@ -193,7 +193,7 @@ function love.load(args)
 
         }):with({ clip = true }):as("main")
     }):with({ style = { bg = { 0, 0, 0, 0 }, padding = 0, spacing = 0, radius = 0 } }):as("root")
-    ui.root = root
+    ui.root = uie.root({ root })
     main = root._main
 
     function root._titlebar._close:cb()
@@ -281,7 +281,7 @@ function love.update(dt)
 
     love.frame = love.frame + 1
     
-    local root = ui.root
+    local root = ui.root._root
     local main = main
 
     local mouseX, mouseY = love.mouse.getPosition()
@@ -337,7 +337,11 @@ function love.draw()
         return
     end
 
+    -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+
     ui.draw()
+
+    -- love.graphics.setScissor()
 
     love.timer = nil
 end
