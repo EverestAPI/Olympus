@@ -8,6 +8,9 @@ ui.mousemoving = false
 
 function ui.update()
     local root = ui.root
+    if not root then
+        return
+    end
 
     if not ui.mousemoving then
         local mouseX, mouseY = love.mouse.getPosition()
@@ -17,7 +20,20 @@ function ui.update()
 
     ui.delta = love.timer.getDelta()
 
-    root:update()
+    local all = root.all
+    if not all then
+        root:collect(true)
+        all = root.all
+    end
+
+    for i = 1, #all do
+        local c = all[i]
+        local cb = c.update
+        if cb then
+            cb(c)
+        end
+    end
+
     root:layoutLazy()
     root:layoutLateLazy()
 

@@ -36,8 +36,6 @@ uie.add("window", {
     end,
 
     update = function(self)
-        uie.__column.update(self)
-
         local parent = self.parent
         if not parent then
             return
@@ -125,8 +123,6 @@ uie.add("titlebar", {
     end,
 
     update = function(self)
-        uie.__row.update(self)
-
         local style = self.style
         local label = self._label
         local labelStyle = label.style

@@ -32,8 +32,6 @@ uie.add("scrollbox", {
     end,
 
     update = function(self)
-        uie.__group.update(self)
-
         local dx = self.__dx
         local dy = self.__dy
         if dx ~= 0 or dy ~= 0 then
@@ -140,8 +138,6 @@ uie.add("scrollhandle", {
     end,
 
     update = function(self)
-        uie.__default.update(self)
-
         local enabled = self.enabled
         if enabled == nil then
             enabled = self.isNeeded

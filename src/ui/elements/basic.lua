@@ -3,6 +3,7 @@ local uie = require("ui.elements.main")
 local uiu = require("ui.utils")
 
 
+-- Special root element.
 uie.add("root", {
     id = "root",
     cacheable = false,
@@ -29,7 +30,10 @@ uie.add("root", {
 
     layoutLate = function(self)
         self:layoutLateChildren()
+        self:collect(false)
+    end,
 
+    collect = function(self, basic)
         local all = {}
 
         local function collectAll(el)
@@ -37,8 +41,9 @@ uie.add("root", {
             if children then
                 for i = 1, #children do
                     local c = children[i]
-                    table.insert(all, c)
+                    c.parent = el
                     c.visible = false
+                    table.insert(all, c)
                     collectAll(c)
                 end
             end
@@ -47,13 +52,17 @@ uie.add("root", {
         collectAll(self)
         self.all = all
 
+        if basic then
+            return
+        end
+
         local allI = {}
 
-        local function collectAllI(el, pl, pt, pr, pb, pi)
+        local function collectAllI(el, px, py, pl, pt, pr, pb, pi)
             local children = el.children
             if children then
-                local erl = el.screenX
-                local ert = el.screenY
+                local erl = px + el.realX
+                local ert = py + el.realY
                 local err = erl + el.width
                 local erb = ert + el.height
 
@@ -64,28 +73,26 @@ uie.add("root", {
 
                 for i = 1, #children do
                     local c = children[i]
-                    if c:intersects(bl, bt, br - bl, bb - bt) then
+                    if c:intersects(bl, bt, br, bb) then
                         c.visible = true
 
                         local interactive = c.interactive
 
                         if pi and interactive >= 0 then
-                            local insertAt = #allI
-                            collectAllI(c, bl, bt, br, bb, true)
-
                             if interactive >= 1 then
-                                table.insert(allI, insertAt, c)
+                                table.insert(allI, c)
                             end
 
+                            collectAllI(c, erl, ert, bl, bt, br, bb, true)
                         else
-                            collectAllI(c, bl, bt, br, bb, false)
+                            collectAllI(c, erl, ert, bl, bt, br, bb, false)
                         end
                     end
                 end
             end
         end
         
-        collectAllI(self, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
+        collectAllI(self, 0, 0, 0, 0, love.graphics.getWidth(), love.graphics.getHeight(), true)
         self.allI = allI
     end,
 

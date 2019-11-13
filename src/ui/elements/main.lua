@@ -106,16 +106,11 @@ uie.__default = {
         )
     end,
 
-    intersects = function(self, mx, my, mw, mh)
+    intersects = function(self, ml, mt, mr, mb)
         local el = self.screenX
         local er = el + self.width
         local et = self.screenY
         local eb = et + self.height
-
-        local ml = mx
-        local mr = ml + mw
-        local mt = my
-        local mb = mt + mh
 
         return not (
             mr < el or er < ml or
@@ -232,16 +227,10 @@ uie.__default = {
         end
     end,
 
+    --[[
     update = function(self)
-        local children = self.children
-        if children then
-            for i = 1, #children do
-                local c = children[i]
-                c.parent = self
-                c:update()
-            end
-        end
     end,
+    --]]
 
     layoutLazy = function(self)        
         if not self.reflowing then
@@ -314,7 +303,7 @@ uie.__default = {
                     end
 
                     if not calced then
-                        table.insert(calcset, k)
+                        calcset[#calcset + 1] = k
                         self[k:sub(5, 5):lower() .. k:sub(6)] = v(self)
                     end
                 end
