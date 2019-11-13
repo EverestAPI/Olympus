@@ -106,6 +106,23 @@ uie.__default = {
             ey <= my and my <= ey + eh
     end,
 
+    intersects = function(self, mx, my, mw, mh)
+        local selfL = self.screenX
+        local selfR = selfL + self.width
+        local selfT = self.screenY
+        local selfB = selfT + self.height
+
+        local mL = mx
+        local mR = mL + mw
+        local mT = my
+        local mB = mT + mh
+
+        return not (
+            mR < selfL or selfR < mL or
+            mB < selfT or selfB < mT
+        )
+    end,
+
     getHovered = function(self)
         local hovering = ui.hovering
         while hovering do
@@ -312,13 +329,13 @@ uie.__default = {
             for i = 1, #children do
                 local c = children[i]
                 if c.visible then
-                    c:drawCached()
+                    c:drawLazy()
                 end
             end
         end
     end,
 
-    drawCached = function(self)
+    drawLazy = function(self)
         if not self.cacheable then
             self:draw()
             return
@@ -343,10 +360,9 @@ uie.__default = {
                 self.__cachedCanvas = nil
             end
 
-            print(self, width, height, self.__cachedWidth, self.__cachedHeight)
             self.__cachedWidth = width
             self.__cachedHeight = height
-            self.__cacheSkip = 4
+            --self.__cacheSkip = 4
         end
 
         local cacheSkip = self.__cacheSkip
@@ -356,13 +372,15 @@ uie.__default = {
 
             local sX, sY, sW, sH = love.graphics.getScissor()
             local scissorX, scissorY = love.graphics.transformPoint(self.screenX, self.screenY)
-            love.graphics.intersectScissor(scissorX - padding, scissorY - padding, width + padding * 2, height + padding * 2)
+            -- FIXME: SCISSORING MACHINE BROKE
+            --love.graphics.setScissor(scissorX - padding, scissorY - padding, width, height)
 
             self:draw()
 
-            love.graphics.setScissor(sX, sY, sW, sH)
+            --love.graphics.setScissor(sX, sY, sW, sH)
 
-            local el = self
+            --[[
+            local el = self.parent
             while el ~= nil do
                 local elCacheSkip = el.__cacheSkip
                 if elCacheSkip > cacheSkip then
@@ -371,6 +389,8 @@ uie.__default = {
                 el.__cacheSkip = cacheSkip
                 el = el.parent
             end
+            --]]
+
             return
         end
 
@@ -411,7 +431,21 @@ uie.__default = {
             return nil
         end
     
+        --[[
         if not self:contains(mx, my) then
+            return nil
+        end
+        --]]
+
+        local ex = self.screenX
+        local ey = self.screenY
+        local ew = self.width
+        local eh = self.height
+
+        if not (
+            ex <= mx and mx <= ex + ew and
+            ey <= my and my <= ey + eh
+        ) then
             return nil
         end
     
@@ -662,6 +696,8 @@ function uie.add(eltype, default)
         el.__propcache = {}
         el.__rawid = tostring(el):sub(8)
 
+        uie.flatten(el)
+
         return setmetatable(el, mtEl)
     end
 
@@ -675,6 +711,27 @@ function uie.add(eltype, default)
     end
 
     return new
+end
+
+local function _flatten(el, default)
+    for k, v in pairs(default) do
+        if k:sub(1, 1) ~= "_" and k ~= "style" and el[k] == nil then
+            el[k] = v
+        end
+    end
+end
+
+function uie.flatten(el)
+    local __default = uie.__default
+    local default = el.__default
+    while true do
+        _flatten(el, default)
+        default = uie["__" .. (default.base or "default")] or __default
+        if default == __default then
+            _flatten(el, default)
+            break
+        end
+    end
 end
 
 return uie

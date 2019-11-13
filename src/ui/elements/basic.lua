@@ -129,7 +129,8 @@ uie.add("panel", {
         end
 
         local sX, sY, sW, sH
-        local clip = self.clip and not self.cachedCanvas
+        -- FIXME: SCISSORING MACHINE BROKE
+        local clip = false -- self.clip and not self.cachedCanvas
         if clip then
             sX, sY, sW, sH = love.graphics.getScissor()
             local scissorX, scissorY = love.graphics.transformPoint(x, y)
@@ -140,7 +141,7 @@ uie.add("panel", {
         for i = 1, #children do
             local c = children[i]
             if c.visible then
-                c:drawCached()
+                c:drawLazy()
             end
         end
 

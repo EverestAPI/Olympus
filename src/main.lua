@@ -269,7 +269,7 @@ function love.load(args)
     else
         love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
     end
-    ]]--
+    --]]
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
 end
 

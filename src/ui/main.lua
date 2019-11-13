@@ -27,7 +27,7 @@ end
 function ui.draw()
     local root = ui.root
     
-    root:drawCached()
+    root:drawLazy()
 end
 
 
