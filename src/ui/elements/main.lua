@@ -353,6 +353,9 @@ uie.__default = {
             self.__cachedHeight = height
         end
 
+        local x = self.screenX
+        local y = self.screenY
+
         local canvas = self.cachedCanvas
         if not canvas then
             canvas = self.__cachedCanvas
@@ -372,10 +375,10 @@ uie.__default = {
 
             love.graphics.push()
             love.graphics.origin()
-            love.graphics.translate(-self.screenX + padding, -self.screenY + padding)
+            love.graphics.translate(-x + padding, -y + padding)
 
             if sX then
-                love.graphics.setScissor(sX - self.realX, sY - self.realY, sW + padding, sH + padding)
+                love.graphics.setScissor()
             end
 
             self:draw()
@@ -391,7 +394,7 @@ uie.__default = {
 
         love.graphics.setColor(1, 1, 1, 1)
         love.graphics.setBlendMode("alpha", "premultiplied")
-        love.graphics.draw(canvas, self.screenX - padding, self.screenY - padding)
+        love.graphics.draw(canvas, x - padding, y - padding)
         love.graphics.setBlendMode("alpha", "alphamultiply")
     end,
 

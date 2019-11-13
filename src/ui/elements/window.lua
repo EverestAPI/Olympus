@@ -7,10 +7,11 @@ require("ui.elements.input")
 -- Basic window.
 uie.add("window", {
     base = "column",
-
+    cacheable = false,
     interactive = 2,
 
     style = {
+        bg = { 0.12, 0.12, 0.12, 1 },
         border = { 0.15, 0.15, 0.15, 1 },
         padding = 1,
         spacing = 0

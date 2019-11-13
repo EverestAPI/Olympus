@@ -274,7 +274,7 @@ uie.add("panel", {
             if clip then
                 sX, sY, sW, sH = love.graphics.getScissor()
                 local scissorX, scissorY = love.graphics.transformPoint(x, y)
-                love.graphics.intersectScissor(scissorX - 1, scissorY - 1, w + 2, h + 2)
+                love.graphics.intersectScissor(scissorX, scissorY, w, h)
             end
 
             local children = self.children

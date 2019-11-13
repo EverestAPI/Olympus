@@ -13,7 +13,7 @@ uie.add("button", {
         padding = 8,
         spacing = 4,
 
-        normalBG = { 0.1, 0.1, 0.1, 0.6 },
+        normalBG = { 0.08, 0.08, 0.08, 0.6 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0 },
 
@@ -186,7 +186,7 @@ uie.add("listItem", {
         spacing = 4,
         radius = 0,
         
-        normalBG = { 0.1, 0.1, 0.1, 0.6 },
+        normalBG = { 0.08, 0.08, 0.08, 0.6 },
         normalFG = { 1, 1, 1, 1 },
         normalBorder = { 0, 0, 0, 0 },
 
