@@ -18,10 +18,9 @@ uie.add("window", {
     },
 
     init = function(self, title, inner)
-        if inner and (inner.id == nil or inner.id == "") then
-            inner = inner:as("inner")
-            inner.style.radius = 0
-        end
+        inner = inner:as("inner")
+        inner.style.radius = 0
+
         uie.__column.init(self, {
             uie.titlebar(title),
             inner

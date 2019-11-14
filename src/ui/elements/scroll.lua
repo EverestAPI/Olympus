@@ -11,10 +11,9 @@ uie.add("scrollbox", {
     interactive = 2,
 
     init = function(self, inner)
-        if inner and (inner.id == nil or inner.id == "") then
-            inner = inner:as("inner")
-            inner.style.radius = 0
-        end
+        inner:as("inner")
+        inner.style.radius = 0
+
         uie.__group.init(self, {
             inner,
             uie.scrollhandleX():as("handleX"),
@@ -119,15 +118,7 @@ uie.add("scrollhandle", {
         fadeDuration = 0.2
     },
 
-    init = function(self, inner)
-        if inner and (inner.id == nil or inner.id == "") then
-            inner = inner:as("inner")
-            inner.style.radius = 0
-        end
-        uie.__group.init(self, {
-            inner
-        })
-
+    init = function(self)
         self.enabled = nil
         self.__enabled = true
     end,

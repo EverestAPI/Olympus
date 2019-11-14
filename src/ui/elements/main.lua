@@ -184,8 +184,11 @@ uie.__default = {
     end,
 
     reflow = function(self)
-        local el = self
-        while el ~= nil do
+        self.reflowing = nil
+        self.reflowingLate = true
+        self.cachedCanvas = nil
+        local el = self.parent
+        while el ~= nil and not el.reflowing do
             el.reflowing = true
             el.reflowingLate = true
             el.cachedCanvas = nil
@@ -209,8 +212,9 @@ uie.__default = {
     end,
 
     repaint = function(self)
-        local el = self
-        while el ~= nil do
+        self.cachedCanvas = nil
+        local el = self.parent
+        while el ~= nil and (not el.cacheable or el.cachedCanvas ~= nil) do
             el.cachedCanvas = nil
             el = el.parent
         end
