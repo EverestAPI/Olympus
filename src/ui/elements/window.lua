@@ -151,6 +151,7 @@ uie.add("titlebar", {
 
         local fadeDuration = style.fadeDuration
         if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
             local f = fadeTime / fadeDuration
             bg = {
                 bgPrev[1] + (bg[1] - bgPrev[1]) * f,
@@ -164,7 +165,6 @@ uie.add("titlebar", {
                 fgPrev[3] + (fg[3] - fgPrev[3]) * f,
                 fgPrev[4] + (fg[4] - fgPrev[4]) * f,
             }
-            fadeTime = fadeTime + ui.delta
             self:repaint()
         end
 

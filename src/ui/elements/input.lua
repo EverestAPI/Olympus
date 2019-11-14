@@ -102,6 +102,7 @@ uie.add("button", {
 
         local fadeDuration = style.fadeDuration
         if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
             local f = fadeTime / fadeDuration
             bg = {
                 bgPrev[1] + (bg[1] - bgPrev[1]) * f,
@@ -121,7 +122,6 @@ uie.add("button", {
                 borderPrev[3] + (border[3] - borderPrev[3]) * f,
                 borderPrev[4] + (border[4] - borderPrev[4]) * f,
             }
-            fadeTime = fadeTime + ui.delta
             self:repaint()
         end
 
@@ -313,6 +313,7 @@ uie.add("listItem", {
 
         local fadeDuration = style.fadeDuration
         if #bgPrev ~= 0 and fadeTime < fadeDuration then
+            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
             local f = fadeTime / fadeDuration
             bg = {
                 bgPrev[1] + (bg[1] - bgPrev[1]) * f,
@@ -332,7 +333,6 @@ uie.add("listItem", {
                 borderPrev[3] + (border[3] - borderPrev[3]) * f,
                 borderPrev[4] + (border[4] - borderPrev[4]) * f,
             }
-            fadeTime = fadeTime + ui.delta
             self:repaint()
         end
 

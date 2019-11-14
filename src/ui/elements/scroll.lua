@@ -168,6 +168,7 @@ uie.add("scrollhandle", {
 
         local fadeDuration = style.fadeDuration
         if #colorPrev ~= 0 and fadeTime < fadeDuration then
+            fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
             local f = fadeTime / fadeDuration
             color = {
                 colorPrev[1] + (color[1] - colorPrev[1]) * f,
@@ -181,7 +182,6 @@ uie.add("scrollhandle", {
                 borderPrev[3] + (border[3] - borderPrev[3]) * f,
                 borderPrev[4] + (border[4] - borderPrev[4]) * f,
             }
-            fadeTime = fadeTime + ui.delta
             self:repaint()
         end
 
