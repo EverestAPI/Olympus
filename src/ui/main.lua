@@ -1,5 +1,7 @@
 local ui = {}
 
+ui.debug = false
+
 ui.hovering = nil
 ui.dragging = nil
 ui.draggingCounter = 0
@@ -92,13 +94,13 @@ function ui.mousemoved(x, y, dx, dy)
     
     if hoveringPrev ~= hoveringNext then
         if hoveringPrev then
-            local cb = hoveringPrev.onEnter
+            local cb = hoveringPrev.onLeave
             if cb then
                 cb(hoveringPrev)
             end
         end
         if hoveringNext then
-            local cb = hoveringNext.onLeave
+            local cb = hoveringNext.onEnter
             if cb then
                 cb(hoveringNext)
             end

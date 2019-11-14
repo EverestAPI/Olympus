@@ -84,7 +84,7 @@ uie.add("window", {
             local c = children[i]
             if c == self then
                 table.remove(children, i)
-                table.insert(children, self)
+                children[#children + 1] = self
                 return
             end
         end
@@ -116,7 +116,7 @@ uie.add("titlebar", {
             uie.label(title):as("label")
         }
         if closeable then
-            table.insert(children, uie.buttonClose())
+            children[#children + 1] = uie.buttonClose()
         end
         uie.__row.init(self, children)
         self.style.bg = {}

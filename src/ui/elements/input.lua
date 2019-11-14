@@ -41,6 +41,7 @@ uie.add("button", {
         self.enabled = true
         self.style.bg = {}
         self._label.style.color = {}
+        self.style.border = {}
     end,
 
     getEnabled = function(self)
@@ -101,34 +102,51 @@ uie.add("button", {
         end
 
         local fadeDuration = style.fadeDuration
-        if #bgPrev ~= 0 and fadeTime < fadeDuration then
+        if fadeTime < fadeDuration then
             fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
             local f = fadeTime / fadeDuration
-            bg = {
-                bgPrev[1] + (bg[1] - bgPrev[1]) * f,
-                bgPrev[2] + (bg[2] - bgPrev[2]) * f,
-                bgPrev[3] + (bg[3] - bgPrev[3]) * f,
-                bgPrev[4] + (bg[4] - bgPrev[4]) * f,
-            }
-            fg = {
-                fgPrev[1] + (fg[1] - fgPrev[1]) * f,
-                fgPrev[2] + (fg[2] - fgPrev[2]) * f,
-                fgPrev[3] + (fg[3] - fgPrev[3]) * f,
-                fgPrev[4] + (fg[4] - fgPrev[4]) * f,
-            }
-            border = {
-                borderPrev[1] + (border[1] - borderPrev[1]) * f,
-                borderPrev[2] + (border[2] - borderPrev[2]) * f,
-                borderPrev[3] + (border[3] - borderPrev[3]) * f,
-                borderPrev[4] + (border[4] - borderPrev[4]) * f,
-            }
+
+            if #bgPrev == 0 then
+                f = 1
+            end
+
+            if f < 1 then
+                bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
+                bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
+                bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
+                bgPrev[4] = bgPrev[4] + (bg[4] - bgPrev[4]) * f
+
+                fgPrev[1] = fgPrev[1] + (fg[1] - fgPrev[1]) * f
+                fgPrev[2] = fgPrev[2] + (fg[2] - fgPrev[2]) * f
+                fgPrev[3] = fgPrev[3] + (fg[3] - fgPrev[3]) * f
+                fgPrev[4] = fgPrev[4] + (fg[4] - fgPrev[4]) * f
+
+                borderPrev[1] = borderPrev[1] + (border[1] - borderPrev[1]) * f
+                borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
+                borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
+                borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
+
+            else
+                bgPrev[1] = bg[1]
+                bgPrev[2] = bg[2]
+                bgPrev[3] = bg[3]
+                bgPrev[4] = bg[4]
+
+                fgPrev[1] = fg[1]
+                fgPrev[2] = fg[2]
+                fgPrev[3] = fg[3]
+                fgPrev[4] = fg[4]
+
+                borderPrev[1] = border[1]
+                borderPrev[2] = border[2]
+                borderPrev[3] = border[3]
+                borderPrev[4] = border[4]
+            end
+            
             self:repaint()
         end
 
         self.__fadeTime = fadeTime
-        style.bg = bg
-        labelStyle.color = fg
-        style.border = border
     end,
 
     onClick = function(self, x, y, button)
@@ -155,6 +173,7 @@ uie.add("list", {
         uie.__column.init(self, uiu.map(items, uie.listItem))
         self.cb = cb
         self.enabled = true
+        self.selected = false
     end,
 
     layoutLazy = function(self)
@@ -219,6 +238,7 @@ uie.add("listItem", {
         self.enabled = true
         self.style.bg = {}
         self._label.style.color = {}
+        self.style.border = {}
     end,
 
     layoutLazy = function(self)
@@ -256,7 +276,7 @@ uie.add("listItem", {
     end,
 
     getInteractive = function(self)
-        return self.parent.enabled and self.__enabled
+        return self.parent.enabled and self.__enabled and 1 or -1
     end,
 
     getSelected = function(self)
@@ -312,34 +332,51 @@ uie.add("listItem", {
         end
 
         local fadeDuration = style.fadeDuration
-        if #bgPrev ~= 0 and fadeTime < fadeDuration then
+        if fadeTime < fadeDuration then
             fadeTime = math.min(fadeDuration, fadeTime + ui.delta)
             local f = fadeTime / fadeDuration
-            bg = {
-                bgPrev[1] + (bg[1] - bgPrev[1]) * f,
-                bgPrev[2] + (bg[2] - bgPrev[2]) * f,
-                bgPrev[3] + (bg[3] - bgPrev[3]) * f,
-                bgPrev[4] + (bg[4] - bgPrev[4]) * f,
-            }
-            fg = {
-                fgPrev[1] + (fg[1] - fgPrev[1]) * f,
-                fgPrev[2] + (fg[2] - fgPrev[2]) * f,
-                fgPrev[3] + (fg[3] - fgPrev[3]) * f,
-                fgPrev[4] + (fg[4] - fgPrev[4]) * f,
-            }
-            border = {
-                borderPrev[1] + (border[1] - borderPrev[1]) * f,
-                borderPrev[2] + (border[2] - borderPrev[2]) * f,
-                borderPrev[3] + (border[3] - borderPrev[3]) * f,
-                borderPrev[4] + (border[4] - borderPrev[4]) * f,
-            }
+
+            if #bgPrev == 0 then
+                f = 1
+            end
+
+            if f < 1 then
+                bgPrev[1] = bgPrev[1] + (bg[1] - bgPrev[1]) * f
+                bgPrev[2] = bgPrev[2] + (bg[2] - bgPrev[2]) * f
+                bgPrev[3] = bgPrev[3] + (bg[3] - bgPrev[3]) * f
+                bgPrev[4] = bgPrev[4] + (bg[4] - bgPrev[4]) * f
+
+                fgPrev[1] = fgPrev[1] + (fg[1] - fgPrev[1]) * f
+                fgPrev[2] = fgPrev[2] + (fg[2] - fgPrev[2]) * f
+                fgPrev[3] = fgPrev[3] + (fg[3] - fgPrev[3]) * f
+                fgPrev[4] = fgPrev[4] + (fg[4] - fgPrev[4]) * f
+
+                borderPrev[1] = borderPrev[1] + (border[1] - borderPrev[1]) * f
+                borderPrev[2] = borderPrev[2] + (border[2] - borderPrev[2]) * f
+                borderPrev[3] = borderPrev[3] + (border[3] - borderPrev[3]) * f
+                borderPrev[4] = borderPrev[4] + (border[4] - borderPrev[4]) * f
+
+            else
+                bgPrev[1] = bg[1]
+                bgPrev[2] = bg[2]
+                bgPrev[3] = bg[3]
+                bgPrev[4] = bg[4]
+
+                fgPrev[1] = fg[1]
+                fgPrev[2] = fg[2]
+                fgPrev[3] = fg[3]
+                fgPrev[4] = fg[4]
+
+                borderPrev[1] = border[1]
+                borderPrev[2] = border[2]
+                borderPrev[3] = border[3]
+                borderPrev[4] = border[4]
+            end
+            
             self:repaint()
         end
 
         self.__fadeTime = fadeTime
-        style.bg = bg
-        labelStyle.color = fg
-        style.border = border
     end,
 
     onClick = function(self, x, y, button)

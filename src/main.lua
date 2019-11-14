@@ -46,6 +46,11 @@ function love.load(args)
     end
 
     utils = require("ui.utils")
+
+    love.version = table.pack(love.getVersion())
+    love.versionStr = utils.join(love.version, ".")
+    print(love.versionStr)
+
     native = require("native")
 
     love.graphics.setFont(love.graphics.newFont(16))
@@ -373,7 +378,9 @@ function love.draw()
 
     -- love.graphics.setScissor()
 
-    love.timer = nil
+    if love.version[1] ~= 0 then
+        love.timer = nil
+    end
 end
 
 function love.keypressed(key, scancode, isrepeat)

@@ -100,8 +100,8 @@ uie.add("scrollhandle", {
     interactive = 1,
 
     style = {
-        color = { },
-        border = { },
+        color = {},
+        border = {},
 
         thickness = 6,
         radius = 3,

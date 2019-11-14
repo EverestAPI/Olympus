@@ -49,7 +49,7 @@ uie.add("root", {
                     local c = children[i]
                     c.parent = el
                     c.visible = false
-                    table.insert(all, c)
+                    all[#all + 1] = c
                     collectAll(c)
                 end
             end
@@ -86,7 +86,7 @@ uie.add("root", {
 
                         if pi and interactive >= 0 then
                             if interactive >= 1 then
-                                table.insert(allI, c)
+                                allI[#allI + 1] = c
                             end
 
                             collectAllI(c, erl, ert, bl, bt, br, bb, true)
@@ -359,8 +359,10 @@ uie.add("label", {
             self._text = value
         end
 
-        if not self.dynamic then
+        if not self.dynamic and (self.width ~= math.ceil(self._text:getWidth()) or self.height ~= math.ceil(self._text:getHeight())) then
             self:reflow()
+        else
+            self:repaint()
         end
     end,
 
@@ -400,8 +402,7 @@ uie.add("image", {
 
     calcSize = function(self)
         local image = self._image
-        local width = image:getWidth()
-        local height = image:getHeight()
+        local width, height = image:getWidth(), image:getHeight()
 
         local transform = self.transform
         if transform then

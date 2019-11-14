@@ -27,7 +27,7 @@ math.round = math.round or uiu.round
 function uiu.listRange(from, to, step)
     local output = {}
     for i = from, to, (step or 1) do
-        table.insert(output, i)
+        output[#output + 1] = i
     end
     return output
 end
@@ -78,11 +78,11 @@ function uiu.magic(fn, ...)
                 arg = input[ii]
                 ii = ii + 1
             end
-            table.insert(args, arg)
+            args[#args + 1] = arg
         end
 
         for i = ii, #input do
-            table.insert(args, input[i])
+            args[#args + 1] = input[i]
         end
 
         return fn(table.unpack(args))
