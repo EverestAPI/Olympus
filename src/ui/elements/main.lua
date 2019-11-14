@@ -170,7 +170,12 @@ uie.__default = {
         return self
     end,
 
-    with = function(self, props)
+    with = function(self, props, ...)
+        if type(props) == "function" then
+            local rv = props(self, ...)
+            return rv or self
+        end
+
         for k, v in pairs(props) do
             self[k] = v
         end
@@ -178,13 +183,8 @@ uie.__default = {
         return self
     end,
 
-    run = function(self, cb, ...)
-        local rv = cb(self, ...)
-        return rv or self
-    end,
-
     reflow = function(self)
-        self.reflowing = nil
+        self.reflowing = true
         self.reflowingLate = true
         self.cachedCanvas = nil
         local el = self.parent
@@ -204,6 +204,31 @@ uie.__default = {
             for i = 1, #children do
                 local c = children[i]
                 c.reflowing = true
+                c.reflowingLate = true
+                c.cachedCanvas = nil
+                c:reflowDown()
+            end
+        end
+    end,
+
+    reflowLate = function(self)
+        self.reflowingLate = true
+        self.cachedCanvas = nil
+        local el = self.parent
+        while el ~= nil and not el.reflowingLate do
+            el.reflowingLate = true
+            el.cachedCanvas = nil
+            el = el.parent
+        end
+
+        self:repaintDown()
+    end,
+
+    reflowLateDown = function(self)
+        local children = self.children
+        if children then
+            for i = 1, #children do
+                local c = children[i]
                 c.reflowingLate = true
                 c.cachedCanvas = nil
                 c:reflowDown()

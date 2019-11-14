@@ -1,4 +1,7 @@
-local ffi = require("ffi")
+local ffiStatus, ffi = pcall(require, "ffi")
+if not ffiStatus then
+    return false
+end
 local bit = require("bit")
 
 local sdl

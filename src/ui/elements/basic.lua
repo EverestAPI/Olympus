@@ -33,7 +33,13 @@ uie.add("root", {
         self:collect(false)
     end,
 
+    recollect = function(self)
+        self.recollecting = true
+    end,
+
     collect = function(self, basic)
+        self.recollecting = false
+
         local all = {}
 
         local function collectAll(el)

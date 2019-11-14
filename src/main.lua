@@ -55,9 +55,9 @@ function love.load(args)
 
     local root = uie.column({
         uie.group({
-            uie.image("background"):as("bg"):run(function(bg)
+            uie.image("background"):as("bg"):with(function(bg)
                 local transform = love.math.newTransform()
-                transform:scale(10, 10)
+                transform:scale(15, 15)
                 bg.transform = transform
             end)
         }):with({
@@ -68,7 +68,11 @@ function love.load(args)
         }),
 
         uie.titlebar("Everest.Olympus", true):with({
-            style = { focusedBG = { 0.4, 0.4, 0.4, 0.25 }, unfocusedBG = { 0.2, 0.2, 0.2, 0.3 } }, onDrag = utils.nop
+            style = {
+                focusedBG = { 0.4, 0.4, 0.4, 0.25 },
+                unfocusedBG = { 0.2, 0.2, 0.2, 0.3 }
+            },
+            onDrag = utils.nop
         }),
 
         uie.group({
@@ -79,7 +83,12 @@ function love.load(args)
                 uie.row({
                     uie.label("<TODO: TEXT INPUT>"),
                     uie.button("...")
-                }):with({ style = { padding = 0, bg = {} }}),
+                }):with({
+                    style = {
+                        padding = 0,
+                        bg = {}
+                    }
+                }),
                 uie.label("Celeste <version> + Everest <version>"),
 
                 uie.label("Step 2: Select Everest Version"),
@@ -114,7 +123,12 @@ function love.load(args)
                     uie.button("Step 3: Install"),
                     uie.button("Uninstall"),
                     uie.button("???", utils.magic(print, "pressed"))
-                }):with({ style = { padding = 0, bg = {} }})
+                }):with({
+                    style = {
+                        padding = 0,
+                        bg = {}
+                    }
+                })
 
             }):with({
                 style = {
@@ -122,6 +136,7 @@ function love.load(args)
                     bg = {}
                 },
 
+                cacheable = false,
                 clip = false,
 
                 layoutLazy = function(self)
@@ -143,7 +158,11 @@ function love.load(args)
                 end,
             }):as("installer"),
 
-            uie.label():with({ style = { color = { 0, 0, 0, 1 } } }):as("debug"),
+            uie.label():with({
+                style = {
+                    color = { 0, 0, 0, 1 }
+                }
+            }):as("debug"),
 
             --[[
             uie.window("Windowception",
@@ -192,7 +211,15 @@ function love.load(args)
             --]]
 
         }):with({ clip = true }):as("main")
-    }):with({ style = { bg = { 0, 0, 0, 0 }, padding = 0, spacing = 0, radius = 0 } }):as("root")
+    }):with({
+        style = {
+            bg = {},
+            padding = 0,
+            spacing = 0,
+            radius = 0
+        },
+        clip = false,
+    }):as("root")
     ui.root = uie.root({ root })
     main = root._main
 
@@ -200,76 +227,79 @@ function love.load(args)
         love.event.quit()
     end
 
-    native.setWindowHitTest(function(win, area)
-        local border = 8
-        local corner = 12
+    if native then
+        native.setWindowHitTest(function(win, area)
+            local border = 8
+            local corner = 12
 
-        local x = area.x
-        local y = area.y
+            local x = area.x
+            local y = area.y
 
-        if root._titlebar._close:contains(x, y) then
-            return 0
-        end
-
-        local w, h, flags = love.window.getMode()
-
-        if flags.resizable then
-            if y < border then
-                if x < border then
-                    return 2
-                end
-                if w - corner <= x then
-                    return 4
-                end
-                return 3
-            end
-
-            if h - border <= y then
-                if x < border then
-                    return 8
-                end
-                if w - corner < x then
-                    return 6
-                end
-                return 7
-            end
-
-            if x < border then
-                return 9
-            end
-
-            if w - border <= x then
-                return 5
-            end
-        end
-
-        if y < root._titlebar.height then
-            return 1
-        end
-
-        return 0
-    end)
-
-    -- Shamelessly based off of how FNA force-repaints the window on resize.
-    native.setEventFilter(function(userdata, event)
-        if event[0].type == 0x200 then -- SDL_WINDOWEVENT
-            if event[0].window.event == 3 then -- SDL_WINDOWEVENT_EXPOSED
-                _love_runStep()
-                love.graphics = nil -- Don't redraw, we've already redrawn.
+            if root._titlebar._close:contains(x, y) then
                 return 0
             end
-        end
-        return 1
-    end)
 
-    local windowStatus = native.prepareWindow()
-    --[[
-    if windowStatus.transparent then
-        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.87)
-    else
-        love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
+            local w, h, flags = love.window.getMode()
+
+            if flags.resizable then
+                if y < border then
+                    if x < border then
+                        return 2
+                    end
+                    if w - corner <= x then
+                        return 4
+                    end
+                    return 3
+                end
+
+                if h - border <= y then
+                    if x < border then
+                        return 8
+                    end
+                    if w - corner < x then
+                        return 6
+                    end
+                    return 7
+                end
+
+                if x < border then
+                    return 9
+                end
+
+                if w - border <= x then
+                    return 5
+                end
+            end
+
+            if y < root._titlebar.height then
+                return 1
+            end
+
+            return 0
+        end)
+
+        -- Shamelessly based off of how FNA force-repaints the window on resize.
+        native.setEventFilter(function(userdata, event)
+            if event[0].type == 0x200 then -- SDL_WINDOWEVENT
+                if event[0].window.event == 3 then -- SDL_WINDOWEVENT_EXPOSED
+                    _love_runStep()
+                    love.graphics = nil -- Don't redraw, we've already redrawn.
+                    return 0
+                end
+            end
+            return 1
+        end)
+
+        local windowStatus = native.prepareWindow()
+        --[[
+        if windowStatus.transparent then
+            love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.87)
+        else
+            love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
+        end
+        --]]
     end
-    --]]
+
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
 end
 
@@ -358,7 +388,7 @@ function love.mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
-    if mousePresses == 0 then
+    if mousePresses == 0 and native then
         native.captureMouse(true)
     end
     mousePresses = mousePresses + presses
@@ -368,7 +398,7 @@ end
 function love.mousereleased(x, y, button, istouch, presses)
     mousePresses = mousePresses - presses
     ui.mousereleased(x, y, button)
-    if mousePresses == 0 then
+    if mousePresses == 0 and native then
         native.captureMouse(false)
     end
 end

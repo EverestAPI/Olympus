@@ -12,7 +12,7 @@ function ui.update()
         return
     end
 
-    if not ui.mousemoving then
+    if not ui.mousemoving and (root.reflowingLate or root.recollecting) then
         local mouseX, mouseY = love.mouse.getPosition()
         ui.mousemoved(mouseX, mouseY, 0, 0)
     end
@@ -36,6 +36,10 @@ function ui.update()
 
     root:layoutLazy()
     root:layoutLateLazy()
+
+    if root.recollecting then
+        root:collect(false)
+    end
 
 end
 

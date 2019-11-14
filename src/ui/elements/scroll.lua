@@ -84,7 +84,7 @@ uie.add("scrollbox", {
         inner.y = uiu.round(-y)
 
         self:repositionChildren()
-        ui.root:reflow()
+        ui.root:recollect()
         self._handleX:repaint()
         self._handleX:layoutLate()
         self._handleY:repaint()
