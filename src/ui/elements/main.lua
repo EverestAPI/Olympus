@@ -750,4 +750,18 @@ function uie.flatten(el)
     end
 end
 
+uie.add("new", {
+    init = function(self, props, ...)
+        local initOrig = self.init
+        
+        self:with(props, ...)
+
+        local init = self.init
+        if init ~= initOrig then
+            self.init = initOrig
+            init(self)
+        end
+    end
+})
+
 return uie

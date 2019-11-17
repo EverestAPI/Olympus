@@ -391,6 +391,7 @@ uie.add("image", {
 
     quad = nil,
     transform = nil,
+    drawArgs = nil,
 
     init = function(self, image)
         if type(image) == "string" then
@@ -416,21 +417,28 @@ uie.add("image", {
     draw = function(self)
         love.graphics.setColor(self.style.color)
 
-        local transform = self.transform
-        local quad = self.quad
-        if quad then
-            if transform then
-                love.graphics.draw(self._image, quad, transform)
-            else
-                love.graphics.draw(self._image, quad, self.screenX, self.screenY)
-            end
+        local drawArgs = self.drawArgs
+        if drawArgs then
+            love.graphics.draw(self._image, table.unpack(drawArgs))
 
         else
+            local transform = self.transform
+            local quad = self.quad
             if transform then
-                love.graphics.draw(self._image, transform)
+                if quad then
+                    love.graphics.draw(self._image, quad, transform)
+                else
+                    
+                    love.graphics.draw(self._image, transform)
+                end
 
             else
-                love.graphics.draw(self._image, self.screenX, self.screenY)
+                if quad then
+                    love.graphics.draw(self._image, quad, self.screenX, self.screenY)
+
+                else
+                    love.graphics.draw(self._image, self.screenX, self.screenY)
+                end
             end
         end
     end

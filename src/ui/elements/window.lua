@@ -218,7 +218,7 @@ uie.add("buttonClose", {
     interactive = 1,
 
     style = {
-        padding = 6,
+        padding = 16,
         normalBG = { 0.9, 0.1, 0.2, 1 },
         hoveredBG = { 0.85, 0.25, 0.25, 1 },
         pressedBG = { 0.6, 0.08, 0.14, 1 }
@@ -228,6 +228,12 @@ uie.add("buttonClose", {
        uie.__button.init(self, uie.image("ui/close"))
     end,
 
+    layoutLazy = function(self)
+        uie.__button.layoutLazy(self)
+        self.realHeight = self.height
+        self.height = 0
+    end,
+
     layoutLateLazy = function(self)
         -- Always reflow this child whenever its parent gets reflowed.
         self:layoutLate()
@@ -235,7 +241,9 @@ uie.add("buttonClose", {
 
     layoutLate = function(self)
         local parent = self.parent
-        self.realX = parent.width - parent.style.padding - self.width
+        self.realX = parent.width - self.width + 1
+        self.realY = -1
+        self.height = self.realHeight
     end
 })
 

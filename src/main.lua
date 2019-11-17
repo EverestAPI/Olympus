@@ -6,6 +6,8 @@ local native
 
 local ui
 local uie
+local moonshine
+
 local main
 
 local mousePresses = 0
@@ -58,18 +60,90 @@ function love.load(args)
     ui = require("ui.main")
     uie = require("ui.elements.all")
 
+    moonshine = require("moonshine")
+
     local root = uie.column({
-        uie.group({
-            uie.image("background"):as("bg"):with(function(bg)
-                local transform = love.math.newTransform()
-                transform:scale(15, 15)
-                bg.transform = transform
-            end)
-        }):with({
+        uie.new({
+            id = "bg",
             width = 0,
             height = 0,
-            clip = false,
-            cacheable = false
+            cacheable = false,
+
+            bg = utils.image("background"),
+
+            cog = utils.image("cogwheel"),
+            time = 8,
+
+            effect = moonshine(moonshine.effects.gaussianblur),
+
+            init = function(self)
+                self.effect.gaussianblur.sigma = 5
+            end,
+
+            update = function(self)
+                self.time = self.time + ui.delta
+
+                local width, height = love.graphics.getWidth() + 4, love.graphics.getHeight() + 4
+                if width ~= self.innerWidth or height ~= self.innerHeight then
+                    self.effect.resize(width, height)
+                    self.innerWidth = width
+                    self.innerHeight = height
+                end
+                self:repaint()
+            end,
+
+            layoutLate = function(self)
+                self.realX = 0
+                self.realY = 0
+            end,
+
+            drawBG = function(self)
+                local width, height = love.graphics.getWidth(), love.graphics.getHeight()
+                local mouseX, mouseY = ui.mouseX, ui.mouseY
+                local time = self.time
+
+                local scale = math.max(width / 540, height / 700)
+                scale = (scale - 1) * 0.25 + 1
+
+                love.graphics.setColor(1, 1, 1, 1)
+                love.graphics.draw(
+                    self.bg,
+                    width / 2 - mouseX * 0.02,
+                    height / 2 - mouseY * 0.02,
+                    0,
+                    15 * scale, 15 * scale,
+                    64, 36
+                )
+
+                love.graphics.setColor(0, 0, 0, 0.1)
+                love.graphics.draw(
+                    self.cog,
+                    128 - mouseX * 0.04,
+                    -32 - mouseY * 0.04,
+                    time * 0.2,
+                    2, 2,
+                    128, 128
+                )
+
+                love.graphics.setColor(0.1, 0.1, 0.1, 0.15)
+                love.graphics.draw(
+                    self.cog,
+                    width - 128 - mouseX * 0.06,
+                    height + 32 - mouseY * 0.06,
+                    time * 0.3,
+                    3, 3,
+                    128, 128
+                )
+
+                love.graphics.push()
+                love.graphics.origin()
+            end,
+
+            draw = function(self)
+                love.graphics.setColor(1, 1, 1, 1)
+                self.effect(self.drawBG, self)
+                love.graphics.pop()
+            end
         }),
 
         uie.titlebar("Everest.Olympus", true):with({
@@ -86,7 +160,7 @@ function love.load(args)
 
                 uie.label("Step 1: Select Celeste.exe"),
                 uie.row({
-                    uie.label("<TODO: TEXT INPUT>"),
+                    uie.field("<TODO: TEXT INPUT>"),
                     uie.button("...")
                 }):with({
                     style = {
@@ -102,7 +176,9 @@ function love.load(args)
                         utils.map(utils.listRange(100, 1, -1), function(i)
                             return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
                         end)
-                    )
+                    ):with(function(list)
+                        list.selected = list.children[1]
+                    end):as("versions")
                 ):with({
                     height = 300,
                     layoutLazy = function(self)
@@ -215,7 +291,9 @@ function love.load(args)
             ):with({ x = 200, y = 50 }):as("test"),
             --]]
 
-        }):with({ clip = true }):as("main")
+        }):with({
+            clip = true
+        }):as("main")
     }):with({
         style = {
             bg = {},
@@ -320,6 +398,16 @@ function love.update(dt)
     local main = main
 
     local mouseX, mouseY = love.mouse.getPosition()
+    local mouseState = false
+    if native then
+        mouseX, mouseY, mouseState = native.getGlobalMouseState()
+        local windowX, windowY = native.getWindowPosition()
+        mouseX = mouseX - windowX
+        mouseY = mouseY - windowY
+        mouseState = mouseState
+    else
+        mouseState = false
+    end
 
     if profile then
         if love.frame % 100 == 0 then
@@ -334,7 +422,7 @@ function love.update(dt)
             "hovering: " .. tostring(ui.hovering) .. "\n" ..
             "dragging: " .. tostring(ui.dragging) .. "\n" ..
             "focusing: " .. tostring(ui.focusing) .. "\n" ..
-            "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
+            "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
     end
 
     local width = love.graphics.getWidth()
@@ -360,7 +448,7 @@ function love.update(dt)
             "Mouse: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
     end
 
-    ui.update()
+    ui.update(mouseX, mouseY, mouseState)
 
     if profile then
         profile.stop()
@@ -390,8 +478,8 @@ function love.keypressed(key, scancode, isrepeat)
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
-    ui.mousemoving = false
-    ui.mousemoved(x, y, dx, dy)
+    --ui.mousemoving = false
+    --ui.mousemoved(x, y)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)

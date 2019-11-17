@@ -8,15 +8,17 @@ ui.draggingCounter = 0
 ui.focusing = nil
 ui.mousemoving = false
 
-function ui.update()
+function ui.update(mouseX, mouseY, mouseState)
     local root = ui.root
     if not root then
         return
     end
 
-    if not ui.mousemoving and (root.reflowingLate or root.recollecting) then
-        local mouseX, mouseY = love.mouse.getPosition()
-        ui.mousemoved(mouseX, mouseY, 0, 0)
+    if not ui.mousemoving --[[and (root.reflowingLate or root.recollecting)--]] then
+        if not mouseState then
+            mouseX, mouseY = love.mouse.getPosition()
+        end
+        ui.mousemoved(mouseX, mouseY)
     end
     ui.mousemoving = false
 
@@ -88,6 +90,18 @@ function ui.mousemoved(x, y, dx, dy)
     end
     ui.mousemoving = true
 
+    if not dx or not dy then
+        if not ui.mouseX or not ui.mouseY then
+            dx = 0
+            dy = 0
+        else
+            dx = x - ui.mouseX
+            dy = y - ui.mouseY
+        end
+    end
+    ui.mouseX = x
+    ui.mouseY = y
+
     local hoveringPrev = ui.hovering
     local hoveringNext = root:getChildAt(x, y)
     ui.hovering = hoveringNext
@@ -128,14 +142,12 @@ function ui.mousepressed(x, y, button)
     ui.draggingCounter = ui.draggingCounter + 1
 
     local hovering = root:getChildAt(x, y)
-    if hovering then
-        if ui.dragging == nil or ui.dragging == hovering then
-            local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
-            ui.dragging = el
-            ui.focusing = el
-        else
-            ui.interactiveIterate(hovering, "onPress", x, y, button, false)
-        end
+    if ui.dragging == nil or ui.dragging == hovering then
+        local el = ui.interactiveIterate(hovering, "onPress", x, y, button, true)
+        ui.dragging = el
+        ui.focusing = el
+    else
+        ui.interactiveIterate(hovering, "onPress", x, y, button, false)
     end
 end
 
