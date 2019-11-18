@@ -10,8 +10,6 @@ local moonshine
 
 local main
 
-local mousePresses = 0
-
 -- Needed to avoid running the same frame twice on resize
 -- and to avoid Löve2D's default sleep throttle.
 local _love_timer = love.timer
@@ -57,8 +55,8 @@ function love.load(args)
 
     love.graphics.setFont(love.graphics.newFont(16))
 
-    ui = require("ui.main")
-    uie = require("ui.elements.all")
+    ui = require("ui")
+    uie = require("ui.elements")
 
     moonshine = require("moonshine")
 
@@ -83,7 +81,7 @@ function love.load(args)
             update = function(self)
                 self.time = self.time + ui.delta
 
-                local width, height = love.graphics.getWidth() + 4, love.graphics.getHeight() + 4
+                local width, height = love.graphics.getWidth(), love.graphics.getHeight()
                 if width ~= self.innerWidth or height ~= self.innerHeight then
                     self.effect.resize(width, height)
                     self.innerWidth = width
@@ -98,12 +96,12 @@ function love.load(args)
             end,
 
             drawBG = function(self)
-                local width, height = love.graphics.getWidth(), love.graphics.getHeight()
+                local width, height = love.graphics.getWidth() + 4, love.graphics.getHeight() + 4
                 local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
                 local time = self.time
 
                 local scale = math.max(width / 540, height / 700)
-                scale = (scale - 1) * 0.125 + 1
+                scale = (scale - 1) * 0.25 + 1
 
                 love.graphics.setColor(1, 1, 1, 1)
                 love.graphics.draw(
@@ -151,8 +149,11 @@ function love.load(args)
                 focusedBG = { 0.4, 0.4, 0.4, 0.25 },
                 unfocusedBG = { 0.2, 0.2, 0.2, 0.3 }
             },
-            onDrag = utils.nop
-        }),
+            onDrag = utils.nop,
+            root = true
+        }):with(function(bar)
+            bar._close.cb = love.event.quit
+        end),
 
         uie.group({
             uie.column({
@@ -192,7 +193,7 @@ Use the latest "stable" version if you hate updating.]])),
                     ):with(function(list)
                         list.selected = list.children[1]
                     end):as("versions")
-                ):with(utils.fillWidth):with(utils.fillHeightExcept(361)),
+                ):with(utils.fillWidth):with(utils.fillHeightExcept(393)),
 
                 uie.row({
                     uie.button("Step 3: Install"),
@@ -211,7 +212,7 @@ Use the latest "stable" version if you hate updating.]])),
                 
                     layoutLate = function(self)
                         local parent = self.parent
-                        self.realY = parent.innerHeight
+                        self.realY = parent.innerHeight - self.height
                         uie.__row.layoutLate(self)
                     end
                 })
@@ -224,7 +225,7 @@ Use the latest "stable" version if you hate updating.]])),
 
                 cacheable = false,
                 clip = false,
-            }):with(utils.fillWidth):with(utils.fillHeight):as("installer"),
+            }):with(utils.fill):as("installer"),
 
             uie.label():with({
                 style = {
@@ -279,23 +280,27 @@ Use the latest "stable" version if you hate updating.]])),
             --]]
 
         }):with({
-            clip = true
-        }):as("main")
+            style = {
+                bg = { bg = {} },
+                padding = 0,
+                spacing = 0,
+                radius = 0
+            },
+            clip = false
+        }):with(utils.fill):as("main")
     }):with({
         style = {
-            bg = {},
+            bg = { bg = {} },
             padding = 0,
             spacing = 0,
             radius = 0
         },
         clip = false,
+        cacheable = false
     }):as("root")
-    ui.root = uie.root({ root })
+    
+    ui.init(root)
     main = root._main
-
-    function root._titlebar._close:cb()
-        love.event.quit()
-    end
 
     if native then
         native.setWindowHitTest(function(win, area)
@@ -384,18 +389,6 @@ function love.update(dt)
     local root = ui.root._root
     local main = main
 
-    local mouseX, mouseY = love.mouse.getPosition()
-    local mouseState = false
-    if native then
-        mouseX, mouseY, mouseState = native.getGlobalMouseState()
-        local windowX, windowY = native.getWindowPosition()
-        mouseX = mouseX - windowX
-        mouseY = mouseY - windowY
-        mouseState = mouseState
-    else
-        mouseState = false
-    end
-
     if profile then
         if love.frame % 100 == 0 then
             main._debug.text = profile.report(10)
@@ -409,33 +402,10 @@ function love.update(dt)
             "hovering: " .. tostring(ui.hovering) .. "\n" ..
             "dragging: " .. tostring(ui.dragging) .. "\n" ..
             "focusing: " .. tostring(ui.focusing) .. "\n" ..
-            "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
-    end
-
-    local width = love.graphics.getWidth()
-    local height = love.graphics.getHeight()
-
-    root.focused = love.window.hasFocus()
-    
-    if main.width ~= width or main.height ~= height - root._titlebar.height then
-        root.width = width
-        root.height = height
-
-        main.width = width
-        main.height = height - root._titlebar.height
-
-        root._titlebar:reflow()
-        main:reflow()
-        main._installer:reflow()
+            ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
     end
     
-    if main._test then
-        main._test.text =
-            "FPS: " .. love.timer.getFPS() .. "\n" ..
-            "Mouse: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(love.mouse.isDown(1))
-    end
-
-    ui.update(mouseX, mouseY, mouseState)
+    ui.update()
 
     if profile then
         profile.stop()
@@ -462,29 +432,4 @@ function love.keypressed(key, scancode, isrepeat)
     if key == "escape" then
         love.event.quit()
     end
-end
-
-function love.mousemoved(x, y, dx, dy, istouch)
-    --ui.mousemoving = false
-    --ui.mousemoved(x, y)
-end
-
-function love.mousepressed(x, y, button, istouch, presses)
-    if mousePresses == 0 and native then
-        native.captureMouse(true)
-    end
-    mousePresses = mousePresses + presses
-    ui.mousepressed(x, y, button)
-end
-
-function love.mousereleased(x, y, button, istouch, presses)
-    mousePresses = mousePresses - presses
-    ui.mousereleased(x, y, button)
-    if mousePresses == 0 and native then
-        native.captureMouse(false)
-    end
-end
-
-function love.wheelmoved(x, y)
-    ui.wheelmoved(x, y)
 end

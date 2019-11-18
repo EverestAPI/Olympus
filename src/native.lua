@@ -31,12 +31,6 @@ ffi.cdef[[
 
     SDL_Window* SDL_GL_GetCurrentWindow();
 
-    int SDL_CaptureMouse(bool enabled);
-
-    int SDL_GetGlobalMouseState(int* x, int* y);
-
-    void SDL_GetWindowPosition(SDL_Window* window, int* x, int* y);
-
     typedef enum {
         SDL_HITTEST_NORMAL,
         SDL_HITTEST_DRAGGABLE,
@@ -222,25 +216,6 @@ native.os = ffi.os
 
 function native.getCurrentWindow()
     return sdl.SDL_GL_GetCurrentWindow()
-end
-
-function native.captureMouse(value)
-    return sdl.SDL_CaptureMouse(value)
-end
-
-function native.getGlobalMouseState()
-    local x = ffi.new("int[1]")
-    local y = ffi.new("int[1]")
-    local state = sdl.SDL_GetGlobalMouseState(x, y)
-    return x[0], y[0], state
-end
-
-function native.getWindowPosition()
-    local window = native.getCurrentWindow()
-    local x = ffi.new("int[1]")
-    local y = ffi.new("int[1]")
-    sdl.SDL_GetWindowPosition(window, x, y)
-    return x[0], y[0]
 end
 
 local _windowHitTestCB = nil

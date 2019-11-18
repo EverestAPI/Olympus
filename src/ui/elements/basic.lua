@@ -7,8 +7,17 @@ local uiu = require("ui.utils")
 uie.add("root", {
     id = "root",
     cacheable = false,
-    init = function(self, children)
-        self.children = children or {}
+    init = function(self, child)
+        uiu.hook(child, {
+            layoutLazy = function(orig, self)
+                self.width = self.parent.width
+                self.height = self.parent.height
+                self.reflowing = true
+                self.reflowingLate = true
+                orig(self)
+            end
+        })
+        self.children = { child }
     end,
 
     calcSize = function(self)

@@ -1,3 +1,6 @@
+local uiu = require("ui.utils")
+local uin = require("ui.native")
+
 local ui = {}
 
 ui.debug = false
@@ -6,30 +9,54 @@ ui.hovering = nil
 ui.dragging = nil
 ui.draggingCounter = 0
 ui.focusing = nil
-ui.mousemoving = false
+ui.mousePresses = 0
 
-function ui.update(mouseX, mouseY, mouseState)
+local prevWidth
+local prevHeight
+function ui.update()
     local root = ui.root
     if not root then
         return
     end
 
-    if not ui.mousemoving --[[and (root.reflowingLate or root.recollecting)--]] then
-        if not mouseState then
-            mouseX, mouseY = love.mouse.getPosition()
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+
+    root.focused = love.window.hasFocus()
+    
+    if prevWidth ~= width or prevHeight ~= height then
+        prevWidth = width
+        prevHeight = height
+
+        root.width = width
+        root.innerWidth = width
+        root.height = height
+        root.innerHeight = height
+        root:reflow()
+
+        if not root.all then
+            root:layoutLazy()
+            root:layoutLateLazy()
         end
-        ui.mousemoved(mouseX, mouseY)
     end
-    ui.mousemoving = false
+
+    local mouseX, mouseY = love.mouse.getPosition()
+    local mouseState = false
+    if uin then
+        mouseX, mouseY, mouseState = uin.getGlobalMouseState()
+        local windowX, windowY = uin.getWindowPosition()
+        mouseX = mouseX - windowX
+        mouseY = mouseY - windowY
+        mouseState = mouseState
+    else
+        mouseState = false
+    end
+
+    ui.mousemoved(mouseX, mouseY)
 
     ui.delta = love.timer.getDelta()
 
     local all = root.all
-    if not all then
-        root:collect(true)
-        all = root.all
-    end
-
     for i = 1, #all do
         local c = all[i]
         local cb = c.update
@@ -78,17 +105,13 @@ function ui.interactiveIterate(el, funcid, ...)
     return el
 end
 
+
 function ui.mousemoved(x, y, dx, dy)
     local ui = ui
     local root = ui.root
     if not root then
         return
     end
-
-    if ui.mousemoving then
-        return
-    end
-    ui.mousemoving = true
 
     if not dx or not dy then
         if not ui.mouseX or not ui.mouseY then
@@ -132,8 +155,14 @@ function ui.mousemoved(x, y, dx, dy)
     end
 end
 
-function ui.mousepressed(x, y, button)
+function ui.mousepressed(x, y, button, istouch, presses)
     local ui = ui
+
+    if ui.mousePresses == 0 and uin then
+        uin.captureMouse(true)
+    end
+    ui.mousePresses = ui.mousePresses + presses
+
     local root = ui.root
     if not root then
         return
@@ -151,8 +180,14 @@ function ui.mousepressed(x, y, button)
     end
 end
 
-function ui.mousereleased(x, y, button)
+function ui.mousereleased(x, y, button, istouch, presses)
     local ui = ui
+
+    ui.mousePresses = ui.mousePresses - presses
+    if ui.mousePresses == 0 and uin then
+        uin.captureMouse(false)
+    end
+
     local root = ui.root
     if not root then
         return
@@ -190,6 +225,32 @@ function ui.wheelmoved(dx, dy)
     if hovering then
         ui.interactiveIterate(hovering, "onScroll", ui.mouseX, ui.mouseY, dx, dy)
     end
+end
+
+
+local hookedLove = false
+function ui.hookLove()
+    if hookedLove then
+        return
+    end
+    hookedLove = true
+
+    uiu.hook(love, {
+        mousepressed = function(orig, ...)
+            ui.mousepressed(...)
+            return orig(...)
+        end,
+
+        mousereleased = function(orig, ...)
+            ui.mousereleased(...)
+            return orig(...)
+        end,
+
+        wheelmoved = function(orig, ...)
+            ui.wheelmoved(...)
+            return orig(...)
+        end
+    })
 end
 
 

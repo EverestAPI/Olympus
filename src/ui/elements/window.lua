@@ -133,7 +133,7 @@ uie.add("titlebar", {
         local bg = bgPrev
         local fg = fgPrev
 
-        if self.parent.focused then
+        if (self.root and ui.root.focused) or self.parent.focused then
             bg = style.focusedBG
             fg = style.focusedFG
         else
@@ -209,7 +209,7 @@ uie.add("buttonClose", {
     },
 
     init = function(self)
-       uie.__button.init(self, uie.image("ui/close"))
+       uie.__button.init(self, uie.image("ui:close"))
     end,
 
     layoutLazy = function(self)
