@@ -1,3 +1,6 @@
 [submodule "src/moonshine"]
 	path = src/moonshine
 	url = https://github.com/vrld/moonshine.git
+[submodule "src/ui"]
+	path = src/ui
+	url = https://github.com/EverestAPI/OlympUI.git
