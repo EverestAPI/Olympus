@@ -45,6 +45,8 @@ function love.load(args)
         end
     end
 
+    love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
+
     utils = require("ui.utils")
 
     love.version = table.pack(love.getVersion())
@@ -52,8 +54,6 @@ function love.load(args)
     print(love.versionStr)
 
     native = require("native")
-
-    love.graphics.setFont(love.graphics.newFont(16))
 
     ui = require("ui")
     uie = require("ui.elements")
@@ -152,7 +152,10 @@ function love.load(args)
             onDrag = utils.nop,
             root = true
         }):with(function(bar)
-            bar._close.cb = love.event.quit
+            bar._close:with({
+                cb = love.event.quit,
+                height = 7
+            })
         end),
 
         uie.group({
@@ -193,7 +196,7 @@ Use the latest "stable" version if you hate updating.]])),
                     ):with(function(list)
                         list.selected = list.children[1]
                     end):as("versions")
-                ):with(utils.fillWidth):with(utils.fillHeightExcept(393)),
+                ):with(utils.fillWidth):with(utils.fillHeightExcept(411)),
 
                 uie.row({
                     uie.button("Step 3: Install"),
@@ -212,14 +215,14 @@ Use the latest "stable" version if you hate updating.]])),
                 
                     layoutLate = function(self)
                         local parent = self.parent
-                        self.realY = parent.innerHeight - self.height
+                        self.realY = parent.innerHeight - self.height - 16
                         uie.__row.layoutLate(self)
                     end
                 })
 
             }):with({
                 style = {
-                    padding = 32,
+                    padding = 16,
                     bg = {}
                 },
 
