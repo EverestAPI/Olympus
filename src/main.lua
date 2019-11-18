@@ -99,11 +99,11 @@ function love.load(args)
 
             drawBG = function(self)
                 local width, height = love.graphics.getWidth(), love.graphics.getHeight()
-                local mouseX, mouseY = ui.mouseX, ui.mouseY
+                local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
                 local time = self.time
 
                 local scale = math.max(width / 540, height / 700)
-                scale = (scale - 1) * 0.25 + 1
+                scale = (scale - 1) * 0.125 + 1
 
                 love.graphics.setColor(1, 1, 1, 1)
                 love.graphics.draw(
@@ -159,46 +159,40 @@ function love.load(args)
                 uie.image("header"),
 
                 uie.label("Step 1: Select Celeste.exe"),
+
                 uie.row({
-                    uie.field("<TODO: TEXT INPUT>"),
-                    uie.button("...")
+                    uie.field("<TODO: TEXT INPUT>"):with(utils.fillWidthExcept(32 + 4)),
+                    uie.button("..."):with(utils.rightbound)
                 }):with({
                     style = {
                         padding = 0,
                         bg = {}
                     }
-                }),
+                }):with(utils.fillWidth),
+
                 uie.label("Celeste <version> + Everest <version>"),
 
                 uie.label("Step 2: Select Everest Version"),
+                uie.column({
+                    uie.label(([[
+Use the newest version for more features and bugfixes.
+Use the latest "stable" version if you hate updating.]])),
+                }):with({
+                    style = {
+                        bg = { 0.6, 0.5, 0.15, 0.6 },
+                        radius = 3,
+                    }
+                }):with(utils.fillWidth),
+
                 uie.scrollbox(
                     uie.list(
-                        utils.map(utils.listRange(100, 1, -1), function(i)
+                        utils.map(utils.listRange(10, 1, -1), function(i)
                             return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
                         end)
                     ):with(function(list)
                         list.selected = list.children[1]
                     end):as("versions")
-                ):with({
-                    height = 300,
-                    layoutLazy = function(self)
-                        -- Required to allow the container to shrink again.
-                        uie.__scrollbox.layoutLazy(self)
-                        self.width = 0
-                    end,
-                
-                    layoutLateLazy = function(self)
-                        -- Always reflow this child whenever its parent gets reflowed.
-                        self:layoutLate()
-                    end,
-                
-                    layoutLate = function(self)
-                        local width = self.parent.innerWidth
-                        self.width = width
-                        self.innerWidth = width - self.style.padding * 2
-                        uie.__row.layoutLate(self)
-                    end,
-                }),
+                ):with(utils.fillWidth):with(utils.fillHeightExcept(361)),
 
                 uie.row({
                     uie.button("Step 3: Install"),
@@ -208,7 +202,18 @@ function love.load(args)
                     style = {
                         padding = 0,
                         bg = {}
-                    }
+                    },
+
+                    layoutLateLazy = function(self)
+                        -- Always reflow this child whenever its parent gets reflowed.
+                        self:layoutLate()
+                    end,
+                
+                    layoutLate = function(self)
+                        local parent = self.parent
+                        self.realY = parent.innerHeight
+                        uie.__row.layoutLate(self)
+                    end
                 })
 
             }):with({
@@ -219,29 +224,11 @@ function love.load(args)
 
                 cacheable = false,
                 clip = false,
-
-                layoutLazy = function(self)
-                    -- Required to allow the container to shrink again.
-                    uie.__scrollbox.layoutLazy(self)
-                    self.width = 0
-                end,
-            
-                layoutLateLazy = function(self)
-                    -- Always reflow this child whenever its parent gets reflowed.
-                    self:layoutLate()
-                end,
-            
-                layoutLate = function(self)
-                    local width = self.parent.innerWidth
-                    self.width = width
-                    self.innerWidth = width - self.style.padding * 2
-                    uie.__row.layoutLate(self)
-                end,
-            }):as("installer"),
+            }):with(utils.fillWidth):with(utils.fillHeight):as("installer"),
 
             uie.label():with({
                 style = {
-                    color = { 0, 0, 0, 1 }
+                    color = { 0, 0, 0, 0 }
                 }
             }):as("debug"),
 

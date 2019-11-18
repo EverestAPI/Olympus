@@ -49,9 +49,40 @@ uie.add("scrollbox", {
             self.__dx = dx
             self.__dy = dy
         end
+
+        local inner = self._inner
+        local origX, origY = inner.x, inner.y
+        local x, y = origX, origY
+        
+        x = math.max(x + inner.width, self.width) - inner.width
+        x = math.min(0, x)
+        
+        y = math.max(y + inner.height, self.height) - inner.height
+        y = math.min(0, y)
+
+        if x ~= origX or y ~= origY then
+            inner.x = x
+            inner.y = y
+            self:afterScroll()
+        end
+
+    end,
+
+    afterScroll = function(self)
+        self:repositionChildren()
+        ui.root:recollect()
+        self._handleX:repaint()
+        self._handleX:layoutLate()
+        self._handleY:repaint()
+        self._handleY:layoutLate()
+        self:repaint()
     end,
 
     onScroll = function(self, x, y, dx, dy, raw)
+        if dx == 0 and dy == 0 then
+            return
+        end
+
         local inner = self._inner
 
         if not raw then
@@ -83,13 +114,7 @@ uie.add("scrollbox", {
         end
         inner.y = uiu.round(-y)
 
-        self:repositionChildren()
-        ui.root:recollect()
-        self._handleX:repaint()
-        self._handleX:layoutLate()
-        self._handleY:repaint()
-        self._handleY:layoutLate()
-        self:repaint()
+        self:afterScroll()
     end
 })
 

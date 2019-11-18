@@ -90,6 +90,132 @@ function uiu.magic(fn, ...)
 end
 
 
+function uiu.hook(target, nameOrMap, cb)
+    if type(nameOrMap) ~= "string" then
+        for name, cb in pairs(nameOrMap) do
+            uiu.hook(target, name, cb)
+        end
+        return
+    end
+
+    local name = nameOrMap
+    local orig = target[name] or uiu.nop
+    target[name] = function(self, ...)
+        cb(self, orig, ...)
+    end
+end
+
+
+function uiu.fillWidth(el)
+    uiu.hook(el, {
+        layoutLazy = function(self, orig)
+            -- Required to allow the container to shrink again.
+            orig(self)
+            self.width = 0
+        end,
+    
+        layoutLateLazy = function(self, orig)
+            -- Always reflow this child whenever its parent gets reflowed.
+            self:layoutLate()
+        end,
+    
+        layoutLate = function(self, orig)
+            local width = self.parent.innerWidth
+            self.width = width
+            self.innerWidth = width - self.style.padding * 2
+            orig(self)
+        end
+    })
+end
+
+function uiu.fillWidthExcept(leftover)
+    return function(el)
+        uiu.hook(el, {
+            layoutLazy = function(self, orig)
+                -- Required to allow the container to shrink again.
+                orig(self)
+                self.width = 0
+            end,
+        
+            layoutLateLazy = function(self, orig)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+        
+            layoutLate = function(self, orig)
+                local width = self.parent.innerWidth - leftover
+                self.width = width
+                self.innerWidth = width - self.style.padding * 2
+                orig(self)
+            end
+        })
+    end
+end
+
+
+function uiu.fillHeight(el)
+    uiu.hook(el, {
+        layoutLazy = function(self, orig)
+            -- Required to allow the container to shrink again.
+            orig(self)
+            self.height = 0
+        end,
+    
+        layoutLateLazy = function(self, orig)
+            -- Always reflow this child whenever its parent gets reflowed.
+            self:layoutLate()
+        end,
+    
+        layoutLate = function(self, orig)
+            local Height = self.parent.innerHeight
+            self.height = Height
+            self.innerHeight = Height - self.style.padding * 2
+            orig(self)
+        end
+    })
+end
+
+function uiu.fillHeightExcept(leftover)
+    return function(el)
+        uiu.hook(el, {
+            layoutLazy = function(self, orig)
+                -- Required to allow the container to shrink again.
+                orig(self)
+                self.height = 0
+            end,
+        
+            layoutLateLazy = function(self, orig)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+        
+            layoutLate = function(self, orig)
+                local Height = self.parent.innerHeight - leftover
+                self.height = Height
+                self.innerHeight = Height - self.style.padding * 2
+                orig(self)
+            end
+        })
+    end
+end
+
+
+function uiu.rightbound(el)
+    uiu.hook(el, {
+        layoutLateLazy = function(self, orig)
+            -- Always reflow this child whenever its parent gets reflowed.
+            self:layoutLate()
+        end,
+    
+        layoutLate = function(self, orig)
+            local parent = self.parent
+            self.realX = parent.innerWidth - self.width
+            orig(self)
+        end
+    })
+end
+
+
 table.pack = table.pack or function(...)
     return { ... }
 end
