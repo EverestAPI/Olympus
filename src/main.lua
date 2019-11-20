@@ -302,7 +302,8 @@ Use the latest "stable" version if you hate updating.]])),
         cacheable = false
     }):as("root")
     
-    ui.init(root)
+    ui.init(root, false)
+    ui.hookLove(false, true)
     main = root._main
 
     if native then
