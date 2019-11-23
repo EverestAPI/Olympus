@@ -232,7 +232,7 @@ Use the latest "stable" version if you hate updating.]])),
 
             uie.label():with({
                 style = {
-                    color = { 0, 0, 0, 0 }
+                    color = { 0, 0, 0, 1 }
                 }
             }):as("debug"),
 
@@ -289,7 +289,8 @@ Use the latest "stable" version if you hate updating.]])),
                 spacing = 0,
                 radius = 0
             },
-            clip = false
+            clip = false,
+            cacheable = false
         }):with(utils.fill):as("main")
     }):with({
         style = {
@@ -300,7 +301,7 @@ Use the latest "stable" version if you hate updating.]])),
         },
         clip = false,
         cacheable = false
-    }):as("root")
+    })
     
     ui.init(root, false)
     ui.hookLove(false, true)
