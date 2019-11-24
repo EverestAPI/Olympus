@@ -165,7 +165,7 @@ function love.load(args)
                 uie.label("Step 1: Select Celeste.exe"),
 
                 uie.row({
-                    uie.field("<TODO: TEXT INPUT>"):with(utils.fillWidthExcept(32 + 4)),
+                    uie.field("<TODO: TEXT INPUT>"):with(utils.fillWidth(-1, true)),
                     uie.button("..."):with(utils.rightbound)
                 }):with({
                     style = {
@@ -196,7 +196,7 @@ Use the latest "stable" version if you hate updating.]])),
                     ):with(function(list)
                         list.selected = list.children[1]
                     end):as("versions")
-                ):with(utils.fillWidth):with(utils.fillHeightExcept(411)),
+                ):with(utils.fillWidth):with(utils.fillHeight(68, true)),
 
                 uie.row({
                     uie.button("Step 3: Install"),
@@ -206,19 +206,8 @@ Use the latest "stable" version if you hate updating.]])),
                     style = {
                         padding = 0,
                         bg = {}
-                    },
-
-                    layoutLateLazy = function(self)
-                        -- Always reflow this child whenever its parent gets reflowed.
-                        self:layoutLate()
-                    end,
-                
-                    layoutLate = function(self)
-                        local parent = self.parent
-                        self.realY = parent.innerHeight - self.height - 16
-                        uie.__row.layoutLate(self)
-                    end
-                })
+                    }
+                }):with(utils.bottombound)
 
             }):with({
                 style = {
@@ -291,7 +280,7 @@ Use the latest "stable" version if you hate updating.]])),
             },
             clip = false,
             cacheable = false
-        }):with(utils.fill):as("main")
+        }):with(utils.fillWidth):with(utils.fillHeight(true)):as("main")
     }):with({
         style = {
             bg = { bg = {} },
