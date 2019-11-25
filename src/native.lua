@@ -289,15 +289,15 @@ function native.prepareWindow()
 
                 local attrData = ffi.new("WINCOMPATTRDATA[1]")
                 local accentPolicy = ffi.new("ACCENTPOLICY[1]")
-        
+
                 attrData[0].attribute = 19 -- WCA_ACCENT_POLICY
                 attrData[0].data = accentPolicy
                 attrData[0].dataSize = ffi.sizeof("ACCENTPOLICY")
-        
+
                 accentPolicy[0].accentState = 3 -- ACCENT_ENABLE_BLURBEHIND = 3, ACCENT_ENABLE_ACRYLICBLURBEHIND = 4
                 accentPolicy[0].flags = bit.bor(0x20, 0x40, 0x80, 0x100) -- Window border behavior
                 accentPolicy[0].color = 0xFFFFFFFF
-        
+
                 sys.SetWindowCompositionAttribute(hwnd, attrData)
 
             elseif verMaj >= 5 then
