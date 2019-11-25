@@ -193,7 +193,9 @@ Use the latest "stable" version if you hate updating.]])),
                         utils.map(utils.listRange(10, 1, -1), function(i)
                             return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
                         end)
-                    ):with(utils.fillWidth):with(function(list)
+                    ):with({
+                        grow = false
+                    }):with(utils.fillWidth):with(function(list)
                         list.selected = list.children[1]
                     end):as("versions")
                 ):with(utils.fillWidth):with(utils.fillHeight(68, true)),
@@ -291,7 +293,7 @@ Use the latest "stable" version if you hate updating.]])),
         clip = false,
         cacheable = false
     })
-    
+
     ui.init(root, false)
     ui.hookLove(false, true)
     main = root._main
