@@ -190,7 +190,7 @@ Use the latest "stable" version if you hate updating.]])),
 
                 uie.scrollbox(
                     uie.list(
-                        utils.map(utils.listRange(10, 1, -1), function(i)
+                        utils.map(utils.listRange(200, 1, -1), function(i)
                             return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
                         end)
                     ):with({
@@ -240,7 +240,7 @@ Use the latest "stable" version if you hate updating.]])),
             uie.window("Hello, World!",
                 uie.column({
                     uie.label("This is a one-line label."),
-                    
+
                     -- Labels use Löve2D Text objects under the hood.
                     uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
 
@@ -248,7 +248,11 @@ Use the latest "stable" version if you hate updating.]])),
                     uie.label("This is a two-line label.\nThe following label is updated dynamically."),
 
                     -- Dynamically updated label.
-                    uie.label():as("info"),
+                    uie.label():with({
+                        update = function(el)
+                            el.text = "FPS: " .. love.timer.getFPS()
+                        end
+                    }),
 
                     uie.button("This is a button.", function(btn)
                         if btn.counter == nil then
