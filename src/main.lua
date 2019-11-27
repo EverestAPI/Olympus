@@ -162,43 +162,60 @@ function love.load(args)
             uie.column({
                 uie.image("header"),
 
-                uie.label("Step 1: Select Celeste.exe"),
-
                 uie.row({
-                    uie.field("<TODO: TEXT INPUT>"):with(utils.fillWidth(-1, true)),
-                    uie.button("..."):with(utils.rightbound)
+
+                    uie.column({
+                        uie.label("Step 1: Select your installation"),
+
+                        uie.scrollbox(
+                            uie.list(
+                                {
+                                    "Steam",
+                                    "Epic",
+                                    "Bingo",
+                                    "Casual",
+                                    "Custom",
+                                }
+                            ):with({
+                                grow = false
+                            }):with(utils.fillWidth):with(function(list)
+                                list.selected = list.children[1]
+                            end):as("versions")
+                        ):with(utils.fillWidth):with(utils.fillHeight(true)),
+                    }):with(utils.fillHeight),
+
+                    uie.column({
+                        uie.label("Step 2: Select Everest Version"),
+                        uie.column({
+                            uie.label(([[
+Use the newest version for more features and bugfixes.
+Use the latest "stable" version if you hate updating.]])),
+                        }):with({
+                            style = {
+                                bg = { 0.6, 0.5, 0.15, 0.6 },
+                                radius = 3,
+                            }
+                        }):with(utils.fillWidth),
+
+                        uie.scrollbox(
+                            uie.list(
+                                utils.map(utils.listRange(200, 1, -1), function(i)
+                                    return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
+                                end)
+                            ):with({
+                                grow = false
+                            }):with(utils.fillWidth):with(function(list)
+                                list.selected = list.children[1]
+                            end):as("versions")
+                        ):with(utils.fillWidth):with(utils.fillHeight(true)),
+                    }):with(utils.fillHeight),
+
                 }):with({
                     style = {
                         padding = 0,
                         bg = {}
                     }
-                }):with(utils.fillWidth),
-
-                uie.label("Celeste <version> + Everest <version>"),
-
-                uie.label("Step 2: Select Everest Version"),
-                uie.column({
-                    uie.label(([[
-Use the newest version for more features and bugfixes.
-Use the latest "stable" version if you hate updating.]])),
-                }):with({
-                    style = {
-                        bg = { 0.6, 0.5, 0.15, 0.6 },
-                        radius = 3,
-                    }
-                }):with(utils.fillWidth),
-
-                uie.scrollbox(
-                    uie.list(
-                        utils.map(utils.listRange(200, 1, -1), function(i)
-                            return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
-                        end)
-                    ):with({
-                        grow = false
-                    }):with(utils.fillWidth):with(function(list)
-                        list.selected = list.children[1]
-                    end):as("versions")
-                ):with(utils.fillWidth):with(utils.fillHeight(68, true)),
+                }):with(utils.fillWidth):with(utils.fillHeight(16, true)),
 
                 uie.row({
                     uie.button("Step 3: Install"),
