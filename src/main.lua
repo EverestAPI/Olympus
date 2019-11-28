@@ -167,25 +167,46 @@ function love.load(args)
                     uie.column({
                         uie.label("Step 1: Select your installation"),
 
-                        uie.scrollbox(
-                            uie.list(
-                                {
-                                    "Steam",
-                                    "Epic",
-                                    "Bingo",
-                                    "Casual",
-                                    "Custom",
-                                }
-                            ):with({
-                                grow = false
-                            }):with(utils.fillWidth):with(function(list)
-                                list.selected = list.children[1]
-                            end):as("versions")
-                        ):with(utils.fillWidth):with(utils.fillHeight(true)),
+                        uie.column({
+
+                            uie.scrollbox(
+                                uie.list(
+                                    {
+                                        "Steam",
+                                        "Epic",
+                                        "Bingo",
+                                        "Casual",
+                                        "Custom",
+                                    }
+                                ):with({
+                                    grow = false
+                                }):with(utils.fillWidth):with(function(list)
+                                    list.selected = list.children[1]
+                                end):as("versions")
+                            ):with(utils.fillWidth):with(utils.fillHeight),
+
+                            uie.row({
+                                uie.label("Loading"),
+                                uie.spinner():with({
+                                    width = 16,
+                                    height = 16,
+                                    progress = 0.3
+                                })
+                            }):with({
+                                clip = false,
+                                cacheable = false
+                            }):with(utils.bottombound):with(utils.rightbound)
+
+                        }):with({
+                            style = {
+                                padding = 0,
+                                bg = {}
+                            }
+                        }):with(utils.fillWidth):with(utils.fillHeight(true))
                     }):with(utils.fillHeight),
 
                     uie.column({
-                        uie.label("Step 2: Select Everest Version"),
+                        uie.label("Step 2: Select version"),
                         uie.column({
                             uie.label(([[
 Use the newest version for more features and bugfixes.
@@ -197,17 +218,37 @@ Use the latest "stable" version if you hate updating.]])),
                             }
                         }):with(utils.fillWidth),
 
-                        uie.scrollbox(
-                            uie.list(
-                                utils.map(utils.listRange(200, 1, -1), function(i)
-                                    return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
-                                end)
-                            ):with({
-                                grow = false
-                            }):with(utils.fillWidth):with(function(list)
-                                list.selected = list.children[1]
-                            end):as("versions")
-                        ):with(utils.fillWidth):with(utils.fillHeight(true)),
+                        uie.column({
+
+                            uie.scrollbox(
+                                uie.list(
+                                    utils.map(utils.listRange(200, 1, -1), function(i)
+                                        return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
+                                    end)
+                                ):with({
+                                    grow = false
+                                }):with(utils.fillWidth):with(function(list)
+                                    list.selected = list.children[1]
+                                end):as("versions")
+                            ):with(utils.fillWidth):with(utils.fillHeight),
+
+                            uie.row({
+                                uie.label("Loading"),
+                                uie.spinner():with({
+                                    width = 16,
+                                    height = 16
+                                })
+                            }):with({
+                                clip = false,
+                                cacheable = false
+                            }):with(utils.bottombound):with(utils.rightbound)
+
+                        }):with({
+                            style = {
+                                padding = 0,
+                                bg = {}
+                            }
+                        }):with(utils.fillWidth):with(utils.fillHeight(true))
                     }):with(utils.fillHeight),
 
                 }):with({
@@ -220,7 +261,7 @@ Use the latest "stable" version if you hate updating.]])),
                 uie.row({
                     uie.button("Step 3: Install"),
                     uie.button("Uninstall"),
-                    uie.button("???", utils.magic(print, "pressed"))
+                    uie.button("???", utils.magic(print, "pressed")),
                 }):with({
                     style = {
                         padding = 0,
