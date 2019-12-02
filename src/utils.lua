@@ -32,9 +32,16 @@ function utils.downloadJSON(url, headers)
     return dkjson.decode(body)
 end
 
+-- trim6 from http://lua-users.org/wiki/StringTrim
 function utils.trim(s)
-    -- trim6 from http://lua-users.org/wiki/StringTrim
     return s:match("^()%s*$") and "" or s:match("^%s*(.*%S)")
+end
+
+function utils.dateToTimestamp(dateString)
+    local pattern = "(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+.?%d*)Z"
+    local year, month, day, hour, min, sec = dateString:match(pattern)
+    local offset = os.time() - os.time(os.date("!*t"))
+    return os.time({ year = year, month = month, day = day, hour = hour, min = min, sec = sec, isdst = false }) + offset
 end
 
 return utils

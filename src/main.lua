@@ -64,6 +64,14 @@ function love.load(args)
 
     moonshine = require("moonshine")
 
+    local bgs = {}
+    for i, file in ipairs(love.filesystem.getDirectoryItems("data")) do
+        local bg = file:match("^(bg%d+)%.png$")
+        if bg then
+            bgs[#bgs + 1] = bg
+        end
+    end
+
     local root = uie.column({
         uie.new({
             id = "bg",
@@ -71,7 +79,7 @@ function love.load(args)
             height = 0,
             cacheable = false,
 
-            bg = uiu.image("background"),
+            bg = uiu.image(bgs[love.math.random(#bgs)]),
 
             cog = uiu.image("cogwheel"),
             time = 8,
@@ -150,8 +158,8 @@ function love.load(args)
 
         uie.titlebar("Everest.Olympus", true):with({
             style = {
-                focusedBG = { 0.4, 0.4, 0.4, 0.25 },
-                unfocusedBG = { 0.2, 0.2, 0.2, 0.3 }
+                focusedBG = { 0.4, 0.4, 0.4, 0.05 },
+                unfocusedBG = { 0.2, 0.2, 0.2, 0.1 }
             },
             onDrag = uiu.nop,
             root = true
@@ -189,14 +197,7 @@ function love.load(args)
                                 end):as("installs")
                             ):with(uiu.fillWidth):with(uiu.fillHeight),
 
-                            uie.row({
-                                uie.label("Loading"),
-                                uie.spinner():with({
-                                    width = 16,
-                                    height = 16,
-                                    progress = 0.3
-                                })
-                            }):with({
+                            uie.button("Manage"):with({
                                 clip = false,
                                 cacheable = false
                             }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
@@ -283,7 +284,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
 
             uie.label():with({
                 style = {
-                    color = { 0, 0, 0, 1 }
+                    color = { 0, 0, 0, 0 }
                 }
             }):as("debug"),
 
@@ -456,9 +457,11 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
                     text = text .. " (" .. branch .. ")"
                 end
 
+                local info = ""
+
                 local time = build.finishTime
                 if time then
-                    time = time:gsub("T", " "):gsub("(%:%d%d%..*)", "")
+                    info = info .. " built at " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(time))
                 end
 
                 local sha = build.sourceVersion
@@ -466,22 +469,25 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
                     for ci = 1, #commits do
                         local c = commits[ci]
                         if c.sha == sha then
+                            if c.commit.author.email == c.commit.committer.email then
+                                info = info .. " by " .. c.author.login
+                            end
+
                             local message = c.commit.message
                             local nl = message:find("\n")
                             if nl then
                                 message = message:sub(1, nl - 1)
                             end
-                            if time then
-                                text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, " " .. time .. "\n" .. message }
-                            else
-                                text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, " " .. message }
-                            end
+
+                            info = info .. "\n" .. message
+
                             break
                         end
                     end
+                end
 
-                elseif time then
-                    text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, " " .. time }
+                if #info ~= 0 then
+                    text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, info }
                 end
 
                 local item = uie.listItem(text, build)
