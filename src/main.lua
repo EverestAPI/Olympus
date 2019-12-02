@@ -1,7 +1,9 @@
 local lldb
 local profile
 
+local uiu
 local utils
+local threader
 local native
 
 local ui
@@ -18,7 +20,7 @@ local _love_run = love.run
 local _love_runStep
 function love.run()
     local orig = _love_run()
-    
+
     local function step()
         love.timer = _love_timer
         love.graphics = _love_graphics
@@ -47,10 +49,12 @@ function love.load(args)
 
     love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
 
-    utils = require("ui.utils")
+    uiu = require("ui.utils")
+    utils = require("utils")
+    threader = require("threader")
 
     love.version = table.pack(love.getVersion())
-    love.versionStr = utils.join(love.version, ".")
+    love.versionStr = uiu.join(love.version, ".")
     print(love.versionStr)
 
     native = require("native")
@@ -67,9 +71,9 @@ function love.load(args)
             height = 0,
             cacheable = false,
 
-            bg = utils.image("background"),
+            bg = uiu.image("background"),
 
-            cog = utils.image("cogwheel"),
+            cog = uiu.image("cogwheel"),
             time = 8,
 
             effect = moonshine(moonshine.effects.gaussianblur),
@@ -149,14 +153,14 @@ function love.load(args)
                 focusedBG = { 0.4, 0.4, 0.4, 0.25 },
                 unfocusedBG = { 0.2, 0.2, 0.2, 0.3 }
             },
-            onDrag = utils.nop,
+            onDrag = uiu.nop,
             root = true
         }):with(function(bar)
             bar._close:with({
                 cb = love.event.quit,
                 height = 7
             })
-        end),
+        end):as("titlebar"),
 
         uie.group({
             uie.column({
@@ -180,10 +184,10 @@ function love.load(args)
                                     }
                                 ):with({
                                     grow = false
-                                }):with(utils.fillWidth):with(function(list)
+                                }):with(uiu.fillWidth):with(function(list)
                                     list.selected = list.children[1]
-                                end):as("versions")
-                            ):with(utils.fillWidth):with(utils.fillHeight),
+                                end):as("installs")
+                            ):with(uiu.fillWidth):with(uiu.fillHeight),
 
                             uie.row({
                                 uie.label("Loading"),
@@ -195,42 +199,40 @@ function love.load(args)
                             }):with({
                                 clip = false,
                                 cacheable = false
-                            }):with(utils.bottombound):with(utils.rightbound)
+                            }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
 
                         }):with({
                             style = {
                                 padding = 0,
                                 bg = {}
                             }
-                        }):with(utils.fillWidth):with(utils.fillHeight(true))
-                    }):with(utils.fillHeight),
+                        }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+                    }):with(uiu.fillHeight),
 
                     uie.column({
                         uie.label("Step 2: Select version"),
                         uie.column({
-                            uie.label(([[
+                            uie.label(({{ 1, 1, 1, 1 }, [[
 Use the newest version for more features and bugfixes.
-Use the latest "stable" version if you hate updating.]])),
+Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if you hate updating.]]})),
                         }):with({
                             style = {
-                                bg = { 0.6, 0.5, 0.15, 0.6 },
+                                bg = {},
+                                border = { 0.1, 0.6, 0.3, 0.7 },
                                 radius = 3,
                             }
-                        }):with(utils.fillWidth),
+                        }):with(uiu.fillWidth),
 
                         uie.column({
 
                             uie.scrollbox(
-                                uie.list(
-                                    utils.map(utils.listRange(200, 1, -1), function(i)
-                                        return { text = string.format("%i%s", i, i % 7 == 0 and " (stable)" or ""), data = i }
-                                    end)
-                                ):with({
+                                uie.list({
+                                }):with({
                                     grow = false
-                                }):with(utils.fillWidth):with(function(list)
+                                }):with(uiu.fillWidth):with(function(list)
                                     list.selected = list.children[1]
                                 end):as("versions")
-                            ):with(utils.fillWidth):with(utils.fillHeight),
+                            ):with(uiu.fillWidth):with(uiu.fillHeight),
 
                             uie.row({
                                 uie.label("Loading"),
@@ -241,33 +243,33 @@ Use the latest "stable" version if you hate updating.]])),
                             }):with({
                                 clip = false,
                                 cacheable = false
-                            }):with(utils.bottombound):with(utils.rightbound)
+                            }):with(uiu.bottombound):with(uiu.rightbound):as("loadingVersions")
 
                         }):with({
                             style = {
                                 padding = 0,
                                 bg = {}
                             }
-                        }):with(utils.fillWidth):with(utils.fillHeight(true))
-                    }):with(utils.fillHeight),
+                        }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+                    }):with(uiu.fillWidth(-1, true)):with(uiu.fillHeight),
 
                 }):with({
                     style = {
                         padding = 0,
                         bg = {}
                     }
-                }):with(utils.fillWidth):with(utils.fillHeight(16, true)),
+                }):with(uiu.fillWidth):with(uiu.fillHeight(16, true)),
 
                 uie.row({
                     uie.button("Step 3: Install"),
                     uie.button("Uninstall"),
-                    uie.button("???", utils.magic(print, "pressed")),
+                    uie.button("???", uiu.magic(print, "pressed")),
                 }):with({
                     style = {
                         padding = 0,
                         bg = {}
                     }
-                }):with(utils.bottombound)
+                }):with(uiu.bottombound)
 
             }):with({
                 style = {
@@ -277,7 +279,7 @@ Use the latest "stable" version if you hate updating.]])),
 
                 cacheable = false,
                 clip = false,
-            }):with(utils.fill):as("installer"),
+            }):with(uiu.fill):as("installer"),
 
             uie.label():with({
                 style = {
@@ -344,7 +346,7 @@ Use the latest "stable" version if you hate updating.]])),
             },
             clip = false,
             cacheable = false
-        }):with(utils.fillWidth):with(utils.fillHeight(true)):as("main")
+        }):with(uiu.fillWidth):with(uiu.fillHeight(true)):as("main")
     }):with({
         style = {
             bg = { bg = {} },
@@ -434,6 +436,68 @@ Use the latest "stable" version if you hate updating.]])),
     end
 
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
+
+    threader.routine(function()
+        local utilsAsync = threader.wrap("utils")
+        local builds = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Everest/_apis/build/builds"):result().value
+        -- TODO: Limit commits range
+        local commits = utilsAsync.downloadJSON("https://api.github.com/repos/EverestAPI/Everest/commits"):result()
+
+        local offset = 700
+        local list = main:findChild("versions")
+        for bi = 1, #builds do
+            local build = builds[bi]
+
+            if (build.status == "completed" or build.status == "succeeded") and (build.reason == "manual" or build.reason == "individualCI") then
+                local text = tostring(build.id + offset)
+
+                local branch = build.sourceBranch:gsub("refs/heads/", "")
+                if branch ~= "master" then
+                    text = text .. " (" .. branch .. ")"
+                end
+
+                local time = build.finishTime
+                if time then
+                    time = time:gsub("T", " "):gsub("(%:%d%d%..*)", "")
+                end
+
+                local sha = build.sourceVersion
+                if sha and commits then
+                    for ci = 1, #commits do
+                        local c = commits[ci]
+                        if c.sha == sha then
+                            local message = c.commit.message
+                            local nl = message:find("\n")
+                            if nl then
+                                message = message:sub(1, nl - 1)
+                            end
+                            if time then
+                                text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, " " .. time .. "\n" .. message }
+                            else
+                                text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, " " .. message }
+                            end
+                            break
+                        end
+                    end
+
+                elseif time then
+                    text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, " " .. time }
+                end
+
+                local item = uie.listItem(text, build)
+                if branch == "stable" then
+                    item.style.normalBG = { 0.08, 0.2, 0.12, 0.6 }
+                    item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.7 }
+                    item.style.pressedBG = { 0.1, 0.5, 0.2, 0.7 }
+                    item.style.selectedBG = { 0.1, 0.6, 0.3, 0.7 }
+                end
+                list:addChild(item)
+            end
+        end
+
+        main:findChild("loadingVersions"):removeSelf()
+    end)
+
 end
 
 love.frame = 0
@@ -442,8 +506,10 @@ function love.update(dt)
         return
     end
 
+    threader.update()
+
     love.frame = love.frame + 1
-    
+
     local root = ui.root._root
     local main = main
 
@@ -462,7 +528,7 @@ function love.update(dt)
             "focusing: " .. tostring(ui.focusing) .. "\n" ..
             ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
     end
-    
+
     ui.update()
 
     if profile then

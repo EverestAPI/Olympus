@@ -4,3 +4,6 @@
 [submodule "src/ui"]
 	path = src/ui
 	url = https://github.com/EverestAPI/OlympUI.git
+[submodule "src/luajit-request"]
+	path = src/luajit-request
+	url = https://github.com/LPGhatguy/luajit-request.git
