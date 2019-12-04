@@ -90,8 +90,8 @@ function love.load(args)
                 self.effect.gaussianblur.sigma = 5
             end,
 
-            update = function(self)
-                self.time = self.time + ui.delta
+            update = function(self, dt)
+                self.time = self.time + dt
 
                 local width, height = love.graphics.getWidth(), love.graphics.getHeight()
                 if width ~= self.innerWidth or height ~= self.innerHeight then
@@ -461,7 +461,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
 
                 local time = build.finishTime
                 if time then
-                    info = info .. " built at " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(time))
+                    info = info .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(time))
                 end
 
                 local sha = build.sourceVersion
@@ -470,7 +470,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
                         local c = commits[ci]
                         if c.sha == sha then
                             if c.commit.author.email == c.commit.committer.email then
-                                info = info .. " by " .. c.author.login
+                                info = info .. " ∙ " .. c.author.login
                             end
 
                             local message = c.commit.message
