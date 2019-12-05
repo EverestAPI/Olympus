@@ -5,12 +5,10 @@ local uiu
 local utils
 local threader
 local native
+local scener
 
 local ui
 local uie
-local moonshine
-
-local main
 
 -- Needed to avoid running the same frame twice on resize
 -- and to avoid Löve2D's default sleep throttle.
@@ -62,101 +60,12 @@ function love.load(args)
     ui = require("ui")
     uie = require("ui.elements")
 
-    moonshine = require("moonshine")
-
-    local bgs = {}
-    for i, file in ipairs(love.filesystem.getDirectoryItems("data")) do
-        local bg = file:match("^(bg%d+)%.png$")
-        if bg then
-            bgs[#bgs + 1] = bg
-        end
-    end
+    scener = require("scener")
 
     local root = uie.column({
-        uie.new({
-            id = "bg",
-            width = 0,
-            height = 0,
-            cacheable = false,
+        require("background")(),
 
-            bg = uiu.image(bgs[love.math.random(#bgs)]),
-
-            cog = uiu.image("cogwheel"),
-            time = 8,
-
-            effect = moonshine(moonshine.effects.gaussianblur),
-
-            init = function(self)
-                self.effect.gaussianblur.sigma = 5
-            end,
-
-            update = function(self, dt)
-                self.time = self.time + dt
-
-                local width, height = love.graphics.getWidth(), love.graphics.getHeight()
-                if width ~= self.innerWidth or height ~= self.innerHeight then
-                    self.effect.resize(width, height)
-                    self.innerWidth = width
-                    self.innerHeight = height
-                end
-                self:repaint()
-            end,
-
-            layoutLate = function(self)
-                self.realX = 0
-                self.realY = 0
-            end,
-
-            drawBG = function(self)
-                local width, height = love.graphics.getWidth() + 4, love.graphics.getHeight() + 4
-                local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
-                local time = self.time
-
-                local scale = math.max(width / 540, height / 700)
-                scale = (scale - 1) * 0.25 + 1
-
-                love.graphics.setColor(1, 1, 1, 1)
-                love.graphics.draw(
-                    self.bg,
-                    width / 2 - mouseX * 0.02,
-                    height / 2 - mouseY * 0.02,
-                    0,
-                    15 * scale, 15 * scale,
-                    64, 36
-                )
-
-                love.graphics.setColor(0, 0, 0, 0.1)
-                love.graphics.draw(
-                    self.cog,
-                    128 - mouseX * 0.04,
-                    -32 - mouseY * 0.04,
-                    time * 0.2,
-                    2, 2,
-                    128, 128
-                )
-
-                love.graphics.setColor(0.1, 0.1, 0.1, 0.15)
-                love.graphics.draw(
-                    self.cog,
-                    width - 128 - mouseX * 0.06,
-                    height + 32 - mouseY * 0.06,
-                    time * 0.3,
-                    3, 3,
-                    128, 128
-                )
-
-                love.graphics.push()
-                love.graphics.origin()
-            end,
-
-            draw = function(self)
-                love.graphics.setColor(1, 1, 1, 1)
-                self.effect(self.drawBG, self)
-                love.graphics.pop()
-            end
-        }),
-
-        uie.titlebar("Everest.Olympus", true):with({
+        uie.titlebar(uie.image("titlebar"), true):with({
             style = {
                 focusedBG = { 0.4, 0.4, 0.4, 0.05 },
                 unfocusedBG = { 0.2, 0.2, 0.2, 0.1 }
@@ -171,172 +80,25 @@ function love.load(args)
         end):as("titlebar"),
 
         uie.group({
-            uie.column({
-                uie.image("header"),
+            uie.group({
 
-                uie.row({
-
-                    uie.column({
-                        uie.label("Step 1: Select your installation"),
-
-                        uie.column({
-
-                            uie.scrollbox(
-                                uie.list(
-                                    {
-                                        "Steam",
-                                        "Epic",
-                                        "Bingo",
-                                        "Casual",
-                                        "Custom",
-                                    }
-                                ):with({
-                                    grow = false
-                                }):with(uiu.fillWidth):with(function(list)
-                                    list.selected = list.children[1]
-                                end):as("installs")
-                            ):with(uiu.fillWidth):with(uiu.fillHeight),
-
-                            uie.button("Manage"):with({
-                                clip = false,
-                                cacheable = false
-                            }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
-
-                        }):with({
-                            style = {
-                                padding = 0,
-                                bg = {}
-                            }
-                        }):with(uiu.fillWidth):with(uiu.fillHeight(true))
-                    }):with(uiu.fillHeight),
-
-                    uie.column({
-                        uie.label("Step 2: Select version"),
-                        uie.column({
-                            uie.label(({{ 1, 1, 1, 1 }, [[
-Use the newest version for more features and bugfixes.
-Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if you hate updating.]]})),
-                        }):with({
-                            style = {
-                                bg = {},
-                                border = { 0.1, 0.6, 0.3, 0.7 },
-                                radius = 3,
-                            }
-                        }):with(uiu.fillWidth),
-
-                        uie.column({
-
-                            uie.scrollbox(
-                                uie.list({
-                                }):with({
-                                    grow = false
-                                }):with(uiu.fillWidth):with(function(list)
-                                    list.selected = list.children[1]
-                                end):as("versions")
-                            ):with(uiu.fillWidth):with(uiu.fillHeight),
-
-                            uie.row({
-                                uie.label("Loading"),
-                                uie.spinner():with({
-                                    width = 16,
-                                    height = 16
-                                })
-                            }):with({
-                                clip = false,
-                                cacheable = false
-                            }):with(uiu.bottombound):with(uiu.rightbound):as("loadingVersions")
-
-                        }):with({
-                            style = {
-                                padding = 0,
-                                bg = {}
-                            }
-                        }):with(uiu.fillWidth):with(uiu.fillHeight(true))
-                    }):with(uiu.fillWidth(-1, true)):with(uiu.fillHeight),
-
-                }):with({
-                    style = {
-                        padding = 0,
-                        bg = {}
-                    }
-                }):with(uiu.fillWidth):with(uiu.fillHeight(16, true)),
-
-                uie.row({
-                    uie.button("Step 3: Install"),
-                    uie.button("Uninstall"),
-                    uie.button("???", uiu.magic(print, "pressed")),
-                }):with({
-                    style = {
-                        padding = 0,
-                        bg = {}
-                    }
-                }):with(uiu.bottombound)
+                -- Filled dynamically.
 
             }):with({
                 style = {
-                    padding = 16,
+                    padding = 0,
                     bg = {}
                 },
 
                 cacheable = false,
                 clip = false,
-            }):with(uiu.fill):as("installer"),
+            }):with(uiu.fill):as("wrapper"),
 
             uie.label():with({
                 style = {
                     color = { 0, 0, 0, 0 }
                 }
             }):as("debug"),
-
-            --[[
-            uie.window("Windowception",
-                uie.scrollbox(
-                    uie.group({
-                        uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
-                        uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
-                    }):with({ width = 200, height = 400 })
-                ):with({ width = 200, height = 200 })
-            ):with({ x = 50, y = 100 }),
-
-            uie.window("Hello, World!",
-                uie.column({
-                    uie.label("This is a one-line label."),
-
-                    -- Labels use Löve2D Text objects under the hood.
-                    uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
-
-                    -- Multi-line labels aren't subjected to the parent element's spacing property.
-                    uie.label("This is a two-line label.\nThe following label is updated dynamically."),
-
-                    -- Dynamically updated label.
-                    uie.label():with({
-                        update = function(el)
-                            el.text = "FPS: " .. love.timer.getFPS()
-                        end
-                    }),
-
-                    uie.button("This is a button.", function(btn)
-                        if btn.counter == nil then
-                            btn.counter = 0
-                        end
-                        btn.counter = btn.counter + 1
-                        btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
-                    end),
-
-                    uie.button("Disabled"):with({ enabled = false }),
-
-                    uie.button("Useless"),
-
-                    uie.label("Select an item from the list below."):as("selected"),
-                    uie.list(utils.map(utils.listRange(1, 3), function(i)
-                        return { text = string.format("Item %i!", i), data = i }
-                    end), function(list, item)
-                        list.parent._selected.text = "Selected " .. tostring(item)
-                    end)
-
-                })
-            ):with({ x = 200, y = 50 }):as("test"),
-            --]]
 
         }):with({
             style = {
@@ -361,7 +123,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
 
     ui.init(root, false)
     ui.hookLove(false, true)
-    main = root._main
 
     if native then
         native.setWindowHitTest(function(win, area)
@@ -438,72 +199,25 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
 
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
 
-    threader.routine(function()
-        local utilsAsync = threader.wrap("utils")
-        local builds = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Everest/_apis/build/builds"):result().value
-        -- TODO: Limit commits range
-        local commits = utilsAsync.downloadJSON("https://api.github.com/repos/EverestAPI/Everest/commits"):result()
+    local wrapper = root:findChild("wrapper")
+    function scener.onChange(prev, next)
+        wrapper.children = {
+            next.root:with({
+                style = {
+                    bg = {},
+                    padding = 16
+                },
 
-        local offset = 700
-        local list = main:findChild("versions")
-        for bi = 1, #builds do
-            local build = builds[bi]
+                cacheable = false,
+                clip = false,
+            }):with(uiu.fill)
+        }
 
-            if (build.status == "completed" or build.status == "succeeded") and (build.reason == "manual" or build.reason == "individualCI") then
-                local text = tostring(build.id + offset)
+        wrapper:reflow()
+        ui.root:recollect()
+    end
 
-                local branch = build.sourceBranch:gsub("refs/heads/", "")
-                if branch ~= "master" then
-                    text = text .. " (" .. branch .. ")"
-                end
-
-                local info = ""
-
-                local time = build.finishTime
-                if time then
-                    info = info .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(time))
-                end
-
-                local sha = build.sourceVersion
-                if sha and commits then
-                    for ci = 1, #commits do
-                        local c = commits[ci]
-                        if c.sha == sha then
-                            if c.commit.author.email == c.commit.committer.email then
-                                info = info .. " ∙ " .. c.author.login
-                            end
-
-                            local message = c.commit.message
-                            local nl = message:find("\n")
-                            if nl then
-                                message = message:sub(1, nl - 1)
-                            end
-
-                            info = info .. "\n" .. message
-
-                            break
-                        end
-                    end
-                end
-
-                if #info ~= 0 then
-                    text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, info }
-                end
-
-                local item = uie.listItem(text, build)
-                if branch == "stable" then
-                    item.style.normalBG = { 0.08, 0.2, 0.12, 0.6 }
-                    item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.7 }
-                    item.style.pressedBG = { 0.1, 0.5, 0.2, 0.7 }
-                    item.style.selectedBG = { 0.1, 0.6, 0.3, 0.7 }
-                end
-                list:addChild(item)
-            end
-        end
-
-        main:findChild("loadingVersions"):removeSelf()
-    end)
-
+    scener.set(require("scenes/modlist"))
 end
 
 love.frame = 0
@@ -516,9 +230,7 @@ function love.update(dt)
 
     love.frame = love.frame + 1
 
-    local root = ui.root._root
-    local main = main
-
+    --[[
     if profile then
         if love.frame % 100 == 0 then
             main._debug.text = profile.report(10)
@@ -534,6 +246,7 @@ function love.update(dt)
             "focusing: " .. tostring(ui.focusing) .. "\n" ..
             ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
     end
+    --]]
 
     ui.update()
 

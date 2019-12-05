@@ -32,6 +32,10 @@ function utils.downloadJSON(url, headers)
     return dkjson.decode(body)
 end
 
+function utils.fromJSON(body)
+    return dkjson.decode(body)
+end
+
 -- trim6 from http://lua-users.org/wiki/StringTrim
 function utils.trim(s)
     return s:match("^()%s*$") and "" or s:match("^%s*(.*%S)")
