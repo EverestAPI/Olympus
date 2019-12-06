@@ -1,5 +1,6 @@
 local request = require("luajit-request")
 local dkjson = require("dkjson")
+local tinyyaml = require("tinyyaml")
 
 local utils = {}
 
@@ -36,6 +37,15 @@ function utils.fromJSON(body)
     return dkjson.decode(body)
 end
 
+function utils.downloadYAML(url, headers)
+    local body = utils.download(url, headers)
+    return tinyyaml.parse(body)
+end
+
+function utils.fromYAML(body)
+    return tinyyaml.parse(body)
+end
+
 -- trim6 from http://lua-users.org/wiki/StringTrim
 function utils.trim(s)
     return s:match("^()%s*$") and "" or s:match("^%s*(.*%S)")
@@ -46,6 +56,33 @@ function utils.dateToTimestamp(dateString)
     local year, month, day, hour, min, sec = dateString:match(pattern)
     local offset = os.time() - os.time(os.date("!*t"))
     return os.time({ year = year, month = month, day = day, hour = hour, min = min, sec = sec, isdst = false }) + offset
+end
+
+-- Based on https://gist.github.com/HoraceBury/9001099
+function utils.cleanHTML(body)
+    local rules = {
+        { "&amp;", "&" },
+        { "&#151;", "-" },
+        { "&#146;", "'" },
+        { "&#147;", "\"" },
+        { "&#148;", "\"" },
+        { "&#150;", "-" },
+        { "&#160;", " " },
+        { "<br ?/?>", "\n" },
+        { "</p>", "\n" },
+        { "(%b<>)", "" },
+        { "\r", "\n" },
+        { "[\n\n]+", "\n" },
+        { "^\n*", "" },
+        { "\n*$", "" },
+    }
+
+    for i = 1, #rules do
+        local rule = rules[i]
+        body = string.gsub(body, rule[1], rule[2])
+    end
+
+    return body
 end
 
 return utils
