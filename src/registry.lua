@@ -1,4 +1,7 @@
 local luacom = require("luacom")
+if not luacom then
+    return false
+end
 
 local registry = {}
 

@@ -33,13 +33,10 @@ function config.load()
         end
     end
 
-    local fh = io.open(path, "rb")
-    if not fh then
+    local content = fs.read(path)
+    if not content then
         return
     end
-
-    local content = fh:read("*a")
-    fh:close()
 
     local data = utils.fromJSON(content)
     configData = data
@@ -53,15 +50,7 @@ function config.save()
 
     local content = utils.toJSON(configData)
 
-    fs.mkdir(utils.dirname(pathTmp))
-    local fh = io.open(pathTmp, "wb")
-    if not fh then
-        return
-    end
-
-    fh:write(content)
-    fh:close()
-
+    fs.write(pathTmp, content)
     os.rename(pathTmp, path)
     os.remove(path)
 end

@@ -36,7 +36,7 @@ scene.root = root
 function scene.load()
     threader.routine(function()
         local utilsAsync = threader.wrap("utils")
-        local finderAsync = threader.wrap("celestefinder")
+        local finderAsync = threader.wrap("finder")
 
         local listMain = root:findChild("installs")
 

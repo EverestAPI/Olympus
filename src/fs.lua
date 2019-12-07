@@ -63,8 +63,33 @@ function fs.isDirectory(path)
     if not path then
         return false
     end
+    path = path:gsub("([^/\\])[/\\]$", "%1")
     local attrs = lfs.attributes(path)
     return attrs and attrs.mode == "directory" and path
+end
+
+function fs.read(path)
+    local fh = io.open(path, "rb")
+    if not fh then
+        return
+    end
+
+    local content = fh:read("*a")
+    fh:close()
+
+    return content
+end
+
+function fs.write(path, content)
+    fs.mkdir(fs.dirname(path))
+
+    local fh = io.open(path, "wb")
+    if not fh then
+        return
+    end
+
+    fh:write(content)
+    fh:close()
 end
 
 function fs.saveDialog(path, filter)

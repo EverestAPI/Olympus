@@ -4,6 +4,11 @@ local tinyyaml = require("tinyyaml")
 
 local utils = {}
 
+local uiu = require("ui.utils")
+for k, v in pairs(uiu) do
+    utils[k] = v
+end
+
 function utils.download(url, headers)
     headers = headers or {
         ["User-Agent"] = "curl/7.64.1",
