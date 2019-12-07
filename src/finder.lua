@@ -108,27 +108,6 @@ function finder.findSteamInstalls(id)
 end
 
 
-function finder.findSteamInstalls(id)
-    local list = {}
-
-    local libraries = finder.findSteamLibraries()
-    for i = 1, #libraries do
-        local path = libraries[i]
-        path = fs.joinpath(path, "Celeste")
-
-        if fs.isDirectory(path) then
-            list[#list + 1] = {
-                name = "uhh",
-                type = "steam",
-                path = path
-            }
-        end
-    end
-
-    return list
-end
-
-
 function finder.findEpicRoot()
     local userOS = love.system.getOS()
 
