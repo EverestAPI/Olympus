@@ -110,7 +110,6 @@ function scene.load()
                 listFound:addChild(
                     uie.row({
                         uie.column({
-                            uie.label(entry.name),
                             uie.label(entry.type),
                             uie.label(entry.path)
                         }):with({

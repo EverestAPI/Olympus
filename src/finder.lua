@@ -97,7 +97,6 @@ function finder.findSteamInstalls(id)
 
         if fs.isDirectory(path) then
             list[#list + 1] = {
-                name = "uhh",
                 type = "steam",
                 path = path
             }
@@ -151,7 +150,6 @@ function finder.findEpicInstalls(id)
         local path = data.InstallLocation
         if fs.isDirectory(path) then
             list[#list + 1] = {
-                name = "uhh",
                 type = "epic",
                 path = path
             }
