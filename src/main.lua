@@ -1,3 +1,5 @@
+require("love_filesystem_unsandboxing")
+
 local lldb
 local profile
 
@@ -6,6 +8,7 @@ local utils
 local threader
 local native
 local scener
+local config
 
 local ui
 local uie
@@ -47,20 +50,22 @@ function love.load(args)
 
     love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
 
-    uiu = require("ui.utils")
     utils = require("utils")
     threader = require("threader")
 
-    love.version = table.pack(love.getVersion())
-    love.versionStr = uiu.join(love.version, ".")
+    love.version = {love.getVersion()}
+    love.versionStr = table.concat(love.version, ".")
     print(love.versionStr)
 
     native = require("native")
 
     ui = require("ui")
     uie = require("ui.elements")
+    uiu = require("ui.utils")
 
     scener = require("scener")
+
+    config = require("config")
 
     local root = uie.column({
         require("background")(),
@@ -217,7 +222,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set(require("scenes/modlist"))
+    scener.set(require("scenes/installmanager"))
 end
 
 love.frame = 0

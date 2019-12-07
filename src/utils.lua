@@ -29,21 +29,27 @@ function utils.download(url, headers)
 end
 
 function utils.downloadJSON(url, headers)
-    local body = utils.download(url, headers)
-    return dkjson.decode(body)
+    return utils.fromJSON(utils.download(url, headers))
 end
 
 function utils.fromJSON(body)
     return dkjson.decode(body)
 end
 
+function utils.toJSON(table)
+    return dkjson.encode(table)
+end
+
 function utils.downloadYAML(url, headers)
-    local body = utils.download(url, headers)
-    return tinyyaml.parse(body)
+    return utils.fromYAML(utils.download(url, headers))
 end
 
 function utils.fromYAML(body)
     return tinyyaml.parse(body)
+end
+
+function utils.toYAML(table)
+    error("Encoding Lua tables to YAML currently not supported")
 end
 
 -- trim6 from http://lua-users.org/wiki/StringTrim

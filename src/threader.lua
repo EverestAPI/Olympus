@@ -10,7 +10,7 @@ local mtThreadResultWrap = {
 }
 
 function mtThreadResultWrap:__call()
-    return unpack(self)
+    return table.unpack(self)
 end
 
 
@@ -226,10 +226,19 @@ function threader.run(fun, ...)
 end
 
 function threader.async(fun, ...)
-    return threader.run("return " .. fun .. "(...)", ...)
+    return threader.run([[
+        local rv = ]] .. fun .. [[
+        if type(rv) == 'function' then
+            return rv(...)
+        end
+        return rv
+    ]], ...)
 end
 
 function threader.await(thread, ...)
+    if type(thread) == "string" or type(thread) == "nil" then
+        thread = threader.run(thread or "return ...", ...)
+    end
     if type(thread) == "function" then
         thread = threader.run(thread, ...)
     end

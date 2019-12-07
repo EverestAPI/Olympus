@@ -93,7 +93,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
             padding = 0,
             bg = {}
         }
-    }):with(uiu.fillWidth):with(uiu.fillHeight(16, true)),
+    }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
         uie.button("Step 3: Install"),

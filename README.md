@@ -17,6 +17,9 @@
 - [nativefiledialog](https://github.com/Vexatos/nativefiledialog/tree/master/lua)
 - [luajit-request](https://github.com/LPGhatguy/luajit-request)
 - [libcurl](https://curl.haxx.se/libcurl/)
+- [LuaCOM](https://github.com/davidm/luacom)
 - [profile.lua](https://bitbucket.org/itraykov/profile.lua/src/master/)
 - [moonshine](https://github.com/vrld/moonshine)
+- [OlympUI](https://github.com/EverestAPI/OlympUI)
+- Shared code between Olympus and [Lönn](https://github.com/CelestialCartographers/Loenn)
 
