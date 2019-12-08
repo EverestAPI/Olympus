@@ -72,7 +72,7 @@ function scene.browse()
         installs[#installs + 1] = entry
         config.installs = installs
 
-        scene.load():await()
+        scene.reloadAll():await()
     end)
 end
 
@@ -121,7 +121,7 @@ function scene.reloadManual()
 
                         uie.button("Remove", function()
                             table.remove(installs, i)
-                            scene.load()
+                            scene.reloadAll()
                         end):with({
                             y = 6
                         }):with(uiu.rightbound)
@@ -187,7 +187,7 @@ function scene.reloadFound()
                         local installs = config.installs or {}
                         installs[#installs + 1] = entry
                         config.installs = installs
-                        scene.load()
+                        scene.reloadAll()
                     end):with({
                         y = 6
                     }):with(uiu.rightbound)
@@ -201,7 +201,7 @@ function scene.reloadFound()
 end
 
 
-function scene.load()
+function scene.reloadAll()
     local loading = root:findChild("loading")
     if loading then
         loading:removeSelf()
@@ -228,8 +228,13 @@ function scene.load()
 end
 
 
-function scene.enter()
+function scene.load()
 
+end
+
+
+function scene.enter()
+    scene.reloadAll()
 end
 
 
