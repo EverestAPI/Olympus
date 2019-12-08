@@ -223,7 +223,11 @@ function finder.fixRoot(path, appname)
 
     local appdir = fs.isDirectory(fs.joinpath(path, appname .. ".app"))
     if appdir then
-        return fs.isDirectory(fs.joinpath(appdir, "Contents", "MacOS"))
+        path = fs.isDirectory(fs.joinpath(appdir, "Contents", "MacOS"))
+    end
+
+    if not fs.isFile(fs.joinpath(path, "Celeste.exe")) then
+        return nil
     end
 
     return path

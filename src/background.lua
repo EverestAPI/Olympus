@@ -36,12 +36,10 @@ return function()
             self.effect.gaussianblur.sigma = 5
 
             local dots = self.dots
-            for i = 1, 64 do
-                local dot = {
-                    time = 1 + love.math.random() * 0.8
+            for i = 1, 128 do
+                dots[i] = {
+                    time = 1
                 }
-
-                dots[i] = dot
             end
         end,
 
@@ -50,37 +48,40 @@ return function()
 
             local random = love.math.random
 
+            local width, height = love.graphics.getWidth(), love.graphics.getHeight()
+            local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
+
             local dots = self.dots
             for i = 1, #dots do
                 local dot = dots[i]
-                local time = dot.time + dt * (dot.speed or 1)
+                dot.time = dot.time + dt * (dot.speed or 1)
 
-                if time >= 1 then
-                    time = time - 1
+                if dot.time >= 1 or (dot.cx * (width - dot.rad) + dot.rad * 0.5 + dot.rad - mouseX * 0.12) < -128 then
+                    dot.time = random() * 0.5 + 0.3
                     dot.tex = snows[love.math.random(#snows)]
-                    dot.cx = random()
+                    dot.cx = (dot.cx and 1 or -1) + (768 + math.max(mouseX, -mouseX) * 0.12) / width + random() * (dot.cx and 1 or 3)
                     dot.cy = random()
-                    dot.z = random() + 0.5
-                    dot.r = random() * 0.3 + 0.7
-                    dot.g = random() * 0.3 + 0.7
-                    dot.b = random() * 0.3 + 0.7
-                    dot.a = random() * 1.5 + 0.5
+                    dot.z = 0.5 + random()
+                    dot.r = random() * 0.1 + 0.9
+                    dot.g = random() * 0.1 + 0.9
+                    dot.b = random() * 0.1 + 0.9
+                    dot.a = (random() * random() * random() * 1.5) + (random() * 0.5) + 0.5
                     dot.offs = random() * math.pi * 2
                     dot.dir = math.sign(random() - 0.5)
-                    dot.rad = (random() + 0.3) * 512
-                    dot.speed = (random() + 0.5) * 0.04
+                    dot.rad = (random() + 0.3) * 256
+                    dot.speed = (random() + 0.5) * 0.04 + (random() * random()) * 0.04
                     dot.scale = (random() + 0.5) * 0.8
                 end
 
-                dot.time = time
+                dot.cx = dot.cx - dt / width * ((width * 0.25) + 32 + (64 + dot.speed * dot.speed) * dot.speed)
             end
 
-            local width, height = love.graphics.getWidth(), love.graphics.getHeight()
             if width ~= self.innerWidth or height ~= self.innerHeight then
                 self.effect.resize(width, height)
                 self.innerWidth = width
                 self.innerHeight = height
             end
+
             self:repaint()
         end,
 
@@ -148,16 +149,16 @@ return function()
                 local ang = dtime * ddir * math.pi + doffs
                 local t = math.sin(dtime * math.pi)
 
-                local dx = dcx * width + math.cos(ang) * drad
-                local dy = dcy * height + math.sin(ang) * drad
+                local dx = dcx * (width - drad) + drad * 0.5 + math.cos(ang) * drad
+                local dy = dcy * (height - drad) + drad * 0.5 + math.sin(ang) * drad
 
                 dscale = dscale * (t * 0.8 + 0.2)
 
-                love.graphics.setColor(dr, dg, db, 0.1 * t * da)
+                love.graphics.setColor(dr, dg, db, 0.05 * t * da)
                 love.graphics.draw(
                     dtex,
-                    dx - mouseX * 0.1 * dz,
-                    dy - mouseY * 0.1 * dz,
+                    dx - mouseX * 0.08 * dz,
+                    dy - mouseY * 0.08 * dz,
                     time * 0.2 + dtime * 0.5,
                     dscale, dscale,
                     16, 16

@@ -65,7 +65,7 @@ function sharedWrap:update(...)
     end
 
     if rethrow then
-        error(errorMsg)
+        error(self.id .. " gave up: " .. errorMsg)
     end
 
     return unpack(rv)
@@ -344,8 +344,10 @@ end
 function threader.routine(fun, ...)
     local co = coroutine.create(fun)
 
+    local info = debug.getinfo(fun, "S")
+
     local wrap = setmetatable({
-        id = "routine#" .. threadID,
+        id = "routine#" .. threadID .. "|" .. info.short_src .. ":" .. info.linedefined,
         routine = co,
         callbacks = {},
         fallbacks = {},
