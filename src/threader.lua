@@ -32,7 +32,7 @@ function sharedWrap:update(...)
     local rv = self:__update(...)
 
     local running = self.running
-    local errorMsg = self.errorMsg
+    local errorMsg = self.error
     local rethrow = errorMsg and self.critical
 
     if wasRunning and not running then
@@ -90,7 +90,7 @@ function sharedWrap:wait(...)
         return coroutine.yield(self)
     end
 
-    self.__wait()
+    self:__wait()
     return self:update(...)
 end
 

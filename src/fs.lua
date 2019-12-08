@@ -18,22 +18,54 @@ end
 function fs.dirname(path, sep)
     sep = sep or physfs.getDirSeparator()
 
-    return path:match("(.*" .. sep .. ")")
+    return path:match("(.*" .. sep .. ")"):gsub("([^/\\])[/\\]$", "%1")
 end
 
 -- TODO - Sanitize parts with leading/trailing separator
 -- IE {"foo", "/bar/"} becomes "foo//bar", expected "foo/bar"
 function fs.joinpath(...)
-    local paths = {...}
+    local parts = {...}
     local sep = physfs.getDirSeparator()
-
-    return table.concat(paths, sep)
+    return table.concat(parts, sep)
 end
 
-function fs.splitpath(s)
+function fs.splitpath(path)
+    local sep = physfs.getDirSeparator()
+    return string.split(path, sep)
+end
+
+function fs.normalize(path)
+    path = path:gsub("([^/\\])[/\\]$", "%1")
     local sep = physfs.getDirSeparator()
 
-    return string.split(s, sep)
+    local fixed = ""
+    local real = true
+    for part in path:gmatch("([^/\\]*)") do
+        if #part == 0 then
+            if #fixed == 0 then
+                goto add
+            end
+            goto skip
+        end
+
+        if #fixed ~= 0 and real then
+            local partLow = part:lower()
+            real = false
+            for realpart in fs.dir(fixed) do
+                if realpart:lower() == partLow then
+                    real = realpart
+                    break
+                end
+            end
+            part = real or part
+        end
+
+        ::add::
+        fixed = fixed .. part .. sep
+        ::skip::
+    end
+
+    return fixed:sub(1, #fixed - 1)
 end
 
 function fs.fileExtension(path)
@@ -92,13 +124,13 @@ function fs.write(path, content)
     fh:close()
 end
 
-function fs.saveDialog(path, filter)
+function fs.saveDialog(filter, path)
     return threader.run(function()
         return require("nfd").save(filter, nil, path)
     end)
 end
 
-function fs.openDialog(path, filter, callback)
+function fs.openDialog(filter, path)
     return threader.run(function()
         return require("nfd").open(filter, nil, path)
     end)

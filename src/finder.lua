@@ -9,6 +9,8 @@ require("love.system")
 
 local finder = {}
 
+finder.defaultName = "Celeste"
+
 
 function finder.findSteamRoot()
     local userOS = love.system.getOS()
@@ -215,12 +217,37 @@ function finder.findItchInstalls(name)
 end
 
 
+function finder.fixRoot(path, appname)
+    path = fs.normalize(path)
+    appname = appname or finder.defaultName
+
+    local appdir = fs.isDirectory(fs.joinpath(path, appname .. ".app"))
+    if appdir then
+        return fs.isDirectory(fs.joinpath(appdir, "Contents", "MacOS"))
+    end
+
+    return path
+end
+
+
 function finder.findAll()
-    return {
-        table.unpack(finder.findSteamInstalls("Celeste")),
-        table.unpack(finder.findEpicInstalls("Celeste")),
-        table.unpack(finder.findItchInstalls("Celeste")),
+    local all = {
+        table.unpack(finder.findSteamInstalls(finder.defaultName)),
+        table.unpack(finder.findEpicInstalls(finder.defaultName)),
+        table.unpack(finder.findItchInstalls(finder.defaultName)),
     }
+
+    for i = #all, 1, -1 do
+        local entry = all[i]
+        local path = finder.fixRoot(entry.path, finder.defaultName)
+        if not path then
+            table.remove(all, i)
+        else
+            entry.path = path
+        end
+    end
+
+    return all
 end
 
 return finder
