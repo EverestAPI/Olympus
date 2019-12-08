@@ -67,7 +67,9 @@ function scene.reloadManual()
             listManual:addChild(uie.label("Your installations list is empty."))
         end
 
-        listManual:addChild(uie.button("Browse"))
+        listManual:addChild(uie.button("Browse", function()
+            
+        end))
     end)
 end
 

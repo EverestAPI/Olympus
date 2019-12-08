@@ -2,10 +2,18 @@ local ui, uiu, uie = require("ui").quick()
 local moonshine = require("moonshine")
 
 local bgs = {}
+local snows = {}
+local cog = uiu.image("cogwheel")
+
 for i, file in ipairs(love.filesystem.getDirectoryItems("data")) do
     local bg = file:match("^(bg%d+)%.png$")
     if bg then
-        bgs[#bgs + 1] = bg
+        bgs[#bgs + 1] = uiu.image(bg)
+    end
+
+    local snow = file:match("^(snow%d+)%.png$")
+    if snow then
+        snows[#snows + 1] = uiu.image(snow)
     end
 end
 
@@ -16,19 +24,56 @@ return function()
         height = 0,
         cacheable = false,
 
-        bg = uiu.image(bgs[love.math.random(#bgs)]),
+        bg = bgs[love.math.random(#bgs)],
 
-        cog = uiu.image("cogwheel"),
         time = 8,
 
         effect = moonshine(moonshine.effects.gaussianblur),
 
+        dots = {},
+
         init = function(self)
             self.effect.gaussianblur.sigma = 5
+
+            local dots = self.dots
+            for i = 1, 64 do
+                local dot = {
+                    time = 1 + love.math.random() * 0.8
+                }
+
+                dots[i] = dot
+            end
         end,
 
         update = function(self, dt)
             self.time = self.time + dt
+
+            local random = love.math.random
+
+            local dots = self.dots
+            for i = 1, #dots do
+                local dot = dots[i]
+                local time = dot.time + dt * (dot.speed or 1)
+
+                if time >= 1 then
+                    time = time - 1
+                    dot.tex = snows[love.math.random(#snows)]
+                    dot.cx = random()
+                    dot.cy = random()
+                    dot.z = random() + 0.5
+                    dot.r = random() * 0.3 + 0.7
+                    dot.g = random() * 0.3 + 0.7
+                    dot.b = random() * 0.3 + 0.7
+                    dot.a = random() * 1.5 + 0.5
+                    dot.offs = random() * math.pi * 2
+                    dot.dir = math.sign(random() - 0.5)
+                    dot.rad = (random() + 0.3) * 512
+                    dot.speed = (random() + 0.5) * 0.04
+                    dot.scale = (random() + 0.5) * 0.8
+                end
+
+                dot.time = time
+            end
 
             local width, height = love.graphics.getWidth(), love.graphics.getHeight()
             if width ~= self.innerWidth or height ~= self.innerHeight then
@@ -64,7 +109,7 @@ return function()
 
             love.graphics.setColor(0, 0, 0, 0.1)
             love.graphics.draw(
-                self.cog,
+                cog,
                 128 - mouseX * 0.04,
                 -32 - mouseY * 0.04,
                 time * 0.2,
@@ -74,13 +119,50 @@ return function()
 
             love.graphics.setColor(0.1, 0.1, 0.1, 0.15)
             love.graphics.draw(
-                self.cog,
+                cog,
                 width - 128 - mouseX * 0.06,
                 height + 32 - mouseY * 0.06,
                 time * 0.3,
                 3, 3,
                 128, 128
             )
+
+            local dots = self.dots
+            for i = 1, #dots do
+                local dot = dots[i]
+
+                local dtime = dot.time
+                local dtex = dot.tex
+                local dcx = dot.cx
+                local dcy = dot.cy
+                local dz = dot.z
+                local dr = dot.r
+                local dg = dot.g
+                local db = dot.b
+                local da = dot.a
+                local doffs = dot.offs
+                local ddir = dot.dir
+                local drad = dot.rad
+                local dscale = dot.scale
+
+                local ang = dtime * ddir * math.pi + doffs
+                local t = math.sin(dtime * math.pi)
+
+                local dx = dcx * width + math.cos(ang) * drad
+                local dy = dcy * height + math.sin(ang) * drad
+
+                dscale = dscale * (t * 0.8 + 0.2)
+
+                love.graphics.setColor(dr, dg, db, 0.1 * t * da)
+                love.graphics.draw(
+                    dtex,
+                    dx - mouseX * 0.1 * dz,
+                    dy - mouseY * 0.1 * dz,
+                    time * 0.2 + dtime * 0.5,
+                    dscale, dscale,
+                    16, 16
+                )
+            end
 
             love.graphics.push()
             love.graphics.origin()
