@@ -1,3 +1,6 @@
+local unpack = _G.unpack or table.unpack
+
+
 local threader = {
     _threads = {},
     _routines = {},
@@ -10,47 +13,38 @@ local mtThreadResultWrap = {
 }
 
 function mtThreadResultWrap:__call()
-    return table.unpack(self)
+    return unpack(self)
 end
 
 
-local threadWrap = {}
+local sharedWrap = {}
 
-function threadWrap:start(...)
+function sharedWrap:update(...)
     if self.released then
-        error("Thread " .. self.id .. " already released!")
+        error(self.id .. " already released!")
     end
-
-    if self.running then
-        return
-    end
-
-    self.running = true
-    self.thread:start(self.code, self.upvalues, self.channel, ...)
-    threader._threads[#threader._threads + 1] = self
-
-    return self
-end
-
-function threadWrap:update()
-    if self.released then
-        error("Thread " .. self.id .. " already released!")
-    end
-
-    local thread = self.thread
 
     local wasRunning = self.running
-    local running = thread:isRunning()
-    self.running = running
+    if not wasRunning then
+        error(self.id .. " not running!")
+    end
 
-    local errorMsg = thread:getError()
-    self.error = errorMsg
+    local rv = self:__update(...)
+
+    local running = self.running
+    local errorMsg = self.errorMsg
     local rethrow = errorMsg and self.critical
 
     if wasRunning and not running then
-        local channel = self.channel
-        local rv = channel:pop()
         self.result = setmetatable(rv, mtThreadResultWrap)
+
+        local all = threader._threads
+        for i = #all, 1, -1 do
+            if all[i] == self then
+                table.remove(all, i)
+                break
+            end
+        end
 
         if errorMsg then
             local cbs = self.fallbacks
@@ -65,7 +59,7 @@ function threadWrap:update()
             local cbs = self.callbacks
             for i = 1, #cbs do
                 local cb = cbs[i]
-                cb(self, table.unpack(rv))
+                cb(self, unpack(rv))
             end
         end
     end
@@ -74,39 +68,37 @@ function threadWrap:update()
         error(errorMsg)
     end
 
-    return self
+    return unpack(rv)
 end
 
-function threadWrap:wait(...)
+function sharedWrap:wait(...)
     if self.released then
-        error("Thread " .. self.id .. " already released!")
+        error(self.id .. " already released!")
     end
 
-    self:start(...)
+    if not self.running then
+        error(self.id .. " not running!")
+    end
 
     local co = coroutine.running()
-    if threader._routines[co] then
+    local routine = threader._routines[co]
+    if routine then
+        routine.waiting = true
         self:calls(function(...)
-            local pass, errorMsg = coroutine.resume(co, ...)
-            if not pass then
-                error(errorMsg)
-            end
+            routine.waiting = false
         end)
-        coroutine.yield(self)
-        return self
+        return coroutine.yield(self)
     end
 
-    self.thread:wait()
-    self:update()
-
-    return self
+    self.__wait()
+    return self:update(...)
 end
 
-function threadWrap:await()
+function sharedWrap:await()
     return self:result()
 end
 
-function threadWrap:calls(cb, cb2, ...)
+function sharedWrap:calls(cb, cb2, ...)
     self.callbacks[#self.callbacks + 1] = cb
     if cb2 then
         return self:calls(cb2, ...)
@@ -114,7 +106,7 @@ function threadWrap:calls(cb, cb2, ...)
     return self
 end
 
-function threadWrap:falls(cb, cb2, ...)
+function sharedWrap:falls(cb, cb2, ...)
     self.fallbacks[#self.fallbacks + 1] = cb
     if cb2 then
         return self:falls(cb2, ...)
@@ -122,13 +114,53 @@ function threadWrap:falls(cb, cb2, ...)
     return self
 end
 
+
+local threadWrap = {}
+
+function threadWrap:start(...)
+    if self.released then
+        error(self.id .. " already released!")
+    end
+
+    if self.running then
+        error(self.id .. " already running!")
+        return
+    end
+
+    self.running = true
+    self.thread:start(self.code, self.upvalues, self.channel, ...)
+    threader._threads[#threader._threads + 1] = self
+
+    return self
+end
+
+function threadWrap:__update()
+    local thread = self.thread
+
+    local wasRunning = self.running
+    local running = thread:isRunning()
+    self.running = running
+
+    self.error = thread:getError()
+
+    if wasRunning and not running then
+        return self.channel:pop()
+    end
+
+    return {}
+end
+
+function threadWrap:__wait(...)
+    self.thread:wait()
+end
+
 function threadWrap:release()
     if self.running then
-        error("Thread " .. self.id .. " still running!")
+        error(self.id .. " still running!")
     end
 
     if self.released then
-        error("Thread " .. self.id .. " already released!")
+        error(self.id .. " already released!")
     end
 
     self.released = true
@@ -137,7 +169,6 @@ function threadWrap:release()
 
     return self
 end
-
 
 local mtThreadWrap = {
     __name = "threader.thread"
@@ -158,7 +189,62 @@ function mtThreadWrap:__index(key)
         return value
     end
 
-    return threadWrap[key]
+    return threadWrap[key] or sharedWrap[key]
+end
+
+
+local routineWrap = {}
+
+function routineWrap:start()
+    error("Coroutines cannot be restarted!")
+end
+
+function routineWrap:__update(...)
+    local co = self.routine
+
+    local rv = {coroutine.resume(co, ...)}
+    local passed = rv[1]
+    table.remove(rv, 1)
+
+    local running = coroutine.status(co) ~= "dead"
+    self.running = running
+
+    local errorMsg = not passed and (rv[1] or "???")
+    self.error = errorMsg
+
+    return rv
+end
+
+function routineWrap:__wait(...)
+    while self.running do
+        coroutine.yield()
+    end
+end
+
+function routineWrap:release()
+    error("Coroutines cannot be released!")
+end
+
+local mtRoutineWrap = {
+    __name = "threader.routine"
+}
+
+function mtRoutineWrap:__index(key)
+    local value = rawget(self, key)
+    if value ~= nil then
+        return value
+    end
+
+    if key == "result" then
+        self:wait()
+    end
+
+    value = rawget(self, key)
+    if value ~= nil then
+        return value
+    end
+
+    return routineWrap[key] or sharedWrap[key]
 end
 
 
@@ -206,7 +292,7 @@ function threader.new(func)
     end
 
     local wrap = setmetatable({
-        id = threadID,
+        id = "thread#" .. threadID,
         thread = thread,
         channel = channel,
         code = type(func) == "string" and func or string.dump(func),
@@ -236,31 +322,50 @@ function threader.async(fun, ...)
 end
 
 function threader.await(thread, ...)
+    if type(thread) == "table" and not thread.result then
+        local results = {}
+        for i = 1, #thread do
+            results[i] = {threader.await(thread[i], ...)}
+        end
+        return unpack(results)
+    end
+
     if type(thread) == "string" or type(thread) == "nil" then
         thread = threader.run(thread or "return ...", ...)
     end
+
     if type(thread) == "function" then
         thread = threader.run(thread, ...)
     end
+
     return thread:result()
 end
 
 function threader.routine(fun, ...)
     local co = coroutine.create(fun)
-    threader._routines[co] = true
-    local pass, errorMsg = coroutine.resume(co, ...)
-    if not pass then
-        error(errorMsg)
-    end
+
+    local wrap = setmetatable({
+        id = "routine#" .. threadID,
+        routine = co,
+        callbacks = {},
+        fallbacks = {},
+        critical = true,
+        released = false,
+        running = true
+    }, mtRoutineWrap)
+    threader._threads[#threader._threads + 1] = wrap
+    threader._routines[co] = wrap
+
+    threadID = threadID + 1
+    return wrap
 end
 
 function threader.update()
     local all = threader._threads
     for i = #all, 1, -1 do
         local t = all[i]
-        t:update()
-        if not t.running then
-            table.remove(all, i)
+        if not t.waiting then
+            t:update()
         end
     end
 end

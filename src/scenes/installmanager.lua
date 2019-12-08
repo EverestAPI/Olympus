@@ -18,54 +18,33 @@ local root = uie.column({
         }):with(uiu.fillWidth):as("installs")
     ):with(uiu.fillWidth):with(uiu.fillHeight),
 
-    uie.row({
-        uie.label("Loading"),
-        uie.spinner():with({
-            width = 16,
-            height = 16
-        })
-    }):with({
-        clip = false,
-        cacheable = false
-    }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
-
 })
 scene.root = root
 
-
-function scene.load()
-    threader.routine(function()
-        local utilsAsync = threader.wrap("utils")
-        local finderAsync = threader.wrap("finder")
-
+function scene.reloadManual()
+    return threader.routine(function()
         local listMain = root:findChild("installs")
 
         local listManual = root:findChild("listManual")
         if listManual then
-            listManual:removeSelf()
-        end
-
-        local listFound = root:findChild("listFound")
-        if listFound then
-            listFound:removeSelf()
-        end
-
-
-        listManual = uie.column({
-            uie.row({
+            listManual.children = {}
+        else
+            listManual = uie.column({
+                uie.row({
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0,
+                    }
+                }):with(uiu.fillWidth)
             }):with({
                 style = {
-                    bg = {},
-                    padding = 0,
+                    bg = { 0.1, 0.1, 0.1, 0.6 },
                 }
             }):with(uiu.fillWidth)
-        }):with({
-            style = {
-                bg = { 0.1, 0.1, 0.1, 0.6 },
-            }
-        }):with(uiu.fillWidth)
 
-        listMain:addChild(listManual:as("listManual"))
+            listMain:addChild(listManual:as("listManual"))
+        end
 
         local manual = config.installs or {}
 
@@ -89,7 +68,19 @@ function scene.load()
         end
 
         listManual:addChild(uie.button("Browse"))
+    end)
+end
 
+function scene.reloadFound()
+    return threader.routine(function()
+        local finderAsync = threader.wrap("finder")
+
+        local listMain = root:findChild("installs")
+
+        local listFound = root:findChild("listFound")
+        if listFound then
+            listFound:removeSelf()
+        end
 
         local found = finderAsync.findAll():result()
 
@@ -109,33 +100,50 @@ function scene.load()
 
                 listFound:addChild(
                     uie.row({
-                        uie.column({
-                            uie.label(entry.type),
-                            uie.label(entry.path)
-                        }):with({
-                            style = {
-                                bg = {},
-                                padding = 0,
-                            }
-                        }):with(uiu.fillWidth(-1, true)),
+                        uie.image("store/" .. entry.type):with({
+                            scale = 48 / 128
+                        }),
 
-                        uie.column({
-                            uie.button("Add"),
-                            --uie.button("Remove")
-                        }):with({
-                            style = {
-                                bg = {},
-                                padding = 0,
-                            }
+                        uie.label(entry.path):with({
+                            y = 14
+                        }),
+
+                        uie.button("Add"):with({
+                            y = 6
                         }):with(uiu.rightbound)
                     }):with(uiu.fillWidth)
                 )
             end
         end
 
-        threader.await()
-        threader.await()
-        root:findChild("loadingInstalls"):removeSelf()
+    end)
+end
+
+function scene.load()
+    threader.routine(function()
+        local loading = root:findChild("loading")
+        if loading then
+            loading:removeSelf()
+        end
+
+        loading = uie.row({
+            uie.label("Loading"),
+            uie.spinner():with({
+                width = 16,
+                height = 16
+            })
+        }):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
+        root:addChild(loading)
+
+        threader.await({
+            scene.reloadManual(),
+            scene.reloadFound()
+        })
+
+        loading:removeSelf()
     end)
 
 end
