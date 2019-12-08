@@ -1,6 +1,10 @@
 local fs = require("fs")
 local utils = require("utils")
 local registry = require("registry")
+local sqlite3status, sqlite3 = pcall(require, "lsqlite3")
+if not sqlite3status then
+    sqlite3status, sqlite3 = pcall(require, "lsqlite3complete")
+end
 require("love.system")
 
 local finder = {}
@@ -125,8 +129,7 @@ function finder.findEpicRoot()
     end
 end
 
-
-function finder.findEpicInstalls(id)
+function finder.findEpicInstalls(name)
     local list = {}
 
     local epic = finder.findEpicRoot()
@@ -143,7 +146,7 @@ function finder.findEpicInstalls(id)
         manifest = fs.joinpath(manifests, manifest)
         local data = utils.fromJSON(fs.read(manifest))
 
-        if data.DisplayName ~= id then
+        if data.DisplayName ~= name then
             goto next
         end
 
@@ -162,10 +165,61 @@ function finder.findEpicInstalls(id)
 end
 
 
+function finder.findItchDatabase()
+    local userOS = love.system.getOS()
+
+    if userOS == "Windows" then
+        return fs.isFile(fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db"))
+
+    elseif userOS == "OS X" then
+        return false
+
+    elseif userOS == "Linux" then
+        return false
+    end
+end
+
+function finder.findItchInstalls(name)
+    local list = {}
+
+    local dbPath = finder.findItchDatabase()
+    if not dbPath then
+        return list
+    end
+
+    local db = sqlite3.open(dbPath)
+
+    local query = db:prepare([[
+        SELECT verdict FROM caves
+        WHERE game_id == (
+            SELECT ID FROM games
+            WHERE title == ?
+        )
+    ]])
+    query:bind_values(name)
+
+    for body in query:urows() do
+        local data = utils.fromJSON(body)
+        local path = data.basePath
+        if fs.isDirectory(path) then
+            list[#list + 1] = {
+                type = "itch",
+                path = path
+            }
+        end
+    end
+
+    query:finalize()
+    db:close()
+    return list
+end
+
+
 function finder.findAll()
     return {
         table.unpack(finder.findSteamInstalls("Celeste")),
         table.unpack(finder.findEpicInstalls("Celeste")),
+        table.unpack(finder.findItchInstalls("Celeste")),
     }
 end
 

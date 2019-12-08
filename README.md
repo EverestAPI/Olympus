@@ -18,6 +18,7 @@
 - [luajit-request](https://github.com/LPGhatguy/luajit-request)
 - [libcurl](https://curl.haxx.se/libcurl/)
 - [LuaCOM](https://github.com/davidm/luacom)
+- [LuaSQLite3](http://lua.sqlite.org/index.cgi/home)
 - [profile.lua](https://bitbucket.org/itraykov/profile.lua/src/master/)
 - [moonshine](https://github.com/vrld/moonshine)
 - [OlympUI](https://github.com/EverestAPI/OlympUI)
