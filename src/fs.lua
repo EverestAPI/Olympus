@@ -9,6 +9,15 @@ local threader = require("threader")
 
 local fs = {}
 
+fs.mkdir = lfs.mkdir
+fs.chdir = lfs.chdir
+fs.dir = lfs.dir
+fs.rmdir = lfs.rmdir
+fs.rmdir = lfs.rmdir
+fs.getcwd = lfs.currentdir
+
+fs.remove = os.remove
+
 function fs.filename(path, sep)
     sep = sep or physfs.getDirSeparator()
 
@@ -75,13 +84,6 @@ end
 function fs.stripExtension(path)
     return path:sub(1, #path - #fs.fileExtension(path) - 1)
 end
-
-fs.mkdir = lfs.mkdir
-fs.chdir = lfs.chdir
-fs.dir = lfs.dir
-fs.rmdir = lfs.rmdir
-
-fs.remove = os.remove
 
 function fs.isFile(path)
     if not path then

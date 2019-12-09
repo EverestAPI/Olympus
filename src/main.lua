@@ -9,6 +9,7 @@ local threader
 local native
 local scener
 local config
+local sharp
 
 local ui
 local uie
@@ -66,6 +67,9 @@ function love.load(args)
     scener = require("scener")
 
     config = require("config")
+
+    sharp = require("sharp")
+    sharp.init(lldb)
 
     local root = uie.column({
         require("background")(),

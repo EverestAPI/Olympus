@@ -19,6 +19,7 @@
 - [libcurl](https://curl.haxx.se/libcurl/)
 - [LuaCOM](https://github.com/davidm/luacom)
 - [LuaSQLite3](http://lua.sqlite.org/index.cgi/home)
+- [lua-subprocess](https://github.com/0x0ade/lua-subprocess)
 - [profile.lua](https://bitbucket.org/itraykov/profile.lua/src/master/)
 - [moonshine](https://github.com/vrld/moonshine)
 - [OlympUI](https://github.com/EverestAPI/OlympUI)

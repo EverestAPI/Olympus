@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Reflection;
+using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,8 +12,9 @@ namespace Olympus {
         public static void Main(string[] args) {
             Process parentProc = null;
 
-            if (args.Length != 1) {
-                Console.WriteLine(@"{""__init"": ""no parent pid""}");
+            if (args.Length == 0) {
+                Console.WriteLine(@"""no parent pid""");
+                Console.WriteLine(@"null");
                 Console.Out.Flush();
                 // return;
 
@@ -19,25 +22,52 @@ namespace Olympus {
                 try {
                     parentProc = Process.GetProcessById(int.Parse(args[0]));
                 } catch {
-                    Console.WriteLine(@"{""__error"": ""zombie process""}");
+                    Console.WriteLine(@"null");
+                    Console.WriteLine(@"{""error"": ""invalid parent id""}\n");
                     Console.Out.Flush();
                     return;
                 }
 
-                Console.WriteLine(@"{""__init"": ""just fine""}");
+                bool debug = false;
+
+                for (int i = 1; i < args.Length; i++) {
+                    string arg = args[i];
+                    if (arg == "--debug") {
+                        debug = true;
+                    }
+                }
+
+                if (debug) {
+                    Debugger.Launch();
+                    Console.WriteLine(@"""debug""");
+
+                } else {
+                    Console.WriteLine(@"""fine""");
+                }
+
+                Console.WriteLine(@"null");
                 Console.Out.Flush();
             }
 
-
-            Dictionary<string, Cmd> cmds = new Dictionary<string, Cmd>();
-            foreach (Type type in typeof(Cmd).Assembly.GetTypes()) {
-                if (!typeof(Cmd).IsAssignableFrom(type) || type.IsAbstract)
-                    continue;
-
-                Cmd cmd = (Cmd) Activator.CreateInstance(type);
-                cmds[cmd.ID] = cmd;
+            if (parentProc != null) {
+                Thread killswitch = new Thread(() => {
+                    try {
+                        while (!parentProc.HasExited) {
+                            Thread.Yield();
+                            Thread.Sleep(1000);
+                        }
+                        Environment.Exit(0);
+                    } catch {
+                        Environment.Exit(-1);
+                    }
+                }) {
+                    Name = "Killswitch",
+                    IsBackground = true
+                };
+                killswitch.Start();
             }
 
+            Cmds.Init();
 
             JsonSerializer serializer = new JsonSerializer();
 
@@ -51,38 +81,51 @@ namespace Olympus {
                             // Commands from Olympus come in pairs of two objects:
 
                             // Command ID
-                            string id = serializer.Deserialize<string>(reader);
-                            if (!cmds.TryGetValue(id, out Cmd cmd)) {
+                            string id = serializer.Deserialize<string>(reader).ToLowerInvariant();
+                            Cmd cmd = Cmds.Get(id);
+                            if (cmd == null) {
                                 reader.Read();
                                 reader.Skip();
-                                Console.WriteLine(@"{""__error"": ""cmd id not found""}");
-                                Console.Out.Flush();
-                            }
-
-                            // Payload
-                            reader.Read();
-                            try {
-                                object input = serializer.Deserialize(reader, cmd.InputType);
-                                object output = cmd.Run(input);
-                                serializer.Serialize(writer, output, cmd.OutputType);
-                                writer.Flush();
-                                Console.WriteLine();
-                                Console.Out.Flush();
-
-                            } catch (Exception e) {
+                                Console.WriteLine(@"null");
                                 writer.WriteStartObject();
-                                writer.WritePropertyName("__error");
-                                writer.WriteValue("cmd failed running: " + e);
+                                writer.WritePropertyName("error");
+                                writer.WriteValue("cmd failed running: not found: " + id);
                                 writer.WriteEndObject();
                                 writer.Flush();
                                 Console.WriteLine();
                                 Console.Out.Flush();
                             }
+
+                            // Payload
+                            reader.Read();
+                            object input = serializer.Deserialize(reader, cmd.InputType);
+                            object output;
+                            try {
+                                output = cmd.Run(input);
+
+                            } catch (Exception e) {
+                                Console.WriteLine(@"null");
+                                writer.WriteStartObject();
+                                writer.WritePropertyName("error");
+                                writer.WriteValue("cmd failed running: " + e);
+                                writer.WriteEndObject();
+                                writer.Flush();
+                                Console.WriteLine();
+                                Console.Out.Flush();
+                                continue;
+                            }
+
+                            serializer.Serialize(writer, output, cmd.OutputType);
+                            writer.Flush();
+                            Console.WriteLine();
+                            Console.WriteLine(@"null");
+                            Console.Out.Flush();
                         }
 
                     } catch (Exception e) {
+                        Console.WriteLine(@"null");
                         writer.WriteStartObject();
-                        writer.WritePropertyName("__error");
+                        writer.WritePropertyName("error");
                         writer.WriteValue("cmd failed parsing: " + e);
                         writer.WriteEndObject();
                         writer.Flush();
