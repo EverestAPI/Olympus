@@ -42,7 +42,7 @@ namespace Olympus {
                     Console.WriteLine(@"""debug""");
 
                 } else {
-                    Console.WriteLine(@"""fine""");
+                    Console.WriteLine(@"""ok""");
                 }
 
                 Console.WriteLine(@"null");

@@ -275,8 +275,7 @@ function threader.new(func)
         local rv = {func(unpack(args))}
         channel:push(rv)
     ]])
-    local channelKey = "threader:" .. tostring(threadID)
-    local channel = love.thread.getChannel(channelKey)
+    local channel = love.thread.newChannel()
 
     local upvalues = {}
     if type(func) == "function" then
