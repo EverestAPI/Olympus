@@ -128,7 +128,7 @@ function threadWrap:start(...)
     end
 
     self.running = true
-    self.thread:start(self.code, self.upvalues, self.channel, ...)
+    self.thread:start(self.id, self.code, self.upvalues, self.channel, ...)
     threader._threads[#threader._threads + 1] = self
 
     return self
@@ -249,15 +249,18 @@ end
 
 
 local threadID = 0
-function threader.new(func)
+function threader.new(fun)
     local thread = love.thread.newThread([[-- threader.new
         local args = {...}
+
+        local id = args[1]
+        table.remove(args, 1)
 
         local code = args[1]
         table.remove(args, 1)
 
         local load = load or loadstring
-        local func = assert(load(code))
+        local fun = assert(load(code))
 
         local upvalues = args[1]
         table.remove(args, 1)
@@ -268,33 +271,45 @@ function threader.new(func)
 
         for i = 1, #upvalues do
             local slot = upvalues[i]
-            debug.setupvalue(func, i, slot.value)
+            debug.setupvalue(fun, i, slot.value)
         end
 
         local unpack = unpack or table.unpack
-        local rv = {func(unpack(args))}
+        local rv = {fun(unpack(args))}
         channel:push(rv)
     ]])
     local channel = love.thread.newChannel()
 
+    local info
     local upvalues = {}
-    if type(func) == "function" then
+    if type(fun) == "function" then
+        info = debug.getinfo(fun, "S")
+        info = ">" .. info.short_src .. ":" .. info.linedefined
+
         local i = 1
         while true do
-            local key, value = debug.getupvalue(func, i)
+            local key, value = debug.getupvalue(fun, i)
             if not key then
                 break
             end
             upvalues[i] = { key = key, value = value }
             i = i + 1
         end
+
+    else
+        info = debug.getinfo(2, "fSl")
+        if info.func == threader.run then
+            info = debug.getinfo(3, "Sl")
+        end
+
+        info = "<" .. info.short_src .. ":" .. info.currentline
     end
 
     local wrap = setmetatable({
-        id = "thread#" .. threadID,
+        id = "thread#" .. threadID .. info,
         thread = thread,
         channel = channel,
-        code = type(func) == "string" and func or string.dump(func),
+        code = type(fun) == "string" and fun or string.dump(fun),
         upvalues = upvalues,
         callbacks = {},
         fallbacks = {},
@@ -346,7 +361,7 @@ function threader.routine(fun, ...)
     local info = debug.getinfo(fun, "S")
 
     local wrap = setmetatable({
-        id = "routine#" .. threadID .. "|" .. info.short_src .. ":" .. info.linedefined,
+        id = "routine#" .. threadID .. ">" .. info.short_src .. ":" .. info.linedefined,
         routine = co,
         callbacks = {},
         fallbacks = {},

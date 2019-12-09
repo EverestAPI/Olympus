@@ -21,6 +21,9 @@ namespace Olympus {
 
         public static Cmd Get(string id)
             => All.TryGetValue(id, out Cmd cmd) ? cmd : null;
+
+        public static T Get<T>(string id) where T : Cmd
+            => All.TryGetValue(id, out Cmd cmd) ? (T) cmd : null;
     }
 
     public abstract class Cmd {

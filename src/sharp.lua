@@ -1,7 +1,14 @@
 local threader = require("threader")
 
+-- These must be named channels so that new threads requiring sharp can use them.
+local channelQueue = love.thread.getChannel("sharpQueue")
+local channelReturn = love.thread.getChannel("sharpReturn")
+local channelDebug = love.thread.getChannel("sharpDebug")
+
 -- The command queue thread.
-local function sharpthread(channelQueue, channelReturn, debug)
+local function sharpthread()
+    local debugging = channelDebug:peek()
+
     local fs = require("fs")
     local subprocess = require("subprocess")
     local ffi = require("ffi")
@@ -35,7 +42,7 @@ local function sharpthread(channelQueue, channelReturn, debug)
         fs.joinpath(cwd, "Olympus.Sharp.exe"),
         pid,
 
-        debug and "--debug" or nil,
+        debugging and "--debug" or nil,
 
         stdin = subprocess.PIPE,
         stdout = subprocess.PIPE,
@@ -65,25 +72,38 @@ local function sharpthread(channelQueue, channelReturn, debug)
         return read()
     end
 
+    local function dprint(...)
+        if debugging then
+            print("[sharp queue]", ...)
+        end
+    end
+
+    local unpack = table.unpack or _G.unpack
+
     -- The child process immediately sends a status message.
     local initStatus = read()
 
     while true do
+        dprint("awaiting next cmd")
         local cmd = channelQueue:demand()
         local id = cmd.id
         local args = cmd.args
 
         if id == "_init" then
+            dprint("returning init", initStatus)
             channelReturn:push(initStatus)
-            break
-        end
 
-        if id == "_die" then
+        elseif id == "_die" then
+            dprint("dying")
             channelReturn:push({ value = "ok" })
             break
-        end
 
-        channelReturn:push(run(id, args))
+        else
+            dprint("running", id, unpack(args))
+            local rv = run(id, args)
+            dprint("returning", rv.value, rv.status, rv.status and rv.status.error)
+            channelReturn:push(rv)
+        end
     end
 end
 
@@ -107,19 +127,30 @@ end
 
 local sharp = setmetatable({}, mtSharp)
 
-local function _run(channelQueue, channelReturn, id, ...)
+local function _run(id, ...)
+    local debugging = channelDebug:peek()
+
+    local function dprint(...)
+        if debugging then
+            print("[sharp run]", ...)
+        end
+    end
+
+    dprint("enqueuing", id, ...)
     channelQueue:push({ id = id, args = {...} })
 
+    dprint("awaiting return value")
     local rv = channelReturn:demand()
+    dprint("got", rv.value, rv.status, rv.status and rv.status.error)
 
-    if type(rv.status) == "error" and rv.status.error then
+    if type(rv.status) == "table" and rv.status.error then
         error("Failed running %s: %s", id, rv.status.error)
     end
 
     return rv.value
 end
 function sharp.run(id, ...)
-    return threader.run(_run, sharp.channelQueue, sharp.channelReturn, id, ...)
+    return threader.run(_run, id, ...)
 end
 
 sharp.initStatus = false
@@ -128,12 +159,15 @@ function sharp.init(debug)
         return sharp.initStatus
     end
 
+    if debug then
+        channelDebug:pop()
+        channelDebug:push(debug and true or false)
+    end
+
     -- Run the command queue on a separate thread.
     local thread = threader.new(sharpthread)
     sharp.thread = thread
-    sharp.channelQueue = love.thread.newChannel()
-    sharp.channelReturn = love.thread.newChannel()
-    thread:start(sharp.channelQueue, sharp.channelReturn, debug and true or false)
+    thread:start()
 
     -- The child process immediately sends a status message.
     sharp.initStatus = sharp.run("_init"):result()

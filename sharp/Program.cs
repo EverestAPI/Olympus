@@ -74,52 +74,54 @@ namespace Olympus {
             while (!(parentProc?.HasExited ?? false)) {
                 using (JsonTextWriter writer = new JsonTextWriter(Console.Out)) {
                     try {
-                        using (JsonTextReader reader = new JsonTextReader(Console.In)) {
-                            reader.SupportMultipleContent = true;
+                        using (JsonTextReader reader = new JsonTextReader(Console.In) {
+                            SupportMultipleContent = true
+                        }) {
+                            while (!(parentProc?.HasExited ?? false)) {
+                                // Commands from Olympus come in pairs of two objects:
 
-                            reader.Read();
-                            // Commands from Olympus come in pairs of two objects:
-
-                            // Command ID
-                            string id = serializer.Deserialize<string>(reader).ToLowerInvariant();
-                            Cmd cmd = Cmds.Get(id);
-                            if (cmd == null) {
+                                // Command ID
                                 reader.Read();
-                                reader.Skip();
-                                Console.WriteLine(@"null");
-                                writer.WriteStartObject();
-                                writer.WritePropertyName("error");
-                                writer.WriteValue("cmd failed running: not found: " + id);
-                                writer.WriteEndObject();
+                                string id = serializer.Deserialize<string>(reader).ToLowerInvariant();
+                                Cmd cmd = Cmds.Get(id);
+                                if (cmd == null) {
+                                    reader.Read();
+                                    reader.Skip();
+                                    Console.WriteLine(@"null");
+                                    writer.WriteStartObject();
+                                    writer.WritePropertyName("error");
+                                    writer.WriteValue("cmd failed running: not found: " + id);
+                                    writer.WriteEndObject();
+                                    writer.Flush();
+                                    Console.WriteLine();
+                                    Console.Out.Flush();
+                                }
+
+                                // Payload
+                                reader.Read();
+                                object input = serializer.Deserialize(reader, cmd.InputType);
+                                object output;
+                                try {
+                                    output = cmd.Run(input);
+
+                                } catch (Exception e) {
+                                    Console.WriteLine(@"null");
+                                    writer.WriteStartObject();
+                                    writer.WritePropertyName("error");
+                                    writer.WriteValue("cmd failed running: " + e);
+                                    writer.WriteEndObject();
+                                    writer.Flush();
+                                    Console.WriteLine();
+                                    Console.Out.Flush();
+                                    continue;
+                                }
+
+                                serializer.Serialize(writer, output, cmd.OutputType);
                                 writer.Flush();
                                 Console.WriteLine();
-                                Console.Out.Flush();
-                            }
-
-                            // Payload
-                            reader.Read();
-                            object input = serializer.Deserialize(reader, cmd.InputType);
-                            object output;
-                            try {
-                                output = cmd.Run(input);
-
-                            } catch (Exception e) {
                                 Console.WriteLine(@"null");
-                                writer.WriteStartObject();
-                                writer.WritePropertyName("error");
-                                writer.WriteValue("cmd failed running: " + e);
-                                writer.WriteEndObject();
-                                writer.Flush();
-                                Console.WriteLine();
                                 Console.Out.Flush();
-                                continue;
                             }
-
-                            serializer.Serialize(writer, output, cmd.OutputType);
-                            writer.Flush();
-                            Console.WriteLine();
-                            Console.WriteLine(@"null");
-                            Console.Out.Flush();
                         }
 
                     } catch (Exception e) {

@@ -3,6 +3,7 @@ local utils = require("utils")
 local threader = require("threader")
 local fs = require("fs")
 local config = require("config")
+local sharp = require("sharp")
 
 local scene = {}
 
@@ -77,6 +78,49 @@ function scene.browse()
 end
 
 
+function scene.createEntry(list, entry, manualIndex)
+    return threader.routine(function()
+        local version = sharp.getVersionString(entry.path):result()
+
+        local row = uie.row({
+            uie.image("store/" .. entry.type):with({
+                scale = 48 / 128
+            }),
+
+            uie.label(entry.path):with({
+                y = 14
+            }),
+
+            uie.label(version):with({
+                y = 14
+            }),
+
+            manualIndex and
+            uie.button("Remove", function()
+                local installs = config.installs
+                table.remove(installs, manualIndex)
+                config.installs = installs
+                scene.reloadAll()
+            end):with({
+                y = 6
+            }):with(uiu.rightbound)
+
+            or
+            uie.button("Add", function()
+                local installs = config.installs or {}
+                installs[#installs + 1] = entry
+                config.installs = installs
+                scene.reloadAll()
+            end):with({
+                y = 6
+            }):with(uiu.rightbound)
+        }):with(uiu.fillWidth)
+
+        list:addChild(row)
+    end)
+end
+
+
 function scene.reloadManual()
     return threader.routine(function()
         local listMain = root:findChild("installs")
@@ -108,25 +152,7 @@ function scene.reloadManual()
             listManual:addChild(uie.label("Your Installations:"))
             for i = 1, #installs do
                 local entry = installs[i]
-
-                listManual:addChild(
-                    uie.row({
-                        uie.image("store/" .. entry.type):with({
-                            scale = 48 / 128
-                        }),
-
-                        uie.label(entry.path):with({
-                            y = 14
-                        }),
-
-                        uie.button("Remove", function()
-                            table.remove(installs, i)
-                            scene.reloadAll()
-                        end):with({
-                            y = 6
-                        }):with(uiu.rightbound)
-                    }):with(uiu.fillWidth)
-                )
+                scene.createEntry(listManual, entry, i):result()
             end
 
         else
@@ -173,26 +199,7 @@ function scene.reloadFound()
                 listMain:addChild(listFound:as("listFound"))
             end
 
-            listFound:addChild(
-                uie.row({
-                    uie.image("store/" .. entry.type):with({
-                        scale = 48 / 128
-                    }),
-
-                    uie.label(entry.path):with({
-                        y = 14
-                    }),
-
-                    uie.button("Add", function()
-                        local installs = config.installs or {}
-                        installs[#installs + 1] = entry
-                        config.installs = installs
-                        scene.reloadAll()
-                    end):with({
-                        y = 6
-                    }):with(uiu.rightbound)
-                }):with(uiu.fillWidth)
-            )
+            scene.createEntry(listFound, entry, false):result()
 
             ::next::
         end
