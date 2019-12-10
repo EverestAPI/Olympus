@@ -73,7 +73,7 @@ function scene.browse()
         installs[#installs + 1] = entry
         config.installs = installs
 
-        scene.reloadAll():await()
+        scene.reloadAll()
     end)
 end
 
@@ -87,12 +87,14 @@ function scene.createEntry(list, entry, manualIndex)
                 scale = 48 / 128
             }),
 
-            uie.label(entry.path):with({
-                y = 14
-            }),
-
-            uie.label(version):with({
-                y = 14
+            uie.column({
+                uie.label(entry.path),
+                uie.label({{1, 1, 1, 0.5}, version})
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0
+                }
             }),
 
             manualIndex and
@@ -226,12 +228,16 @@ function scene.reloadAll()
     }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
     root:addChild(loading)
 
-    return threader.routine(threader.await, {
-        scene.reloadManual(),
-        scene.reloadFound()
-    }):calls(function()
-        loading:removeSelf()
-    end)
+    local left = 2
+    local function done()
+        left = left - 1
+        if left <= 0 then
+            loading:removeSelf()
+        end
+    end
+
+    scene.reloadManual():calls(done)
+    scene.reloadFound():calls(done)
 end
 
 

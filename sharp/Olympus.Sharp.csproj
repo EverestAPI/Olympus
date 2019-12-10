@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.1" />
     <PackageReference Include="MonoMod" Version="19.12.4.1" />
     <PackageReference Include="MonoMod.RuntimeDetour" Version="19.12.4.1" />
     <PackageReference Include="MonoMod.RuntimeDetour.HookGen" Version="19.12.4.1" />

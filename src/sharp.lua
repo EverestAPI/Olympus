@@ -144,7 +144,7 @@ local function _run(id, ...)
     dprint("got", rv.value, rv.status, rv.status and rv.status.error)
 
     if type(rv.status) == "table" and rv.status.error then
-        error("Failed running %s: %s", id, rv.status.error)
+        error(string.format("Failed running %s: %s", id, rv.status.error))
     end
 
     return rv.value
