@@ -9,6 +9,18 @@ for k, v in pairs(uiu) do
     utils[k] = v
 end
 
+function utils.merge(...)
+    local all = {}
+    local tables = {...}
+    for i = 1, #tables do
+        local t = tables[i]
+        for j = 1, #t do
+            all[#all + 1] = t[j]
+        end
+    end
+    return all
+end
+
 function utils.download(url, headers)
     headers = headers or {
         ["User-Agent"] = "curl/7.64.1",

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Reflection;
 using System.Threading;
 using Newtonsoft.Json;
@@ -10,6 +11,9 @@ namespace Olympus {
     public class Program {
 
         public static void Main(string[] args) {
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
             Process parentProc = null;
 
             if (args.Length == 0) {

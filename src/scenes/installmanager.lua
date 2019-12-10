@@ -80,12 +80,20 @@ end
 
 function scene.createEntry(list, entry, manualIndex)
     return threader.routine(function()
-        local version = sharp.getVersionString(entry.path):result()
+        local version = entry.type ~= "debug" and sharp.getVersionString(entry.path):result() or ""
+
+        local imgStatus, img
+        if entry.type ~= "debug" then
+            imgStatus, img = pcall(uie.image, "store/" .. entry.type)
+            if not imgStatus then
+                imgStatus, img = pcall(uie.image, "store/manual")
+            end
+        end
 
         local row = uie.row({
-            uie.image("store/" .. entry.type):with({
+            (img and img:with({
                 scale = 48 / 128
-            }),
+            }) or false),
 
             uie.column({
                 uie.label(entry.path),
@@ -97,25 +105,27 @@ function scene.createEntry(list, entry, manualIndex)
                 }
             }),
 
-            manualIndex and
-            uie.button("Remove", function()
-                local installs = config.installs
-                table.remove(installs, manualIndex)
-                config.installs = installs
-                scene.reloadAll()
-            end):with({
-                y = 6
-            }):with(uiu.rightbound)
+            entry.type ~= "debug" and (
+                manualIndex and
+                uie.button("Remove", function()
+                    local installs = config.installs
+                    table.remove(installs, manualIndex)
+                    config.installs = installs
+                    scene.reloadAll()
+                end):with({
+                    y = 6
+                }):with(uiu.rightbound)
 
-            or
-            uie.button("Add", function()
-                local installs = config.installs or {}
-                installs[#installs + 1] = entry
-                config.installs = installs
-                scene.reloadAll()
-            end):with({
-                y = 6
-            }):with(uiu.rightbound)
+                or
+                uie.button("Add", function()
+                    local installs = config.installs or {}
+                    installs[#installs + 1] = entry
+                    config.installs = installs
+                    scene.reloadAll()
+                end):with({
+                    y = 6
+                }):with(uiu.rightbound)
+            )
         }):with(uiu.fillWidth)
 
         list:addChild(row)
@@ -176,7 +186,7 @@ function scene.reloadFound()
             listFound = nil
         end
 
-        local found = threader.wrap("finder").findAll():result()
+        local found = threader.wrap("finder").findAll():result() or {}
 
         local installs = config.installs or {}
 

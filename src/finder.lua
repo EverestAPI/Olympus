@@ -10,6 +10,17 @@ require("love.system")
 local finder = {}
 
 finder.defaultName = "Celeste"
+finder.debugging = false
+
+local function dbg(list, text)
+    if finder.debugging then
+        print("[finder]", text)
+        list[#list + 1] = {
+            type = "debug",
+            path = text
+        }
+    end
+end
 
 
 function finder.findSteamRoot()
@@ -101,6 +112,8 @@ function finder.findSteamInstalls(id)
         local path = libraries[i]
         path = fs.joinpath(path, "Celeste")
 
+        dbg(list, "Steam library: " .. path)
+
         if fs.isDirectory(path) then
             list[#list + 1] = {
                 type = "steam",
@@ -136,6 +149,7 @@ function finder.findEpicInstalls(name)
 
     local epic = finder.findEpicRoot()
     if not epic then
+        dbg(list, "Epic root not found")
         return list
     end
 
@@ -145,14 +159,21 @@ function finder.findEpicInstalls(name)
             goto next
         end
 
+        dbg(list, "Epic manifest: " .. manifest)
+
         manifest = fs.joinpath(manifests, manifest)
         local data = utils.fromJSON(fs.read(manifest))
+
+        dbg(list, "DisplayName: " .. data.DisplayName)
 
         if data.DisplayName ~= name then
             goto next
         end
 
         local path = data.InstallLocation
+
+        dbg(list, "InstallLocation: " .. data.InstallLocation)
+
         if fs.isDirectory(path) then
             list[#list + 1] = {
                 type = "epic",
@@ -185,6 +206,7 @@ function finder.findItchInstalls(name)
     local list = {}
 
     local dbPath = finder.findItchDatabase()
+    dbg(list, "Itch DB: " .. tostring(dbPath))
     if not dbPath then
         return list
     end
@@ -203,6 +225,7 @@ function finder.findItchInstalls(name)
     for body in query:urows() do
         local data = utils.fromJSON(body)
         local path = data.basePath
+        dbg(list, "Itch row: " .. tostring(path))
         if fs.isDirectory(path) then
             list[#list + 1] = {
                 type = "itch",
@@ -235,15 +258,15 @@ end
 
 
 function finder.findAll()
-    local all = {
-        table.unpack(finder.findSteamInstalls(finder.defaultName)),
-        table.unpack(finder.findEpicInstalls(finder.defaultName)),
-        table.unpack(finder.findItchInstalls(finder.defaultName)),
-    }
+    local all = utils.merge(
+        finder.findSteamInstalls(finder.defaultName),
+        finder.findEpicInstalls(finder.defaultName),
+        finder.findItchInstalls(finder.defaultName)
+    )
 
     for i = #all, 1, -1 do
         local entry = all[i]
-        local path = finder.fixRoot(entry.path, finder.defaultName)
+        local path = entry and (entry.type == "debug" and entry.path or finder.fixRoot(entry.path, finder.defaultName))
         if not path then
             table.remove(all, i)
         else

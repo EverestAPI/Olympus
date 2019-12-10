@@ -9,6 +9,10 @@ local channelDebug = love.thread.getChannel("sharpDebug")
 local function sharpthread()
     local debugging = channelDebug:peek()
 
+    if debugging then
+        print("[sharp init]", "starting thread")
+    end
+
     local fs = require("fs")
     local subprocess = require("subprocess")
     local ffi = require("ffi")
@@ -38,14 +42,21 @@ local function sharpthread()
         pid = tostring(ffi.C.getpid())
     end
 
+    local exe = fs.joinpath(cwd, "Olympus.Sharp.exe")
+
+    if debugging then
+        print("[sharp init]", "starting subprocess", exe, pid, "--debug")
+    end
+
     local process = assert(subprocess.popen({
-        fs.joinpath(cwd, "Olympus.Sharp.exe"),
+        exe,
         pid,
 
         debugging and "--debug" or nil,
 
         stdin = subprocess.PIPE,
         stdout = subprocess.PIPE,
+        stderr = subprocess.STDOUT,
         cwd = cwd
     }))
     local stdout = process.stdout
@@ -81,7 +92,13 @@ local function sharpthread()
     local unpack = table.unpack or _G.unpack
 
     -- The child process immediately sends a status message.
+    if debugging then
+        print("[sharp init]", "reading init")
+    end
     local initStatus = read()
+    if debugging then
+        print("[sharp init]", "read init", initStatus)
+    end
 
     while true do
         dprint("awaiting next cmd")

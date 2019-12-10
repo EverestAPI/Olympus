@@ -21,15 +21,15 @@ local sharedWrap = {}
 
 function sharedWrap:update(...)
     if self.released then
-        error(self.id .. " already released!")
+        error(self.id .. " already released!", 2)
     end
 
     local wasRunning = self.running
     if not wasRunning then
-        error(self.id .. " not running!")
+        error(self.id .. " not running!", 2)
     end
 
-    local rv = self:__update(...)
+    local rv = self:__update(...) or {}
 
     local running = self.running
     local errorMsg = self.error
@@ -65,7 +65,7 @@ function sharedWrap:update(...)
     end
 
     if rethrow then
-        error(self.id .. " gave up: " .. errorMsg)
+        error(self.id .. " died:\n" .. errorMsg)
     end
 
     return unpack(rv)
@@ -73,11 +73,11 @@ end
 
 function sharedWrap:wait(...)
     if self.released then
-        error(self.id .. " already released!")
+        error(self.id .. " already released!", 2)
     end
 
     if not self.running then
-        error(self.id .. " not running!")
+        error(self.id .. " not running!", 2)
     end
 
     local co = coroutine.running()
@@ -119,11 +119,11 @@ local threadWrap = {}
 
 function threadWrap:start(...)
     if self.released then
-        error(self.id .. " already released!")
+        error(self.id .. " already released!", 2)
     end
 
     if self.running then
-        error(self.id .. " already running!")
+        error(self.id .. " already running!", 2)
         return
     end
 
@@ -141,13 +141,17 @@ function threadWrap:__update()
     local running = thread:isRunning()
     self.running = running
 
-    self.error = thread:getError()
+    local error = thread:getError()
+    if error ~= nil then
+        error = true
+    end
+    self.error = error
 
     if wasRunning and not running then
         return self.channel:pop()
     end
 
-    return {}
+    return nil
 end
 
 function threadWrap:__wait(...)
@@ -156,11 +160,11 @@ end
 
 function threadWrap:release()
     if self.running then
-        error(self.id .. " still running!")
+        error(self.id .. " still running!", 2)
     end
 
     if self.released then
-        error(self.id .. " already released!")
+        error(self.id .. " already released!", 2)
     end
 
     self.released = true
@@ -196,7 +200,7 @@ end
 local routineWrap = {}
 
 function routineWrap:start()
-    error("Coroutines cannot be restarted!")
+    error("Coroutines cannot be restarted!", 2)
 end
 
 function routineWrap:__update(...)
@@ -222,7 +226,7 @@ function routineWrap:__wait(...)
 end
 
 function routineWrap:release()
-    error("Coroutines cannot be released!")
+    error("Coroutines cannot be released!", 2)
 end
 
 local mtRoutineWrap = {
@@ -275,16 +279,34 @@ function threader.new(fun)
         end
 
         local unpack = unpack or table.unpack
-        local rv = {fun(unpack(args))}
+
+        local status, rv = xpcall(
+            function()
+                return {fun(unpack(args))}
+            end,
+            function(err)
+                print("[thread error]", id, err)
+                if type(err) == "userdata" or type(err) == "table" then
+                    return err
+                end
+                return debug.traceback(tostring(err), 1)
+            end
+        )
+
+        if not status then
+            error(rv)
+        end
+
         channel:push(rv)
     ]])
     local channel = love.thread.newChannel()
 
-    local info
+    local suffix = ""
+
     local upvalues = {}
     if type(fun) == "function" then
-        info = debug.getinfo(fun, "S")
-        info = ">" .. info.short_src .. ":" .. info.linedefined
+        local infoFun = debug.getinfo(fun, "S")
+        suffix = suffix .. ">" .. infoFun.short_src .. ":" .. infoFun.linedefined
 
         local i = 1
         while true do
@@ -296,17 +318,17 @@ function threader.new(fun)
             i = i + 1
         end
 
-    else
-        info = debug.getinfo(2, "fSl")
-        if info.func == threader.run then
-            info = debug.getinfo(3, "Sl")
-        end
-
-        info = "<" .. info.short_src .. ":" .. info.currentline
     end
 
+    local infoCall = debug.getinfo(2, "fSl")
+    if infoCall.func == threader.run then
+        infoCall = debug.getinfo(3, "Sl")
+    end
+
+    suffix = suffix .. "<" .. infoCall.short_src .. ":" .. infoCall.currentline
+
     local wrap = setmetatable({
-        id = "thread#" .. threadID .. info,
+        id = "thread#" .. threadID .. suffix,
         thread = thread,
         channel = channel,
         code = type(fun) == "string" and fun or string.dump(fun),
@@ -356,19 +378,48 @@ function threader.await(thread, ...)
 end
 
 function threader.routine(fun, ...)
-    local co = coroutine.create(fun)
+    local suffix = ""
 
-    local info = debug.getinfo(fun, "S")
+    local infoFun = debug.getinfo(fun, "S")
+    suffix = suffix .. ">" .. infoFun.short_src .. ":" .. infoFun.linedefined
+
+    local infoCall = debug.getinfo(2, "Sl")
+    suffix = suffix .. "<" .. infoCall.short_src .. ":" .. infoCall.currentline
 
     local wrap = setmetatable({
-        id = "routine#" .. threadID .. ">" .. info.short_src .. ":" .. info.linedefined,
-        routine = co,
+        id = "routine#" .. threadID .. suffix,
         callbacks = {},
         fallbacks = {},
         critical = true,
         released = false,
         running = true
     }, mtRoutineWrap)
+
+    local co = coroutine.create(function(...)
+        local id = wrap.id
+        local args = {...}
+
+        local status, rv = xpcall(
+            function()
+                return {fun(unpack(args))}
+            end,
+            function(err)
+                print("[thread error]", id, err)
+                if type(err) == "userdata" or type(err) == "table" then
+                    return err
+                end
+                return debug.traceback(tostring(err), 1)
+            end
+        )
+
+        if not status then
+            error(rv, 2)
+        end
+
+        return unpack(rv)
+    end)
+
+    wrap.routine = co
     threader._threads[#threader._threads + 1] = wrap
     threader._routines[co] = wrap
 
@@ -406,7 +457,7 @@ function mtThreadTableWrap:__index(key)
 end
 
 function mtThreadTableWrap:__newindex(key, value)
-    error("Wrapped tables are readonly!")
+    error("Wrapped tables are readonly!", 2)
 end
 
 
@@ -440,7 +491,7 @@ function mtThreadRequireWrap:__index(key)
 end
 
 function mtThreadRequireWrap:__newindex(key, value)
-    error("Wrapped tables are readonly!")
+    error("Wrapped tables are readonly!", 2)
 end
 
 function threader.wrap(raw)
