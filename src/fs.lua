@@ -186,12 +186,7 @@ function fs.getStorageDir()
         return fs.joinpath(os.getenv("LocalAppData"), name)
 
     elseif userOS == "Linux" then
-        local xdgConfig = os.getenv("XDG_CONFIG_HOME")
-        if xdgConfig then
-            return fs.joinpath(xdgConfig, name)
-        else
-            return fs.joinpath(os.getenv("HOME"), ".config", name)
-        end
+        return fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), name)
 
     elseif userOS == "OS X" then
         return fs.joinpath(os.getenv("HOME"), "Library", "Application Support", name)
