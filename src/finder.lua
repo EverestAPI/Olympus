@@ -85,13 +85,10 @@ function finder.findSteamLibraries()
         return libraries
     end
 
-    local fh = io.open(config, "rb")
-    if not fh then
+    config = fs.read(config)
+    if not config then
         return libraries
     end
-
-    config = fh:read("*a")
-    fh:close()
 
     for path in config:gmatch([[BaseInstallFolder[^"]*"%s*("[^"]*")]]) do
         path = utils.fromJSON(path)
@@ -104,6 +101,96 @@ function finder.findSteamLibraries()
     return libraries
 end
 
+function finder.findSteamShortcuts()
+    local steam = finder.findSteamRoot()
+    if not steam then
+        return {}
+    end
+
+    local byte = string.byte
+
+    local allLists = {}
+
+    local userdata = fs.isDirectory(fs.joinpath(steam, "userdata"))
+    for userid in fs.dir(userdata) do
+        if not userid:match("%d+") then
+            goto next
+        end
+
+        local path = fs.isFile(fs.joinpath(userdata, userid, "config", "shortcuts.vdf"))
+        if not path then
+            goto next
+        end
+
+        local data = fs.read(path)
+        if not data then
+            goto next
+        end
+
+        local pos = 1
+
+        local function get(pattern)
+            pattern = "^(" .. pattern .. ")"
+            local rv = {data:match(pattern, pos)}
+            if rv[1] then
+                pos = pos + #rv[1]
+                if rv[2] then
+                    table.remove(rv, 1)
+                end
+            end
+            return table.unpack(rv)
+        end
+
+        local root = {}
+        local current = root
+        local pathStack = {}
+        local stack = {}
+
+        while true do
+            while get("\8") do
+                current = stack[#stack]
+                pathStack[#pathStack] = nil
+                stack[#stack] = nil
+                if not current then
+                    break
+                end
+            end
+
+            local typ, key = get("(.)([^%z]+)%z")
+            if not typ then
+                break
+            end
+            typ = byte(typ)
+            -- Field names can have different casings across different objs in the same file!
+            key = key:lower()
+
+            if typ == 0 then
+                pathStack[#pathStack + 1] = key
+                stack[#stack + 1] = current
+                local child = {}
+                current[key] = child
+                current = child
+
+            else
+                current[key] = get("([^%z]*)%z")
+            end
+
+        end
+
+        allLists[#allLists + 1] = root.shortcuts
+        ::next::
+    end
+
+    local all = {}
+    for i = 1, #allLists do
+        for k, shortcut in pairs(allLists[i]) do
+            all[#all + 1] = shortcut
+        end
+    end
+
+    return all
+end
+
 function finder.findSteamInstalls(id)
     local list = {}
 
@@ -111,9 +198,31 @@ function finder.findSteamInstalls(id)
     for i = 1, #libraries do
         local path = libraries[i]
         path = fs.joinpath(path, "Celeste")
-
         dbg(list, "Steam library: " .. path)
+        if fs.isDirectory(path) then
+            list[#list + 1] = {
+                type = "steam",
+                path = path
+            }
+        end
+    end
 
+    -- Note: This will add *all shortcutted games and their startup dirs!
+    local shortcuts = finder.findSteamShortcuts()
+    -- dbg(list, ({require("serialize").serialize(shortcuts, true)})[2])
+    for i = 1, #shortcuts do
+        local shortcut = shortcuts[i]
+
+        local path = shortcut.exe
+        path = path and fs.isDirectory(fs.dirname(path:match("^\"?([^\" ]*)")))
+        if fs.isDirectory(path) then
+            list[#list + 1] = {
+                type = "steam",
+                path = path
+            }
+        end
+
+        path = shortcut.startdir
         if fs.isDirectory(path) then
             list[#list + 1] = {
                 type = "steam",
@@ -149,7 +258,6 @@ function finder.findEpicInstalls(name)
 
     local epic = finder.findEpicRoot()
     if not epic then
-        dbg(list, "Epic root not found")
         return list
     end
 
@@ -271,6 +379,20 @@ function finder.findAll()
             table.remove(all, i)
         else
             entry.path = path
+        end
+    end
+
+    for i = 1, #all do
+        local entryA = all[i]
+        local pathA = entryA.type ~= "debug" and entryA.path
+        if pathA then
+            for j = #all, i + 1, -1 do
+                local entryB = all[j]
+                local pathB = entryB.type ~= "debug" and entryB.path
+                if pathB and pathB == pathA then
+                    table.remove(all, j)
+                end
+            end
         end
     end
 

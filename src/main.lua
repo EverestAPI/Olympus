@@ -200,14 +200,7 @@ function love.load(args)
             return 1
         end)
 
-        local windowStatus = native.prepareWindow()
-        --[[
-        if windowStatus.transparent then
-            love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 0.87)
-        else
-            love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
-        end
-        --]]
+        native.prepareWindow()
     end
 
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)

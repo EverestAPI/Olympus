@@ -257,10 +257,6 @@ function native.setEventFilter(callback)
 end
 
 function native.prepareWindow()
-    local status = {
-        transparent = false
-    }
-
     local sdlWindow = native.getCurrentWindow()
     local sdlWMinfo = ffi.new("SDL_SysWMinfo[1]")
     sdl.SDL_GetWindowWMInfo(sdlWindow, sdlWMinfo)
@@ -271,65 +267,22 @@ function native.prepareWindow()
         local dwmEnabled = ffi.new("bool[1]")
         dwm.DwmIsCompositionEnabled(dwmEnabled)
         if dwmEnabled[0] then
-            local verP = io.popen("ver")
-            local verS = verP:read("*a")
-            verP:close()
-            local verMajIndex = verS:find("%[Version ") + 8
-            local verMinIndex = verS:find("%.", verMajIndex)
-            local verMinEndIndex = verS:find("%.", verMinIndex + 1)
-            local verMaj = tonumber(verS:sub(verMajIndex + 1, verMinIndex - 1))
-            local verMin = tonumber(verS:sub(verMinIndex + 1, verMinEndIndex - 1))
-            if verMaj == 2000 then
-                verMaj = 5
-            end
+            local ncRenderingPolicy = ffi.new("int[1]", 2)
+            dwm.DwmSetWindowAttribute(hwnd, 2, ncRenderingPolicy, ffi.sizeof("int"))
 
-            if verMaj >= 10 and false then -- Dragging the window lags no matter the accentState on some machines.
-                -- Windows 10+
-                status.transparent = true
+            local margins = ffi.new("MARGINS[1]")
+            margins[0].left = -1
+            margins[0].right = -1
+            margins[0].top = -1
+            margins[0].bottom = -1
+            dwm.DwmExtendFrameIntoClientArea(hwnd, margins)
 
-                local attrData = ffi.new("WINCOMPATTRDATA[1]")
-                local accentPolicy = ffi.new("ACCENTPOLICY[1]")
-
-                attrData[0].attribute = 19 -- WCA_ACCENT_POLICY
-                attrData[0].data = accentPolicy
-                attrData[0].dataSize = ffi.sizeof("ACCENTPOLICY")
-
-                accentPolicy[0].accentState = 3 -- ACCENT_ENABLE_BLURBEHIND = 3, ACCENT_ENABLE_ACRYLICBLURBEHIND = 4
-                accentPolicy[0].flags = bit.bor(0x20, 0x40, 0x80, 0x100) -- Window border behavior
-                accentPolicy[0].color = 0xFFFFFFFF
-
-                sys.SetWindowCompositionAttribute(hwnd, attrData)
-
-            elseif verMaj >= 5 then
-                -- Windows Vista+
-
-                if verMaj >= 8 or (verMaj == 6 and verMin >= 2) then
-                    -- Windows 8+ lacks Aero.
-                    status.transparent = false
-                else
-                    status.transparent = true
-                end
-
-                local ncRenderingPolicy = ffi.new("int[1]", 2)
-                dwm.DwmSetWindowAttribute(hwnd, 2, ncRenderingPolicy, ffi.sizeof("int"))
-
-                local margins = ffi.new("MARGINS[1]")
-                margins[0].left = -1
-                margins[0].right = -1
-                margins[0].top = -1
-                margins[0].bottom = -1
-                dwm.DwmExtendFrameIntoClientArea(hwnd, margins)
-
-                local blurbehind = ffi.new("DWM_BLURBEHIND[1]")
-                blurbehind[0].flags = 0x01
-                blurbehind[0].enable = true
-                dwm.DwmEnableBlurBehindWindow(hwnd, blurbehind)
-
-            end
+            local blurbehind = ffi.new("DWM_BLURBEHIND[1]")
+            blurbehind[0].flags = 0x01
+            blurbehind[0].enable = true
+            dwm.DwmEnableBlurBehindWindow(hwnd, blurbehind)
         end
     end
-
-    return status
 end
 
 return native
