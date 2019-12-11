@@ -9,6 +9,8 @@ require("love.system")
 
 local finder = {}
 
+local channelCache = love.thread.getChannel("finderCache")
+
 finder.defaultName = "Celeste"
 finder.debugging = false
 
@@ -217,7 +219,7 @@ function finder.findSteamInstalls(id)
         path = path and fs.isDirectory(fs.dirname(path:match("^\"?([^\" ]*)")))
         if fs.isDirectory(path) then
             list[#list + 1] = {
-                type = "steam",
+                type = "steam_shortcut",
                 path = path
             }
         end
@@ -225,7 +227,7 @@ function finder.findSteamInstalls(id)
         path = shortcut.startdir
         if fs.isDirectory(path) then
             list[#list + 1] = {
-                type = "steam",
+                type = "steam_shortcut",
                 path = path
             }
         end
@@ -365,8 +367,13 @@ function finder.fixRoot(path, appname)
 end
 
 
-function finder.findAll()
-    local all = utils.merge(
+function finder.findAll(uncached)
+    local all = uncached and channelCache:peek()
+    if all then
+        return all
+    end
+
+    all = utils.merge(
         finder.findSteamInstalls(finder.defaultName),
         finder.findEpicInstalls(finder.defaultName),
         finder.findItchInstalls(finder.defaultName)
@@ -396,6 +403,7 @@ function finder.findAll()
         end
     end
 
+    channelCache:push(all)
     return all
 end
 
