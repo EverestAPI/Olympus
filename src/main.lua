@@ -1,6 +1,7 @@
 require("love_filesystem_unsandboxing")
 
 local debugging
+local debuggingSharp
 local lldb
 local profile
 
@@ -48,6 +49,9 @@ function love.load(args)
                 lldb.start()
             end
 
+        elseif arg == "--debug-sharp" then
+            debuggingSharp = true
+
         elseif arg == "--profile" then
             profile = profile or require("profile")
         end
@@ -73,7 +77,7 @@ function love.load(args)
     config = require("config")
 
     sharp = require("sharp")
-    sharp.init(debugging)
+    sharp.init(debugging, debuggingSharp)
 
     local root = uie.column({
         require("background")(),

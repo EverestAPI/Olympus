@@ -7,7 +7,7 @@ local channelDebug = love.thread.getChannel("sharpDebug")
 
 -- The command queue thread.
 local function sharpthread()
-    local debugging = channelDebug:peek()
+    local debugging, debuggingSharp = table.unpack(channelDebug:peek())
 
     if debugging then
         print("[sharp init]", "starting thread")
@@ -67,7 +67,7 @@ local function sharpthread()
         exe,
         pid,
 
-        debugging and "--debug" or nil,
+        debuggingSharp and "--debug" or nil,
 
         stdin = subprocess.PIPE,
         stdout = subprocess.PIPE,
@@ -160,7 +160,7 @@ end
 local sharp = setmetatable({}, mtSharp)
 
 local function _run(id, ...)
-    local debugging = channelDebug:peek()
+    local debugging = table.unpack(channelDebug:peek())
 
     local function dprint(...)
         if debugging then
@@ -186,15 +186,13 @@ function sharp.run(id, ...)
 end
 
 sharp.initStatus = false
-function sharp.init(debug)
+function sharp.init(debug, debugSharp)
     if sharp.initStatus then
         return sharp.initStatus
     end
 
-    if debug then
-        channelDebug:pop()
-        channelDebug:push(debug and true or false)
-    end
+    channelDebug:pop()
+    channelDebug:push({ debug and true or false, debugSharp and true or false })
 
     -- Run the command queue on a separate thread.
     local thread = threader.new(sharpthread)
