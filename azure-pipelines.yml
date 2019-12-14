@@ -1,0 +1,284 @@
+strategy:
+  maxParallel: 3
+  matrix:
+    windows:
+      jobArchName: 'Windows'
+      imageName: 'windows-latest'
+      agentArch: 'windows'
+      artifactPrefix: 'windows.'
+      artifactSuffix: ''
+      netbuilder: 'core'
+      lualibs: 'prebuilt'
+      loveURL: 'https://bitbucket.org/rude/love/downloads/love-11.3-win32.zip'
+      loveZIP: 'love.zip'
+      loveBinaryDirectory: ''
+      loveBinary: 'love.exe'
+    macos:
+      jobArchName: 'macOS'
+      imageName: 'macOS-latest'
+      agentArch: 'macOS'
+      artifactPrefix: 'macos.'
+      artifactSuffix: ''
+      netbuilder: 'mono'
+      monokickURL: 'https://github.com/flibitijibibo/MonoKickstart.git'
+      lualibs: 'luarocks'
+      luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua@5.1/lib"'
+      loveURL: 'https://bitbucket.org/rude/love/downloads/love-11.3-macos.zip'
+      loveZIP: 'love.zip'
+      loveBinaryDirectory: 'love.app/Contents/MacOS/'
+      loveBinary: 'love'
+    linux:
+      jobArchName: 'linux'
+      imageName: 'ubuntu-latest'
+      agentArch: 'ubuntu'
+      artifactPrefix: 'linux.'
+      artifactSuffix: ''
+      netbuilder: 'mono'
+      monokickURL: 'https://github.com/flibitijibibo/MonoKickstart.git'
+      lualibs: 'luarocks'
+      luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
+      loveBinaryDirectory: ''
+
+variables:
+  netBuildPlatform: 'Any CPU'
+  netBuildConfiguration: 'Release'
+
+name: '$(Date:yy.MM.dd)$(Rev:.rr)'
+
+pool:
+  vmImage: '$(imageName)'
+
+steps:
+- checkout: self 
+  clean: false
+  fetchDepth: 3
+  lfs: false
+  submodules: recursive
+
+
+# Prepare dependencies.
+# Use brew on macOS.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.agentArch, 'macOS'))
+  displayName: 'Setup: macOS: brew: install lua@5.1 and luarocks'
+  inputs:
+    script: |
+      brew install lua@5.1
+      brew install luarocks
+
+# Use apt on Ubuntu.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.agentArch, 'ubuntu'))
+  displayName: 'Setup: Ubuntu: apt: install luarocks and deps'
+  inputs:
+    script: |
+      sudo apt -y install luarocks libgtk-3-dev
+
+# Cross-platform setup.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.lualibs, 'luarocks'))
+  displayName: 'Setup: luarocks: config'
+  inputs:
+    script: |
+      luarocks config lua_version 5.1
+      luarocks
+
+
+# Build LuaRocks depdencies.
+# Install nfd.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.lualibs, 'luarocks'))
+  displayName: 'Build: luarocks: install nfd'
+  inputs:
+    script: |
+      luarocks install --tree=luarocks https://raw.githubusercontent.com/Vexatos/nativefiledialog/master/lua/nfd-scm-1.rockspec $LUAROCKSARGS
+
+# Install lsqlite3complete.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.lualibs, 'luarocks'))
+  displayName: 'Build: luarocks: install lsqlite3complete'
+  inputs:
+    script: |
+      luarocks install --tree=luarocks lsqlite3complete $LUAROCKSARGS
+
+
+# Build sharp.
+# Use dotnet to restore NuGet packages even when building with mono.
+- task: DotNetCoreCLI@2
+  displayName: 'Build: dotnet: restore sharp'
+  inputs:
+    command: 'restore'
+    projects: 'sharp/*.csproj'
+
+# Build using core.
+- task: DotNetCoreCLI@2
+  condition: and(succeeded(), eq(variables.netbuilder, 'core'))
+  displayName: 'Build: dotnet: build sharp'
+  inputs:
+    command: 'build'
+    projects: 'sharp/*.csproj'
+    arguments: '--configuration $(netBuildConfiguration) "/p:Configuration=$(netBuildConfiguration)"'
+
+# Build using mono.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.netbuilder, 'mono'))
+  displayName: 'Build: mono: build sharp'
+  inputs:
+    script: 'msbuild sharp/*.sln "/p:Configuration=$(netBuildConfiguration)" "/p:Platform=$(netBuildPlatform)"'
+
+
+# Create and publish an artifact.
+# Download and unpack LÖVE.
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.loveURL, ''))
+  displayName: 'Dist: Download LÖVE'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Invoke-WebRequest -Uri $env:LOVEURL -OutFile $env:LOVEZIP$env:LOVETAR
+# Unzip love.zip.
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.loveZIP, ''))
+  displayName: 'Dist: Unpack LÖVE (ZIP)'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Expand-Archive -Path $env:LOVEZIP -DestinationPath love -Force
+      if (Test-Path -Path love/love-11.3-win32 -PathType Container) {
+        Move-Item -Path love/love-11.3-win32 -Destination love-win
+        Remove-Item -Path love -Force -Recurse
+        Move-Item -Path love-win -Destination love
+      }
+# Untar love.tar.gz.
+- task: CmdLine@2
+  condition: and(succeeded(), ne(variables.loveTAR, ''))
+  displayName: 'Dist: Unpack LÖVE (TAR)'
+  continueOnError: true
+  inputs:
+    script: |
+      mkdir -p love && \
+      tar xvf $LOVETAR -C love && \
+      mv love/dest/* love/ && \
+      rmdir love/dest
+
+# Create a dummy dir for platforms which don't use prebuilt LÖVE.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.loveURL, ''))
+  displayName: 'Dist: Create empty LÖVE dir for sad and lonely penguins'
+  continueOnError: true
+  inputs:
+    script: |
+      mkdir -p love
+
+# Bundle src into olympus.love.
+- task: PowerShell@2
+  condition: succeeded()
+  displayName: 'Dist: Bundle olympus.love'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Compress-Archive -Path src/* -DestinationPath love/olympus.zip
+      Move-Item -Path love/olympus.zip -Destination love/olympus.love
+# Glue it onto the love binary.
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.loveBinary, ''))
+  displayName: 'Dist: Glue olympus.love onto LÖVE'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      if ($PSVersionTable.PSVersion.Major -lt 6) {
+        Get-Content love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY,love/olympus.love -Encoding Byte -ReadCount 512 | Set-Content love-glued -Encoding Byte
+      } else {
+        Get-Content love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY,love/olympus.love -AsByteStream -ReadCount 0 | Set-Content love-glued -AsByteStream
+      }
+      Remove-Item -Path love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY -Force
+      Move-Item -Path love-glued -Destination love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY
+      Remove-Item -Path love/olympus.love -Force
+
+# Copy luarocks.
+- task: CopyFiles@2
+  condition: and(succeeded(), eq(variables.lualibs, 'luarocks'))
+  displayName: 'Dist: Copy luarocks'
+  continueOnError: true
+  inputs:
+    sourceFolder: '$(Build.SourcesDirectory)/luarocks/lib/lua'
+    contents: '**/*'
+    targetFolder: 'love/$(loveBinaryDirectory)'
+    cleanTargetFolder: false
+    overWrite: true
+    flattenFolders: true
+- task: CopyFiles@2
+  condition: and(succeeded(), eq(variables.lualibs, 'prebuilt'))
+  displayName: 'Dist: Copy prebuilt libs'
+  continueOnError: true
+  inputs:
+    sourceFolder: '$(Build.SourcesDirectory)/lib'
+    contents: '**/*'
+    targetFolder: 'love/$(loveBinaryDirectory)'
+    cleanTargetFolder: false
+    overWrite: true
+    flattenFolders: true
+
+# Copy sharp.
+- task: CopyFiles@2
+  condition: succeeded()
+  displayName: 'Dist: Copy sharp'
+  continueOnError: true
+  inputs:
+    sourceFolder: '$(Build.SourcesDirectory)/sharp/bin'
+    contents: '**/!(xunit.*|System.*|Microsoft.*|*.Tests.dll|*.pdb)'
+    targetFolder: 'love/$(loveBinaryDirectory)/sharp'
+    cleanTargetFolder: true
+    overWrite: true
+    flattenFolders: true
+
+# If needed, grab MonoKickstart and shove the prebuilts into the sharp dir.
+# Clone.
+- task: CmdLine@2
+  condition: and(succeeded(), ne(variables.monokickURL, ''))
+  displayName: 'Dist: Clone MonoKickstart'
+  continueOnError: true
+  inputs:
+    script: |
+      git clone $MONOKICKURL
+# Copy the precompiled folder into the sharp folder.
+- task: CopyFiles@2
+  condition: and(succeeded(), ne(variables.monokickURL, ''))
+  displayName: 'Dist: Copy MonoKickstart'
+  continueOnError: true
+  inputs:
+    sourceFolder: '$(Build.SourcesDirectory)/MonoKickstart/precompiled'
+    contents: '**/*'
+    targetFolder: 'love/$(loveBinaryDirectory)/sharp'
+    cleanTargetFolder: false
+    overWrite: true
+    flattenFolders: false
+
+# Per-platform cleanup.
+# Windows
+- task: PowerShell@2
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Dist: Windows: Cleanup'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Remove-Item -Path love/changes.txt -Force
+      Remove-Item -Path love/game.ico -Force
+      Remove-Item -Path love/love.ico -Force
+      Remove-Item -Path love/lovec.exe -Force
+      Move-Item -Path love/love.exe -Destination love/main.exe
+
+# Publish.
+- task: PublishBuildArtifacts@1
+  condition: succeeded()
+  displayName: 'Dist: Publish'
+  continueOnError: true
+  inputs:
+    pathtoPublish: '$(Build.SourcesDirectory)/love'
+    artifactName: '$(artifactPrefix)main$(artifactSuffix)'
+    publishLocation: 'Container'
