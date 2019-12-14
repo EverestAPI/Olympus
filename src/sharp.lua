@@ -60,8 +60,19 @@ local function sharpthread()
 
     local exe = fs.joinpath(cwd, exename)
 
+    local logpath = os.getenv("OLYMPUS_SHARP_LOGPATH") or nil
+    if logpath and #logpath == 0 then
+        logpath = nil
+    end
+
+    if not logpath and not debugging then
+        logpath = fs.joinpath(fs.getStorageDir(), "log-sharp.txt")
+        fs.mkdir(fs.dirname(logpath))
+    end
+
     if debugging then
         print("[sharp init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
+        print("[sharp init]", "logging to", logpath)
     end
 
     local process = assert(subprocess.popen({
@@ -72,7 +83,7 @@ local function sharpthread()
 
         stdin = subprocess.PIPE,
         stdout = subprocess.PIPE,
-        stderr = subprocess.STDOUT,
+        stderr = logpath,
         cwd = cwd
     }))
     local stdout = process.stdout

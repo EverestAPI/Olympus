@@ -76,7 +76,7 @@ namespace Olympus {
 
             JsonSerializer serializer = new JsonSerializer();
 
-            while ((parentProc != null && parentProc.HasExited && parentProc.Id == parentProcID) || parentProc == null) {
+            while ((parentProc != null && !parentProc.HasExited && parentProc.Id == parentProcID) || parentProc == null) {
                 using (JsonTextWriter writer = new JsonTextWriter(Console.Out)) {
                     try {
                         using (JsonTextReader reader = new JsonTextReader(Console.In) {
@@ -85,6 +85,8 @@ namespace Olympus {
                             while (!(parentProc?.HasExited ?? false)) {
                                 // Commands from Olympus come in pairs of two objects:
 
+                                Console.Error.WriteLine("[sharp] Awaiting next command");
+
                                 // Command ID
                                 reader.Read();
                                 string id = serializer.Deserialize<string>(reader).ToLowerInvariant();
@@ -92,6 +94,7 @@ namespace Olympus {
                                 if (cmd == null) {
                                     reader.Read();
                                     reader.Skip();
+                                    Console.Error.WriteLine($"[sharp] Unknown command {id}");
                                     Console.WriteLine(@"null");
                                     writer.WriteStartObject();
                                     writer.WritePropertyName("error");
@@ -103,14 +106,18 @@ namespace Olympus {
                                     continue;
                                 }
 
+                                Console.Error.WriteLine($"[sharp] Parsing args for {id}");
+
                                 // Payload
                                 reader.Read();
                                 object input = serializer.Deserialize(reader, cmd.InputType);
                                 object output;
                                 try {
+                                    Console.Error.WriteLine($"[sharp] Executing {id}");
                                     output = cmd.Run(input);
 
                                 } catch (Exception e) {
+                                    Console.Error.WriteLine($"[sharp] Failed running {id}: {e}");
                                     Console.WriteLine(@"null");
                                     writer.WriteStartObject();
                                     writer.WritePropertyName("error");
@@ -131,6 +138,7 @@ namespace Olympus {
                         }
 
                     } catch (Exception e) {
+                        Console.Error.WriteLine($"[sharp] Failed parsing: {e}");
                         Console.WriteLine(@"null");
                         writer.WriteStartObject();
                         writer.WritePropertyName("error");

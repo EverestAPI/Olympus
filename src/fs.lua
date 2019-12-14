@@ -6,6 +6,8 @@ local lfs = require("lfs_ffi")
 local nfd = require("nfd")
 local physfs = require("physfs")
 local threader = require("threader")
+require("love.system")
+require("love.filesystem")
 
 local fs = {}
 
@@ -21,7 +23,7 @@ fs.remove = os.remove
 function fs.filename(path, sep)
     sep = sep or physfs.getDirSeparator()
 
-    return path:match("[^" .. sep .. "]+$")
+    return path:gsub("([^/\\])[/\\]$", "%1"):match("[^" .. sep .. "]+$")
 end
 
 function fs.dirname(path, sep)
