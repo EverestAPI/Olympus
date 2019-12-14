@@ -314,7 +314,9 @@ steps:
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       mv love/love.app love/Olympus.app
-      zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip love/*
+      pushd love
+      zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip *
+      popd
 
 # Linux
 - task: CmdLine@2
@@ -324,7 +326,9 @@ steps:
   inputs:
     script: |
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
-      zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip love/*
+      pushd love
+      zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip *
+      popd
 
 # Publish.
 - task: PublishBuildArtifacts@1
