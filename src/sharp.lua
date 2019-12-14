@@ -7,7 +7,8 @@ local channelDebug = love.thread.getChannel("sharpDebug")
 
 -- The command queue thread.
 local function sharpthread()
-    local debugging, debuggingSharp = table.unpack(channelDebug:peek())
+    local debuggingFlags = channelDebug:peek()
+    local debugging, debuggingSharp = debuggingFlags[1], debuggingFlags[2]
 
     if debugging then
         print("[sharp init]", "starting thread")
@@ -60,7 +61,7 @@ local function sharpthread()
     local exe = fs.joinpath(cwd, exename)
 
     if debugging then
-        print("[sharp init]", "starting subprocess", exe, pid, "--debug")
+        print("[sharp init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
     end
 
     local process = assert(subprocess.popen({
@@ -160,7 +161,7 @@ end
 local sharp = setmetatable({}, mtSharp)
 
 local function _run(id, ...)
-    local debugging = table.unpack(channelDebug:peek())
+    local debugging = channelDebug:peek()[1]
 
     local function dprint(...)
         if debugging then
