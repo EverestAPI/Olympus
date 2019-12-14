@@ -15,6 +15,7 @@ namespace Olympus {
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
             Process parentProc = null;
+            int parentProcID = 0;
 
             if (args.Length == 0) {
                 Console.WriteLine(@"""no parent pid""");
@@ -24,7 +25,7 @@ namespace Olympus {
 
             } else {
                 try {
-                    parentProc = Process.GetProcessById(int.Parse(args[0]));
+                    parentProc = Process.GetProcessById(parentProcID = int.Parse(args[0]));
                 } catch {
                     Console.WriteLine(@"null");
                     Console.WriteLine(@"{""error"": ""invalid parent id""}\n");
@@ -56,7 +57,7 @@ namespace Olympus {
             if (parentProc != null) {
                 Thread killswitch = new Thread(() => {
                     try {
-                        while (!parentProc.HasExited) {
+                        while (!parentProc.HasExited && parentProc.Id == parentProcID) {
                             Thread.Yield();
                             Thread.Sleep(1000);
                         }
@@ -75,7 +76,7 @@ namespace Olympus {
 
             JsonSerializer serializer = new JsonSerializer();
 
-            while (!(parentProc?.HasExited ?? false)) {
+            while ((parentProc != null && parentProc.HasExited && parentProc.Id == parentProcID) || parentProc == null) {
                 using (JsonTextWriter writer = new JsonTextWriter(Console.Out)) {
                     try {
                         using (JsonTextReader reader = new JsonTextReader(Console.In) {
