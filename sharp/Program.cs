@@ -99,6 +99,7 @@ namespace Olympus {
                                     writer.Flush();
                                     Console.WriteLine();
                                     Console.Out.Flush();
+                                    continue;
                                 }
 
                                 // Payload
