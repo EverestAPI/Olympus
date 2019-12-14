@@ -97,14 +97,14 @@ local function sharpthread()
     end
 
     local function run(id, argsLua)
-        assert(stdin:write(utils.toJSON(id)))
+        assert(stdin:write(utils.toJSON(id) .. "\n"))
 
         local argsSharp = {}
         -- Olympus.Sharp expects C# Tuples, which aren't lists.
         for i = 1, #argsLua do
             argsSharp["Item" .. i] = argsLua[i]
         end
-        assert(stdin:write(utils.toJSON(argsSharp)))
+        assert(stdin:write(utils.toJSON(argsSharp) .. "\n"))
 
         assert(stdin:flush())
         return read()
