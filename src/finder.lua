@@ -305,10 +305,10 @@ function finder.findItchDatabase()
         return fs.isFile(fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db"))
 
     elseif userOS == "OS X" then
-        return fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db"))
+        return fs.isFile(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db"))
 
     elseif userOS == "Linux" then
-        return fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db")
+        return fs.isFile(fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db"))
     end
 end
 
