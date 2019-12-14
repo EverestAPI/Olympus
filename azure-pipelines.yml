@@ -12,6 +12,7 @@ strategy:
       loveURL: 'https://bitbucket.org/rude/love/downloads/love-11.3-win32.zip'
       loveZIP: 'love.zip'
       loveBinaryDirectory: ''
+      loveResourcesDirectory: ''
       loveBinary: 'love.exe'
     macos:
       jobArchName: 'macOS'
@@ -26,11 +27,11 @@ strategy:
       loveURL: 'https://bitbucket.org/rude/love/downloads/love-11.3-macos.zip'
       loveZIP: 'love.zip'
       loveBinaryDirectory: 'love.app/Contents/MacOS/'
-      loveBinary: 'love'
+      loveResourcesDirectory: 'love.app/Contents/Resources/'
     linux:
       jobArchName: 'linux'
       imageName: 'ubuntu-latest'
-      agentArch: 'ubuntu'
+      agentArch: 'linux'
       artifactPrefix: 'linux.'
       artifactSuffix: ''
       netbuilder: 'mono'
@@ -38,6 +39,7 @@ strategy:
       lualibs: 'luarocks'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
       loveBinaryDirectory: ''
+      loveResourcesDirectory: ''
 
 variables:
   netBuildPlatform: 'Any CPU'
@@ -68,8 +70,8 @@ steps:
 
 # Use apt on Ubuntu.
 - task: CmdLine@2
-  condition: and(succeeded(), eq(variables.agentArch, 'ubuntu'))
-  displayName: 'Setup: Ubuntu: apt: install luarocks and deps'
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
+  displayName: 'Setup: Linux: apt: install luarocks and deps'
   inputs:
     script: |
       sudo apt -y install luarocks libgtk-3-dev
@@ -85,6 +87,14 @@ steps:
 
 
 # Build LuaRocks depdencies.
+# Install subprocess.
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.lualibs, 'luarocks'))
+  displayName: 'Build: luarocks: install subprocess'
+  inputs:
+    script: |
+      luarocks install --tree=luarocks https://raw.githubusercontent.com/0x0ade/lua-subprocess/master/subprocess-scm-1.rockspec $LUAROCKSARGS
+
 # Install nfd.
 - task: CmdLine@2
   condition: and(succeeded(), eq(variables.lualibs, 'luarocks'))
@@ -181,7 +191,7 @@ steps:
     targetType: 'inline'
     script: |
       Compress-Archive -Path src/* -DestinationPath love/olympus.zip
-      Move-Item -Path love/olympus.zip -Destination love/olympus.love
+      Move-Item -Path love/olympus.zip -Destination love/$env:LOVEBINARYDIRECTORY/olympus.love
 # Glue it onto the love binary.
 - task: PowerShell@2
   condition: and(succeeded(), ne(variables.loveBinary, ''))
@@ -191,13 +201,13 @@ steps:
     targetType: 'inline'
     script: |
       if ($PSVersionTable.PSVersion.Major -lt 6) {
-        Get-Content love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY,love/olympus.love -Encoding Byte -ReadCount 512 | Set-Content love-glued -Encoding Byte
+        Get-Content love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY,love/$env:LOVEBINARYDIRECTORY/olympus.love -Encoding Byte -ReadCount 512 | Set-Content love-glued -Encoding Byte
       } else {
-        Get-Content love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY,love/olympus.love -AsByteStream -ReadCount 0 | Set-Content love-glued -AsByteStream
+        Get-Content love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY,love/$env:LOVEBINARYDIRECTORY/olympus.love -AsByteStream -ReadCount 0 | Set-Content love-glued -AsByteStream
       }
-      Remove-Item -Path love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY -Force
-      Move-Item -Path love-glued -Destination love/$env:LOVEBINARYDIRECTORY$env:LOVEBINARY
-      Remove-Item -Path love/olympus.love -Force
+      Remove-Item -Path love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY -Force
+      Move-Item -Path love-glued -Destination love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY
+      Remove-Item -Path love/$env:LOVEBINARYDIRECTORY/olympus.love -Force
 
 # Copy luarocks.
 - task: CopyFiles@2
@@ -211,12 +221,13 @@ steps:
     cleanTargetFolder: false
     overWrite: true
     flattenFolders: true
+
+# Copy prebuilt libs.
 - task: CopyFiles@2
-  condition: and(succeeded(), eq(variables.lualibs, 'prebuilt'))
   displayName: 'Dist: Copy prebuilt libs'
   continueOnError: true
   inputs:
-    sourceFolder: '$(Build.SourcesDirectory)/lib'
+    sourceFolder: '$(Build.SourcesDirectory)/lib-$(agentArch)'
     contents: '**/*'
     targetFolder: 'love/$(loveBinaryDirectory)'
     cleanTargetFolder: false
@@ -245,6 +256,19 @@ steps:
   inputs:
     script: |
       git clone $MONOKICKURL
+# Fix Kick filename and bash script.
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.monokickURL, ''))
+  displayName: 'Dist: Fix MonoKickstart'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Move-Item -Path MonoKickstart/precompiled/kick.bin.osx -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.osx
+      Move-Item -Path MonoKickstart/precompiled/kick.bin.x86 -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.x86
+      Move-Item -Path MonoKickstart/precompiled/kick.bin.x86_64 -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.x86_64
+      (Get-Content MonoKickstart/precompiled/Kick) -replace "(?<=\s*\./)kick\.bin", "Olympus.Sharp.bin" | Set-Content MonoKickstart/precompiled/Kick
+      Move-Item -Path MonoKickstart/precompiled/Kick -Destination MonoKickstart/precompiled/Olympus.Sharp.sh
 # Copy the precompiled folder into the sharp folder.
 - task: CopyFiles@2
   condition: and(succeeded(), ne(variables.monokickURL, ''))
@@ -272,6 +296,35 @@ steps:
       Remove-Item -Path love/love.ico -Force
       Remove-Item -Path love/lovec.exe -Force
       Move-Item -Path love/love.exe -Destination love/main.exe
+      Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip -Force
+
+# macOS
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.agentArch, 'macOS'))
+  displayName: 'Dist: macOS: Cleanup'
+  continueOnError: true
+  inputs:
+    script: |
+      PLIST=love/love.app/Contents/Info.plist
+      plutil -replace CFBundleIdentifier -string "everest.olympus" $PLIST
+      plutil -replace CFBundleName -string "olympus" $PLIST
+      plutil -replace CFBundleExecutable -string "olympus.sh" $PLIST
+      plutil -remove CFBundleDocumentTypes $PLIST
+      plutil -remove UTExportedTypeDeclarations $PLIST
+      chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
+      chmod a+rx love/$LOVEBINARYDIRECTORY/love
+      mv love/love.app love/Olympus.app
+      zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip love/*
+
+# Linux
+- task: CmdLine@2
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
+  displayName: 'Dist: Linux: Cleanup'
+  continueOnError: true
+  inputs:
+    script: |
+      chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
+      zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/dist.zip love/*
 
 # Publish.
 - task: PublishBuildArtifacts@1
@@ -279,6 +332,6 @@ steps:
   displayName: 'Dist: Publish'
   continueOnError: true
   inputs:
-    pathtoPublish: '$(Build.SourcesDirectory)/love'
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)'
     artifactName: '$(artifactPrefix)main$(artifactSuffix)'
     publishLocation: 'Container'
