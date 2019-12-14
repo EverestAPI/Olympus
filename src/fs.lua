@@ -127,12 +127,30 @@ function fs.write(path, content)
 end
 
 function fs.saveDialog(filter, path)
+    if love.system.getOS() == "OS X" then
+        -- nfd crashes on macOS when running on a thread separate from the main thread.
+        -- TODO: Enqueue onto the main thread.
+        local rv = { require("nfd").save(filter, nil, path) }
+        return threader.routine(function()
+            return table.unpack(rv)
+        end)
+    end
+
     return threader.run(function()
         return require("nfd").save(filter, nil, path)
     end)
 end
 
 function fs.openDialog(filter, path)
+    if love.system.getOS() == "OS X" then
+        -- nfd crashes on macOS when running on a thread separate from the main thread.
+        -- TODO: Enqueue onto the main thread.
+        local rv = { require("nfd").open(filter, nil, path) }
+        return threader.routine(function()
+            return table.unpack(rv)
+        end)
+    end
+
     return threader.run(function()
         return require("nfd").open(filter, nil, path)
     end)
