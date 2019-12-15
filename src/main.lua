@@ -82,7 +82,7 @@ function love.load(args)
     local root = uie.column({
         require("background")(),
 
-        uie.titlebar(uie.image("titlebar"), true):with({
+        os.getenv("OLYMPUS_TITLEBAR") == "1" and uie.titlebar(uie.image("titlebar"), true):with({
             style = {
                 focusedBG = { 0.4, 0.4, 0.4, 0.05 },
                 unfocusedBG = { 0.2, 0.2, 0.2, 0.1 }
@@ -142,69 +142,73 @@ function love.load(args)
     ui.hookLove(false, true)
 
     if native then
-        native.setWindowHitTest(function(win, area)
-            local border = 8
-            local corner = 12
-
-            local x = area.x
-            local y = area.y
-
-            if root._titlebar._close:contains(x, y) then
-                return 0
-            end
-
-            local w, h, flags = love.window.getMode()
-
-            if flags.resizable then
-                if y < border then
-                    if x < border then
-                        return 2
+        if love.system.getOS() == "Windows" then
+            -- Shamelessly based off of how FNA force-repaints the window on resize.
+            native.setEventFilter(function(userdata, event)
+                if event[0].type == 0x200 then -- SDL_WINDOWEVENT
+                    if event[0].window.event == 3 then -- SDL_WINDOWEVENT_EXPOSED
+                        _love_runStep()
+                        love.graphics = nil -- Don't redraw, we've already redrawn.
+                        return 0
                     end
-                    if w - corner <= x then
-                        return 4
-                    end
-                    return 3
                 end
-
-                if h - border <= y then
-                    if x < border then
-                        return 8
-                    end
-                    if w - corner < x then
-                        return 6
-                    end
-                    return 7
-                end
-
-                if x < border then
-                    return 9
-                end
-
-                if w - border <= x then
-                    return 5
-                end
-            end
-
-            if y < root._titlebar.height then
                 return 1
-            end
+            end)
+        end
 
-            return 0
-        end)
+        if root._titlebar then
+            native.setWindowHitTest(function(win, area)
+                local border = 8
+                local corner = 12
 
-        -- Shamelessly based off of how FNA force-repaints the window on resize.
-        native.setEventFilter(function(userdata, event)
-            if event[0].type == 0x200 then -- SDL_WINDOWEVENT
-                if event[0].window.event == 3 then -- SDL_WINDOWEVENT_EXPOSED
-                    _love_runStep()
-                    love.graphics = nil -- Don't redraw, we've already redrawn.
+                local x = area.x
+                local y = area.y
+
+                if root._titlebar._close:contains(x, y) then
                     return 0
                 end
-            end
-            return 1
-        end)
 
-        native.prepareWindow()
+                local w, h, flags = love.window.getMode()
+
+                if flags.resizable then
+                    if y < border then
+                        if x < border then
+                            return 2
+                        end
+                        if w - corner <= x then
+                            return 4
+                        end
+                        return 3
+                    end
+
+                    if h - border <= y then
+                        if x < border then
+                            return 8
+                        end
+                        if w - corner < x then
+                            return 6
+                        end
+                        return 7
+                    end
+
+                    if x < border then
+                        return 9
+                    end
+
+                    if w - border <= x then
+                        return 5
+                    end
+                end
+
+                if y < root._titlebar.height then
+                    return 1
+                end
+
+                return 0
+            end)
+
+            native.prepareWindow()
+        end
     end
 
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)

@@ -45,7 +45,13 @@ end
 
 function fs.splitpath(path)
     local sep = physfs.getDirSeparator()
-    return string.split(path, sep)
+    local parts = {}
+    local i = 1
+    for part in path:gmatch("([^" .. sep .. "]*)") do
+        parts[i] = part
+        i = i + 1
+    end
+    return parts
 end
 
 function fs.normalize(path)
