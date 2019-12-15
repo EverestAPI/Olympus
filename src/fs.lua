@@ -11,7 +11,6 @@ require("love.filesystem")
 
 local fs = {}
 
-fs.mkdir = lfs.mkdir
 fs.chdir = lfs.chdir
 fs.dir = lfs.dir
 fs.rmdir = lfs.rmdir
@@ -19,6 +18,10 @@ fs.rmdir = lfs.rmdir
 fs.getcwd = lfs.currentdir
 
 fs.remove = os.remove
+
+function fs.mkdir(path, mode)
+    return lfs.mkdir(path, mode or 755)
+end
 
 function fs.filename(path, sep)
     sep = sep or physfs.getDirSeparator()
