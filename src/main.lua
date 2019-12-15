@@ -252,13 +252,11 @@ function love.update(dt)
         return
     end
 
-    threader.update()
-
     love.frame = love.frame + 1
 
     if profile then
         profile.frame = (profile.frame or 0) + 1
-        if profile.frame % 400 == 0 then
+        if profile.frame % 100 == 0 then
             debugLabel.text =
                 "FPS: " .. love.timer.getFPS() ..
                 profile.report(20)
@@ -275,6 +273,8 @@ function love.update(dt)
             ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
     end
 
+    threader.update()
+
     ui.update()
 
     if profile then
@@ -287,11 +287,19 @@ function love.draw()
         return
     end
 
+    if profile then
+        profile.start()
+    end
+
     -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
     ui.draw()
 
     -- love.graphics.setScissor()
+
+    if profile then
+        profile.stop()
+    end
 
     if love.version[1] ~= 0 then
         love.timer = nil

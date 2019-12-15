@@ -21,6 +21,7 @@ local _current = nil
 local _internal = {}
 
 function profile.hooker(event)
+  local clockt = clock()
   if event == "call" then
     local info = debug.getinfo(2, 'fnS')
     local f = info.func
@@ -43,10 +44,10 @@ function profile.hooker(event)
       end
       _nrefs[f] = _nrefs[f] + 1
       if _nrefs[f] == 1 then
-        _tcalled[f] = clock()
+        _tcalled[f] = clockt
       end
     end
-    _ncalls[f] = _ncalls[f] + 1
+    _ncalls[f] = (_ncalls[f] or 0) + 1
   else
     local f = _current
     if f then
@@ -56,7 +57,7 @@ function profile.hooker(event)
         if _nrefs[f] or 0 >= 1 then
           _nrefs[f] = _nrefs[f] - 1
           if _nrefs[f] == 0 then
-            local dt = clock() - _tcalled[f]
+            local dt = clockt - (_tcalled[f] or clockt)
             _telapsed[f] = _telapsed[f] + dt
             _tcalled[f] = nil
           end
