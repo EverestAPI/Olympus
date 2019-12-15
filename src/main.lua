@@ -16,6 +16,8 @@ local sharp
 local ui
 local uie
 
+local debugLabel
+
 -- Needed to avoid running the same frame twice on resize
 -- and to avoid Löve2D's default sleep throttle.
 local _love_timer = love.timer
@@ -111,11 +113,19 @@ function love.load(args)
                 clip = false,
             }):with(uiu.fill):as("wrapper"),
 
-            uie.label():with({
+            uie.panel({
+                uie.label():with({
+                    style = {
+                        color = { 0, 0, 0, 1 }
+                    }
+                }):as("debug"),
+            }):with({
+                interactive = -1,
                 style = {
-                    color = { 0, 0, 0, 0 }
-                }
-            }):as("debug"),
+                    bg = { 1, 1, 1, 0.5 }
+                },
+                visible = true
+            }):with(uiu.bottombound)
 
         }):with({
             style = {
@@ -137,6 +147,8 @@ function love.load(args)
         clip = false,
         cacheable = false
     })
+
+    debugLabel = root:findChild("debug")
 
     ui.init(root, false)
     ui.hookLove(false, true)
@@ -244,23 +256,23 @@ function love.update(dt)
 
     love.frame = love.frame + 1
 
-    --[[
     if profile then
         if love.frame % 100 == 0 then
-            main._debug.text = profile.report(10)
+            debugLabel.text =
+                "FPS: " .. love.timer.getFPS() ..
+                profile.report(10)
             profile.reset()
         end
 
         profile.start()
     else
-        main._debug.text =
+        debugLabel.text =
             "FPS: " .. love.timer.getFPS() .. "\n" ..
             "hovering: " .. tostring(ui.hovering) .. "\n" ..
             "dragging: " .. tostring(ui.dragging) .. "\n" ..
             "focusing: " .. tostring(ui.focusing) .. "\n" ..
             ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
     end
-    --]]
 
     ui.update()
 

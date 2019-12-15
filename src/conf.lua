@@ -6,7 +6,7 @@ function love.conf(t)
     t.window.minheight = 600
     t.window.borderless = false
     t.window.resizable = true -- when borderless, true causes a flickering border on Windows
-    t.window.vsync = 1
+    t.window.vsync = 0
     t.window.highdpi = true
     t.console = false
 end
