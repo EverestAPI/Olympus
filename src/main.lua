@@ -257,10 +257,11 @@ function love.update(dt)
     love.frame = love.frame + 1
 
     if profile then
-        if love.frame % 100 == 0 then
+        profile.frame = (profile.frame or 0) + 1
+        if profile.frame % 400 == 0 then
             debugLabel.text =
                 "FPS: " .. love.timer.getFPS() ..
-                profile.report(10)
+                profile.report(20)
             profile.reset()
         end
 
@@ -300,5 +301,35 @@ end
 function love.keypressed(key, scancode, isrepeat)
     if key == "escape" then
         love.event.quit()
+    end
+
+    if key == "f12" then
+        if love.keyboard.isDown("lshift") then
+            debug.debug()
+
+        elseif os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+            if not lldb then
+                lldb = require("lldebugger")
+                lldb.start()
+            else
+                lldb.stop()
+                lldb = nil
+            end
+        end
+    end
+
+    if key == "f1" then
+        debugLabel.parent.visible = not debugLabel.parent.visible
+    end
+
+    if key == "f2" then
+        if not profile then
+            debugLabel.parent.visible = true
+            debugLabel.text = "Profiling..."
+            profile = require("profile")
+            profile.reset()
+        else
+            profile = nil
+        end
     end
 end

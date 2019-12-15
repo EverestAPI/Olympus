@@ -53,7 +53,7 @@ function profile.hooker(event)
       local prev = debug.getinfo(3, 'f')
       if not prev or prev.func ~= f then
         _current = prev.func
-        if _nrefs[f] >= 1 then
+        if _nrefs[f] or 0 >= 1 then
           _nrefs[f] = _nrefs[f] - 1
           if _nrefs[f] == 0 then
             local dt = clock() - _tcalled[f]
@@ -61,7 +61,7 @@ function profile.hooker(event)
             _tcalled[f] = nil
           end
         end
-        assert(_nrefs[f] >= 0, _nrefs[f])
+        assert(_nrefs[f] or 0 >= 0, _nrefs[f])
       end
     end
   end
