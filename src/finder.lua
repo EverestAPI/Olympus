@@ -12,17 +12,6 @@ local finder = {}
 local channelCache = love.thread.getChannel("finderCache")
 
 finder.defaultName = "Celeste"
-finder.debugging = false
-
-local function dbg(list, text)
-    if finder.debugging then
-        print("[finder]", text)
-        list[#list + 1] = {
-            type = "debug",
-            path = text
-        }
-    end
-end
 
 
 function finder.findSteamRoot()
@@ -189,7 +178,6 @@ function finder.findSteamInstalls(id)
     for i = 1, #libraries do
         local path = libraries[i]
         path = fs.joinpath(path, "Celeste")
-        dbg(list, "Steam library: " .. path)
         if fs.isDirectory(path) then
             list[#list + 1] = {
                 type = "steam",
@@ -198,9 +186,8 @@ function finder.findSteamInstalls(id)
         end
     end
 
-    -- Note: This will add *all shortcutted games and their startup dirs!
+    -- Note: This will add *all* shortcutted games and their startup dirs!
     local shortcuts = finder.findSteamShortcuts()
-    -- dbg(list, ({require("serialize").serialize(shortcuts, true)})[2])
     for i = 1, #shortcuts do
         local shortcut = shortcuts[i]
 
@@ -255,15 +242,7 @@ function finder.findEpicInstalls(name)
     local manifests = fs.joinpath(epic, "Manifests")
     for manifest in fs.dir(manifests) do
         manifest = manifest:match("%.item$") and fs.joinpath(manifests, manifest)
-        if manifest then
-            dbg(list, "Epic manifest: " .. manifest)
-        end
-
         local data = manifest and utils.fromJSON(fs.read(manifest))
-        if data then
-            dbg(list, "DisplayName: " .. data.DisplayName)
-        end
-
         if data and data.DisplayName == name then
             local path = data.InstallLocation
             if fs.isDirectory(path) then
@@ -297,7 +276,6 @@ function finder.findItchInstalls(name)
     local list = {}
 
     local dbPath = finder.findItchDatabase()
-    dbg(list, "Itch DB: " .. tostring(dbPath))
     if not dbPath then
         return list
     end
@@ -316,7 +294,6 @@ function finder.findItchInstalls(name)
     for body in query:urows() do
         local data = utils.fromJSON(body)
         local path = data.basePath
-        dbg(list, "Itch row: " .. tostring(path))
         if fs.isDirectory(path) then
             list[#list + 1] = {
                 type = "itch",
@@ -362,7 +339,7 @@ function finder.findAll(uncached)
 
     for i = #all, 1, -1 do
         local entry = all[i]
-        local path = entry and (entry.type == "debug" and entry.path or finder.fixRoot(entry.path, finder.defaultName))
+        local path = entry and finder.fixRoot(entry.path, finder.defaultName)
         if not path then
             table.remove(all, i)
         else
@@ -372,11 +349,11 @@ function finder.findAll(uncached)
 
     for i = 1, #all do
         local entryA = all[i]
-        local pathA = entryA.type ~= "debug" and entryA.path
+        local pathA = entryA.path
         if pathA then
             for j = #all, i + 1, -1 do
                 local entryB = all[j]
-                local pathB = entryB.type ~= "debug" and entryB.path
+                local pathB = entryB.path
                 if pathB and pathB == pathA then
                     table.remove(all, j)
                 end

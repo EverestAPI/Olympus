@@ -80,14 +80,12 @@ end
 
 function scene.createEntry(list, entry, manualIndex)
     return threader.routine(function()
-        local version = entry.type ~= "debug" and sharp.getVersionString(entry.path):result() or ""
+        local version = sharp.getVersionString(entry.path):result() or ""
 
         local imgStatus, img
-        if entry.type ~= "debug" then
-            imgStatus, img = pcall(uie.image, "store/" .. entry.type)
-            if not imgStatus then
-                imgStatus, img = pcall(uie.image, "store/manual")
-            end
+        imgStatus, img = pcall(uie.image, "store/" .. entry.type)
+        if not imgStatus then
+            imgStatus, img = pcall(uie.image, "store/manual")
         end
 
         local row = uie.row({
