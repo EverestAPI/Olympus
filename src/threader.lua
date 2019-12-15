@@ -255,7 +255,10 @@ end
 local threadID = 0
 function threader.new(fun)
     local thread = love.thread.newThread([[-- threader.new
-        pcall(require, "prethread")
+        local prethreadStatus, prethread = pcall(require, "prethread")
+        if prethreadStatus and type(prethread) == "function" then
+            prethread(...)
+        end
 
         local args = {...}
 

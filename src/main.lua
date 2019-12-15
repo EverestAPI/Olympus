@@ -1,4 +1,4 @@
-require("love_filesystem_unsandboxing")
+require("prethread")("main")
 
 local debugging
 local debuggingSharp
