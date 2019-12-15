@@ -9,7 +9,7 @@ for k, v in pairs(uiu) do
     utils[k] = v
 end
 
-function utils.merge(...)
+function utils.concat(...)
     local all = {}
     local tables = {...}
     for i = 1, #tables do

@@ -354,7 +354,7 @@ function finder.findAll(uncached)
         return all
     end
 
-    all = utils.merge(
+    all = utils.concat(
         finder.findSteamInstalls(finder.defaultName),
         finder.findEpicInstalls(finder.defaultName),
         finder.findItchInstalls(finder.defaultName)
