@@ -115,72 +115,61 @@ function finder.findSteamShortcuts()
 
     local userdata = fs.isDirectory(fs.joinpath(steam, "userdata"))
     for userid in fs.dir(userdata) do
-        if not userid:match("%d+") then
-            goto next
-        end
+        local path = userid:match("%d+") and fs.isFile(fs.joinpath(userdata, userid, "config", "shortcuts.vdf"))
+        local data = path and fs.read(path)
+        if data then
+            local pos = 1
 
-        local path = fs.isFile(fs.joinpath(userdata, userid, "config", "shortcuts.vdf"))
-        if not path then
-            goto next
-        end
-
-        local data = fs.read(path)
-        if not data then
-            goto next
-        end
-
-        local pos = 1
-
-        local function get(pattern)
-            pattern = "^(" .. pattern .. ")"
-            local rv = {data:match(pattern, pos)}
-            if rv[1] then
-                pos = pos + #rv[1]
-                if rv[2] then
-                    table.remove(rv, 1)
+            local function get(pattern)
+                pattern = "^(" .. pattern .. ")"
+                local rv = {data:match(pattern, pos)}
+                if rv[1] then
+                    pos = pos + #rv[1]
+                    if rv[2] then
+                        table.remove(rv, 1)
+                    end
                 end
+                return table.unpack(rv)
             end
-            return table.unpack(rv)
-        end
 
-        local root = {}
-        local current = root
-        local pathStack = {}
-        local stack = {}
+            local root = {}
+            local current = root
+            local pathStack = {}
+            local stack = {}
 
-        while true do
-            while get("\8") do
-                current = stack[#stack]
-                pathStack[#pathStack] = nil
-                stack[#stack] = nil
-                if not current then
+            while true do
+                while get("\8") do
+                    current = stack[#stack]
+                    pathStack[#pathStack] = nil
+                    stack[#stack] = nil
+                    if not current then
+                        break
+                    end
+                end
+
+                local typ, key = get("(.)([^%z]+)%z")
+                if not typ then
                     break
                 end
+                typ = byte(typ)
+                -- Field names can have different casings across different objs in the same file!
+                key = key:lower()
+
+                if typ == 0 then
+                    pathStack[#pathStack + 1] = key
+                    stack[#stack + 1] = current
+                    local child = {}
+                    current[key] = child
+                    current = child
+
+                else
+                    current[key] = get("([^%z]*)%z")
+                end
+
             end
 
-            local typ, key = get("(.)([^%z]+)%z")
-            if not typ then
-                break
-            end
-            typ = byte(typ)
-            -- Field names can have different casings across different objs in the same file!
-            key = key:lower()
-
-            if typ == 0 then
-                pathStack[#pathStack + 1] = key
-                stack[#stack + 1] = current
-                local child = {}
-                current[key] = child
-                current = child
-
-            else
-                current[key] = get("([^%z]*)%z")
-            end
-
+            allLists[#allLists + 1] = root.shortcuts
         end
-
-        allLists[#allLists + 1] = root.shortcuts
-        ::next::
     end
 
     local all = {}
@@ -265,33 +254,25 @@ function finder.findEpicInstalls(name)
 
     local manifests = fs.joinpath(epic, "Manifests")
     for manifest in fs.dir(manifests) do
-        if not manifest:match("%.item$") then
-            goto next
+        manifest = manifest:match("%.item$") and fs.joinpath(manifests, manifest)
+        if manifest then
+            dbg(list, "Epic manifest: " .. manifest)
         end
 
-        dbg(list, "Epic manifest: " .. manifest)
-
-        manifest = fs.joinpath(manifests, manifest)
-        local data = utils.fromJSON(fs.read(manifest))
-
-        dbg(list, "DisplayName: " .. data.DisplayName)
-
-        if data.DisplayName ~= name then
-            goto next
+        local data = manifest and utils.fromJSON(fs.read(manifest))
+        if data then
+            dbg(list, "DisplayName: " .. data.DisplayName)
         end
 
-        local path = data.InstallLocation
-
-        dbg(list, "InstallLocation: " .. data.InstallLocation)
-
-        if fs.isDirectory(path) then
-            list[#list + 1] = {
-                type = "epic",
-                path = path
-            }
+        if data and data.DisplayName == name then
+            local path = data.InstallLocation
+            if fs.isDirectory(path) then
+                list[#list + 1] = {
+                    type = "epic",
+                    path = path
+                }
+            end
         end
-
-        ::next::
     end
 
     return list
