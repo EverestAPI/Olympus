@@ -26,13 +26,15 @@ end
 function fs.filename(path, sep)
     sep = sep or physfs.getDirSeparator()
 
-    return path:gsub("([^/\\])[/\\]$", "%1"):match("[^" .. sep .. "]+$")
+    path = path:gsub("([^/\\])[/\\]$", "%1"):match("[^" .. sep .. "]+$")
+    return path
 end
 
 function fs.dirname(path, sep)
     sep = sep or physfs.getDirSeparator()
 
-    return path:match("(.*" .. sep .. ")"):gsub("([^/\\])[/\\]$", "%1")
+    path = path:match("(.*" .. sep .. ")"):gsub("([^/\\])[/\\]$", "%1")
+    return path
 end
 
 -- TODO - Sanitize parts with leading/trailing separator
