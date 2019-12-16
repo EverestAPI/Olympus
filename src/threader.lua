@@ -124,7 +124,6 @@ function threadWrap:start(...)
 
     if self.running then
         error(self.id .. " already running!", 2)
-        return
     end
 
     self.running = true

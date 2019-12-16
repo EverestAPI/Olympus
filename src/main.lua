@@ -243,7 +243,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set(require("scenes/installmanager"))
+    scener.set(require("scenes/everest"))
 end
 
 love.frame = 0
@@ -336,6 +336,7 @@ function love.keypressed(key, scancode, isrepeat)
             debugLabel.text = "Profiling..."
             profile = require("profile")
             profile.reset()
+            profile.frame = 0
         else
             profile = nil
         end

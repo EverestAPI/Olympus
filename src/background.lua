@@ -82,7 +82,7 @@ return function()
                 self.innerHeight = height
             end
 
-            self:repaint()
+            --self:repaint()
         end,
 
         layoutLate = function(self)

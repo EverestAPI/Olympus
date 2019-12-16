@@ -109,8 +109,7 @@ function scene.load()
                 imgholder.children[1]:removeSelf()
 
                 if screenshots[1]._sFile530:match("%.webp$") then
-                    item:reflowDown()
-                    return
+                    return item:reflowDown()
                 end
 
                 local img = utilsAsync.download("https://files.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. screenshots[1]._sFile100):result()
