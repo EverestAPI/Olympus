@@ -247,7 +247,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set(require("scenes/gamebanana"))
+    scener.set(require("scenes/benchmark"))
 end
 
 love.frame = 0
