@@ -40,6 +40,12 @@ function love.run()
     return step
 end
 
+local _love_errhand = love.errhand
+function love.errhand(...)
+    _love_runStep = nil
+    return _love_errhand(...)
+end
+
 function love.load(args)
     for i = 1, #args do
         local arg = args[i]
@@ -157,12 +163,10 @@ function love.load(args)
         if love.system.getOS() == "Windows" then
             -- Shamelessly based off of how FNA force-repaints the window on resize.
             native.setEventFilter(function(userdata, event)
-                if event[0].type == 0x200 then -- SDL_WINDOWEVENT
-                    if event[0].window.event == 3 then -- SDL_WINDOWEVENT_EXPOSED
-                        _love_runStep()
-                        love.graphics = nil -- Don't redraw, we've already redrawn.
-                        return 0
-                    end
+                if _love_runStep and event[0].type == 0x200 and event[0].window.event == 3 then -- SDL_WINDOWEVENT and SDL_WINDOWEVENT_EXPOSED
+                    _love_runStep()
+                    love.graphics = nil -- Don't redraw, we've already redrawn.
+                    return 0
                 end
                 return 1
             end)
@@ -243,7 +247,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set(require("scenes/everest"))
+    scener.set(require("scenes/gamebanana"))
 end
 
 love.frame = 0

@@ -108,12 +108,12 @@ function scene.load()
 
                 imgholder.children[1]:removeSelf()
 
-                if screenshots[1]._sFile530:match("%.webp$") then
+                if screenshots[1]._sFile:match("%.webp$") then
                     return item:reflowDown()
                 end
 
                 local img = utilsAsync.download("https://files.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. screenshots[1]._sFile100):result()
-                img = love.filesystem.newFileData(img, screenshots[1]._sFile530)
+                img = love.filesystem.newFileData(img, screenshots[1]._sFile)
                 img = love.graphics.newImage(img)
 
                 imgholder:addChild(uie.image(img))
