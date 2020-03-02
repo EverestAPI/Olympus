@@ -265,7 +265,6 @@ steps:
     targetType: 'inline'
     script: |
       Move-Item -Path MonoKickstart/precompiled/kick.bin.osx -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.osx
-      Move-Item -Path MonoKickstart/precompiled/kick.bin.x86 -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.x86
       Move-Item -Path MonoKickstart/precompiled/kick.bin.x86_64 -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.x86_64
       (Get-Content MonoKickstart/precompiled/Kick) -replace "(?<=\s*\./)kick\.bin", "Olympus.Sharp.bin" | Set-Content MonoKickstart/precompiled/Kick
       Move-Item -Path MonoKickstart/precompiled/Kick -Destination MonoKickstart/precompiled/Olympus.Sharp.sh
