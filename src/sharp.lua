@@ -49,6 +49,7 @@ local function sharpthread()
 
     elseif ffi.os == "Linux" then
         if ffi.arch == "x86" then
+            -- Note: MonoKickstart no longer ships with x86 prebuilts.
             exename = "Olympus.Sharp.bin.x86"
         elseif ffi.arch == "x64" then
             exename = "Olympus.Sharp.bin.x86_64"

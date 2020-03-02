@@ -266,8 +266,6 @@ steps:
     script: |
       Move-Item -Path MonoKickstart/precompiled/kick.bin.osx -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.osx
       Move-Item -Path MonoKickstart/precompiled/kick.bin.x86_64 -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.x86_64
-      (Get-Content MonoKickstart/precompiled/Kick) -replace "(?<=\s*\./)kick\.bin", "Olympus.Sharp.bin" | Set-Content MonoKickstart/precompiled/Kick
-      Move-Item -Path MonoKickstart/precompiled/Kick -Destination MonoKickstart/precompiled/Olympus.Sharp.sh
 # Copy the precompiled folder into the sharp folder.
 - task: CopyFiles@2
   condition: and(succeeded(), ne(variables.monokickURL, ''))
