@@ -173,6 +173,7 @@ return function()
             love.graphics.setColor(1, 1, 1, 1)
             self.effect(self.drawBG, self)
             love.graphics.pop()
+            uiu.resetColor()
         end
     })
 end
