@@ -6,18 +6,22 @@ end
 
 function scener.set(scene)
     local prev = scener.scene
-    if prev then
+    if prev and prev.leave then
         prev.leave()
     end
 
     scener.scene = scene
 
     if not scene.loaded then
-        scene.load()
+        if scene.load then
+            scene.load()
+        end
         scene.loaded = true
     end
 
-    scene.enter()
+    if scene.enter then
+        scene.enter()
+    end
 
     scener.onChange(prev, scene)
 end

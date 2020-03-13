@@ -345,4 +345,8 @@ function love.keypressed(key, scancode, isrepeat)
             profile = nil
         end
     end
+
+    if key == "f5" then
+        scener.set(require("scenes/scenelist"))
+    end
 end

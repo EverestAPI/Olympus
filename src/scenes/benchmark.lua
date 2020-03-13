@@ -6,6 +6,51 @@ local scene = {}
 
 
 local root = uie.column({
+    uie.topbar({
+        { "File", {
+            { "New" },
+            { },
+            { "Open" },
+            { "Recent", {
+                { "Totally" },
+                { "Not A Dummy" },
+                { "Nested Submenu" }
+            } },
+            { },
+            { "Save" },
+            { "Save As..." },
+            { },
+            { "Settings" },
+            { },
+            { "Quit", love.event.quit }
+        }},
+
+        { "Edit", {
+            { "Undo" },
+            { "Redo" }
+        }},
+
+        { "Map", {
+            { "Stylegrounds" },
+            { "Metadata" },
+            { "Save Map Image" }
+        }},
+
+        { "Room", {
+            { "Add" },
+            { "Configure" }
+        }},
+
+        { "Help", {
+            { "Update" },
+            { "About" }
+        }},
+
+        { "Debug", {
+            { "Uhh" }
+        }},
+    }),
+
     uie.image("header"),
 
     uie.row({
