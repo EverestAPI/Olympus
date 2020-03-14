@@ -14,8 +14,20 @@ local root = uie.column({
             { "Recent", {
                 { "Totally" },
                 { "Not A Dummy" },
-                { "Nested Submenu" }
-            } },
+                { "Nested Submenu", {
+                    { "Totally" },
+                    { "Not A Dummy" },
+                    { "Nested Submenu", {
+                        { "Totally" },
+                        { "Not A Dummy" },
+                        { "Nested Submenu", {
+                            { "Totally" },
+                            { "Not A Dummy" },
+                            { "Nested Submenu" }
+                        }}
+                    }}
+                }}
+            }},
             { },
             { "Save" },
             { "Save As..." },
