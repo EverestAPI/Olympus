@@ -52,7 +52,7 @@ function config.save()
 
     fs.write(pathTmp, content)
     os.rename(pathTmp, path)
-    os.remove(path)
+    os.remove(pathTmp)
 end
 
 config = setmetatable(config, mtConfig)

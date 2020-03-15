@@ -92,10 +92,6 @@ function scene.load()
 
                 -- uie.label(utils.cleanHTML(text)):with({ wrap = true }):as("text"),
 
-            }):with({
-                style = {
-                    bg = { 0.1, 0.1, 0.1, 0.6 },
-                }
             }):with(uiu.fillWidth)
 
             list:addChild(item)
@@ -106,9 +102,9 @@ function scene.load()
 
                 local screenshots = utilsAsync.fromJSON(screenshotsRaw):result()
 
-                imgholder.children[1]:removeSelf()
-
                 if screenshots[1]._sFile:match("%.webp$") then
+                    -- TODO: WEBP SUPPORT
+                    imgholder.children[1]:removeSelf()
                     return item:reflowDown()
                 end
 
@@ -116,6 +112,7 @@ function scene.load()
                 img = love.filesystem.newFileData(img, screenshots[1]._sFile)
                 img = love.graphics.newImage(img)
 
+                imgholder.children[1]:removeSelf()
                 imgholder:addChild(uie.image(img))
                 item:reflowDown()
             end)

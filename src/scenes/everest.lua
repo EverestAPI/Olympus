@@ -1,6 +1,8 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
+local scener = require("scener")
+local config = require("config")
 
 local scene = {}
 
@@ -16,25 +18,18 @@ local root = uie.column({
             uie.column({
 
                 uie.scrollbox(
-                    uie.list(
-                        {
-                            "Steam",
-                            "Epic",
-                            "Bingo",
-                            "Casual",
-                            "Custom",
-                        }
-                    ):with({
+                    uie.list({
+                    }):with({
                         grow = false
-                    }):with(uiu.fillWidth):with(function(list)
-                        list.selected = list.children[1]
-                    end):as("installs")
+                    }):with(uiu.fillWidth):as("installs")
                 ):with(uiu.fillWidth):with(uiu.fillHeight),
 
-                uie.button("Manage"):with({
+                uie.button("Manage", function()
+                    scener.push("installmanager")
+                end):with({
                     clip = false,
                     cacheable = false
-                }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
+                }):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
 
             }):with({
                 style = {
@@ -110,6 +105,23 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
 scene.root = root
 
 
+function scene.reloadInstalls()
+    local list = root:findChild("installs")
+    list.children = {}
+    list.selected = nil
+
+    local installs = config.installs or {}
+    for i = 1, #installs do
+        local entry = installs[i]
+        list:addChild(uie.listItem(entry.path))
+    end
+
+    if not list.selected then
+        list.selected = list.children[1]
+    end
+end
+
+
 function scene.load()
 
     threader.routine(function()
@@ -182,7 +194,7 @@ end
 
 
 function scene.enter()
-
+    scene.reloadInstalls()
 end
 
 

@@ -83,6 +83,7 @@ function love.load(args)
     scener = require("scener")
 
     config = require("config")
+    config.load()
 
     sharp = require("sharp")
     sharp.init(debugging, debuggingSharp)
@@ -247,7 +248,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set(require("scenes/benchmark"))
+    scener.set("benchmark")
 end
 
 love.frame = 0
@@ -347,6 +348,6 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f5" then
-        scener.set(require("scenes/scenelist"))
+        scener.set("scenelist")
     end
 end

@@ -60,10 +60,6 @@ function scene.load()
                             end)
                         )
                     })
-                }):with({
-                    style = {
-                        bg = { 0.1, 0.1, 0.1, 0.6 },
-                    }
                 }):with(uiu.fillWidth)
             )
         end

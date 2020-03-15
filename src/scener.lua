@@ -1,5 +1,9 @@
 
-local scener = {}
+local scener = {
+    pathPrefix = "scenes/",
+    current = nil,
+    stack = {}
+}
 
 function scener.onChange(prev, next)
 end
@@ -10,7 +14,11 @@ function scener.set(scene)
         prev.leave()
     end
 
-    scener.scene = scene
+    if type(scene) == "string" then
+        scene = require(scener.pathPrefix .. scene)
+    end
+
+    scener.current = scene
 
     if not scene.loaded then
         if scene.load then
@@ -24,6 +32,17 @@ function scener.set(scene)
     end
 
     scener.onChange(prev, scene)
+
+    return scene
+end
+
+function scener.push(scene)
+    table.insert(scener.stack, scener.current)
+    scener.set(scene)
+end
+
+function scener.pop()
+    scener.set(table.remove(scener.stack))
 end
 
 return scener

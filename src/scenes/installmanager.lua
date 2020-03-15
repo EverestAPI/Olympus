@@ -1,6 +1,7 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
+local scener = require("scener")
 local fs = require("fs")
 local config = require("config")
 local sharp = require("sharp")
@@ -9,6 +10,21 @@ local scene = {}
 
 
 local root = uie.column({
+
+    uie.row({
+        uie.button("Back", function()
+            scener.pop()
+        end),
+
+    }):with({
+        style = {
+            padding = 0,
+            bg = {}
+        },
+        clip = false,
+        cacheable = false
+    }):with(uiu.fillWidth):as("bar"),
+
     uie.scrollbox(
         uie.column({
         }):with({
@@ -17,10 +33,11 @@ local root = uie.column({
                 padding = 0,
             }
         }):with(uiu.fillWidth):as("installs")
-    ):with(uiu.fillWidth):with(uiu.fillHeight),
+    ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
 })
 scene.root = root
+local bar = root:findChild("bar")
 
 
 function scene.browse()
@@ -109,6 +126,7 @@ function scene.createEntry(list, entry, manualIndex)
                     local installs = config.installs
                     table.remove(installs, manualIndex)
                     config.installs = installs
+                    config.save()
                     scene.reloadAll()
                 end):with({
                     y = 6
@@ -119,6 +137,7 @@ function scene.createEntry(list, entry, manualIndex)
                     local installs = config.installs or {}
                     installs[#installs + 1] = entry
                     config.installs = installs
+                    config.save()
                     scene.reloadAll()
                 end):with({
                     y = 6
@@ -147,10 +166,6 @@ function scene.reloadManual()
                         padding = 0,
                     }
                 }):with(uiu.fillWidth)
-            }):with({
-                style = {
-                    bg = { 0.1, 0.1, 0.1, 0.6 },
-                }
             }):with(uiu.fillWidth)
 
             listMain:addChild(listManual:as("listManual"))
@@ -200,10 +215,6 @@ function scene.reloadFound()
             if not listFound then
                 listFound = uie.column({
                     uie.label("Found:")
-                }):with({
-                    style = {
-                        bg = { 0.1, 0.1, 0.1, 0.6 },
-                    }
                 }):with(uiu.fillWidth)
 
                 listMain:addChild(listFound:as("listFound"))
@@ -219,7 +230,7 @@ end
 
 
 function scene.reloadAll()
-    local loading = root:findChild("loading")
+    local loading = bar:findChild("loading")
     if loading then
         loading:removeSelf()
     end
@@ -234,7 +245,7 @@ function scene.reloadAll()
         clip = false,
         cacheable = false
     }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
-    root:addChild(loading)
+    bar:addChild(loading)
 
     local left = 2
     local function done()
@@ -250,12 +261,12 @@ end
 
 
 function scene.load()
-
+    scene.reloadAll()
 end
 
 
 function scene.enter()
-    scene.reloadAll()
+
 end
 
 
