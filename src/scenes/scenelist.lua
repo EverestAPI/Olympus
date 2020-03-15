@@ -27,7 +27,7 @@ function scene.load()
         local path = file:match("^(.*)%.lua$")
         if path then
             list:addChild(uie.button(path, function()
-                scener.set(path)
+                scener.push(path)
             end))
         end
     end

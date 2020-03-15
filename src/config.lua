@@ -27,7 +27,7 @@ function config.load()
 
     if existsTmp then
         if exists then
-            os.delete(pathTmp)
+            os.remove(pathTmp)
         else
             os.rename(pathTmp, path)
         end
@@ -50,7 +50,9 @@ function config.save()
 
     local content = utils.toJSON(configData)
 
+    os.remove(pathTmp)
     fs.write(pathTmp, content)
+    os.remove(path)
     os.rename(pathTmp, path)
     os.remove(pathTmp)
 end

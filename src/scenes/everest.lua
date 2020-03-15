@@ -113,7 +113,7 @@ function scene.reloadInstalls()
     local installs = config.installs or {}
     for i = 1, #installs do
         local entry = installs[i]
-        list:addChild(uie.listItem(entry.path))
+        list:addChild(uie.listItem(entry.name))
     end
 
     if not list.selected then

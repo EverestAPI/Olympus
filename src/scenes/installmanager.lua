@@ -87,9 +87,10 @@ function scene.browse()
             end
         end
 
+        entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
         installs[#installs + 1] = entry
         config.installs = installs
-
+        config.save()
         scene.reloadAll()
     end)
 end
@@ -111,6 +112,12 @@ function scene.createEntry(list, entry, manualIndex)
             }) or false),
 
             uie.column({
+                manualIndex and uie.field(
+                    entry.name,
+                    function(value)
+                        entry.name = value
+                    end
+                ):with(uiu.fillWidth),
                 uie.label(entry.path),
                 uie.label({{1, 1, 1, 0.5}, version})
             }):with({
@@ -118,7 +125,7 @@ function scene.createEntry(list, entry, manualIndex)
                     bg = {},
                     padding = 0
                 }
-            }),
+            }):with(uiu.fillWidth(16, true)),
 
             entry.type ~= "debug" and (
                 manualIndex and
@@ -128,20 +135,17 @@ function scene.createEntry(list, entry, manualIndex)
                     config.installs = installs
                     config.save()
                     scene.reloadAll()
-                end):with({
-                    y = 6
-                }):with(uiu.rightbound)
+                end):with(uiu.rightbound)
 
                 or
                 uie.button("Add", function()
                     local installs = config.installs or {}
+                    entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
                     installs[#installs + 1] = entry
                     config.installs = installs
                     config.save()
                     scene.reloadAll()
-                end):with({
-                    y = 6
-                }):with(uiu.rightbound)
+                end):with(uiu.rightbound)
             )
         }):with(uiu.fillWidth)
 

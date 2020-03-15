@@ -65,8 +65,6 @@ function love.load(args)
         end
     end
 
-    love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
-
     utils = require("utils")
     threader = require("threader")
 
@@ -79,6 +77,9 @@ function love.load(args)
     ui = require("ui")
     uie = require("ui.elements")
     uiu = require("ui.utils")
+
+    love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
+    ui.fontMono = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 16)
 
     scener = require("scener")
 
@@ -120,19 +121,35 @@ function love.load(args)
                 clip = false,
             }):with(uiu.fill):as("wrapper"),
 
-            uie.panel({
-                uie.label():with({
+            uie.window("debug",
+                uie.label("", ui.fontMono):with({
                     style = {
-                        color = { 0, 0, 0, 1 }
-                    }
-                }):as("debug"),
-            }):with({
-                interactive = -1,
+                        color = { 0.9, 0.9, 0.9, 1 }
+                    },
+
+                    interactive = 1,
+
+                    onPress = function(self, ...)
+                        self.parent.titlebar:onPress(...)
+                    end,
+
+                    onRelease = function(self, ...)
+                        self.parent.titlebar:onRelease(...)
+                    end,
+
+                    onDrag = function(self, ...)
+                        self.parent.titlebar:onDrag(...)
+                    end
+                }):as("debug")
+            ):with({
                 style = {
-                    bg = { 1, 1, 1, 0.5 }
+                    bg = { 0.02, 0.02, 0.02, 1 },
+                    padding = 8
                 },
-                visible = true
-            }):with(uiu.bottombound)
+                visible = profile ~= nil
+            }):with(function(el)
+                table.remove(el.children, 1).parent = el
+            end)
 
         }):with({
             style = {
@@ -248,7 +265,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set("benchmark")
+    scener.set("scenelist")
 end
 
 love.frame = 0
@@ -259,23 +276,28 @@ function love.update(dt)
 
     love.frame = love.frame + 1
 
-    if profile then
-        profile.frame = (profile.frame or 0) + 1
-        if profile.frame % 100 == 0 then
-            debugLabel.text =
-                "FPS: " .. love.timer.getFPS() ..
-                profile.report(20)
-            profile.reset()
-        end
+    if love.frame > 1 then
+        if profile then
+            profile.frame = (profile.frame or 0) + 1
+            if profile.frame % 100 == 0 then
+                debugLabel.text =
+                    "FPS: " .. love.timer.getFPS() ..
+                    profile.report(20)
+                debugLabel.parent:reflow()
+                profile.reset()
+            end
 
-        profile.start()
-    else
-        debugLabel.text =
-            "FPS: " .. love.timer.getFPS() .. "\n" ..
-            "hovering: " .. tostring(ui.hovering) .. "\n" ..
-            "dragging: " .. tostring(ui.dragging) .. "\n" ..
-            "focusing: " .. tostring(ui.focusing) .. "\n" ..
-            ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
+            profile.start()
+
+        else
+            debugLabel.text =
+                "FPS: " .. love.timer.getFPS() .. "\n" ..
+                "hovering: " .. tostring(ui.hovering) .. "\n" ..
+                "dragging: " .. tostring(ui.dragging) .. "\n" ..
+                "focusing: " .. tostring(ui.focusing) .. "\n" ..
+                ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
+            debugLabel.parent:reflow()
+        end
     end
 
     threader.update()
@@ -339,6 +361,7 @@ function love.keypressed(key, scancode, isrepeat)
         if not profile then
             debugLabel.parent.visible = true
             debugLabel.text = "Profiling..."
+            debugLabel.parent:reflow()
             profile = require("profile")
             profile.reset()
             profile.frame = 0
