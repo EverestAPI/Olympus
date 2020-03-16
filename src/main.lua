@@ -143,10 +143,11 @@ function love.load(args)
                 }):as("debug")
             ):with({
                 style = {
-                    bg = { 0.02, 0.02, 0.02, 1 },
+                    bg = { 0.02, 0.02, 0.02, 0.9 },
                     padding = 8
                 },
-                visible = profile ~= nil
+                visible = profile ~= nil,
+                interactive = profile ~= nil and 1 or -1
             }):with(function(el)
                 table.remove(el.children, 1).parent = el
             end)
@@ -355,11 +356,15 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == "f1" then
         debugLabel.parent.visible = not debugLabel.parent.visible
+        debugLabel.parent.interactive = debugLabel.parent.visible and 1 or -1
+        ui.root:recollect(false, true)
     end
 
     if key == "f2" then
         if not profile then
             debugLabel.parent.visible = true
+            debugLabel.parent.interactive = 1
+            ui.root:recollect(false, true)
             debugLabel.text = "Profiling..."
             debugLabel.parent:reflow()
             profile = require("profile")

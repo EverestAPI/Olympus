@@ -116,6 +116,7 @@ function scene.createEntry(list, entry, manualIndex)
                     entry.name,
                     function(value)
                         entry.name = value
+                        config.save()
                     end
                 ):with(uiu.fillWidth),
                 uie.label(entry.path),
@@ -124,7 +125,10 @@ function scene.createEntry(list, entry, manualIndex)
                 style = {
                     bg = {},
                     padding = 0
-                }
+                },
+
+                clip = false,
+                cacheable = false
             }):with(uiu.fillWidth(16, true)),
 
             entry.type ~= "debug" and (
