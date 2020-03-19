@@ -91,9 +91,16 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
-        uie.button("Step 3: Install"),
-        uie.button("Uninstall"),
-        uie.button("???", uiu.magic(print, "pressed")),
+        uie.button("Step 3: Install", function()
+            scene.install()
+        end):hook({
+            update = function(orig, self, ...)
+                local root = scene.root
+                self.enabled = root:findChild("installs").selected and root:findChild("versions").selected
+                orig(self, ...)
+            end
+        }):as("install"),
+        uie.button("Uninstall")
     }):with({
         style = {
             padding = 0,
@@ -108,17 +115,28 @@ scene.root = root
 function scene.reloadInstalls()
     local list = root:findChild("installs")
     list.children = {}
-    list.selected = nil
 
     local installs = config.installs or {}
     for i = 1, #installs do
         local entry = installs[i]
-        list:addChild(uie.listItem(entry.name))
+        list:addChild(uie.listItem(entry.name, entry))
     end
 
-    if not list.selected then
-        list.selected = list.children[1]
+    list.selected = list.children[1]
+end
+
+
+function scene.install()
+    local install = root:findChild("installs").selected
+    install = install and install.data
+
+    local version = root:findChild("versions").selected
+    version = version and version.data
+
+    if not install or not version then
+        return
     end
+
 end
 
 
