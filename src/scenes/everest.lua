@@ -100,7 +100,14 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
                 orig(self, ...)
             end
         }):as("install"),
-        uie.button("Uninstall")
+
+        uie.button("Uninstall"):hook({
+            update = function(orig, self, ...)
+                local root = scene.root
+                self.enabled = root:findChild("installs").selected
+                orig(self, ...)
+            end
+        }):as("uninstall")
     }):with({
         style = {
             padding = 0,
@@ -123,6 +130,7 @@ function scene.reloadInstalls()
     end
 
     list.selected = list.children[1]
+    list:reflow()
 end
 
 
@@ -134,6 +142,16 @@ function scene.install()
     version = version and version.data
 
     if not install or not version then
+        return
+    end
+
+end
+
+function scene.uninstall()
+    local install = root:findChild("installs").selected
+    install = install and install.data
+
+    if not install then
         return
     end
 
