@@ -92,7 +92,7 @@ function love.load(args)
     local root = uie.column({
         require("background")(),
 
-        os.getenv("OLYMPUS_TITLEBAR") == "1" and uie.titlebar(uie.image("titlebar"), true):with({
+        config.csd and uie.titlebar(uie.image("titlebar"), true):with({
             style = {
                 focusedBG = { 0.4, 0.4, 0.4, 0.05 },
                 unfocusedBG = { 0.2, 0.2, 0.2, 0.1 }
@@ -154,17 +154,19 @@ function love.load(args)
 
         }):with({
             style = {
-                bg = { bg = {} },
+                bg = {},
                 padding = 0,
                 spacing = 0,
                 radius = 0
             },
             clip = false,
             cacheable = false
-        }):with(uiu.fillWidth):with(uiu.fillHeight(true)):as("main")
+        }):with(uiu.fillWidth):with(uiu.fillHeight(true)):with(uiu.at(0, 29)):as("main"),
+
+        uie.topbar({}):as("pathbar"),
     }):with({
         style = {
-            bg = { bg = {} },
+            bg = {},
             padding = 0,
             spacing = 0,
             radius = 0
@@ -248,6 +250,7 @@ function love.load(args)
 
     love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
 
+    local pathbar = root:findChild("pathbar")
     local wrapper = root:findChild("wrapper")
     function scener.onChange(prev, next)
         wrapper.children = {
@@ -263,6 +266,29 @@ function love.load(args)
         }
 
         wrapper:reflow()
+
+        local items = {
+
+            { "<<<",
+                function()
+                    scener.pop()
+                end
+            }
+
+        }
+
+        for i = 1, #scener.stack do
+            items[i + 1] = { scener.stack[i].name, function()
+                scener.pop(#scener.stack - i + 1)
+            end }
+        end
+
+        items[#scener.stack + 2] = { next.name }
+
+        pathbar.children = uiu.map(items, uie.__menuItem.map)
+
+        pathbar:reflow()
+
         ui.root:recollect()
     end
 
@@ -336,7 +362,11 @@ end
 
 function love.keypressed(key, scancode, isrepeat)
     if key == "escape" then
-        love.event.quit()
+        if #scener.stack > 0 then
+            scener.pop()
+        else
+            love.event.quit()
+        end
     end
 
     if key == "f12" then

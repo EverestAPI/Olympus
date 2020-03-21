@@ -42,6 +42,17 @@ function config.load()
     configData = data
     mtConfig.__index = data
     mtConfig.__newindex = data
+
+    data.installs = data.installs or {}
+
+    local csd = os.getenv("OLYMPUS_CSD")
+    if csd == "1" then
+        data.csd = true
+    elseif csd == "0" then
+        data.csd = false
+    elseif data.csd == nil then
+        data.csd = false
+    end
 end
 
 function config.save()

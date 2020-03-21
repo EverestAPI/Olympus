@@ -11,20 +11,6 @@ local scene = {}
 
 local root = uie.column({
 
-    uie.row({
-        uie.button("Back", function()
-            scener.pop()
-        end),
-
-    }):with({
-        style = {
-            padding = 0,
-            bg = {}
-        },
-        clip = false,
-        cacheable = false
-    }):with(uiu.fillWidth):as("bar"),
-
     uie.scrollbox(
         uie.column({
         }):with({
@@ -33,11 +19,13 @@ local root = uie.column({
                 padding = 0,
             }
         }):with(uiu.fillWidth):as("installs")
-    ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+    ):with({
+        clip = false,
+        cacheable = false
+    }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
 })
 scene.root = root
-local bar = root:findChild("bar")
 
 
 function scene.browse()
@@ -238,7 +226,7 @@ end
 
 
 function scene.reloadAll()
-    local loading = bar:findChild("loading")
+    local loading = root:findChild("loading")
     if loading then
         loading:removeSelf()
     end
@@ -253,7 +241,7 @@ function scene.reloadAll()
         clip = false,
         cacheable = false
     }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
-    bar:addChild(loading)
+    root:addChild(loading)
 
     local left = 2
     local function done()

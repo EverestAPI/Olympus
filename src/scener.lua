@@ -15,7 +15,10 @@ function scener.set(scene)
     end
 
     if type(scene) == "string" then
-        scene = require(scener.pathPrefix .. scene)
+        local path = scene
+        scene = require(scener.pathPrefix .. path)
+        scene.path = scene.path or path
+        scene.name = scene.name or path
     end
 
     scener.current = scene
@@ -41,8 +44,30 @@ function scener.push(scene)
     scener.set(scene)
 end
 
-function scener.pop()
+function scener.pop(count)
+    if count then
+        for i = 1, count do
+            if not scener.pop() then
+                return false
+            end
+        end
+
+        return count > 0
+    end
+
+    local scene = scener.current
+    if scene and scene.leave then
+        if scene.leave() == false then
+            return false
+        end
+    end
+
+    if #scener.stack <= 0 then
+        return false
+    end
+
     scener.set(table.remove(scener.stack))
+    return true
 end
 
 return scener

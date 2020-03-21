@@ -8,8 +8,6 @@ local scene = {}
 
 
 local root = uie.column({
-    uie.image("header"),
-
     uie.row({
 
         uie.column({
