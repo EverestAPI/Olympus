@@ -4,7 +4,9 @@ local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
 
-local scene = {}
+local scene = {
+    name = "Everest Installer"
+}
 
 
 local root = uie.column({

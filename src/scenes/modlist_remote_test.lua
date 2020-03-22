@@ -2,7 +2,9 @@ local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
 
-local scene = {}
+local scene = {
+    name = "Mod Manager (Remote Test)"
+}
 
 
 local root = uie.column({

@@ -6,7 +6,9 @@ local fs = require("fs")
 local config = require("config")
 local sharp = require("sharp")
 
-local scene = {}
+local scene = {
+    name = "Install Manager"
+}
 
 
 local root = uie.column({

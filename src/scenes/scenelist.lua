@@ -1,7 +1,9 @@
 local ui, uiu, uie = require("ui").quick()
 local scener = require("scener")
 
-local scene = {}
+local scene = {
+    name = "Main Menu"
+}
 
 
 local root = uie.column({
@@ -26,7 +28,8 @@ function scene.load()
     for i, file in ipairs(love.filesystem.getDirectoryItems("scenes")) do
         local path = file:match("^(.*)%.lua$")
         if path then
-            list:addChild(uie.button(path, function()
+            local scene = scener.preload(path)
+            list:addChild(uie.button(scene.name, function()
                 scener.push(path)
             end))
         end

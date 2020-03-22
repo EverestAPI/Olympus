@@ -4,7 +4,8 @@ function love.conf(t)
         config.load()
     else
         config = {
-            csd = false
+            csd = false,
+            vsync = true
         }
     end
 
@@ -15,7 +16,7 @@ function love.conf(t)
     t.window.minheight = 600
     t.window.borderless = config.csd
     t.window.resizable = true -- when borderless, true causes a flickering border on Windows
-    t.window.vsync = 0
+    t.window.vsync = config.vsync and 1 or 0
     t.window.highdpi = true
     t.console = false
 end

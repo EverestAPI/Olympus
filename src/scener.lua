@@ -8,6 +8,13 @@ local scener = {
 function scener.onChange(prev, next)
 end
 
+function scener.preload(path)
+    local scene = require(scener.pathPrefix .. path)
+    scene.path = scene.path or path
+    scene.name = scene.name or path
+    return scene
+end
+
 function scener.set(scene)
     local prev = scener.scene
     if prev and prev.leave then
@@ -15,10 +22,7 @@ function scener.set(scene)
     end
 
     if type(scene) == "string" then
-        local path = scene
-        scene = require(scener.pathPrefix .. path)
-        scene.path = scene.path or path
-        scene.name = scene.name or path
+        scene = scener.preload(scene)
     end
 
     scener.current = scene

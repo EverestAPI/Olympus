@@ -53,6 +53,15 @@ function config.load()
     elseif data.csd == nil then
         data.csd = false
     end
+
+    local vsync = os.getenv("OLYMPUS_VSYNC")
+    if vsync == "1" then
+        data.vsync = true
+    elseif vsync == "0" then
+        data.vsync = false
+    elseif data.vsync == nil then
+        data.vsync = true
+    end
 end
 
 function config.save()
