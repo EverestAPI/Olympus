@@ -79,6 +79,7 @@ function love.load(args)
     uiu = require("ui.utils")
 
     love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
+    ui.fontDebug = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 8)
     ui.fontMono = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 16)
     ui.fontBig = love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 28)
 
@@ -323,6 +324,8 @@ function love.update(dt)
                 "hovering: " .. tostring(ui.hovering) .. "\n" ..
                 "dragging: " .. tostring(ui.dragging) .. "\n" ..
                 "focusing: " .. tostring(ui.focusing) .. "\n" ..
+                "debug: " .. tostring(lldb ~= nil) .. "\n" ..
+                "debugDraw: " .. tostring(ui.debugDraw) .. "\n" ..
                 ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
             debugLabel.parent:reflow()
         end
@@ -349,6 +352,7 @@ function love.draw()
     -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
     ui.draw()
+    ui.repaintAll = false
 
     -- love.graphics.setScissor()
 
@@ -406,7 +410,11 @@ function love.keypressed(key, scancode, isrepeat)
         end
     end
 
-    if key == "f5" then
-        scener.set("scenelist")
+    if key == "f10" then
+        ui.repaintAll = true
+    end
+
+    if key == "f11" then
+        ui.debugDraw = not ui.debugDraw
     end
 end

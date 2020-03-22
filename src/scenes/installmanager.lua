@@ -172,23 +172,16 @@ function scene.reloadManual()
         if listManual then
             listManual.children = {}
         else
-            listManual = uie.column({
-                uie.row({
-                }):with({
-                    style = {
-                        bg = {},
-                        padding = 0,
-                    }
-                }):with(uiu.fillWidth)
-            }):with(uiu.fillWidth)
+            listManual = uie.column({}):with(uiu.fillWidth)
 
             listMain:addChild(listManual:as("listManual"))
         end
 
+        listManual:addChild(uie.label("Your Installations", ui.fontBig))
+
         local installs = config.installs or {}
 
         if #installs > 0 then
-            listManual:addChild(uie.label("Your Installations", ui.fontBig))
             for i = 1, #installs do
                 local entry = installs[i]
                 scene.createEntry(listManual, entry, i):result()
