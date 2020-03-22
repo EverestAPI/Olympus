@@ -411,10 +411,20 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f10" then
-        ui.repaintAll = true
+        if love.keyboard.isDown("lshift") then
+            ui.repaintAll = true
+        else
+
+            ui.root:recollect()
+        end
     end
 
     if key == "f11" then
-        ui.debugDraw = not ui.debugDraw
+        if love.keyboard.isDown("lshift") then
+            ui.debugDraw = (ui.debugDraw ~= -1) and -1 or true
+
+        else
+            ui.debugDraw = not ui.debugDraw
+        end
     end
 end
