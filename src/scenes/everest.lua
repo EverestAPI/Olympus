@@ -13,7 +13,7 @@ local root = uie.column({
     uie.row({
 
         uie.column({
-            uie.label("Step 1: Select your installation"),
+            uie.label("Your Installations", ui.fontBig),
 
             uie.column({
 
@@ -40,7 +40,7 @@ local root = uie.column({
         }):with(uiu.fillHeight),
 
         uie.column({
-            uie.label("Step 2: Select version"),
+            uie.label("Versions", ui.fontBig),
             uie.column({
                 uie.label(({{ 1, 1, 1, 1 },
 [[Use the newest version for more features and bugfixes.

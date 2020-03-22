@@ -106,10 +106,10 @@ local root = uie.column({
 
             uie.window("Hello, World!",
                 uie.column({
-                    uie.label("This is a one-line label."),
+                    uie.label("This is a big label.", ui.fontBig),
 
                     -- Labels use Löve2D Text objects under the hood.
-                    uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " label."}),
+                    uie.label({ { 1, 1, 1 }, "This is a ", { 1, 0, 0 }, "colored", { 0, 1, 1 }, " mono-font label."}, ui.fontMono),
 
                     -- Multi-line labels aren't subjected to the parent element's spacing property.
                     uie.label("This is a two-line label.\nThe following label is updated dynamically."),

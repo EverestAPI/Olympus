@@ -11,23 +11,7 @@ local scene = {
 }
 
 
-local root = uie.column({
-
-    uie.scrollbox(
-        uie.column({
-        }):with({
-            style = {
-                bg = {},
-                padding = 0,
-            }
-        }):with(uiu.fillWidth):as("installs")
-    ):with({
-        clip = false,
-        cacheable = false
-    }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
-
-})
-scene.root = root
+local root
 
 
 function scene.browse()
@@ -123,7 +107,7 @@ function scene.createEntry(list, entry, manualIndex)
 
             uie.row({
 
-                manualIndex and uie.button("↑", function()
+                manualIndex and uie.button(uie.image("up"), function()
                     local installs = config.installs
                     table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
                     config.installs = installs
@@ -133,7 +117,7 @@ function scene.createEntry(list, entry, manualIndex)
                     enabled = manualIndex > 1
                 }),
 
-                manualIndex and uie.button("↓", function()
+                manualIndex and uie.button(uie.image("down"), function()
                     local installs = config.installs
                     table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
                     config.installs = installs
@@ -204,14 +188,14 @@ function scene.reloadManual()
         local installs = config.installs or {}
 
         if #installs > 0 then
-            listManual:addChild(uie.label("Your Installations:"))
+            listManual:addChild(uie.label("Your Installations", ui.fontBig))
             for i = 1, #installs do
                 local entry = installs[i]
                 scene.createEntry(listManual, entry, i):result()
             end
 
         else
-            listManual:addChild(uie.label("Your installations list is empty."))
+            listManual:addChild(uie.label("This list is empty."))
         end
 
         listManual:addChild(uie.button("Browse", scene.browse))
@@ -244,7 +228,7 @@ function scene.reloadFound()
 
             if not listFound then
                 listFound = uie.column({
-                    uie.label("Found:")
+                    uie.label("Found", ui.fontBig)
                 }):with(uiu.fillWidth)
 
                 listMain:addChild(listFound:as("listFound"))
@@ -260,6 +244,25 @@ end
 
 
 function scene.reloadAll()
+    root = uie.column({
+
+        uie.scrollbox(
+            uie.column({
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0,
+                }
+            }):with(uiu.fillWidth):as("installs")
+        ):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+
+    })
+    scene.root = root
+    scener.onChange(scener.current, scener.current)
+
     local loading = root:findChild("loading")
     if loading then
         loading:removeSelf()
