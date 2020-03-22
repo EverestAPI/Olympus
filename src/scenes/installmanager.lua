@@ -121,26 +121,58 @@ function scene.createEntry(list, entry, manualIndex)
                 cacheable = false
             }):with(uiu.fillWidth(16, true)),
 
-            entry.type ~= "debug" and (
-                manualIndex and
-                uie.button("Remove", function()
-                    local installs = config.installs
-                    table.remove(installs, manualIndex)
-                    config.installs = installs
-                    config.save()
-                    scene.reloadAll()
-                end):with(uiu.rightbound)
+            uie.row({
 
-                or
-                uie.button("Add", function()
-                    local installs = config.installs or {}
-                    entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
-                    installs[#installs + 1] = entry
+                manualIndex and uie.button("↑", function()
+                    local installs = config.installs
+                    table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
                     config.installs = installs
                     config.save()
                     scene.reloadAll()
-                end):with(uiu.rightbound)
-            )
+                end):with({
+                    enabled = manualIndex > 1
+                }),
+
+                manualIndex and uie.button("↓", function()
+                    local installs = config.installs
+                    table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
+                    config.installs = installs
+                    config.save()
+                    scene.reloadAll()
+                end):with({
+                    enabled = manualIndex < #config.installs
+                }),
+
+                entry.type ~= "debug" and (
+                    manualIndex and
+                    uie.button("Remove", function()
+                        local installs = config.installs
+                        table.remove(installs, manualIndex)
+                        config.installs = installs
+                        config.save()
+                        scene.reloadAll()
+                    end)
+
+                    or
+                    uie.button("Add", function()
+                        local installs = config.installs or {}
+                        entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
+                        installs[#installs + 1] = entry
+                        config.installs = installs
+                        config.save()
+                        scene.reloadAll()
+                    end)
+                )
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0
+                },
+
+                clip = false
+            }):with(uiu.rightbound)
+
         }):with(uiu.fillWidth)
 
         list:addChild(row)
