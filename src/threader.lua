@@ -5,6 +5,8 @@ local threader = {
     _threads = {},
     _routines = {},
     _wrapCache = {},
+
+    id = "main"
 }
 
 
@@ -65,7 +67,7 @@ function sharedWrap:update(...)
     end
 
     if rethrow then
-        error(self.id .. " died:\n" .. errorMsg)
+        error(self.id .. " died:\n" .. tostring(errorMsg))
     end
 
     return unpack(rv)
@@ -141,9 +143,6 @@ function threadWrap:__update()
     self.running = running
 
     local error = thread:getError()
-    if error ~= nil then
-        error = true
-    end
     self.error = error
 
     if wasRunning and not running then
@@ -254,6 +253,11 @@ end
 local threadID = 0
 function threader.new(fun)
     local thread = love.thread.newThread([[-- threader.new
+        local __threadType = "new"
+
+]] .. (threader.debug and ("-- DEBUG START\n" .. threader.debug .. "\n--DEBUG END") or "") .. [[
+]] .. (threader.debugStart and threader.debugStart or "") .. [[
+
         local prethreadStatus, prethread = pcall(require, "prethread")
         if prethreadStatus and type(prethread) == "function" then
             prethread(...)
@@ -263,6 +267,8 @@ function threader.new(fun)
 
         local id = args[1]
         table.remove(args, 1)
+
+        require("threader").id = id
 
         local code = args[1]
         table.remove(args, 1)
@@ -302,8 +308,7 @@ function threader.new(fun)
         end
 
         channel:push(rv)
-    ]])
-    local channel = love.thread.newChannel()
+    ]] .. (threader.debugEnd and threader.debugEnd or ""))
 
     local suffix = ""
 
@@ -334,7 +339,7 @@ function threader.new(fun)
     local wrap = setmetatable({
         id = "thread#" .. threadID .. suffix,
         thread = thread,
-        channel = channel,
+        channel = love.thread.newChannel(),
         code = type(fun) == "string" and fun or string.dump(fun),
         upvalues = upvalues,
         callbacks = {},
@@ -353,12 +358,17 @@ end
 
 function threader.async(fun, ...)
     return threader.run([[
+        local __threadType = "async"
+
+]] .. (threader.debug and ("-- DEBUG START\n" .. threader.debug .. "\n--DEBUG END") or "") .. [[
+]] .. (threader.debugStart and threader.debugStart or "") .. [[
+
         local rv = ]] .. fun .. [[
         if type(rv) == 'function' then
             return rv(...)
         end
         return rv
-    ]], ...)
+    ]] .. (threader.debugEnd and threader.debugEnd or ""), ...)
 end
 
 function threader.await(thread, ...)
@@ -477,6 +487,11 @@ function mtThreadRequireWrap:__index(key)
 
     value = function(...)
         return threader.run([[-- threader.wrap
+        local __threadType = "wrap"
+
+]] .. (threader.debug and ("-- DEBUG START\n" .. threader.debug .. "\n--DEBUG END") or "") .. [[
+]] .. (threader.debugStart and threader.debugStart or "") .. [[
+
             local args = {...}
 
             local dep = args[1]
@@ -487,7 +502,7 @@ function mtThreadRequireWrap:__index(key)
 
             local unpack = unpack or table.unpack
             return require(dep)[key](unpack(args))
-        ]], self[mtThreadRequireWrap], key, ...)
+        ]] .. (threader.debugEnd and threader.debugEnd or ""), self[mtThreadRequireWrap], key, ...)
     end
 
     rawset(self, key, value)

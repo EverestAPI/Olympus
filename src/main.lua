@@ -47,6 +47,9 @@ function love.errhand(...)
 end
 
 function love.load(args)
+    utils = require("utils")
+    threader = require("threader")
+
     for i = 1, #args do
         local arg = args[i]
 
@@ -64,9 +67,6 @@ function love.load(args)
             profile = profile or require("profile")
         end
     end
-
-    utils = require("utils")
-    threader = require("threader")
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
@@ -89,7 +89,7 @@ function love.load(args)
     config.load()
 
     sharp = require("sharp")
-    sharp.init(debugging, debuggingSharp)
+    sharp.init(debugging or debuggingSharp, debuggingSharp)
 
     local root = uie.column({
         require("background")(),

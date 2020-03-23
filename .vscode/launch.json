@@ -17,6 +17,19 @@
             ]
         },
         {
+            "name": "Debug Sharp (Windows)",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "${workspaceFolder}/love/love.exe",
+            },
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "${workspaceFolder}/src",
+                "--debug-sharp"
+            ]
+        },
+        {
             "name": "Debug (Windows)",
             "type": "lua-local",
             "request": "launch",

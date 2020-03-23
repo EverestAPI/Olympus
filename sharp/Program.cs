@@ -17,6 +17,8 @@ namespace Olympus {
             Process parentProc = null;
             int parentProcID = 0;
 
+            Console.WriteLine(@"""_""");
+
             if (args.Length == 0) {
                 Console.WriteLine(@"""no parent pid""");
                 Console.WriteLine(@"null");
@@ -87,18 +89,26 @@ namespace Olympus {
 
                                 Console.Error.WriteLine("[sharp] Awaiting next command");
 
+                                // Unique ID
+                                reader.Read();
+                                string uid = serializer.Deserialize<string>(reader).ToLowerInvariant();
+                                Console.Error.WriteLine($"[sharp] Receiving command {uid}");
+                                serializer.Serialize(writer, uid, typeof(string));
+                                Console.WriteLine();
+                                Console.Out.Flush();
+
                                 // Command ID
                                 reader.Read();
-                                string id = serializer.Deserialize<string>(reader).ToLowerInvariant();
-                                Cmd cmd = Cmds.Get(id);
+                                string cid = serializer.Deserialize<string>(reader).ToLowerInvariant();
+                                Cmd cmd = Cmds.Get(cid);
                                 if (cmd == null) {
                                     reader.Read();
                                     reader.Skip();
-                                    Console.Error.WriteLine($"[sharp] Unknown command {id}");
+                                    Console.Error.WriteLine($"[sharp] Unknown command {cid}");
                                     Console.WriteLine(@"null");
                                     writer.WriteStartObject();
                                     writer.WritePropertyName("error");
-                                    writer.WriteValue("cmd failed running: not found: " + id);
+                                    writer.WriteValue("cmd failed running: not found: " + cid);
                                     writer.WriteEndObject();
                                     writer.Flush();
                                     Console.WriteLine();
@@ -106,18 +116,18 @@ namespace Olympus {
                                     continue;
                                 }
 
-                                Console.Error.WriteLine($"[sharp] Parsing args for {id}");
+                                Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
 
                                 // Payload
                                 reader.Read();
                                 object input = serializer.Deserialize(reader, cmd.InputType);
                                 object output;
                                 try {
-                                    Console.Error.WriteLine($"[sharp] Executing {id}");
+                                    Console.Error.WriteLine($"[sharp] Executing {cid}");
                                     output = cmd.Run(input);
 
                                 } catch (Exception e) {
-                                    Console.Error.WriteLine($"[sharp] Failed running {id}: {e}");
+                                    Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
                                     Console.WriteLine(@"null");
                                     writer.WriteStartObject();
                                     writer.WritePropertyName("error");

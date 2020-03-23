@@ -71,96 +71,97 @@ end
 
 
 function scene.createEntry(list, entry, manualIndex)
-    return threader.routine(function()
-        local version = sharp.getVersionString(entry.path):result() or ""
-
-        local imgStatus, img
-        imgStatus, img = pcall(uie.image, "store/" .. entry.type)
-        if not imgStatus then
-            imgStatus, img = pcall(uie.image, "store/manual")
-        end
-
-        local row = uie.row({
-            (img and img:with({
-                scale = 48 / 128
-            }) or false),
-
-            uie.column({
-                manualIndex and uie.field(
-                    entry.name,
-                    function(value)
-                        entry.name = value
-                        config.save()
-                    end
-                ):with(uiu.fillWidth),
-                uie.label(entry.path),
-                uie.label({{1, 1, 1, 0.5}, version})
-            }):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
-
-                clip = false,
-                cacheable = false
-            }):with(uiu.fillWidth(16, true)),
-
-            uie.row({
-
-                manualIndex and uie.button(uie.image("up"), function()
-                    local installs = config.installs
-                    table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
-                    config.installs = installs
-                    config.save()
-                    scene.reloadAll()
-                end):with({
-                    enabled = manualIndex > 1
-                }),
-
-                manualIndex and uie.button(uie.image("down"), function()
-                    local installs = config.installs
-                    table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
-                    config.installs = installs
-                    config.save()
-                    scene.reloadAll()
-                end):with({
-                    enabled = manualIndex < #config.installs
-                }),
-
-                entry.type ~= "debug" and (
-                    manualIndex and
-                    uie.button("Remove", function()
-                        local installs = config.installs
-                        table.remove(installs, manualIndex)
-                        config.installs = installs
-                        config.save()
-                        scene.reloadAll()
-                    end)
-
-                    or
-                    uie.button("Add", function()
-                        local installs = config.installs or {}
-                        entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
-                        installs[#installs + 1] = entry
-                        config.installs = installs
-                        config.save()
-                        scene.reloadAll()
-                    end)
-                )
-
-            }):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
-
-                clip = false
-            }):with(uiu.rightbound)
-
-        }):with(uiu.fillWidth)
-
-        list:addChild(row)
+    local labelVersion = uie.label({{1, 1, 1, 0.5}, "Scanning..."})
+    sharp.getVersionString(entry.path):calls(function(t, version)
+        labelVersion.text = {{1, 1, 1, 0.5}, version or "???"}
     end)
+
+    local imgStatus, img
+    imgStatus, img = pcall(uie.image, "store/" .. entry.type)
+    if not imgStatus then
+        imgStatus, img = pcall(uie.image, "store/manual")
+    end
+
+    local row = uie.row({
+        (img and img:with({
+            scale = 48 / 128
+        }) or false),
+
+        uie.column({
+            manualIndex and uie.field(
+                entry.name,
+                function(value)
+                    entry.name = value
+                    config.save()
+                end
+            ):with(uiu.fillWidth),
+            uie.label(entry.path),
+            labelVersion
+        }):with({
+            style = {
+                bg = {},
+                padding = 0
+            },
+
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth(16, true)),
+
+        uie.row({
+
+            manualIndex and uie.button(uie.image("up"), function()
+                local installs = config.installs
+                table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
+                config.installs = installs
+                config.save()
+                scene.reloadAll()
+            end):with({
+                enabled = manualIndex > 1
+            }),
+
+            manualIndex and uie.button(uie.image("down"), function()
+                local installs = config.installs
+                table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
+                config.installs = installs
+                config.save()
+                scene.reloadAll()
+            end):with({
+                enabled = manualIndex < #config.installs
+            }),
+
+            entry.type ~= "debug" and (
+                manualIndex and
+                uie.button("Remove", function()
+                    local installs = config.installs
+                    table.remove(installs, manualIndex)
+                    config.installs = installs
+                    config.save()
+                    scene.reloadAll()
+                end)
+
+                or
+                uie.button("Add", function()
+                    local installs = config.installs or {}
+                    entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
+                    installs[#installs + 1] = entry
+                    config.installs = installs
+                    config.save()
+                    scene.reloadAll()
+                end)
+            )
+
+        }):with({
+            style = {
+                bg = {},
+                padding = 0
+            },
+
+            clip = false
+        }):with(uiu.rightbound)
+
+    }):with(uiu.fillWidth)
+
+    list:addChild(row)
 end
 
 
@@ -184,7 +185,7 @@ function scene.reloadManual()
         if #installs > 0 then
             for i = 1, #installs do
                 local entry = installs[i]
-                scene.createEntry(listManual, entry, i):result()
+                scene.createEntry(listManual, entry, i)
             end
 
         else
@@ -227,7 +228,7 @@ function scene.reloadFound()
                 listMain:addChild(listFound:as("listFound"))
             end
 
-            scene.createEntry(listFound, entry, false):result()
+            scene.createEntry(listFound, entry, false)
 
             ::next::
         end

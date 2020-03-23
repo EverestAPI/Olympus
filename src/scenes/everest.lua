@@ -3,6 +3,7 @@ local utils = require("utils")
 local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
+local sharp = require("sharp")
 
 local scene = {
     name = "Everest Installer"
@@ -96,7 +97,11 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
         end):hook({
             update = function(orig, self, ...)
                 local root = scene.root
-                self.enabled = root:findChild("installs").selected and root:findChild("versions").selected
+                local selected = root:findChild("installs").selected
+                self.enabled = selected and root:findChild("versions").selected
+                selected = selected and selected.data
+                selected = selected and selected.version
+                self.text = (selected and selected:match("%+")) and "Step 3: Update" or "Step 3: Install"
                 orig(self, ...)
             end
         }):as("install"),
@@ -104,7 +109,11 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
         uie.button("Uninstall"):hook({
             update = function(orig, self, ...)
                 local root = scene.root
-                self.enabled = root:findChild("installs").selected
+                local selected = root:findChild("installs").selected
+                selected = selected and selected.data
+                selected = selected and selected.version
+                selected = selected and selected:match("%+")
+                self.enabled = selected
                 orig(self, ...)
             end
         }):as("uninstall")
@@ -126,7 +135,25 @@ function scene.reloadInstalls()
     local installs = config.installs or {}
     for i = 1, #installs do
         local entry = installs[i]
-        list:addChild(uie.listItem(entry.name, entry))
+        local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { entry = entry, version = "???" })
+
+        sharp.getVersionString(entry.path):calls(function(t, version)
+            version = version or "???"
+
+            local celeste = version:match("Celeste ([^ ]+)")
+            local everest = version:match("Everest ([^ ]+)")
+            if everest then
+                version = celeste .. " + " .. everest
+
+            else
+                version = celeste or version
+            end
+
+            item.text = {{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\n" .. version}
+            item.data.version = version
+        end)
+
+        list:addChild(item)
     end
 
     list.selected = list.children[1]

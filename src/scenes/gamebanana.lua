@@ -16,7 +16,10 @@ local root = uie.column({
                 padding = 0,
             }
         }):with(uiu.fillWidth):as("mods")
-    ):with(uiu.fillWidth):with(uiu.fillHeight),
+    ):with({
+        clip = false,
+        cacheable = false
+    }):with(uiu.fillWidth):with(uiu.fillHeight),
 
     uie.row({
         uie.label("Loading"),

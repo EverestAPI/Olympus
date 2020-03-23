@@ -5,6 +5,9 @@ local channelQueue = love.thread.getChannel("sharpQueue")
 local channelReturn = love.thread.getChannel("sharpReturn")
 local channelDebug = love.thread.getChannel("sharpDebug")
 
+-- Thread-local ID.
+local tuid = 0
+
 -- The command queue thread.
 local function sharpthread()
     local debuggingFlags = channelDebug:peek()
@@ -92,13 +95,16 @@ local function sharpthread()
 
     local function read()
         return {
+            uid = utils.fromJSON(assert(stdout:read("*l"))),
             value = utils.fromJSON(assert(stdout:read("*l"))),
             status = utils.fromJSON(assert(stdout:read("*l")))
         }
     end
 
-    local function run(id, argsLua)
-        assert(stdin:write(utils.toJSON(id) .. "\n"))
+    local function run(uid, cid, argsLua)
+        assert(stdin:write(utils.toJSON(uid) .. "\n"))
+
+        assert(stdin:write(utils.toJSON(cid) .. "\n"))
 
         local argsSharp = {}
         -- Olympus.Sharp expects C# Tuples, which aren't lists.
@@ -108,12 +114,17 @@ local function sharpthread()
         assert(stdin:write(utils.toJSON(argsSharp) .. "\n"))
 
         assert(stdin:flush())
-        return read()
+
+        local data = read()
+        assert(uid == data.uid)
+        return data
     end
+
+    local uid = "?"
 
     local function dprint(...)
         if debugging then
-            print("[sharp queue]", ...)
+            print("[sharp #" .. uid .. " queue]", ...)
         end
     end
 
@@ -129,23 +140,25 @@ local function sharpthread()
     end
 
     while true do
-        dprint("awaiting next cmd")
+        print("[sharp queue]", "awaiting next cmd")
         local cmd = channelQueue:demand()
-        local id = cmd.id
+        uid = cmd.uid
+        local cid = cmd.cid
         local args = cmd.args
 
-        if id == "_init" then
+        if cid == "_init" then
             dprint("returning init", initStatus)
+            initStatus.uid = uid
             channelReturn:push(initStatus)
 
-        elseif id == "_die" then
+        elseif cid == "_die" then
             dprint("dying")
             channelReturn:push({ value = "ok" })
             break
 
         else
-            dprint("running", id, unpack(args))
-            local rv = run(id, args)
+            dprint("running", cid, unpack(args))
+            local rv = run(uid, cid, args)
             dprint("returning", rv.value, rv.status, rv.status and rv.status.error)
             channelReturn:push(rv)
         end
@@ -172,26 +185,35 @@ end
 
 local sharp = setmetatable({}, mtSharp)
 
-local function _run(id, ...)
+local function _run(cid, ...)
     local debugging = channelDebug:peek()[1]
+    local uid = string.format("(%s)#%d", require("threader").id, tuid)
+    tuid = tuid + 1
 
     local function dprint(...)
         if debugging then
-            print("[sharp run]", ...)
+            print("[sharp #" .. uid .. " run]", ...)
         end
     end
 
-    dprint("enqueuing", id, ...)
-    channelQueue:push({ id = id, args = {...} })
+    dprint("enqueuing", cid, ...)
+    channelQueue:push({ uid = uid, cid = cid, args = {...} })
 
     dprint("awaiting return value")
+    ::reget::
     local rv = channelReturn:demand()
+    if rv.uid ~= uid then
+        channelReturn:push(rv)
+        goto reget
+    end
+
     dprint("got", rv.value, rv.status, rv.status and rv.status.error)
 
     if type(rv.status) == "table" and rv.status.error then
-        error(string.format("Failed running %s: %s", id, rv.status.error))
+        error(string.format("Failed running %s %s: %s", cid, rv.status.error))
     end
 
+    assert(uid == rv.uid)
     return rv.value
 end
 function sharp.run(id, ...)
