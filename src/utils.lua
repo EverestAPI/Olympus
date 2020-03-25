@@ -53,8 +53,8 @@ function utils.fromJSON(body)
     return dkjson.decode(body)
 end
 
-function utils.toJSON(table)
-    return dkjson.encode(table, { indent = true })
+function utils.toJSON(table, state)
+    return dkjson.encode(table, state or { indent = true })
 end
 
 function utils.downloadYAML(url, headers)

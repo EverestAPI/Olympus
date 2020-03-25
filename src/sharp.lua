@@ -102,16 +102,16 @@ local function sharpthread()
     end
 
     local function run(uid, cid, argsLua)
-        assert(stdin:write(utils.toJSON(uid) .. "\n"))
+        assert(stdin:write(utils.toJSON(uid, { indent = false }) .. "\n"))
 
-        assert(stdin:write(utils.toJSON(cid) .. "\n"))
+        assert(stdin:write(utils.toJSON(cid, { indent = false }) .. "\n"))
 
         local argsSharp = {}
         -- Olympus.Sharp expects C# Tuples, which aren't lists.
         for i = 1, #argsLua do
             argsSharp["Item" .. i] = argsLua[i]
         end
-        assert(stdin:write(utils.toJSON(argsSharp) .. "\n"))
+        assert(stdin:write(utils.toJSON(argsSharp, { indent = false }) .. "\n"))
 
         assert(stdin:flush())
 
@@ -140,7 +140,9 @@ local function sharpthread()
     end
 
     while true do
-        print("[sharp queue]", "awaiting next cmd")
+        if debugging then
+            print("[sharp queue]", "awaiting next cmd")
+        end
         local cmd = channelQueue:demand()
         uid = cmd.uid
         local cid = cmd.cid
