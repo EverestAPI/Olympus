@@ -179,6 +179,7 @@ function scene.reloadManual()
         end
 
         listManual:addChild(uie.label("Your Installations", ui.fontBig))
+        threader.await()
 
         local installs = config.installs or {}
 
@@ -186,6 +187,7 @@ function scene.reloadManual()
             for i = 1, #installs do
                 local entry = installs[i]
                 scene.createEntry(listManual, entry, i)
+                threader.await()
             end
 
         else
@@ -226,9 +228,11 @@ function scene.reloadFound()
                 }):with(uiu.fillWidth)
 
                 listMain:addChild(listFound:as("listFound"))
+                threader.await()
             end
 
             scene.createEntry(listFound, entry, false)
+            threader.await()
 
             ::next::
         end

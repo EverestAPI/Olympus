@@ -1,5 +1,5 @@
+local spikerStatus, spiker = pcall(require, "spiker")
 local unpack = _G.unpack or table.unpack
-
 
 local threader = {
     _threads = {},
@@ -441,14 +441,34 @@ function threader.routine(fun, ...)
     return wrap
 end
 
+function threader.sleep(duration)
+    local timeStart = love.timer.getTime()
+
+    local routine = threader._routines[coroutine.running()]
+    if routine then
+        while love.timer.getTime() - timeStart < duration do
+            coroutine.yield()
+        end
+        return
+    end
+
+    love.timer.sleep(duration)
+end
+
 function threader.update()
+    local spiker = spiker
+    local spike = spiker and spiker("threader.update", 0.005)
+
     local all = threader._threads
     for i = #all, 1, -1 do
         local t = all[i]
         if not t.waiting then
             t:update()
         end
+        spike = spike and spike(t.id)
     end
+
+    spike = spike and spiker(spike)
 end
 
 
