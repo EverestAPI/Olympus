@@ -5,7 +5,7 @@ local index = 1
 
 local spike = {}
 
-function spike:start(tag, threshold, thresholdStep)
+function spike:start(tag, threshold, thresholdTotal)
     if not tag then
         local caller = debug.getinfo(2, "fSl")
         if caller.func == next then
@@ -15,51 +15,57 @@ function spike:start(tag, threshold, thresholdStep)
     end
 
     pool[self.index] = nil
+
     self.tag = tag
     self.threshold = threshold or 0.001
-    self.thresholdStep = thresholdStep or threshold or 0.001
+    self.thresholdTotal = thresholdTotal or threshold or 0.001
+    self.spiked = false
+    self.steps = {}
+    self.timeTotal = 0
     local time = love.timer.getTime()
     self.timeStart = time
     self.timeStep = time
-    self.timeStepped = 0
-    self.steps = 0
-    return self, self.timeStart
+
+    return self, 0
 end
 
-function spike:step(steptag, threshold)
+function spike:step(tag, threshold)
     local time = love.timer.getTime()
-    local stopping = pool[self.index]
-    local delta = time - (stopping and self.timeStart or self.timeStep) - self.timeStepped
 
-    threshold = threshold or (type(steptag) == "number" and steptag) or (stopping and self.threshold or self.thresholdStep)
-    steptag = type(steptag) == "string" and steptag
+    local delta = time - self.timeStep
+    self.steps[#self.steps + 1] = {
+        delta = delta,
+        tag = tag,
+        threshold = threshold or (type(tag) == "number" and tag) or self.threshold
+    }
 
-    local steps = self.steps
-    if not stopping then
-        steps = steps + 1
-        self.steps = steps
+    local timeTotal = self.timeTotal + delta
+    self.timeTotal = timeTotal
+    if delta > self.threshold or timeTotal >= self.thresholdTotal then
+        self.spiked = true
     end
 
-    if delta >= threshold then
-        if steps ~= 0 or steptag then
-            print("[SPIKE " .. (stopping and "> " or "| ") .. self.tag .. "]", steptag or steps, delta)
-        else
-            print("[SPIKE " .. (stopping and "> " or "| ") .. self.tag .. "]", delta)
-        end
-        self.threshold = 0
-    end
-
-    local timeEnd = love.timer.getTime()
-    self.timeStepped = self.timeStepped + (timeEnd - time)
-    self.timeStep = timeEnd
-    return self, time
+    self.timeStep = love.timer.getTime()
+    return self, delta
 end
 
 function spike:stop(...)
     pool[self.index] = self
-    local _, time = self:step(...)
-    self.timeEnd = time
-    return self, time
+    local _, deltaEnd = self:step(...)
+
+    if not self.spiked then
+        return self, deltaEnd
+    end
+
+    local steps = self.steps
+    print("[SPIKE T ", self.tag)
+    for i = 1, #steps do
+        local step = steps[i]
+        print("[SPIKE |" .. (step.delta > step.threshold and "*" or " "), step.delta, step.tag)
+    end
+    print("[SPIKE >" .. (self.timeTotal > self.thresholdTotal and "*" or " "), self.timeTotal)
+
+    return self, deltaEnd
 end
 
 local mtSpike = {
