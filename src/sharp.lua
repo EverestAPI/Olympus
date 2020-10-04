@@ -17,10 +17,12 @@ local function sharpthread()
         print("[sharp init]", "starting thread")
     end
 
+    local threader = require("threader")
     local fs = require("fs")
     local subprocess = require("subprocess")
     local ffi = require("ffi")
     local utils = require("utils")
+    local socket = require("socket")
 
     -- Olympus.Sharp is stored in the sharp subdir.
     -- Running love src/ sets the cwd to the src folder.
@@ -93,29 +95,64 @@ local function sharpthread()
     local stdout = process.stdout
     local stdin = process.stdin
 
-    local function read()
+    local read, write, flush
+
+    read = function()
+        return assert(stdout:read("*l"))
+    end
+
+    write = function(data)
+        return assert(stdin:write(data))
+    end
+
+    flush = function()
+        return assert(stdin:flush())
+    end
+
+    local function readBlob()
         return {
-            uid = utils.fromJSON(assert(stdout:read("*l"))),
-            value = utils.fromJSON(assert(stdout:read("*l"))),
-            status = utils.fromJSON(assert(stdout:read("*l")))
+            uid = utils.fromJSON(read()),
+            value = utils.fromJSON(read()),
+            status = utils.fromJSON(read())
         }
     end
 
-    local function run(uid, cid, argsLua)
-        assert(stdin:write(utils.toJSON(uid, { indent = false }) .. "\n"))
+    local function checkTimeoutFilter(err)
+        if type(err) == "string" and (err:match("timeout") or err:match("closed")) then
+            return "timeout"
+        end
+        if type(err) == "userdata" or type(err) == "table" then
+            return err
+        end
+        return debug.traceback(tostring(err), 1)
+    end
 
-        assert(stdin:write(utils.toJSON(cid, { indent = false }) .. "\n"))
+    local function checkTimeout(fun, ...)
+        local status, rv = xpcall(fun, checkTimeoutFilter, ...)
+        if rv == "timeout" then
+            return "timeout"
+        end
+        if not status then
+            error(rv, 2)
+        end
+        return rv
+    end
+
+    local function run(uid, cid, argsLua)
+        write(utils.toJSON(uid, { indent = false }) .. "\n")
+
+        write(utils.toJSON(cid, { indent = false }) .. "\n")
 
         local argsSharp = {}
         -- Olympus.Sharp expects C# Tuples, which aren't lists.
         for i = 1, #argsLua do
             argsSharp["Item" .. i] = argsLua[i]
         end
-        assert(stdin:write(utils.toJSON(argsSharp, { indent = false }) .. "\n"))
+        write(utils.toJSON(argsSharp, { indent = false }) .. "\n")
 
-        assert(stdin:flush())
+        flush()
 
-        local data = read()
+        local data = readBlob()
         assert(uid == data.uid)
         return data
     end
@@ -134,16 +171,63 @@ local function sharpthread()
     if debugging then
         print("[sharp init]", "reading init")
     end
-    local initStatus = read()
+    local initStatus = readBlob()
     if debugging then
         print("[sharp init]", "read init", initStatus)
     end
+
+    -- The status message contains the TCP port we're actually supposed to listen to.
+    -- Switch from STDIN / STDOUT to sockets.
+    local port = initStatus.uid -- initStatus gets modified later
+    local function connect()
+        local try = 1
+        ::retry::
+        local clientOrStatus, clientError = socket.connect("127.0.0.1", port)
+        if not clientOrStatus then
+            try = try + 1
+            if try >= 3 then
+                error(clientError, 2)
+            end
+            if debugging then
+                print("[sharp init]", "failed to connect, retrying in 2s", clientError)
+            end
+            threader.sleep(2)
+            goto retry
+        end
+        clientOrStatus:settimeout(1)
+        return clientOrStatus
+    end
+
+    local client = connect()
+
+    read = function()
+        return assert(client:receive("*l"))
+    end
+
+    write = function(data)
+        return assert(client:send(data))
+    end
+
+    flush = function()
+    end
+
+    local timeoutping = {
+        uid = "_timeoutping",
+        cid = "echo",
+        args = { "timeout ping" }
+    }
 
     while true do
         if debugging then
             print("[sharp queue]", "awaiting next cmd")
         end
-        local cmd = channelQueue:demand()
+        local cmd = channelQueue:demand(0.4)
+        if not cmd then
+            if debugging then
+                print("[sharp queue]", "timeoutping")
+            end
+            cmd = timeoutping
+        end
         uid = cmd.uid
         local cid = cmd.cid
         local args = cmd.args
@@ -159,12 +243,25 @@ local function sharpthread()
             break
 
         else
+            ::rerun::
             dprint("running", cid, unpack(args))
-            local rv = run(uid, cid, args)
-            dprint("returning", rv.value, rv.status, rv.status and rv.status.error)
-            channelReturn:push(rv)
+            local rv = checkTimeout(run, uid, cid, args)
+            if rv == "timeout" then
+                dprint("timeout reconnecting", rv.value, rv.status, rv.status and rv.status.error)
+                client:close()
+                client = connect()
+                goto rerun
+            end
+            if uid == "_timeoutping" then
+                dprint("timeoutping returning", rv.value, rv.status, rv.status and rv.status.error)
+            else
+                dprint("returning", rv.value, rv.status, rv.status and rv.status.error)
+                channelReturn:push(rv)
+            end
         end
     end
+
+    client:close()
 end
 
 
