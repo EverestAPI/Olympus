@@ -42,7 +42,17 @@ function scene.load()
 
         local list = root:findChild("mods")
 
-        local entries = utilsAsync.downloadJSON("https://api.gamebanana.com/Core/List/New?gameid=6460&page=1"):result()
+        local entries, entriesError = utilsAsync.downloadJSON("https://api.gamebanana.com/Core/List/New?gameid=6460&page=1"):result()
+        if not entries then
+            root:findChild("loadingMods"):removeSelf()
+            root:addChild(uie.row({
+                uie.label("Error downloading mod list: " .. tostring(entriesError)),
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            return
+        end
 
         local function mcitem(index, key, value)
             return string.format("&%s[%d]=%s", key, index, value)
@@ -59,7 +69,18 @@ function scene.load()
                 mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles()")
         end
 
-        local infos = utilsAsync.downloadJSON("https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2)):result()
+        local infos, infosError = utilsAsync.downloadJSON("https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2)):result()
+        if not infos then
+            root:findChild("loadingMods"):removeSelf()
+            root:addChild(uie.row({
+                uie.label("Error downloading mod info: " .. tostring(infosError)),
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            return
+        end
+
         for ii = 1, #infos do
             local info = infos[ii]
 

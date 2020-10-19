@@ -81,7 +81,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, [[ version if
                     padding = 0,
                     bg = {}
                 }
-            }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+            }):with(uiu.fillWidth):with(uiu.fillHeight(true)):as("versionsParent")
         }):with(uiu.fillWidth(-1, true)):with(uiu.fillHeight),
 
     }):with({
@@ -189,9 +189,32 @@ function scene.load()
 
     threader.routine(function()
         local utilsAsync = threader.wrap("utils")
-        local builds = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Everest/_apis/build/builds"):result().value
+        local buildsTask = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Everest/_apis/build/builds")
         -- TODO: Limit commits range
-        local commits = utilsAsync.downloadJSON("https://api.github.com/repos/EverestAPI/Everest/commits"):result()
+        local commitsTask = utilsAsync.downloadJSON("https://api.github.com/repos/EverestAPI/Everest/commits")
+
+        local builds, buildsError = buildsTask:result()
+        if not builds then
+            root:findChild("loadingVersions"):removeSelf()
+            root:findChild("versionsParent"):addChild(uie.row({
+                uie.label("Error downloading builds list: " .. tostring(buildsError)),
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            return
+        end
+        builds = builds.value
+
+        local commits, commitsError = commitsTask:result()
+        if not commits then
+            root:findChild("versionsParent"):addChild(uie.row({
+                uie.label("Error downloading commits list: " .. tostring(commitsError)),
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+        end
 
         local offset = 700
         local list = root:findChild("versions")

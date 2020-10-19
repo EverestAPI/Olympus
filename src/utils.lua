@@ -27,9 +27,12 @@ function utils.download(url, headers)
         ["Accept"] = "*/*"
     }
 
-    local response = request.send(url, {
+    local response, error = request.send(url, {
         headers = headers
     })
+    if not response then
+        return false, error
+    end
     local body = response.body
     local code = response.code
 
@@ -46,7 +49,11 @@ function utils.download(url, headers)
 end
 
 function utils.downloadJSON(url, headers)
-    return utils.fromJSON(utils.download(url, headers))
+    local data, error = utils.download(url, headers)
+    if not data then
+        return data, error
+    end
+    return utils.fromJSON(data)
 end
 
 function utils.fromJSON(body)
@@ -58,7 +65,11 @@ function utils.toJSON(table, state)
 end
 
 function utils.downloadYAML(url, headers)
-    return utils.fromYAML(utils.download(url, headers))
+    local data, error = utils.download(url, headers)
+    if not data then
+        return data, error
+    end
+    return utils.fromYAML(data)
 end
 
 function utils.fromYAML(body)
