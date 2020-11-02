@@ -259,7 +259,7 @@ function love.load(args)
             next.root:with({
                 style = {
                     bg = {},
-                    padding = 16
+                    padding = next.root._fullroot and 0 or 16
                 },
 
                 cacheable = false,
