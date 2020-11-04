@@ -76,7 +76,7 @@ return function()
                 dot.cx = dot.cx - dt / width * ((width * 0.25) + 32 + (64 + dot.speed * dot.speed) * dot.speed)
             end
 
-            if width ~= self.innerWidth or height ~= self.innerHeight then
+            if width > self.innerWidth or height > self.innerHeight then
                 self.effect.resize(width, height)
                 self.innerWidth = width
                 self.innerHeight = height

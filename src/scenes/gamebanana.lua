@@ -14,8 +14,10 @@ local root = uie.column({
             style = {
                 bg = {},
                 padding = 0,
-                spacing = 0
+                spacing = 2
             }
+        }):with({
+            cacheable = false
         }):with(uiu.fillWidth):as("mods")
     ):with({
         clip = false,
@@ -34,6 +36,7 @@ local root = uie.column({
     }):with(uiu.bottombound):with(uiu.rightbound):as("loadingMods")
 
 }):with({
+    cacheable = false,
     _fullroot = true
 })
 scene.root = root
@@ -94,12 +97,10 @@ function scene.load()
             end
 
             local item = uie.group({
-                uie.panel({
+                uie.group({
                 }):with({
-                    style = {
-                        padding = 0,
-                        radius = 0
-                    }
+                    clip = false,
+                    cacheable = false
                 }):with(uiu.fill):as("bgholder"),
 
                 uie.panel({
@@ -107,7 +108,7 @@ function scene.load()
                     style = {
                         padding = 0,
                         radius = 0,
-                        bg = { 0, 0, 0, 0.7 }
+                        bg = { 0, 0, 0, 0.8 }
                     }
                 }):with(uiu.fill):as("bgdarken"),
 
@@ -138,7 +139,7 @@ function scene.load()
                         }
                     }),
 
-                    --[[
+                    --[([
                     uie.group({
                         uie.label(utils.cleanHTML(text)):with({ wrap = true }):as("text")
                     }):with(uiu.fillWidth),
@@ -148,10 +149,14 @@ function scene.load()
                     clip = false,
                     cacheable = false,
                     style = {
-                        bg = {}
+                        bg = {},
+                        padding = 24
                     }
                 }):with(uiu.fillWidth):as("content"),
 
+            }):with({
+                clip = false,
+                cacheable = false
             }):with(uiu.fillWidth)
 
             list:addChild(item)
@@ -174,7 +179,7 @@ function scene.load()
 
                 if screenshots[2] and not screenshots[2]._sFile:match("%.webp$") then
                     -- TODO: WEBP SUPPORT
-                    bg = utilsAsync.download("https://files.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile100):result()
+                    bg = utilsAsync.download("https://files.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile):result()
                     bg = love.filesystem.newFileData(bg, screenshots[2]._sFile)
                     bg = love.graphics.newImage(bg)
                 end
@@ -183,49 +188,48 @@ function scene.load()
 
                 imgholder.children[1]:removeSelf()
                 if bg then
-                    local moonshine = require("moonshine")
+                    local effect = ui.root:findChild("bg").effect
                     bg = uie.image(bg):with({
-                        cacheable = false,
-                        effect = moonshine(moonshine.effects.gaussianblur)
+                        cacheForce = true,
+                        cachePadding = 0
                     }):hook({
-                        layoutLazy = function(orig, self)
-                            -- Always reflow this child whenever its parent gets reflowed.
-                            self:layout()
-                        end,
-
-                        layout = function(orig, self)
+                        update = function(orig, self)
                             local image = self._image
                             local width, height = image:getWidth(), image:getHeight()
-                            local pwidth, pheight = self.parent.innerWidth, self.parent.innerHeight
+                            local fwidth, fheight = love.graphics.getWidth(), love.graphics.getHeight()
 
                             if width >= height then
-                                self.scaleX = pwidth / width
-                                self.scaleY = self.scaleX
-                                self.y = pheight * 0.5 - height * self.scaleY * 0.5
+                                self.scale = (fwidth + 512) / width
 
                             else
-                                self.scaleY = pheight / height
-                                self.scaleX = self.scaleX
-                                self.x = pwidth * 0.5 - width * self.scaleX * 0.5
+                                self.scale = (fheight + 512) / height
                             end
+
+                            self.ix = fwidth * 0.5 - width * self.scale * 0.5 - (ui.mouseX - fwidth * 0.5) * 0.013
+                            self.iy = fheight * 0.5 - height * self.scale * 0.5 - (ui.mouseY - fheight * 0.5) * 0.013
 
                             orig(self)
                         end,
 
                         drawBG = function(orig, self)
-                            love.graphics.push()
-                            love.graphics.origin()
-                            love.graphics.draw(self._image, self.x, self.y, 0, self.scaleX, self.scaleY)
+                            love.graphics.draw(self._image, self.ix - self.screenX * 0.8, self.iy - self.screenY * 0.8, 0, self.scale, self.scale)
                         end,
 
                         draw = function(orig, self)
+                            love.graphics.push()
+                            love.graphics.origin()
+                            if ui.debugDraw then
+                                self:drawBG()
+                                love.graphics.pop()
+                                return
+                            end
+
                             love.graphics.setColor(1, 1, 1, 1)
-                            self.effect(self.drawBG, self)
+                            effect(self.drawBG, self)
                             love.graphics.pop()
                             uiu.resetColor()
                         end
-                    })
-                    bg.effect.gaussianblur.sigma = 7
+                    }):with(uiu.fill)
                     bgholder:addChild(bg)
                 end
                 if img then

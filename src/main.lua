@@ -420,7 +420,7 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f11" then
-        if love.keyboard.isDown("lshift") then
+        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             ui.debugDraw = (ui.debugDraw ~= -1) and -1 or true
 
         else
