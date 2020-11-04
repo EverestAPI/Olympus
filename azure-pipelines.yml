@@ -23,6 +23,7 @@ strategy:
       netbuilder: 'mono'
       monokickURL: 'https://github.com/flibitijibibo/MonoKickstart.git'
       lualibs: 'luarocks'
+      luarocksPreArgs: '--lua-dir=/usr/local/opt/lua@5.1'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua@5.1/lib"'
       loveURL: 'https://github.com/love2d/love/releases/download/11.3/love-11.3-macos.zip'
       loveZIP: 'love.zip'
@@ -51,7 +52,7 @@ pool:
   vmImage: '$(imageName)'
 
 steps:
-- checkout: self 
+- checkout: self
   clean: false
   fetchDepth: 3
   lfs: false
@@ -93,7 +94,7 @@ steps:
   displayName: 'Build: luarocks: install subprocess'
   inputs:
     script: |
-      luarocks install --tree=luarocks https://raw.githubusercontent.com/0x0ade/lua-subprocess/master/subprocess-scm-1.rockspec $LUAROCKSARGS
+      luarocks $LUAROCKSPREARGS install --tree=luarocks https://raw.githubusercontent.com/0x0ade/lua-subprocess/master/subprocess-scm-1.rockspec $LUAROCKSARGS
 
 # Install nfd.
 - task: CmdLine@2
@@ -101,7 +102,7 @@ steps:
   displayName: 'Build: luarocks: install nfd'
   inputs:
     script: |
-      luarocks install --tree=luarocks https://raw.githubusercontent.com/Vexatos/nativefiledialog/master/lua/nfd-scm-1.rockspec $LUAROCKSARGS
+      luarocks $LUAROCKSPREARGS install --tree=luarocks https://raw.githubusercontent.com/Vexatos/nativefiledialog/master/lua/nfd-scm-1.rockspec $LUAROCKSARGS
 
 # Install lsqlite3complete.
 - task: CmdLine@2
@@ -109,7 +110,7 @@ steps:
   displayName: 'Build: luarocks: install lsqlite3complete'
   inputs:
     script: |
-      luarocks install --tree=luarocks lsqlite3complete $LUAROCKSARGS
+      luarocks $LUAROCKSPREARGS install --tree=luarocks lsqlite3complete $LUAROCKSARGS
 
 
 # Build sharp.
