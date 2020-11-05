@@ -33,7 +33,7 @@ local root = uie.column({
     }):with({
         clip = false,
         cacheable = false
-    }):with(uiu.bottombound):with(uiu.rightbound):as("loadingMods")
+    }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingMods")
 
 }):with({
     cacheable = false,
@@ -139,7 +139,7 @@ function scene.load()
                         }
                     }),
 
-                    --[([
+                    --[[
                     uie.group({
                         uie.label(utils.cleanHTML(text)):with({ wrap = true }):as("text")
                     }):with(uiu.fillWidth),
