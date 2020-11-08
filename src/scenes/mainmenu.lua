@@ -36,7 +36,7 @@ end
 
 
 local root = uie.column({
-    uie.image("header"),
+    uie.image("header_olympus"),
 
     uie.row({
         uie.column({
@@ -67,13 +67,19 @@ local root = uie.column({
         }):with(uiu.fillHeight),
 
         uie.column({
-            buttonBig("cogwheel", "Install Everest", "everest"),
-            button("cogwheel", "Download Mods From GameBanana", "gamebanana"),
+            buttonBig("mainmenu/everest", "Install Everest", "everest"),
+            button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
             button("cogwheel", "Manage Installed Mods", "modlist"),
             button("cogwheel", "Install Ahorn", "installmanager"),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
-        }):with({ style = { bg = {}, padding = 0 } }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
-    }):with({ style = { bg = {}, padding = 0 } }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+        }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
+
+    }):with({
+        style = {
+            padding = 0,
+            bg = {}
+        }
+    }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
 })
 scene.root = root
