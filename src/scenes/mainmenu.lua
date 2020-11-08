@@ -35,15 +35,17 @@ local function button(icon, text, scene)
 end
 
 
-scene.createInstalls = function()
+function scene.createInstalls()
     return uie.column({
         uie.label("Your Installations", ui.fontBig),
 
         uie.column({
 
             uie.scrollbox(
-                uie.list({
-                }):with({
+                uie.list({}, function(self, data)
+                    config.install = data.index
+                    config.save()
+                end):with({
                     grow = false
                 }):with(uiu.fillWidth):as("installs")
             ):with(uiu.fillWidth):with(uiu.fillHeight),
@@ -62,6 +64,39 @@ scene.createInstalls = function()
             }
         }):with(uiu.fillWidth):with(uiu.fillHeight(true))
     }):with(uiu.fillHeight)
+end
+
+
+function scene.reloadInstalls()
+    local list = scener.current.root:findChild("installs")
+    list.children = {}
+
+    local installs = config.installs or {}
+    for i = 1, #installs do
+        local entry = installs[i]
+        local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { index = i, entry = entry, version = "???" })
+
+        sharp.getVersionString(entry.path):calls(function(t, version)
+            version = version or "???"
+
+            local celeste = version:match("Celeste ([^ ]+)")
+            local everest = version:match("Everest ([^ ]+)")
+            if everest then
+                version = celeste .. " + " .. everest
+
+            else
+                version = celeste or version
+            end
+
+            item.text = {{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\n" .. version}
+            item.data.version = version
+        end)
+
+        list:addChild(item)
+    end
+
+    list.selected = list.children[config.install or 1] or list.children[1]
+    list:reflow()
 end
 
 
@@ -89,39 +124,6 @@ local root = uie.column({
 
 })
 scene.root = root
-
-
-function scene.reloadInstalls()
-    local list = scener.current.root:findChild("installs")
-    list.children = {}
-
-    local installs = config.installs or {}
-    for i = 1, #installs do
-        local entry = installs[i]
-        local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { entry = entry, version = "???" })
-
-        sharp.getVersionString(entry.path):calls(function(t, version)
-            version = version or "???"
-
-            local celeste = version:match("Celeste ([^ ]+)")
-            local everest = version:match("Everest ([^ ]+)")
-            if everest then
-                version = celeste .. " + " .. everest
-
-            else
-                version = celeste or version
-            end
-
-            item.text = {{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\n" .. version}
-            item.data.version = version
-        end)
-
-        list:addChild(item)
-    end
-
-    list.selected = list.children[1]
-    list:reflow()
-end
 
 
 function scene.load()

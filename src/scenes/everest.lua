@@ -203,7 +203,8 @@ function scene.load()
                     text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, info }
                 end
 
-                local item = uie.listItem(text, build)
+                local item = uie.listItem(text, build):with(uiu.fillWidth)
+                item.label.wrap = true
                 if branch == "stable" then
                     item.style.normalBG = { 0.2, 0.4, 0.2, 0.7 }
                     item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.8 }
