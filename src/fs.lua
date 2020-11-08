@@ -37,7 +37,7 @@ function fs.dirname(path, sep)
     return path
 end
 
--- TODO - Sanitize parts with leading/trailing separator
+-- TODO: Sanitize parts with leading / trailing separator
 -- IE {"foo", "/bar/"} becomes "foo//bar", expected "foo/bar"
 function fs.joinpath(...)
     local parts = {...}
@@ -197,7 +197,7 @@ function fs.copyFromLove(mountPoint, output, folder)
     end
 end
 
--- Unzip using phyfs unsandboxed mount system, and then manually copying out files
+-- Unzip using physfs unsandboxed mount system, and then manually copying out files
 function fs.unzip(zipPath, outputDir)
     local tmp = "tmp-zip-" .. tostring(love.timer.getTime())
 
