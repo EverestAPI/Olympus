@@ -10,8 +10,8 @@ function love.conf(t)
     end
 
     t.window.title = "Everest.Olympus"
-    t.window.width = 800
-    t.window.minwidth = 800
+    t.window.width = 1000
+    t.window.minwidth = 1000
     t.window.height = 600
     t.window.minheight = 600
     t.window.borderless = config.csd

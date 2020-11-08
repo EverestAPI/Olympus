@@ -165,7 +165,7 @@ function scene.item(info)
                         padding = 0,
                         bg = {}
                     }
-                })
+                }):with(uiu.fillWidth(16, true))
 
             }):with({
                 style = {
@@ -173,7 +173,7 @@ function scene.item(info)
                     spacing = 16,
                     bg = {}
                 }
-            }),
+            }):with(uiu.fillWidth),
 
             --[[
             uie.group({

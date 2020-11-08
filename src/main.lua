@@ -294,7 +294,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set("scenelist")
+    scener.set("mainmenu")
 end
 
 love.frame = 0

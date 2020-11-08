@@ -2,7 +2,7 @@ local ui, uiu, uie = require("ui").quick()
 local scener = require("scener")
 
 local scene = {
-    name = "Main Menu"
+    name = "Scene List"
 }
 
 
