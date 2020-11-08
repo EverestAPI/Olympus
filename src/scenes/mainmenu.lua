@@ -35,42 +35,48 @@ local function button(icon, text, scene)
 end
 
 
+scene.createInstalls = function()
+    return uie.column({
+        uie.label("Your Installations", ui.fontBig),
+
+        uie.column({
+
+            uie.scrollbox(
+                uie.list({
+                }):with({
+                    grow = false
+                }):with(uiu.fillWidth):as("installs")
+            ):with(uiu.fillWidth):with(uiu.fillHeight),
+
+            uie.button("Manage", function()
+                scener.push("installmanager")
+            end):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
+
+        }):with({
+            style = {
+                padding = 0,
+                bg = {}
+            }
+        }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+    }):with(uiu.fillHeight)
+end
+
+
 local root = uie.column({
     uie.image("header_olympus"),
 
     uie.row({
-        uie.column({
-            uie.label("Your Installations", ui.fontBig),
 
-            uie.column({
-
-                uie.scrollbox(
-                    uie.list({
-                    }):with({
-                        grow = false
-                    }):with(uiu.fillWidth):as("installs")
-                ):with(uiu.fillWidth):with(uiu.fillHeight),
-
-                uie.button("Manage", function()
-                    scener.push("installmanager")
-                end):with({
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
-
-            }):with({
-                style = {
-                    padding = 0,
-                    bg = {}
-                }
-            }):with(uiu.fillWidth):with(uiu.fillHeight(true))
-        }):with(uiu.fillHeight),
+        scene.createInstalls(),
 
         uie.column({
-            buttonBig("mainmenu/everest", "Install Everest", "everest"),
+            buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"),
             button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
             button("cogwheel", "Manage Installed Mods", "modlist"),
-            button("cogwheel", "Install Ahorn", "installmanager"),
+            button("mainmenu/ahorn", "Install Ahorn (Map Editor)", "dummy"),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
         }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
 
@@ -86,7 +92,7 @@ scene.root = root
 
 
 function scene.reloadInstalls()
-    local list = root:findChild("installs")
+    local list = scener.current.root:findChild("installs")
     list.children = {}
 
     local installs = config.installs or {}

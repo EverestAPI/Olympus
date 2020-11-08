@@ -4,6 +4,7 @@ local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
 local sharp = require("sharp")
+local mainmenu = scener.preload("mainmenu")
 
 local scene = {
     name = "Everest Installer"
@@ -13,32 +14,7 @@ local scene = {
 local root = uie.column({
     uie.row({
 
-        uie.column({
-            uie.label("Your Installations", ui.fontBig),
-
-            uie.column({
-
-                uie.scrollbox(
-                    uie.list({
-                    }):with({
-                        grow = false
-                    }):with(uiu.fillWidth):as("installs")
-                ):with(uiu.fillWidth):with(uiu.fillHeight),
-
-                uie.button("Manage", function()
-                    scener.push("installmanager")
-                end):with({
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
-
-            }):with({
-                style = {
-                    padding = 0,
-                    bg = {}
-                }
-            }):with(uiu.fillWidth):with(uiu.fillHeight(true))
-        }):with(uiu.fillHeight),
+        mainmenu.createInstalls(),
 
         uie.column({
             uie.label("Versions", ui.fontBig),
@@ -124,39 +100,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
 
 })
 scene.root = root
-
-
-function scene.reloadInstalls()
-    local list = root:findChild("installs")
-    list.children = {}
-
-    local installs = config.installs or {}
-    for i = 1, #installs do
-        local entry = installs[i]
-        local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { entry = entry, version = "???" })
-
-        sharp.getVersionString(entry.path):calls(function(t, version)
-            version = version or "???"
-
-            local celeste = version:match("Celeste ([^ ]+)")
-            local everest = version:match("Everest ([^ ]+)")
-            if everest then
-                version = celeste .. " + " .. everest
-
-            else
-                version = celeste or version
-            end
-
-            item.text = {{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\n" .. version}
-            item.data.version = version
-        end)
-
-        list:addChild(item)
-    end
-
-    list.selected = list.children[1]
-    list:reflow()
-end
 
 
 function scene.install()
@@ -283,7 +226,7 @@ end
 
 
 function scene.enter()
-    scene.reloadInstalls()
+    mainmenu.reloadInstalls()
 end
 
 
