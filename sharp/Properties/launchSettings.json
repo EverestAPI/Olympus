@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Olympus.Sharp": {
+      "commandName": "Project",
+      "commandLineArgs": "--test"
+    }
+  }
+}

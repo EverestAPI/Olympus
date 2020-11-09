@@ -19,7 +19,7 @@ local function buttonBig(icon, text, scene)
         function()
             scener.push(scene)
         end
-    ):with({ style = { padding = 16 } }):with(uiu.fillWidth)
+    ):with({ style = { padding = 16 } }):with(uiu.fillWidth(4))
 end
 
 local function button(icon, text, scene)
@@ -31,7 +31,7 @@ local function button(icon, text, scene)
         function()
             scener.push(scene)
         end
-    ):with({ style = { padding = 8 } }):with(uiu.fillWidth)
+    ):with({ style = { padding = 8 } }):with(uiu.fillWidth(4))
 end
 
 

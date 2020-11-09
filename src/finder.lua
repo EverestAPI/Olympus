@@ -5,6 +5,7 @@ local sqlite3status, sqlite3 = pcall(require, "lsqlite3")
 if not sqlite3status then
     sqlite3status, sqlite3 = pcall(require, "lsqlite3complete")
 end
+local sharpStatus, sharp = pcall(require, "sharp")
 require("love.system")
 
 local finder = {}
@@ -12,6 +13,9 @@ local finder = {}
 local channelCache = love.thread.getChannel("finderCache")
 
 finder.defaultName = "Celeste"
+-- https://www.microsoft.com/en-us/p/celeste/bwmql2rpwbhb
+-- https://bspmts.mp.microsoft.com/v1/public/catalog/Retail/Products/bwmql2rpwbhb/applockerdata
+finder.defaultUWPName = "MattMakesGamesInc.Celeste_79daxvg0dq3v6"
 
 
 function finder.findSteamRoot()
@@ -308,6 +312,25 @@ function finder.findItchInstalls(name)
 end
 
 
+function finder.findUWPInstalls(package)
+    if not sharpStatus then
+        return {}
+    end
+
+    local path = sharp.getUWPPackagePath(package):result()
+    if not path or #path == 0 then
+        return {}
+    end
+
+    return {
+        {
+            type = "uwp",
+            path = path
+        }
+    }
+end
+
+
 function finder.fixRoot(path, appname)
     path = fs.normalize(path)
     appname = appname or finder.defaultName
@@ -334,7 +357,8 @@ function finder.findAll(uncached)
     all = utils.concat(
         finder.findSteamInstalls(finder.defaultName),
         finder.findEpicInstalls(finder.defaultName),
-        finder.findItchInstalls(finder.defaultName)
+        finder.findItchInstalls(finder.defaultName),
+        finder.findUWPInstalls(finder.defaultUWPName)
     )
 
     for i = #all, 1, -1 do

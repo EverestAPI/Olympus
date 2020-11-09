@@ -56,8 +56,9 @@ function love.load(args)
         if arg == "--debug" then
             debugging = true
             if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" and not lldb then
-                lldb = require("lldebugger")
+                lldb = require("lldebugger").start()
                 lldb.start()
+                local ffi = require("ffi")
             end
 
         elseif arg == "--debug-sharp" then
@@ -375,12 +376,12 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f12" then
-        if love.keyboard.isDown("lshift") then
+        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             debug.debug()
 
         elseif os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
             if not lldb then
-                lldb = require("lldebugger")
+                lldb = require("lldebugger").start()
                 lldb.start()
             else
                 lldb.stop()
@@ -411,7 +412,7 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f10" then
-        if love.keyboard.isDown("lshift") then
+        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             ui.repaintAll = true
         else
 

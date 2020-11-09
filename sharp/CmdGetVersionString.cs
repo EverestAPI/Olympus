@@ -11,6 +11,18 @@ using System.Threading.Tasks;
 namespace Olympus {
     public class CmdGetVersionString : Cmd<string, string> {
         public override string Run(string path) {
+            if (File.Exists(Path.Combine(path, "Celeste.exe")) &&
+                File.Exists(Path.Combine(path, "AppxManifest.xml")) &&
+                File.Exists(Path.Combine(path, "xboxservices.config"))) {
+                try {
+                    using (File.Open(Path.Combine(path, "Celeste.exe"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
+                        // no-op, just try to see if the file can be opened at all.
+                    }
+                } catch {
+                    return "Unsupported version of Celeste.";
+                }
+            }
+
             try {
                 using (ModuleDefinition game = ModuleDefinition.ReadModule(Path.Combine(path, "Celeste.exe"))) {
                     TypeDefinition t_Celeste = game.GetType("Celeste.Celeste");

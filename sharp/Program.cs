@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,6 +18,24 @@ namespace Olympus {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
+            if (args.Length == 1 && args[0] == "--test") {
+                new CmdGetUWPPackagePath().Run("MattMakesGamesInc.Celeste_79daxvg0dq3v6");
+                return;
+            }
+
+            if (args.Length == 0) {
+                AllocConsole();
+                Console.WriteLine("0");
+                Console.WriteLine(@"""no parent pid - interactive debug mode""");
+                Console.WriteLine(@"null");
+                Console.Out.Flush();
+                Cmds.Init();
+                MainLoop(null, Console.In, Console.Out);
+                Console.Error.WriteLine("[sharp] Goodbye");
+                Console.In.ReadLine();
+                return;
+            }
+
             Process parentProc = null;
             int parentProcID = 0;
 
@@ -26,42 +45,34 @@ namespace Olympus {
 
             Console.WriteLine($"{((IPEndPoint) listener.LocalEndpoint).Port}");
 
-            if (args.Length == 0) {
-                Console.WriteLine(@"""no parent pid""");
+            try {
+                parentProc = Process.GetProcessById(parentProcID = int.Parse(args[0]));
+            } catch {
                 Console.WriteLine(@"null");
+                Console.WriteLine(@"{""error"": ""invalid parent id""}\n");
                 Console.Out.Flush();
-                // return;
+                return;
+            }
+
+            bool debug = false;
+
+            for (int i = 1; i < args.Length; i++) {
+                string arg = args[i];
+                if (arg == "--debug") {
+                    debug = true;
+                }
+            }
+
+            if (debug) {
+                Debugger.Launch();
+                Console.WriteLine(@"""debug""");
 
             } else {
-                try {
-                    parentProc = Process.GetProcessById(parentProcID = int.Parse(args[0]));
-                } catch {
-                    Console.WriteLine(@"null");
-                    Console.WriteLine(@"{""error"": ""invalid parent id""}\n");
-                    Console.Out.Flush();
-                    return;
-                }
-
-                bool debug = false;
-
-                for (int i = 1; i < args.Length; i++) {
-                    string arg = args[i];
-                    if (arg == "--debug") {
-                        debug = true;
-                    }
-                }
-
-                if (debug) {
-                    Debugger.Launch();
-                    Console.WriteLine(@"""debug""");
-
-                } else {
-                    Console.WriteLine(@"""ok""");
-                }
-
-                Console.WriteLine(@"null");
-                Console.Out.Flush();
+                Console.WriteLine(@"""ok""");
             }
+
+            Console.WriteLine(@"null");
+            Console.Out.Flush();
 
             if (parentProc != null) {
                 Thread killswitch = new Thread(() => {
@@ -87,106 +98,22 @@ namespace Olympus {
                 while ((parentProc != null && !parentProc.HasExited && parentProc.Id == parentProcID) || parentProc == null) {
                     TcpClient client = listener.AcceptTcpClient();
                     try {
-                        Console.Error.WriteLine($"[sharp] New TCP connection: {client.Client.RemoteEndPoint}");
+                        string ep = client.Client.RemoteEndPoint.ToString();
+                        Console.Error.WriteLine($"[sharp] New TCP connection: {ep}");
 
                         client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
 
                         Thread thread = new Thread(() => {
-                            JsonSerializer jsonSerializer = new JsonSerializer();
-
                             try {
                                 using (Stream stream = client.GetStream())
-                                using (TextWriter writer = new StreamWriter(stream))
-                                using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
-                                    try {
-                                        using (JsonTextReader jsonReader = new JsonTextReader(new StreamReader(stream)) {
-                                            SupportMultipleContent = true
-                                        }) {
-                                            while (!(parentProc?.HasExited ?? false)) {
-                                                // Commands from Olympus come in pairs of two objects:
-
-                                                Console.Error.WriteLine("[sharp] Awaiting next command");
-
-                                                // Unique ID
-                                                jsonReader.Read();
-                                                string uid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
-                                                Console.Error.WriteLine($"[sharp] Receiving command {uid}");
-                                                jsonSerializer.Serialize(jsonWriter, uid, typeof(string));
-                                                jsonWriter.Flush();
-                                                writer.WriteLine();
-                                                writer.Flush();
-
-                                                // Command ID
-                                                jsonReader.Read();
-                                                string cid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
-                                                Cmd cmd = Cmds.Get(cid);
-                                                if (cmd == null) {
-                                                    jsonReader.Read();
-                                                    jsonReader.Skip();
-                                                    Console.Error.WriteLine($"[sharp] Unknown command {cid}");
-                                                    writer.WriteLine(@"null");
-                                                    writer.Flush();
-                                                    jsonWriter.WriteStartObject();
-                                                    jsonWriter.WritePropertyName("error");
-                                                    jsonWriter.WriteValue("cmd failed running: not found: " + cid);
-                                                    jsonWriter.WriteEndObject();
-                                                    jsonWriter.Flush();
-                                                    writer.WriteLine();
-                                                    writer.Flush();
-                                                    continue;
-                                                }
-
-                                                Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
-
-                                                // Payload
-                                                jsonReader.Read();
-                                                object input = jsonSerializer.Deserialize(jsonReader, cmd.InputType);
-                                                object output;
-                                                try {
-                                                    Console.Error.WriteLine($"[sharp] Executing {cid}");
-                                                    output = cmd.Run(input);
-
-                                                } catch (Exception e) {
-                                                    Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
-                                                    writer.WriteLine(@"null");
-                                                    writer.Flush();
-                                                    jsonWriter.WriteStartObject();
-                                                    jsonWriter.WritePropertyName("error");
-                                                    jsonWriter.WriteValue("cmd failed running: " + e);
-                                                    jsonWriter.WriteEndObject();
-                                                    jsonWriter.Flush();
-                                                    writer.WriteLine();
-                                                    writer.Flush();
-                                                    continue;
-                                                }
-
-                                                jsonSerializer.Serialize(jsonWriter, output, cmd.OutputType);
-                                                jsonWriter.Flush();
-                                                writer.WriteLine();
-                                                writer.WriteLine(@"null");
-                                                writer.Flush();
-                                            }
-                                        }
-
-                                    } catch (Exception e) {
-                                        Console.Error.WriteLine($"[sharp] Failed parsing: {e}");
-                                        writer.WriteLine(@"null");
-                                        writer.Flush();
-                                        jsonWriter.WriteStartObject();
-                                        jsonWriter.WritePropertyName("error");
-                                        jsonWriter.WriteValue("cmd failed parsing: " + e);
-                                        jsonWriter.WriteEndObject();
-                                        jsonWriter.Flush();
-                                        writer.WriteLine();
-                                        writer.Flush();
-                                    }
-                                }
-
+                                using (StreamReader reader = new StreamReader(stream))
+                                using (StreamWriter writer = new StreamWriter(stream))
+                                    MainLoop(parentProc, reader, writer);
                             } catch (Exception e) {
-                                Console.Error.WriteLine($"[sharp] Failed communicating: {e}");
+                                Console.Error.WriteLine($"[sharp] Failed communicating with {ep}: {e}");
                                 client.Close();
-                            }
 
+                            }
                         }) {
                             IsBackground = true
                         };
@@ -211,6 +138,98 @@ namespace Olympus {
             Console.Error.WriteLine("[sharp] Goodbye");
 
         }
+
+        public static void MainLoop(Process parentProc, TextReader reader, TextWriter writer) {
+            JsonSerializer jsonSerializer = new JsonSerializer();
+
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
+                try {
+                    using (JsonTextReader jsonReader = new JsonTextReader(reader) {
+                        SupportMultipleContent = true
+                    }) {
+                        while (!(parentProc?.HasExited ?? false)) {
+                            // Commands from Olympus come in pairs of two objects:
+
+                            Console.Error.WriteLine("[sharp] Awaiting next command");
+
+                            // Unique ID
+                            jsonReader.Read();
+                            string uid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
+                            Console.Error.WriteLine($"[sharp] Receiving command {uid}");
+                            jsonSerializer.Serialize(jsonWriter, uid, typeof(string));
+                            jsonWriter.Flush();
+                            writer.WriteLine();
+                            writer.Flush();
+
+                            // Command ID
+                            jsonReader.Read();
+                            string cid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
+                            Cmd cmd = Cmds.Get(cid);
+                            if (cmd == null) {
+                                jsonReader.Read();
+                                jsonReader.Skip();
+                                Console.Error.WriteLine($"[sharp] Unknown command {cid}");
+                                writer.WriteLine(@"null");
+                                writer.Flush();
+                                jsonWriter.WriteStartObject();
+                                jsonWriter.WritePropertyName("error");
+                                jsonWriter.WriteValue("cmd failed running: not found: " + cid);
+                                jsonWriter.WriteEndObject();
+                                jsonWriter.Flush();
+                                writer.WriteLine();
+                                writer.Flush();
+                                continue;
+                            }
+
+                            Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
+
+                            // Payload
+                            jsonReader.Read();
+                            object input = jsonSerializer.Deserialize(jsonReader, cmd.InputType);
+                            object output;
+                            try {
+                                Console.Error.WriteLine($"[sharp] Executing {cid}");
+                                output = cmd.Run(input);
+
+                            } catch (Exception e) {
+                                Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
+                                writer.WriteLine(@"null");
+                                writer.Flush();
+                                jsonWriter.WriteStartObject();
+                                jsonWriter.WritePropertyName("error");
+                                jsonWriter.WriteValue("cmd failed running: " + e);
+                                jsonWriter.WriteEndObject();
+                                jsonWriter.Flush();
+                                writer.WriteLine();
+                                writer.Flush();
+                                continue;
+                            }
+
+                            jsonSerializer.Serialize(jsonWriter, output, cmd.OutputType);
+                            jsonWriter.Flush();
+                            writer.WriteLine();
+                            writer.WriteLine(@"null");
+                            writer.Flush();
+                        }
+                    }
+
+                } catch (Exception e) {
+                    Console.Error.WriteLine($"[sharp] Failed parsing: {e}");
+                    writer.WriteLine(@"null");
+                    writer.Flush();
+                    jsonWriter.WriteStartObject();
+                    jsonWriter.WritePropertyName("error");
+                    jsonWriter.WriteValue("cmd failed parsing: " + e);
+                    jsonWriter.WriteEndObject();
+                    jsonWriter.Flush();
+                    writer.WriteLine();
+                    writer.Flush();
+                }
+            }
+        }
+
+        [DllImport("kernel32")]
+        public static extern bool AllocConsole();
 
     }
 }
