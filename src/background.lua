@@ -101,8 +101,8 @@ return function()
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.draw(
                 self.bg,
-                width / 2 - mouseX * 0.02,
-                height / 2 - mouseY * 0.02,
+                width / 2 - mouseX * 0.01,
+                height / 2 - mouseY * 0.01,
                 0,
                 15 * scale, 15 * scale,
                 64, 36

@@ -2,8 +2,32 @@
 local scener = {
     pathPrefix = "scenes/",
     current = nil,
+    locks = 0,
+    locked = false,
     stack = {}
 }
+
+function scener.lock()
+    scener.locks = scener.locks + 1
+    if not scener.locked then
+        scener.locked = true
+        scener.onChangeLock(true)
+    end
+    return true
+end
+
+function scener.unlock()
+    scener.locks = scener.locks - 1
+    if scener.locks <= 0 and scener.locked then
+        scener.locked = false
+        scener.onChangeLock(false)
+        return false
+    end
+    return true
+end
+
+function scener.onChangeLock(locked)
+end
 
 function scener.onChange(prev, next)
 end

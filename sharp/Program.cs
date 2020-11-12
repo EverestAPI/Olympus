@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -203,6 +204,11 @@ namespace Olympus {
                                 writer.WriteLine();
                                 writer.Flush();
                                 continue;
+                            }
+
+                            if (output is IEnumerator enumerator) {
+                                CmdTasks.Add(new CmdTask(uid, enumerator));
+                                output = uid;
                             }
 
                             jsonSerializer.Serialize(jsonWriter, output, cmd.OutputType);

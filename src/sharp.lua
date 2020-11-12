@@ -309,7 +309,7 @@ local function _run(cid, ...)
     dprint("got", rv.value, rv.status, rv.status and rv.status.error)
 
     if type(rv.status) == "table" and rv.status.error then
-        error(string.format("Failed running %s %s: %s", cid, rv.status.error))
+        error(string.format("Failed running %s %s: %s", uid, cid, tostring(rv.status.error)))
     end
 
     assert(uid == rv.uid)

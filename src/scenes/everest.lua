@@ -113,6 +113,11 @@ function scene.install()
         return
     end
 
+    local installer = scener.set("installer")
+    installer.update(string.format("Installing Everest %s", version.version))
+
+    sharp.installEverest(install.entry.path, version.artifact)
+
 end
 
 function scene.uninstall()
@@ -166,9 +171,11 @@ function scene.load()
                 local text = tostring(build.id + offset)
 
                 local branch = build.sourceBranch:gsub("refs/heads/", "")
-                if branch ~= "master" then
+                if branch ~= "dev" then
                     text = text .. " (" .. branch .. ")"
                 end
+
+                local version = text
 
                 local info = ""
 
@@ -202,6 +209,9 @@ function scene.load()
                 if #info ~= 0 then
                     text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, info }
                 end
+
+                build.version = version
+                build.artifact = "https://dev.azure.com/EverestAPI/Everest/_apis/build/builds/" .. build.id .. "/artifacts?artifactName=main&%24format=zip"
 
                 local item = uie.listItem(text, build):with(uiu.fillWidth)
                 item.label.wrap = true

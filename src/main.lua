@@ -255,6 +255,14 @@ function love.load(args)
 
     local pathbar = root:findChild("pathbar")
     local wrapper = root:findChild("wrapper")
+
+    function scener.onChangeLock(locked)
+        pathbar:reflow()
+        for i = 1, #pathbar.children do
+            pathbar.children[i].enabled = not locked
+        end
+    end
+
     function scener.onChange(prev, next)
         wrapper.children = {
             next.root:with({
@@ -289,6 +297,10 @@ function love.load(args)
         items[#scener.stack + 2] = { next.name }
 
         pathbar.children = uiu.map(items, uie.__menuItem.map)
+
+        for i = 1, #pathbar.children do
+            pathbar.children[i].enabled = not scener.locked
+        end
 
         pathbar:reflow()
 
@@ -381,7 +393,7 @@ function love.keypressed(key, scancode, isrepeat)
 
         elseif os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
             if not lldb then
-                lldb = require("lldebugger").start()
+                lldb = require("lldebugger")
                 lldb.start()
             else
                 lldb.stop()
