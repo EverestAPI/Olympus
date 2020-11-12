@@ -15,7 +15,7 @@ function scener.preload(path)
     return scene
 end
 
-function scener.set(scene)
+function scener.set(scene, ...)
     local prev = scener.scene
     if prev and prev.leave then
         prev.leave()
@@ -35,7 +35,7 @@ function scener.set(scene)
     end
 
     if scene.enter then
-        scene.enter()
+        scene.enter(...)
     end
 
     scener.onChange(prev, scene)
@@ -43,9 +43,9 @@ function scener.set(scene)
     return scene
 end
 
-function scener.push(scene)
+function scener.push(scene, ...)
     table.insert(scener.stack, scener.current)
-    scener.set(scene)
+    scener.set(scene, ...)
 end
 
 function scener.pop(count)

@@ -78,7 +78,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 self.text = (selected and selected:match("%+")) and "Step 3: Update" or "Step 3: Install"
                 orig(self, ...)
             end
-        }):as("install"),
+        }):with(uiu.fillWidth(8, true)):as("install"),
 
         uie.button("Uninstall"):hook({
             update = function(orig, self, ...)
@@ -90,13 +90,13 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 self.enabled = selected
                 orig(self, ...)
             end
-        }):as("uninstall")
+        }):with(uiu.rightbound):as("uninstall")
     }):with({
         style = {
             padding = 0,
             bg = {}
         }
-    }):with(uiu.bottombound)
+    }):with(uiu.fillWidth):with(uiu.bottombound)
 
 })
 scene.root = root
