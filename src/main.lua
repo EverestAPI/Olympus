@@ -1,5 +1,3 @@
-require("prethread")("main")
-
 local debugging
 local debuggingSharp
 local lldb
@@ -56,7 +54,7 @@ function love.load(args)
         if arg == "--debug" then
             debugging = true
             if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" and not lldb then
-                lldb = require("lldebugger").start()
+                lldb = require("lldebugger")
                 lldb.start()
                 local ffi = require("ffi")
             end
@@ -66,6 +64,10 @@ function love.load(args)
 
         elseif arg == "--profile" then
             profile = profile or require("profile")
+
+        elseif arg == "--repl" then
+            debug.debug()
+            love.event.quit()
         end
     end
 
@@ -307,7 +309,7 @@ function love.load(args)
         ui.root:recollect()
     end
 
-    scener.set("mainmenu")
+    scener.set("installer")
 end
 
 love.frame = 0

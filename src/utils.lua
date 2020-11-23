@@ -1,6 +1,9 @@
+require("love.filesystem")
 local request = require("luajit-request")
 local dkjson = require("dkjson")
 local tinyyaml = require("tinyyaml")
+local xml2lua = require("xml2lua")
+local xml2luaTree = require("xmlhandler.tree")
 
 local utils = {}
 
@@ -19,6 +22,10 @@ function utils.concat(...)
         end
     end
     return all
+end
+
+function utils.load(path)
+    return love.filesystem.read(path)
 end
 
 function utils.download(url, headers)
@@ -48,6 +55,10 @@ function utils.download(url, headers)
     return false, code, body
 end
 
+function utils.loadJSON(path)
+    return utils.fromJSON(utils.load(path))
+end
+
 function utils.downloadJSON(url, headers)
     local data, error = utils.download(url, headers)
     if not data then
@@ -64,6 +75,10 @@ function utils.toJSON(table, state)
     return dkjson.encode(table, state or { indent = true })
 end
 
+function utils.loadYAML(path)
+    return utils.fromYAML(utils.load(path))
+end
+
 function utils.downloadYAML(url, headers)
     local data, error = utils.download(url, headers)
     if not data then
@@ -78,6 +93,35 @@ end
 
 function utils.toYAML(table)
     error("Encoding Lua tables to YAML currently not supported")
+end
+
+function utils.loadXML(path)
+    return utils.fromXML(utils.load(path))
+end
+
+function utils.downloadXML(url, headers)
+    local data, error = utils.download(url, headers)
+    if not data then
+        return data, error
+    end
+    return utils.fromXML(data)
+end
+
+function utils.fromXML(body)
+    local handler = xml2luaTree:new()
+    xml2lua.parser(handler):parse(body)
+    return handler.root
+end
+
+function utils.toXML(table, name)
+    if not name then
+        for k, v in pairs(table) do
+            name = k
+            table = v
+            break
+        end
+    end
+    return xml2lua.toXml(table, name)
 end
 
 -- trim6 from http://lua-users.org/wiki/StringTrim

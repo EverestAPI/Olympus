@@ -1,4 +1,7 @@
 local spikerStatus, spiker = pcall(require, "spiker")
+if not spikerStatus then
+    spiker = nil
+end
 local unpack = _G.unpack or table.unpack
 
 local threader = {

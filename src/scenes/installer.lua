@@ -4,6 +4,7 @@ local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
 local sharp = require("sharp")
+local shaper = require("shaper")
 
 local scene = {
     name = "Installer"
@@ -17,6 +18,8 @@ scene.root = root
 
 scene.textFont = ui.fontBig or uie.__label.__default.style.font or love.graphics.getFont()
 scene.text = love.graphics.newText(scene.textFont, "")
+
+scene.shape = shaper.load("data/installshapes/monomod.svg")
 
 
 function scene.update(status, progress)
@@ -58,60 +61,67 @@ function root.draw(self)
     local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
     local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
 
-    local radius = 32
-
-    local thickness = radius * 0.25
-    love.graphics.setLineWidth(thickness)
-
-    radius = radius - thickness
-
-    local polygon = {}
-
-    local edges = 128
-
-    local progA = 0
-    local progB = scene.progress
-
-    if progB then
-        progB = progB * edges
+    local shape = scene.shape
+    if shape then
+        shape:draw(cmx - shape.width * 0.5, cmy - shape.height * 0.5)
 
     else
-        local t = self.time
-        local offs = edges * t * 2
-        if t < 0.5 then
-            progA = offs + 0
-            progB = offs + edges * t * 2
+        local radius = 32
+
+        local thickness = radius * 0.25
+        love.graphics.setLineWidth(thickness)
+
+        radius = radius - thickness
+
+        local polygon = {}
+
+        local edges = 128
+
+        local progA = 0
+        local progB = scene.progress
+
+        if progB then
+            progB = progB * edges
+
         else
-            progA = offs + edges * (t - 0.5) * 2
-            progB = offs + edges
+            local t = self.time
+            local offs = edges * t * 2
+            if t < 0.5 then
+                progA = offs + 0
+                progB = offs + edges * t * 2
+            else
+                progA = offs + edges * (t - 0.5) * 2
+                progB = offs + edges
+            end
         end
-    end
 
-    local progAE = math.floor(progA)
-    local progBE = math.ceil(progB - 1)
+        local progAE = math.floor(progA)
+        local progBE = math.ceil(progB - 1)
 
-    if progBE - progAE >= 1 then
-        local i = 1
-        for edge = progAE, progBE do
-            local f = edge
+        if progBE - progAE >= 1 then
+            local i = 1
+            for edge = progAE, progBE do
+                local f = edge
 
-            if edge == progAE then
-                f = progA
-            elseif edge == progBE then
-                f = progB
+                if edge == progAE then
+                    f = progA
+                elseif edge == progBE then
+                    f = progB
+                end
+
+                f = (1 - f / (edges) + 0.5) * math.pi * 2
+                local x = cmx + math.sin(f) * radius
+                local y = cmy + math.cos(f) * radius
+
+                polygon[i + 0] = x
+                polygon[i + 1] = y
+                i = i + 2
             end
 
-            f = (1 - f / (edges) + 0.5) * math.pi * 2
-            local x = cmx + math.sin(f) * radius
-            local y = cmy + math.cos(f) * radius
-
-            polygon[i + 0] = x
-            polygon[i + 1] = y
-            i = i + 2
+            love.graphics.line(polygon)
         end
-
-        love.graphics.line(polygon)
     end
+
 
     love.graphics.setColor(0, 0, 0, 0.8)
     love.graphics.rectangle(
@@ -128,6 +138,25 @@ function root.draw(self)
     )
 
     uiu.resetColor()
+end
+
+function root.drawDebug(self)
+    local sx = self.screenX
+    local sy = self.screenY
+    local w = self.width
+    local h = self.height
+    local fw = love.graphics.getWidth()
+    local fh = love.graphics.getHeight()
+
+    local cx = sx + w * 0.5
+    local cy = sy + h * 0.5
+    local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
+    local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
+
+    local shape = scene.shape
+    if shape then
+        shape:drawDebug(cmx - shape.width * 0.5, cmy - shape.height * 0.5)
+    end
 end
 
 

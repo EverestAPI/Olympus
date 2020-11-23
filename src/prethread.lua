@@ -28,4 +28,7 @@ return function(id, code, upvalues, channel, ...)
         return _ffi_load(names[#names], ...)
     end
 
+    -- xml2lua is quite something.
+    package.path = package.path .. ";./xml2lua/?.lua"
+
 end

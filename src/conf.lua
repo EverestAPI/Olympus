@@ -1,6 +1,8 @@
+require("prethread")("main")
+
 function love.conf(t)
     local configStatus, config = pcall(require, "config")
-    if config then
+    if configStatus then
         config.load()
     else
         config = {
