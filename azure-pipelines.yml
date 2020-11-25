@@ -63,10 +63,10 @@ steps:
 # Use brew on macOS.
 - task: CmdLine@2
   condition: and(succeeded(), eq(variables.agentArch, 'macOS'))
-  displayName: 'Setup: macOS: brew: install luarocks'
+  displayName: 'Setup: macOS: brew: install lua lua@5.1 luarocks'
   inputs:
     script: |
-      brew install luarocks
+      brew install lua lua@5.1 luarocks
 
 # Use apt on Ubuntu.
 - task: CmdLine@2
