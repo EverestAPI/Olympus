@@ -114,9 +114,15 @@ function scene.install()
     end
 
     local installer = scener.set("installer")
-    installer.update(string.format("Installing Everest %s", version.version))
+    installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
 
-    sharp.installEverest(install.entry.path, version.artifact)
+    threader.routine(function()
+        local task = sharp.installEverest(install.entry.path, version.artifact):result()
+        while sharp.status(task):result() == "running" do
+            installer.update(table.unpack(sharp.poll(task):result()))
+        end
+        installer.update(table.unpack(sharp.poll(task):result()))
+    end)
 
 end
 

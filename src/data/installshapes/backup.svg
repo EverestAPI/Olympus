@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" class="vector" width="300" height="300" baseProfile="full" version="1.1" style="background: #888;"
+    timescale="1.0">
+    <g stroke="#fff" stroke-width="12" stroke-linecap="round" fill="none">
+        <path d="M150.0,30.0 A120,120 0 0,1 270.0,150.0 A-120,120 0 0,1 150.0,270.0 A-120,-120 0 0,1 30.0,150.0 A120,-120 0 0,1 150.0,30.0"/>
+        <path d="M150.0,150.0 L210.0,90.0"/>
+        <path d="M150.0,150.0 L75.0,150.0"/>
+        <path d="M150.0,45.0 A105,105 0 0,1 255.0,150.0 A-105,105 0 0,1 150.0,255.0 A-105,-105 0 0,1 45.0,150.0 A105,-105 0 0,1 150.0,45.0"/>
+    </g>
+</svg>

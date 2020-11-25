@@ -19,10 +19,20 @@ scene.root = root
 scene.textFont = ui.fontBig or uie.__label.__default.style.font or love.graphics.getFont()
 scene.text = love.graphics.newText(scene.textFont, "")
 
-scene.shape = shaper.load("data/installshapes/monomod.svg")
+
+scene.shapes = {}
+
+for i, file in ipairs(love.filesystem.getDirectoryItems("data/installshapes")) do
+    local name = file:match("^(.+)%.svg$")
+    if name then
+        scene.shapes[name] = shaper.load("data/installshapes/" .. name .. ".svg")
+    end
+end
+
+scene.shape = nil
 
 
-function scene.update(status, progress)
+function scene.update(status, progress, shape)
     if not status then
         status = ""
     end
@@ -37,6 +47,14 @@ function scene.update(status, progress)
 
     if progress ~= nil then
         scene.progress = progress
+    end
+
+    if shape ~= nil then
+        if shape == "" then
+            scene.shape = nil
+        else
+            scene.shape = scene.shapes[shape] or scene.shape
+        end
     end
 end
 
@@ -73,9 +91,9 @@ function root.draw(self)
             local t = self.time
             if t < 0.5 then
                 progA = 0
-                progB = t * 2
+                progB = t * 4
             else
-                progA = t * 2 - 1
+                progA = t * 4 - 2
                 progB = 1
             end
         end
@@ -178,7 +196,7 @@ end
 
 
 function scene.enter()
-    scene.update("", false)
+    scene.update("", false, "")
     root.time = 0
     scener.lock()
 end

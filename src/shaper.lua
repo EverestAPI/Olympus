@@ -4,7 +4,7 @@ local uiStatus, ui = pcall(require, "ui")
 local shaper = {}
 
 
-shaper.canvasOffset = 256
+shaper.canvasOffset = 128
 shaper.canvas = love.graphics.newCanvas(512, 512)
 
 function shaper.tonumbers(...)
@@ -65,15 +65,24 @@ function shaper.drawSegment(seg, xo, yo, from, to)
         to = 1
     end
 
-    if seg.from then
+    local ease = seg.ease
+    if to < 0 then
+        from = -from
+        to = -to
+        ease = false
+
+    elseif seg.from then
         local segFrom = seg.from
         local segTo = seg.to
         local segL = segTo - segFrom
-        from = math.min(1, math.max(0, (from - segFrom) / segL))
-        to = math.min(1, math.max(0, (to - segFrom) / segL))
+        from = (from - segFrom) / segL
+        to = (to - segFrom) / segL
     end
 
-    if seg.ease then
+    from = math.min(1, math.max(0, from))
+    to = math.min(1, math.max(0, to))
+
+    if ease then
         from = math.sin(from * math.pi * 0.5)
         to = math.sin(to * math.pi * 0.5)
     end
@@ -224,7 +233,7 @@ function shaper.drawSegmentDebug(seg, xo, yo)
 
     love.graphics.pop()
 
-    shaper.drawTextDebug(1, 1, 1, 1, xo + seg.path[1], yo + seg.path[2], seg.name)
+    shaper.drawTextDebug(1, 1, 1, 1, xo + seg.path[1], yo + seg.path[2], seg.name or (tostring(seg.path[1]) .. ", " .. tostring(seg.path[2])))
 end
 
 
@@ -234,8 +243,10 @@ function shaper.drawShape(shape, xo, yo, from, to)
         to = 1
     end
 
-    from = 1 - (1 - from) * shape.timescale
-    to = to * shape.timescale
+    if to >= 0 then
+        from = 1 - (1 - from) * shape.timescale
+        to = to * shape.timescale
+    end
 
     for i = 1, #shape do
         shape[i]:draw(xo, yo, from, to)
@@ -475,10 +486,15 @@ function shaper.load(path)
         local raw = paths[i]
         local path = shaper.parsePath(raw._attr.d)
         path.name = raw._attr.name
-        path.from, path.to = shaper.tonumbers(raw._attr.range:match("([%d.]+)[, ]([%d.]+)"))
-        path.from = tonumber(path.from)
-        path.to = tonumber(path.to)
+        path.from, path.to = (raw._attr.range or "0.0,1.0"):match("([%d.]+)[, ]([%d.]+)")
+        path.from = tonumber(path.from) or 0
+        path.to = tonumber(path.to) or 1
         path.ease = raw._attr.ease
+        if path.ease == nil then
+            path.ease = true
+        else
+            path.ease = path.ease == "true"
+        end
         path.draw = shaper.drawSegment
         path.drawDebug = shaper.drawSegmentDebug
         shape[i] = path

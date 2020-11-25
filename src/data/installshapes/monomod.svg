@@ -1,50 +1,41 @@
 <svg xmlns="http://www.w3.org/2000/svg" class="vector" width="300" height="300" baseProfile="full" version="1.1" style="background: #888;"
-    timescale="2.0">
+    timescale="1.0">
     <g stroke="#fff" stroke-width="12" stroke-linecap="round" fill="none">
         <path
             name="- top left"
             range="0.0,0.8"
-            ease="true"
             d="M75.0,120.0 L165.0,120.0"/>
         <path
             name="- top right"
             range="0.7,1.0"
-            ease="true"
             d="M195.0,120.0 L225.0,120.0"/>
         <path
             name="- bottom left"
             range="0.0,0.3"
-            ease="true"
             d="M75.0,180.0 L105.0,180.0"/>
         <path
             name="- bottom right"
             range="0.2,1.0"
-            ease="true"
             d="M135.0,180.0 L225.0,180.0"/>
         <path
             name="| top right"
             range="0.0,0.8"
-            ease="true"
             d="M180.0,75.0 L180.0,165.0"/>
         <path
             name="| bottom right"
             range="0.7,1.0"
-            ease="true"
             d="M180.0,195.0 L180.0,225.0"/>
         <path
             name="O"
             range="0.0,0.5"
-            ease="true"
             d="M120.0,195.0 A-15,15 0 0,0 105.0,210.0 A15,15 0 0,0 120.0,225.0 A15,-15 0 0,0 135.0,210.0 A-15,-15 0 0,0 120.0,195.0"/>
         <path
             name="| left"
             range="0.4,0.8"
-            ease="true"
             d="M120.0,195.0 L120.0,135.0"/>
         <path
             name="U"
             range="0.4,1.0"
-            ease="true"
             d="M105.0,75.0 L105.0,90.0 A15,15 0 0,0 120.0,105.0 A15,-15 0 0,0 135.0,90.0 L135.0,75.0"/>
     </g>
 </svg>
