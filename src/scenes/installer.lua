@@ -63,7 +63,24 @@ function root.draw(self)
 
     local shape = scene.shape
     if shape then
-        shape:draw(cmx - shape.width * 0.5, cmy - shape.height * 0.5)
+        local progA = 0
+        local progB = scene.progress
+
+        if progB then
+            progB = progB
+
+        else
+            local t = self.time
+            if t < 0.5 then
+                progA = 0
+                progB = t * 2
+            else
+                progA = t * 2 - 1
+                progB = 1
+            end
+        end
+
+        shape:draw(cmx - shape.width * 0.5, cmy - shape.height * 0.5, progA, progB)
 
     else
         local radius = 32
