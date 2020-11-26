@@ -17,7 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdInstallEverest : Cmd<string, string, IEnumerator> {
+    public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
 
         public static object[] Status(string text, float progress, string shape) {
             Console.Error.WriteLine(text);
@@ -87,6 +87,13 @@ namespace Olympus {
                     }
                 }
             }
+
+            yield return Status("Starting MiniInstaller", false, "install");
+
+            Install(root);
+
+            yield return Status("Done", 1f, "done");
+
         }
 
 
