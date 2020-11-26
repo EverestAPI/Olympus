@@ -45,12 +45,13 @@ namespace Olympus {
             Restep:
             try {
                 if (Enumerator.MoveNext()) {
-                    Current = Enumerator.Current;
-                    if (Current is IEnumerator pass) {
+                    object current = Enumerator.Current;
+                    if (current is IEnumerator pass) {
                         Stack.Push(Enumerator);
                         Enumerator = pass;
                         goto Restep;
                     }
+                    Current = current;
                     return true;
                 } else if (Stack.Count > 0) {
                     Enumerator = Stack.Pop();

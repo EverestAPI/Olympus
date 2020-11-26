@@ -38,6 +38,11 @@ namespace Olympus {
         }
 
         public override IEnumerator Run(string root, string artifactBase) {
+            for (int i = 0; i <= 100; i++) {
+                yield return Status($"uhh {i}", i / 100f, "");
+                Thread.Sleep(10);
+            }
+
             // Only new builds offer olympus-meta and olympus-build artifacts.
             yield return Status("Downloading metadata", false, "");
 

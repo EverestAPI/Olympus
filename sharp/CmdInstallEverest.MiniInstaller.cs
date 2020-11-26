@@ -57,6 +57,7 @@ namespace Olympus {
                         bridge.WriteLine("MiniInstaller finished");
 
                     } catch (Exception e) {
+                        bridge.Exception = e;
                         bridge.IsDone = true;
                         bridge.WriteLine("MiniInstaller died a brutal death");
                         Console.Error.WriteLine(e);
@@ -74,6 +75,9 @@ namespace Olympus {
                 }
 
                 thread.Join();
+
+                if (bridge.Exception != null)
+                    throw new Exception("MiniInstaller died a brutal death", bridge.Exception);
 
             }
         }
@@ -133,6 +137,7 @@ namespace Olympus {
             public string LastLogLine { get; set; }
             public ManualResetEvent LogEvent;
             public bool IsDone { get; set; }
+            public Exception Exception { get; set; }
 
             public void Write(string value) => Console.Error.Write(value);
             public void WriteLine(string value) {

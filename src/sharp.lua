@@ -287,6 +287,9 @@ local function sharpthread()
         channelStatus:push("donecmd " .. tostring(uid) .. " " .. cid)
     end
 
+    channelStatus:clear()
+    channelStatus:push("rip")
+
     client:close()
 end
 
