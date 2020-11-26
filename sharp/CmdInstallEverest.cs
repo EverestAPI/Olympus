@@ -19,14 +19,27 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdInstallEverest : Cmd<string, string, IEnumerator> {
 
-        public override IEnumerator Run(string root, string artifactBase) {
-            for (int i = 0; i <= 100; i++) {
-                yield return new object[] { $"Warmup #{i}", i / 100f, "" };
-                Thread.Sleep(20);
-            }
+        public static object[] Status(string text, float progress, string shape) {
+            Console.Error.WriteLine(text);
+            return StatusSilent(text, progress, shape);
+        }
 
+        public static object[] Status(string text, bool progress, string shape) {
+            Console.Error.WriteLine(text);
+            return StatusSilent(text, progress, shape);
+        }
+
+        public static object[] StatusSilent(string text, float progress, string shape) {
+            return new object[] { text, progress, shape };
+        }
+
+        public static object[] StatusSilent(string text, bool progress, string shape) {
+            return new object[] { text, progress, shape };
+        }
+
+        public override IEnumerator Run(string root, string artifactBase) {
             // Only new builds offer olympus-meta and olympus-build artifacts.
-            yield return new object[] { "Downloading metadata", false, "" };
+            yield return Status("Downloading metadata", false, "");
 
             int size;
 
@@ -45,29 +58,42 @@ namespace Olympus {
                 size = 0;
             }
 
-            if (size == 0) {
-                yield return new object[] { "Failed to load metadata - too old build?", 1f, "error" };
-                yield break;
-            }
+            if (size > 0) {
+                yield return Status("Downloading olympus-build.zip", false, "download");
 
-            yield return new object[] { "Downloading build", false, "download" };
+                using (MemoryStream wrapStream = new MemoryStream()) {
+                    yield return Download(artifactBase + "olympus-build", size, wrapStream);
 
-            using (MemoryStream wrapStream = new MemoryStream()) {
-                yield return Download(artifactBase + "olympus-build", size, wrapStream);
+                    yield return Status("Unzipping olympus-build.zip", false, "download");
+                    wrapStream.Seek(0, SeekOrigin.Begin);
+                    using (ZipArchive wrap = new ZipArchive(wrapStream)) {
+                        using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
+                        using (ZipArchive zip = new ZipArchive(zipStream)) {
+                            yield return Unpack(zip, root);
+                        }
+                    }
+                }
 
-                yield return new object[] { "Unzipping", false, "download" };
-                using (ZipArchive wrap = new ZipArchive(wrapStream)) {
-                    using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
-                    using (ZipArchive zipMain = new ZipArchive(zipStream)) {
+            } else {
+                yield return Status("Downloading main.zip", false, "download");
+
+                using (MemoryStream zipStream = new MemoryStream()) {
+                    yield return Download(artifactBase + "main", size, zipStream);
+
+                    yield return Status("Unzipping main.zip", false, "download");
+                    zipStream.Seek(0, SeekOrigin.Begin);
+                    using (ZipArchive zip = new ZipArchive(zipStream)) {
+                        yield return Unpack(zip, root, "main/");
                     }
                 }
             }
         }
 
+
         public static IEnumerator Download(string url, long length, Stream copy) {
             // The following blob of code mostly comes from the old Everest.Installer, which inherited it from the old ETGMod.Installer.
 
-            yield return new object[] { $"Downloading {Path.GetFileName(url)}", false, "download" };
+            yield return Status($"Downloading {Path.GetFileName(url)}", false, "download");
 
             DateTime timeStart = DateTime.Now;
             int pos = 0;
@@ -119,9 +145,9 @@ namespace Olympus {
                         }
 
                         if (length > 0) {
-                            yield return new object[] { $"Downloading: {((int) Math.Floor(100D * Math.Min(1D, pos / (double) length)))}% @ {speed} KiB/s", (float) ((pos / progressScale) / (double) progressSize), "download" };
+                            yield return StatusSilent($"Downloading: {((int) Math.Floor(100D * Math.Min(1D, pos / (double) length)))}% @ {speed} KiB/s", (float) ((pos / progressScale) / (double) progressSize), "download");
                         } else {
-                            yield return new object[] { $"Downloading: {((int) Math.Floor(pos / 1000D))}KiB @ {speed} KiB/s", false, "download" };
+                            yield return StatusSilent($"Downloading: {((int) Math.Floor(pos / 1000D))}KiB @ {speed} KiB/s", false, "download");
                         }
                     } while (read > 0);
 
@@ -130,7 +156,44 @@ namespace Olympus {
 
             string logTime = (DateTime.Now - timeStart).TotalSeconds.ToString(CultureInfo.InvariantCulture);
             logTime = logTime.Substring(0, Math.Min(logTime.IndexOf('.') + 3, logTime.Length));
-            yield return new object[] { $"Downloaded {pos} bytes in {logTime} seconds.", 1f, "download" };
+            yield return Status($"Downloaded {pos} bytes in {logTime} seconds.", 1f, "download");
+        }
+
+
+        public static IEnumerator Unpack(ZipArchive zip, string root, string prefix = "") {
+            int count = string.IsNullOrEmpty(prefix) ? zip.Entries.Count : zip.Entries.Count(entry => entry.FullName.StartsWith(prefix));
+            int i = 0;
+
+            foreach (ZipArchiveEntry entry in zip.Entries) {
+                string name = entry.FullName;
+                if (string.IsNullOrEmpty(name) || name.EndsWith("/"))
+                    continue;
+
+                if (!string.IsNullOrEmpty(prefix)) {
+                    if (!name.StartsWith(prefix))
+                        continue;
+                    name = name.Substring(prefix.Length);
+                }
+
+                yield return Status($"Unzipping #{i} / {count}: {name}", i / (float) count, "download");
+                i++;
+
+                string to = Path.Combine(root, name);
+                string toParent = Path.GetDirectoryName(to);
+                Console.Error.WriteLine($"{entry.Name} -> {to}");
+
+                if (!Directory.Exists(toParent))
+                    Directory.CreateDirectory(toParent);
+
+                if (File.Exists(to))
+                    File.Delete(to);
+
+                using (FileStream fs = File.OpenWrite(to))
+                using (Stream compressed = entry.Open())
+                    compressed.CopyTo(fs);
+            }
+
+            yield return Status($"Unzipped {count} files", 1f, "download");
         }
 
     }

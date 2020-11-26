@@ -31,7 +31,7 @@ namespace Olympus {
                 Console.WriteLine(@"null");
                 Console.Out.Flush();
                 Cmds.Init();
-                MainLoop(null, Console.In, Console.Out);
+                MainLoop(null, Console.In, Console.Out, true);
                 Console.Error.WriteLine("[sharp] Goodbye");
                 Console.In.ReadLine();
                 return;
@@ -56,11 +56,14 @@ namespace Olympus {
             }
 
             bool debug = false;
+            bool verbose = false;
 
             for (int i = 1; i < args.Length; i++) {
                 string arg = args[i];
                 if (arg == "--debug") {
                     debug = true;
+                } else if (arg == "--verbose") {
+                    verbose = true;
                 }
             }
 
@@ -109,7 +112,7 @@ namespace Olympus {
                                 using (Stream stream = client.GetStream())
                                 using (StreamReader reader = new StreamReader(stream))
                                 using (StreamWriter writer = new StreamWriter(stream))
-                                    MainLoop(parentProc, reader, writer);
+                                    MainLoop(parentProc, reader, writer, verbose);
                             } catch (Exception e) {
                                 Console.Error.WriteLine($"[sharp] Failed communicating with {ep}: {e}");
                                 client.Close();
@@ -140,7 +143,7 @@ namespace Olympus {
 
         }
 
-        public static void MainLoop(Process parentProc, TextReader reader, TextWriter writer) {
+        public static void MainLoop(Process parentProc, TextReader reader, TextWriter writer, bool verbose) {
             JsonSerializer jsonSerializer = new JsonSerializer();
 
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
@@ -151,12 +154,14 @@ namespace Olympus {
                         while (!(parentProc?.HasExited ?? false)) {
                             // Commands from Olympus come in pairs of two objects:
 
-                            Console.Error.WriteLine("[sharp] Awaiting next command");
+                            if (verbose)
+                                Console.Error.WriteLine("[sharp] Awaiting next command");
 
                             // Unique ID
                             jsonReader.Read();
                             string uid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
-                            Console.Error.WriteLine($"[sharp] Receiving command {uid}");
+                            if (verbose)
+                                Console.Error.WriteLine($"[sharp] Receiving command {uid}");
                             jsonSerializer.Serialize(jsonWriter, uid, typeof(string));
                             jsonWriter.Flush();
                             writer.WriteLine();
@@ -182,14 +187,16 @@ namespace Olympus {
                                 continue;
                             }
 
-                            Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
+                            if (verbose)
+                                Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
 
                             // Payload
                             jsonReader.Read();
                             object input = jsonSerializer.Deserialize(jsonReader, cmd.InputType);
                             object output;
                             try {
-                                Console.Error.WriteLine($"[sharp] Executing {cid}");
+                                if (verbose || cmd.LogRun)
+                                    Console.Error.WriteLine($"[sharp] Executing {cid}");
                                 output = cmd.Run(input);
 
                             } catch (Exception e) {

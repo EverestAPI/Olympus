@@ -4,12 +4,15 @@ local threader = require("threader")
 local channelQueue = love.thread.getChannel("sharpQueue")
 local channelReturn = love.thread.getChannel("sharpReturn")
 local channelDebug = love.thread.getChannel("sharpDebug")
+local channelStatus = love.thread.getChannel("sharpStatus")
 
 -- Thread-local ID.
 local tuid = 0
 
 -- The command queue thread.
 local function sharpthread()
+    channelStatus:clear()
+    channelStatus:push("start")
     local debuggingFlags = channelDebug:peek()
     local debugging, debuggingSharp = debuggingFlags[1], debuggingFlags[2]
 
@@ -81,17 +84,25 @@ local function sharpthread()
         print("[sharp init]", "logging to", logpath)
     end
 
-    local process = assert(subprocess.popen({
+    local pargs = {
         exe,
         pid,
-
-        debuggingSharp and "--debug" or nil,
 
         stdin = subprocess.PIPE,
         stdout = subprocess.PIPE,
         stderr = logpath,
         cwd = cwd
-    }))
+    }
+
+    if debuggingSharp then
+        pargs[#pargs + 1] = "--debug"
+    end
+
+    if os.getenv("OLYMPUS_SHARP_VERBOSE") == "1" then
+        pargs[#pargs + 1] = "--verbose"
+    end
+
+    local process = assert(subprocess.popen(pargs))
     local stdout = process.stdout
     local stdin = process.stdin
 
@@ -139,8 +150,9 @@ local function sharpthread()
     end
 
     local function run(uid, cid, argsLua)
+        channelStatus:clear()
+        channelStatus:push("txcmd " .. tostring(uid) .. " " .. cid)
         write(utils.toJSON(uid, { indent = false }) .. "\n")
-
         write(utils.toJSON(cid, { indent = false }) .. "\n")
 
         local argsSharp = {}
@@ -152,6 +164,8 @@ local function sharpthread()
 
         flush()
 
+        channelStatus:clear()
+        channelStatus:push("rxcmd " .. tostring(uid) .. " " .. cid)
         local data = readBlob()
         assert(uid == data.uid)
         return data
@@ -182,10 +196,14 @@ local function sharpthread()
     local function connect()
         local try = 1
         ::retry::
+        channelStatus:clear()
+        channelStatus:push("connect attempt " .. tostring(try))
         local clientOrStatus, clientError = socket.connect("127.0.0.1", port)
         if not clientOrStatus then
             try = try + 1
             if try >= 3 then
+                channelStatus:clear()
+                channelStatus:push("connect error " .. tostring(clientError))
                 error(clientError, 2)
             end
             if debugging then
@@ -232,6 +250,9 @@ local function sharpthread()
         local cid = cmd.cid
         local args = cmd.args
 
+        channelStatus:clear()
+        channelStatus:push("gotcmd " .. tostring(uid) .. " " .. cid)
+
         if cid == "_init" then
             dprint("returning init", initStatus)
             initStatus.uid = uid
@@ -247,6 +268,8 @@ local function sharpthread()
             dprint("running", cid, unpack(args))
             local rv = checkTimeout(run, uid, cid, args)
             if rv == "timeout" then
+                channelStatus:clear()
+                channelStatus:push("reruncmd " .. tostring(uid) .. " " .. cid)
                 dprint("timeout reconnecting", rv.value, rv.status, rv.status and rv.status.error)
                 client:close()
                 client = connect()
@@ -259,6 +282,9 @@ local function sharpthread()
                 channelReturn:push(rv)
             end
         end
+
+        channelStatus:clear()
+        channelStatus:push("donecmd " .. tostring(uid) .. " " .. cid)
     end
 
     client:close()
@@ -325,8 +351,10 @@ function sharp.init(debug, debugSharp)
         return sharp.initStatus
     end
 
-    channelDebug:pop()
+    channelDebug:clear()
     channelDebug:push({ debug and true or false, debugSharp and true or false })
+    channelStatus:clear()
+    channelStatus:push("init")
 
     -- Run the command queue on a separate thread.
     local thread = threader.new(sharpthread)
@@ -337,6 +365,10 @@ function sharp.init(debug, debugSharp)
     sharp.initStatus = sharp.run("_init"):result()
 
     return sharp.initStatus
+end
+
+function sharp.getStatus()
+    return channelStatus:peek() or "unknown"
 end
 
 return sharp

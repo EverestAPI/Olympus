@@ -73,11 +73,12 @@ function root.update(self, dt)
     local tf = 0.5
 
     if scene.shapeNext ~= nil then
+        -- Catch up to next shape.
         if scene.progress then
             scene.time = scene.progress * 0.5
             scene.progress = false
         end
-        tf = 1.5
+        tf = 2
     end
 
     scene.timeReal = scene.timeReal + dt
@@ -94,8 +95,9 @@ function root.update(self, dt)
             if scene.progress then
                 scene.time = scene.progress * 0.5
             end
+            local canSwap = scene.time <= 0.5
             scene.time = scene.time + dt * tf * 2
-            if scene.time <= 0.5 and scene.time * 2 >= scene.progressNext then
+            if canSwap and scene.time * 2 >= scene.progressNext then
                 scene.progress = scene.progressNext
                 scene.progressNext = nil
             end
@@ -111,12 +113,12 @@ function root.update(self, dt)
         end
 
     else
-        -- general indeterminate progress time update
+        -- General indeterminate progress time update.
         scene.time = scene.time + dt * tf
     end
 
     if scene.time >= 1 then
-        scene.time = 0
+        scene.time = scene.time - 1
         if scene.shapeNext ~= nil then
             scene.shape = scene.shapeNext
             scene.shapeNext = nil

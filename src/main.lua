@@ -10,6 +10,7 @@ local native
 local scener
 local config
 local sharp
+local fs
 
 local ui
 local uie
@@ -93,6 +94,8 @@ function love.load(args)
 
     sharp = require("sharp")
     sharp.init(debugging or debuggingSharp, debuggingSharp)
+
+    fs = require("fs")
 
     local root = uie.column({
         require("background")(),
@@ -341,7 +344,11 @@ function love.update(dt)
                 "focusing: " .. tostring(ui.focusing) .. "\n" ..
                 "debug: " .. tostring(lldb ~= nil) .. "\n" ..
                 "debugDraw: " .. tostring(ui.debugDraw) .. "\n" ..
-                ""--"mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState)
+                -- "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState) ..
+                "\n" ..
+                "storageDir: " .. fs.getStorageDir() .. "\n" ..
+                "sharp: " .. sharp.getStatus() .. "\n" ..
+                ""
             debugLabel.parent:reflow()
         end
     end

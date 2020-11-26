@@ -119,12 +119,12 @@ function scene.install()
     threader.routine(function()
         local task = sharp.installEverest(install.entry.path, version.artifactBase):result()
         while sharp.status(task):result() == "running" do
-            local result = sharp.poll(task):result()
-            if type(result) ~= "table" then
+            local result = { sharp.poll(task):result() }
+            if type(result[1]) ~= "table" then
                 print("task poll invalid value", result)
-                error("task poll gave " .. type(result) .. " not string, " .. tostring(result))
+                error("task poll gave " .. type(result[1]) .. " not table, " .. tostring(result[1]))
             end
-            installer.update(table.unpack(result))
+            installer.update(table.unpack(result[1]))
         end
 
         local last = sharp.poll(task):result()

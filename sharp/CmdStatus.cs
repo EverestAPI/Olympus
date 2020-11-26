@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace Olympus {
     public unsafe class CmdStatus : Cmd<string, string> {
+        public override bool LogRun => false;
         public override string Run(string id) {
             return CmdTasks.Get(id)?.Status;
         }

@@ -30,6 +30,7 @@ namespace Olympus {
         public virtual string ID => GetType().Name.Substring(3);
         public abstract Type InputType { get; }
         public abstract Type OutputType { get; }
+        public virtual bool LogRun => true;
         public abstract object Run(object input);
     }
 
