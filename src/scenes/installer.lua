@@ -16,7 +16,7 @@ local root = uie.group({
 })
 scene.root = root
 
-scene.textFont = ui.fontBig or uie.__label.__default.style.font or love.graphics.getFont()
+scene.textFont = ui.fontMono or uie.__label.__default.style.font or love.graphics.getFont()
 scene.text = love.graphics.newText(scene.textFont, "")
 
 
@@ -70,6 +70,8 @@ end
 
 
 function root.update(self, dt)
+    dt = math.min(0.1, dt)
+
     local tf = 0.5
 
     if scene.shapeNext ~= nil then

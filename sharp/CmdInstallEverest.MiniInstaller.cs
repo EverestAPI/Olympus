@@ -20,30 +20,62 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
 
-        public static void Install(string root) {
+        public static IEnumerator Install(string root) {
             Environment.CurrentDirectory = root;
-            Console.Error.WriteLine("Starting MiniInstaller");
 
-            AppDomainSetup nestInfo = new AppDomainSetup();
-            // nestInfo.ApplicationBase = Path.GetDirectoryName(root);
-            nestInfo.ApplicationBase = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            yield return StatusSilent("Starting MiniInstaller", false, "monomod");
 
-            AppDomain nest = AppDomain.CreateDomain(
-                AppDomain.CurrentDomain.FriendlyName + " - MiniInstaller",
-                AppDomain.CurrentDomain.Evidence,
-                nestInfo,
-                AppDomain.CurrentDomain.PermissionSet
-            );
-
-            ((MiniInstallerProxy) nest.CreateInstanceAndUnwrap(
-                typeof(MiniInstallerProxy).Assembly.FullName,
-                typeof(MiniInstallerProxy).FullName
-            )).Boot(new MiniInstallerBridge {
+            using (MiniInstallerBridge bridge = new MiniInstallerBridge {
                 Encoding = Console.Error.Encoding,
                 Root = root
-            });
+            }) {
 
-            AppDomain.Unload(nest);
+                bridge.LogEvent = new ManualResetEvent(false);
+                WaitHandle[] waitHandle = new WaitHandle[] { bridge.LogEvent };
+
+                Thread thread = new Thread(() => {
+                    try {
+                        AppDomainSetup nestInfo = new AppDomainSetup();
+                        // nestInfo.ApplicationBase = Path.GetDirectoryName(root);
+                        nestInfo.ApplicationBase = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+
+                        AppDomain nest = AppDomain.CreateDomain(
+                            AppDomain.CurrentDomain.FriendlyName + " - MiniInstaller",
+                            AppDomain.CurrentDomain.Evidence,
+                            nestInfo,
+                            AppDomain.CurrentDomain.PermissionSet
+                        );
+
+                        ((MiniInstallerProxy) nest.CreateInstanceAndUnwrap(
+                            typeof(MiniInstallerProxy).Assembly.FullName,
+                            typeof(MiniInstallerProxy).FullName
+                        )).Boot(bridge);
+
+                        AppDomain.Unload(nest);
+
+                        bridge.IsDone = true;
+                        bridge.WriteLine("MiniInstaller finished");
+
+                    } catch (Exception e) {
+                        bridge.IsDone = true;
+                        bridge.WriteLine("MiniInstaller died a brutal death");
+                        Console.Error.WriteLine(e);
+                    }
+                }) {
+                    Name = "MiniInstaller"
+                };
+
+                thread.Start();
+
+                while (!bridge.IsDone && thread.IsAlive) {
+                    WaitHandle.WaitAny(waitHandle, 1000);
+                    bridge.LogEvent.Reset();
+                    yield return StatusSilent(bridge.LastLogLine, false, "monomod");
+                }
+
+                thread.Join();
+
+            }
         }
 
         class MiniInstallerProxy : MarshalByRefObject {
@@ -76,38 +108,47 @@ namespace Olympus {
                     TextWriter origOut = Console.Out;
                     TextReader origIn = Console.In;
                     using (TextWriter bridgeWriter = new MiniInstallerBridgeWriter(bridge))
-                    using (LogWriter logWriter = new LogWriter {
-                        STDOUT = Console.Error,
-                        File = bridgeWriter
-                    })
                     using (TextReader fakeReader = new MiniInstallerFakeInReader()) {
-                        Console.SetOut(logWriter);
+                        Console.SetOut(bridgeWriter);
                         Console.SetIn(fakeReader);
 
-                        object exitObject = installerAssembly.EntryPoint.Invoke(null, new object[] { new string[] { } });
-                        if (exitObject != null && exitObject is int && ((int) exitObject) != 0)
-                            throw new Exception($"Return code != 0, but {exitObject}");
+                        try {
+                            object exitObject = installerAssembly.EntryPoint.Invoke(null, new object[] { new string[] { } });
+                            if (exitObject != null && exitObject is int && ((int) exitObject) != 0)
+                                throw new Exception($"Return code != 0, but {exitObject}");
 
-                        Console.SetOut(origOut);
-                        logWriter.STDOUT = null;
-                        Console.SetIn(origIn);
+                        } finally {
+                            Console.SetOut(origOut);
+                            Console.SetIn(origIn);
+                        }
                     }
 
                 }
             }
         }
 
-        class MiniInstallerBridge : MarshalByRefObject {
+        class MiniInstallerBridge : MarshalByRefObject, IDisposable {
             public Encoding Encoding { get; set; }
             public string Root { get; set; }
+            public string LastLogLine { get; set; }
+            public ManualResetEvent LogEvent;
+            public bool IsDone { get; set; }
 
             public void Write(string value) => Console.Error.Write(value);
-            public void WriteLine(string value) => Console.Error.WriteLine(value);
+            public void WriteLine(string value) {
+                Console.Error.WriteLine(value);
+                LastLogLine = value;
+                LogEvent?.Set();
+            }
             public void Write(char value) => Console.Error.Write(value);
             public void Write(char[] buffer, int index, int count) => Console.Error.Write(buffer, index, count);
             public void Flush() => Console.Error.Flush();
             public void Close() {
                 // Console.Error.Close();
+            }
+
+            public void Dispose() {
+                LogEvent?.Dispose();
             }
         }
 
@@ -129,49 +170,6 @@ namespace Olympus {
             public override int Peek() => 1;
             public override int Read() => '\n';
             public override string ReadToEnd() => "\n";
-        }
-
-        class LogWriter : TextWriter {
-            public TextWriter STDOUT;
-            public TextWriter File;
-
-            public override Encoding Encoding => STDOUT?.Encoding ?? File?.Encoding;
-
-            public override void Write(string value) {
-                STDOUT?.Write(value);
-                File?.Write(value);
-                File?.Flush();
-            }
-
-            public override void WriteLine(string value) {
-                STDOUT?.WriteLine(value);
-                File?.WriteLine(value);
-                File?.Flush();
-            }
-
-            public override void Write(char value) {
-                STDOUT?.Write(value);
-                File?.Write(value);
-                File?.Flush();
-            }
-
-            public override void Write(char[] buffer, int index, int count) {
-                STDOUT?.Write(buffer, index, count);
-                File?.Write(buffer, index, count);
-                File?.Flush();
-            }
-
-            public override void Flush() {
-                STDOUT?.Flush();
-                File?.Flush();
-            }
-
-            public override void Close() {
-                STDOUT?.Close();
-                STDOUT = null;
-                File?.Close();
-                File = null;
-            }
         }
 
     }
