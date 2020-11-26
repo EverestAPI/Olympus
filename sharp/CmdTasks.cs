@@ -26,7 +26,8 @@ namespace Olympus {
 
         public readonly string ID;
 
-        public readonly IEnumerator Enumerator;
+        public IEnumerator Enumerator;
+        public Stack<IEnumerator> Stack = new Stack<IEnumerator>();
         public readonly Task Task;
 
         public object Current { get; private set; }
@@ -41,10 +42,19 @@ namespace Olympus {
         }
 
         private bool Step() {
+            Restep:
             try {
                 if (Enumerator.MoveNext()) {
                     Current = Enumerator.Current;
+                    if (Current is IEnumerator pass) {
+                        Stack.Push(Enumerator);
+                        Enumerator = pass;
+                        goto Restep;
+                    }
                     return true;
+                } else if (Stack.Count > 0) {
+                    Enumerator = Stack.Pop();
+                    goto Restep;
                 } else {
                     Status = "done";
                     return false;

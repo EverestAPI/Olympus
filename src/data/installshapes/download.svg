@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" class="vector" width="300" height="300" baseProfile="full" version="1.1" style="background: #888;"
     timescale="1.0">
     <g stroke="#fff" stroke-width="12" stroke-linecap="round" fill="none">
-        <path d="M120.0,180.0 L120.0,180.0 L60.0,180.0 L150.0,270.0 L240.0,180.0 L150.0,180.0 L120.0,150.0 L120.0,30.0 L180.0,30.0 L180.0,165.0 L120.0,165.0 L120.0,180.0"/>
+        <path d="M180.0,180.0 L240.0,180.0 L150.0,270.0 L60.0,180.0 L120.0,180.0 L120.0,30.0 L180.0,30.0 L180.0,180.0"/>
     </g>
 </svg>

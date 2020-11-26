@@ -30,6 +30,13 @@ for i, file in ipairs(love.filesystem.getDirectoryItems("data/installshapes")) d
 end
 
 scene.shape = nil
+scene.shapeNext = nil
+scene.timeReal = 0
+scene.time = 0
+scene.timeDraw = 0
+scene.progress = 0
+scene.progressNext = 0
+scene.progressDraw = 0
 
 
 function scene.update(status, progress, shape)
@@ -46,21 +53,76 @@ function scene.update(status, progress, shape)
     end
 
     if progress ~= nil then
-        scene.progress = progress
+        scene.progressNext = progress
     end
 
     if shape ~= nil then
         if shape == "" then
-            scene.shape = nil
+            scene.shapeNext = false
         else
-            scene.shape = scene.shapes[shape] or scene.shape
+            scene.shapeNext = scene.shapes[shape] or scene.shape
+        end
+        if scene.shapeNext == scene.shape then
+            scene.shapeNext = nil
         end
     end
 end
 
 
 function root.update(self, dt)
-    self.time = (self.time + dt * 0.3) % 1
+    local tf = 0.5
+
+    if scene.shapeNext ~= nil then
+        if scene.progress then
+            scene.time = scene.progress * 0.5
+            scene.progress = false
+        end
+        tf = 1.5
+    end
+
+    scene.timeReal = scene.timeReal + dt
+
+    if scene.shapeNext == nil and scene.progressNext ~= nil then
+        if scene.progress and scene.progressNext then
+            -- progress -> progress on same shape
+            scene.progress = scene.progressNext
+            scene.progressNext = nil
+            scene.time = scene.time + dt * tf
+
+        elseif scene.progressNext then
+            -- ??? -> progress on possibly new shape
+            if scene.progress then
+                scene.time = scene.progress * 0.5
+            end
+            scene.time = scene.time + dt * tf * 2
+            if scene.time <= 0.5 and scene.time * 2 >= scene.progressNext then
+                scene.progress = scene.progressNext
+                scene.progressNext = nil
+            end
+
+        else
+            -- ??? -> indeterminate progress
+            if scene.progress then
+                scene.time = scene.progress * 0.5
+            end
+            scene.progress = scene.progressNext
+            scene.progressNext = nil
+            scene.time = scene.time + dt * tf
+        end
+
+    else
+        -- general indeterminate progress time update
+        scene.time = scene.time + dt * tf
+    end
+
+    if scene.time >= 1 then
+        scene.time = 0
+        if scene.shapeNext ~= nil then
+            scene.shape = scene.shapeNext
+            scene.shapeNext = nil
+        end
+    end
+
     self:repaint()
 end
 
@@ -88,7 +150,7 @@ function root.draw(self)
             progB = progB
 
         else
-            local t = self.time
+            local t = scene.time
             if t < 0.5 then
                 progA = 0
                 progB = t * 4
@@ -119,7 +181,7 @@ function root.draw(self)
             progB = progB * edges
 
         else
-            local t = self.time
+            local t = scene.time
             local offs = edges * t * 2
             if t < 0.5 then
                 progA = offs + 0
@@ -196,8 +258,11 @@ end
 
 
 function scene.enter()
+    scene.timeReal = 0
+    scene.time = 0
+    scene.timeDraw = 0
+    scene.progress = 0
     scene.update("", false, "")
-    root.time = 0
     scener.lock()
 end
 

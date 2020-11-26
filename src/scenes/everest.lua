@@ -117,11 +117,23 @@ function scene.install()
     installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
 
     threader.routine(function()
-        local task = sharp.installEverest(install.entry.path, version.artifact):result()
+        local task = sharp.installEverest(install.entry.path, version.artifactBase):result()
         while sharp.status(task):result() == "running" do
-            installer.update(table.unpack(sharp.poll(task):result()))
+            local result = sharp.poll(task):result()
+            if type(result) ~= "table" then
+                print("task poll invalid value", result)
+                error("task poll gave " .. type(result) .. " not string, " .. tostring(result))
+            end
+            installer.update(table.unpack(result))
         end
-        installer.update(table.unpack(sharp.poll(task):result()))
+
+        local last = sharp.poll(task):result()
+        if sharp.status(task):result() == "error" then
+            last[2] = 1
+            last[3] = "error"
+        end
+
+        installer.update(table.unpack(last))
     end)
 
 end
@@ -217,7 +229,7 @@ function scene.load()
                 end
 
                 build.version = version
-                build.artifact = "https://dev.azure.com/EverestAPI/Everest/_apis/build/builds/" .. build.id .. "/artifacts?artifactName=main&%24format=zip"
+                build.artifactBase = "https://dev.azure.com/EverestAPI/Everest/_apis/build/builds/" .. build.id .. "/artifacts?$format=zip&artifactName="
 
                 local item = uie.listItem(text, build):with(uiu.fillWidth)
                 item.label.wrap = true
