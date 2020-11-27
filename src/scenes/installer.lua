@@ -86,6 +86,8 @@ function scene.done(btns)
         layoutLate = function(orig, self)
             self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
             self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
+            self.y = self.parent.innerHeight - 84
+            self.realY = self.parent.height - 84 - self.parent.style.padding
             orig(self)
         end
     })

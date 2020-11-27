@@ -126,9 +126,7 @@ function scene.install()
         local last = sharp.poll(task):result()
         local status = sharp.free(task):result()
         if status == "error" then
-            last[2] = 1
-            last[3] = "error"
-            installer.update(table.unpack(last))
+            installer.update(last[1], 1, "error")
             installer.done({
                 {
                     "Upload Log",
@@ -145,7 +143,7 @@ function scene.install()
             return
         end
 
-        installer.update(table.unpack(last))
+        installer.update(string.format("Everest %s successfully installed", version.version), 1, "done")
         installer.done({
             {
                 "Launch",
