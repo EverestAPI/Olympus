@@ -69,7 +69,7 @@ end
 
 function scener.push(scene, ...)
     table.insert(scener.stack, scener.current)
-    scener.set(scene, ...)
+    return scener.set(scene, ...)
 end
 
 function scener.pop(count)

@@ -113,7 +113,7 @@ function scene.install()
         return
     end
 
-    local installer = scener.set("installer")
+    local installer = scener.push("installer")
     installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
 
     threader.routine(function()
@@ -124,12 +124,41 @@ function scene.install()
         end
 
         local last = sharp.poll(task):result()
-        if sharp.status(task):result() == "error" then
+        local status = sharp.free(task):result()
+        if status == "error" then
             last[2] = 1
             last[3] = "error"
+            installer.update(table.unpack(last))
+            installer.done({
+                {
+                    "Upload Log",
+                    function()
+                    end
+                },
+                {
+                    "OK",
+                    function()
+                        scener.pop(1)
+                    end
+                }
+            })
+            return
         end
 
         installer.update(table.unpack(last))
+        installer.done({
+            {
+                "Launch",
+                function()
+                end
+            },
+            {
+                "OK",
+                function()
+                    scener.pop(2)
+                end
+            }
+        })
     end)
 
 end

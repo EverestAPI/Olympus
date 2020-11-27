@@ -34,12 +34,14 @@ namespace Olympus {
                 WaitHandle[] waitHandle = new WaitHandle[] { bridge.LogEvent };
 
                 Thread thread = new Thread(() => {
+                    AppDomain nest = null;
                     try {
                         AppDomainSetup nestInfo = new AppDomainSetup();
                         // nestInfo.ApplicationBase = Path.GetDirectoryName(root);
                         nestInfo.ApplicationBase = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+                        nestInfo.LoaderOptimization = LoaderOptimization.SingleDomain;
 
-                        AppDomain nest = AppDomain.CreateDomain(
+                        nest = AppDomain.CreateDomain(
                             AppDomain.CurrentDomain.FriendlyName + " - MiniInstaller",
                             AppDomain.CurrentDomain.Evidence,
                             nestInfo,
@@ -58,8 +60,19 @@ namespace Olympus {
 
                     } catch (Exception e) {
                         bridge.Exception = e;
+
+                        string msg = "MiniInstaller died a brutal death";
+
+                        if (nest != null) {
+                            try {
+                                AppDomain.Unload(nest);
+                            } catch {
+                                msg = "MiniInstaller has become a zombie";
+                            }
+                        }
+
                         bridge.IsDone = true;
-                        bridge.WriteLine("MiniInstaller died a brutal death");
+                        bridge.WriteLine(msg);
                         Console.Error.WriteLine(e);
                     }
                 }) {

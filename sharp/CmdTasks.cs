@@ -18,6 +18,15 @@ namespace Olympus {
             All.Remove(task.ID);
         }
 
+        public static CmdTask Remove(string id) {
+            if (All.TryGetValue(id, out CmdTask task)) {
+                All.Remove(id);
+                return task;
+            }
+
+            return null;
+        }
+
         public static CmdTask Get(string id)
             => All.TryGetValue(id, out CmdTask task) ? task : null;
     }
