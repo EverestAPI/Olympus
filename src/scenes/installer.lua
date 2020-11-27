@@ -4,6 +4,7 @@ local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
 local sharp = require("sharp")
+local native = require("native")
 local shaper = require("shaper")
 
 local scene = {
@@ -53,6 +54,7 @@ function scene.update(status, progress, shape)
     end
 
     if progress ~= nil then
+        native.setProgress(shape == "error" and "error" or not progress and "indeterminate" or "normal", progress or 0)
         scene.progressNext = progress
     end
 
@@ -273,6 +275,7 @@ end
 
 function scene.leave()
     scener.unlock()
+    native.setProgress("none", 0)
 end
 
 

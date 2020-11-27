@@ -3,6 +3,7 @@ if not ffiStatus then
     return false
 end
 local bit = require("bit")
+local sharp = require("sharp")
 
 local sdl
 local dwm
@@ -282,6 +283,16 @@ function native.prepareWindow()
             blurbehind[0].enable = true
             dwm.DwmEnableBlurBehindWindow(hwnd, blurbehind)
         end
+    end
+end
+
+function native.setProgress(state, progress)
+    local sdlWindow = native.getCurrentWindow()
+    local sdlWMinfo = ffi.new("SDL_SysWMinfo[1]")
+    sdl.SDL_GetWindowWMInfo(sdlWindow, sdlWMinfo)
+
+    if ffi.os == "Windows" then
+        sharp.setProgressWin32(tostring(sdlWMinfo[0].info.win.window):sub(#"cdata<void *>: 0x" + 1), state, progress)
     end
 end
 
