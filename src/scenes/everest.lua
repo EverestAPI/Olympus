@@ -4,6 +4,7 @@ local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
 local sharp = require("sharp")
+local alert = require("alert")
 local mainmenu = scener.preload("mainmenu")
 
 local scene = {
@@ -148,6 +149,11 @@ function scene.install()
             {
                 "Launch",
                 function()
+                    sharp.launch(install.entry.path)
+                    alert([[
+Everest is now starting in the background.
+You can close this window.]])
+                    scener.pop(2)
                 end
             },
             {
