@@ -21,6 +21,8 @@ namespace Olympus {
     public unsafe partial class CmdLaunch : Cmd<string, string> {
 
         public override string Run(string root) {
+            Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
+
             Process game = new Process();
 
             // Unix-likes use the wrapper script
@@ -30,9 +32,6 @@ namespace Olympus {
             } else {
                 game.StartInfo.FileName = Path.Combine(root, "Celeste.exe");
             }
-
-            game.StartInfo.UseShellExecute = false;
-            game.StartInfo.EnvironmentVariables["LOCAL_LUA_DEBUGGER_VSCODE"] = "0";
 
             game.StartInfo.WorkingDirectory = root;
             game.Start();
