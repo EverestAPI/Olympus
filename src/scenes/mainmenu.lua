@@ -127,6 +127,7 @@ Olympus is currently unable to install Ahorn.
 Please go to the Ahorn GitHub page for installation instructions.
 This will probably be implemented in a future update.]])
             end),
+            button("cogwheel", "Options", "options"),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
         }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist")
 
@@ -145,7 +146,7 @@ scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
     uie.group({
-        buttonBig("mainmenu/everest", "Launch Everest", function()
+        buttonBig("mainmenu/everest", "Celeste + Everest", function()
             sharp.launch(config.installs[config.install].path)
             alert([[
 Everest is now starting in the background.
@@ -153,7 +154,7 @@ You can close this window.]])
         end)
     }):with(uiu.fillWidth(2.5)),
     uie.group({
-        buttonBig("mainmenu/celeste", "Launch Celeste", function()
+        buttonBig("mainmenu/celeste", "Celeste", function()
             sharp.launch(config.installs[config.install].path, "--vanilla")
             alert([[
 Celeste is now starting in the background.
@@ -170,7 +171,7 @@ You can close this window.]])
     clip = false,
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
-scene.updatebtn = button("mainmenu/everest", "Update Everest (Mod Loader)", "everest"):as("updatebtn")
+scene.updatebtn = button("mainmenu/everest", "Update Everest", "everest"):as("updatebtn")
 scene.installbtn = root:findChild("installbtn")
 
 scene.installs:hook({
