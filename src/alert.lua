@@ -10,15 +10,26 @@ end
 
 
 function alert.show(data)
-    if type(data) == "string" then
-        data = {
-            body = data
-        }
-    end
-
-    local container = uie.column({}):with({
+    local container = uie.group({}):with({
         time = 0,
-        interactive = 2,
+        style = {
+            bg = {},
+            padding = 0,
+            radius = 0
+        },
+        clip = false,
+        cacheable = false
+    }):with(uiu.fill)
+
+    local bg = uie.group({}):hook({
+        onClick = function(orig, self, x, y, button)
+            orig(self, x, y, button)
+            if not data.force then
+                container.close("bypass")
+            end
+        end
+    }):with({
+        interactive = 1,
         style = {
             bg = { 0.1, 0.1, 0.1, 0 },
             padding = 0,
@@ -27,9 +38,21 @@ function alert.show(data)
         clip = false,
         cacheable = false
     }):with(uiu.fill)
-    alert.root:addChild(container)
+    container:addChild(bg)
 
-    local box = uie.panel({}):with({
+    if type(data) == "string" then
+        data = {
+            body = data,
+            buttons = {
+                { "OK", function()
+                    container.close("ok")
+                end }
+            }
+        }
+    end
+
+    local box = uie.column({}):with({
+        interactive = 2,
         style = {
             padding = 16
         },
@@ -64,6 +87,23 @@ function alert.show(data)
         end
     end
 
+    if data.buttons then
+        local row = uie.row():with({
+            style = {
+                bg = {},
+                padding = 0,
+                radius = 0
+            },
+            clip = false
+        }):with(uiu.rightbound)
+        for i = 1, #data.buttons do
+            local btn = data.buttons[i]
+            btn = uie.button(table.unpack(btn))
+            row:addChild(btn)
+        end
+        box:addChild(row)
+    end
+
     container:addChild(box)
 
 
@@ -90,7 +130,7 @@ function alert.show(data)
                     self:removeSelf()
                     return
                 end
-                container.style.bg[4] = math.min(0.6, 1 - time * 6)
+                bg.style.bg[4] = math.min(0.6, 1 - time * 6)
                 box.fade = math.min(1, 1 - time * 7)
 
             else
@@ -98,18 +138,11 @@ function alert.show(data)
                 if time > 1 then
                     time = 1
                 end
-                container.style.bg[4] = math.min(0.6, time * 6)
+                bg.style.bg[4] = math.min(0.6, time * 6)
                 box.fade = math.min(1, time * 7)
             end
 
             container.time = time
-        end,
-
-        onClick = function(orig, self, x, y, button)
-            orig(self, x, y, button)
-            if not data.force then
-                container.close("bypass")
-            end
         end
     })
 
@@ -124,11 +157,12 @@ function alert.show(data)
             local hw = math.floor(width * 0.5)
             local hh = math.floor(height * 0.5)
             love.graphics.setBlendMode("alpha", "premultiplied")
-            love.graphics.draw(canvas, x - padding + hw, y - padding + hh + 20 * (1 - sfade), 0.2 * math.max(0, 0.8 - sfade), scale, scale, hw, hh)
+            love.graphics.draw(canvas, x - padding + hw, y - padding + hh + 20 * (1 - sfade), 0.1 * math.max(0, 0.7 - sfade * 1.2), scale, scale, hw, hh)
             love.graphics.setBlendMode("alpha", "alphamultiply")
         end,
     })
 
+    alert.root:addChild(container)
     return container
 end
 

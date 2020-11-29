@@ -69,8 +69,8 @@ function scene.update(status, progress, shape)
 end
 
 
-function scene.done(btns)
-    local row = uie.row():with({
+function scene.done(buttons)
+    local row = uie.row({}):with({
         style = {
             bg = {},
             padding = 0,
@@ -91,8 +91,8 @@ function scene.done(btns)
             self.realY = self.parent.height - 84 - self.parent.style.padding
         end
     })
-    for i = 1, #btns do
-        local btn = btns[i]
+    for i = 1, #buttons do
+        local btn = buttons[i]
         btn = uie.button(table.unpack(btn))
         row:addChild(btn)
     end

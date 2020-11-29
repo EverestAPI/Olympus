@@ -113,7 +113,10 @@ local root = uie.column({
             button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
             button("cogwheel", "Manage Installed Mods", "modlist"),
             button("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
-                alert("Soon.")
+                alert([[
+Olympus is currently unable to install Ahorn.
+Please go to the Ahorn GitHub page for installation instructions.
+This will be implemented in a future update.]])
             end),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
         }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
