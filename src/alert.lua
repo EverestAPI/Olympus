@@ -32,7 +32,9 @@ function alert.show(data)
     local box = uie.panel({}):with({
         style = {
             padding = 16
-        }
+        },
+        cachePadding = 0,
+        cacheForce = true
     }):hook({
         layoutLateLazy = function(orig, self)
             -- Always reflow this child whenever its parent gets reflowed.
@@ -88,7 +90,8 @@ function alert.show(data)
                     self:removeSelf()
                     return
                 end
-                container.style.bg[4] = math.min(0.6, (0.2 - time) * 6)
+                container.style.bg[4] = math.min(0.6, 1 - time * 6)
+                box.fade = math.min(1, 1 - time * 7)
 
             else
                 time = time + dt
@@ -96,6 +99,7 @@ function alert.show(data)
                     time = 1
                 end
                 container.style.bg[4] = math.min(0.6, time * 6)
+                box.fade = math.min(1, time * 7)
             end
 
             container.time = time
@@ -107,6 +111,21 @@ function alert.show(data)
                 container.close("bypass")
             end
         end
+    })
+
+    box:hook({
+        __drawCachedCanvas = function(orig, self, canvas, x, y, width, height, padding)
+            local fade = box.fade
+            if not uiu.setColor(fade, fade, fade, fade) then
+                return
+            end
+            local scale = 0.7 + 0.3 * math.sin(fade * math.pi * 0.5)
+            local hw = math.floor(width * 0.5)
+            local hh = math.floor(height * 0.5)
+            love.graphics.setBlendMode("alpha", "premultiplied")
+            love.graphics.draw(canvas, x - padding + hw, y - padding + hh, 0, scale, scale, hw, hh)
+            love.graphics.setBlendMode("alpha", "alphamultiply")
+        end,
     })
 
     return container
