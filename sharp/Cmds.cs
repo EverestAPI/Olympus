@@ -32,6 +32,24 @@ namespace Olympus {
         public abstract Type OutputType { get; }
         public virtual bool LogRun => true;
         public abstract object Run(object input);
+
+        public static object[] Status(string text, float progress, string shape) {
+            Console.Error.WriteLine(text);
+            return StatusSilent(text, progress, shape);
+        }
+
+        public static object[] Status(string text, bool progress, string shape) {
+            Console.Error.WriteLine(text);
+            return StatusSilent(text, progress, shape);
+        }
+
+        public static object[] StatusSilent(string text, float progress, string shape) {
+            return new object[] { text, progress, shape };
+        }
+
+        public static object[] StatusSilent(string text, bool progress, string shape) {
+            return new object[] { text, progress, shape };
+        }
     }
 
     public abstract class Cmd<TOutput> : Cmd {

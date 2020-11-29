@@ -25,7 +25,7 @@ function alert.show(data)
         onClick = function(orig, self, x, y, button)
             orig(self, x, y, button)
             if not data.force then
-                container.close("bypass")
+                container:close("bypass")
             end
         end
     }):with({
@@ -49,7 +49,7 @@ function alert.show(data)
     if not data.buttons then
         data.buttons = {
             { "OK", function(container)
-                container.close("OK")
+                container:close("OK")
             end }
         }
     end
@@ -105,7 +105,7 @@ function alert.show(data)
                 if btndata[2] then
                     btndata[2](container)
                 else
-                    container.close(btndata[1])
+                    container:close(btndata[1])
                 end
             end)
             row:addChild(btn)
@@ -116,7 +116,7 @@ function alert.show(data)
     container:addChild(box)
 
 
-    function container.close(reason)
+    function container.close(self, reason)
         if container.closing then
             return
         end

@@ -81,7 +81,29 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             end
         }):with(uiu.fillWidth(8, true)):as("install"),
 
-        uie.button("Uninstall"):hook({
+        uie.button("Uninstall", function()
+            alert({
+                force = true,
+                body = [[
+Uninstalling Everest will keep all your mods intact,
+unless you manually delete them, fully reinstall Celeste,
+or load into a modded save file in vanilla Celeste.
+
+Holding right on the title screen lets you turn off Everest
+until you start up the game again, which is "speedrun-legal" too.
+
+If even uninstalling Everest doesn't bring the expected result,
+please go to your game manager's library and let it verify the game's files.
+Steam, EGS and the itch.io app let you do that without a full reinstall.]],
+                buttons = {
+                    { "Uninstall anyway", function(container)
+                        scene.uninstall()
+                        container:close("OK")
+                    end },
+                    { "Keep Everest" }
+                }
+            })
+        end):hook({
             update = function(orig, self, ...)
                 local root = scene.root
                 local selected = root:findChild("installs").selected
@@ -167,6 +189,7 @@ You can close this window.]])
 
 end
 
+
 function scene.uninstall()
     local install = root:findChild("installs").selected
     install = install and install.data
@@ -174,6 +197,57 @@ function scene.uninstall()
     if not install then
         return
     end
+
+    local installer = scener.push("installer")
+    installer.update("Preparing uninstallation of Everest", false, "backup")
+
+    threader.routine(function()
+        local task = sharp.uninstallEverest(install.entry.path):result()
+        while sharp.status(task):result() == "running" do
+            local result = { sharp.poll(task):result() }
+            installer.update(table.unpack(result[1]))
+        end
+
+        local last = sharp.poll(task):result()
+        local status = sharp.free(task):result()
+        if status == "error" then
+            installer.update(last[1], 1, "error")
+            installer.done({
+                {
+                    "Upload Log",
+                    function()
+                    end
+                },
+                {
+                    "OK",
+                    function()
+                        scener.pop(1)
+                    end
+                }
+            })
+            return
+        end
+
+        installer.update("Everest successfully uninstalled", 1, "done")
+        installer.done({
+            {
+                "Launch",
+                function()
+                    sharp.launch(install.entry.path)
+                    alert([[
+Celeste is now starting in the background.
+You can close this window.]])
+                    scener.pop(2)
+                end
+            },
+            {
+                "OK",
+                function()
+                    scener.pop(2)
+                end
+            }
+        })
+    end)
 
 end
 

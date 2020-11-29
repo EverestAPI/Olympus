@@ -168,7 +168,7 @@ anything to work in the near future, if at all.]],
                                     if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
                                         add()
                                     end
-                                    container.close("OK")
+                                    container:close("OK")
                                 end }
                             }
                         })

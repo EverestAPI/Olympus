@@ -19,24 +19,6 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
 
-        public static object[] Status(string text, float progress, string shape) {
-            Console.Error.WriteLine(text);
-            return StatusSilent(text, progress, shape);
-        }
-
-        public static object[] Status(string text, bool progress, string shape) {
-            Console.Error.WriteLine(text);
-            return StatusSilent(text, progress, shape);
-        }
-
-        public static object[] StatusSilent(string text, float progress, string shape) {
-            return new object[] { text, progress, shape };
-        }
-
-        public static object[] StatusSilent(string text, bool progress, string shape) {
-            return new object[] { text, progress, shape };
-        }
-
         public override IEnumerator Run(string root, string artifactBase) {
             // Only new builds offer olympus-meta and olympus-build artifacts.
             yield return Status("Downloading metadata", false, "");
