@@ -1,5 +1,6 @@
 local ui, uiu, uie = require("ui").quick()
 local scener = require("scener")
+local alert = require("alert")
 
 local scene = {
     name = "Scene List"
@@ -30,7 +31,11 @@ function scene.load()
         if path then
             local scene = scener.preload(path)
             list:addChild(uie.button(scene.name, function()
-                scener.push(path)
+                if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                    alert.scene(path)
+                else
+                    scener.push(path)
+                end
             end))
         end
     end

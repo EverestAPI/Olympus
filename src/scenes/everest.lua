@@ -358,7 +358,7 @@ end
 
 
 function scene.enter()
-    mainmenu.reloadInstalls()
+    mainmenu.reloadInstalls(scene)
 end
 
 

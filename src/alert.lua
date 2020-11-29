@@ -1,5 +1,5 @@
 local ui, uiu, uie = require("ui").quick()
-local threader = require("threader")
+local scener = require("scener")
 
 local alert = {}
 
@@ -172,6 +172,45 @@ function alert.show(data)
     })
 
     alert.root:addChild(container)
+    return container
+end
+
+
+function alert.scene(scene)
+    scene = scener.preload(scene)
+    if not scene.loaded then
+        if scene.load then
+            scene.load()
+        end
+        scene.loaded = true
+    end
+
+    if scene.enter then
+        scene.enter()
+    end
+
+    local container = alert({
+        body = scene.root:with({
+            style = {
+                bg = {},
+                padding = scene.root._fullroot and 0 or 16
+            },
+
+            cacheable = false,
+            clip = false,
+        }):with(uiu.fill),
+        buttons = {}
+    })
+
+    container:findChild("box"):with({
+        style = {
+            padding = 0
+        },
+
+        cacheable = false,
+        clip = false,
+    }):with(uiu.fill(64))
+
     return container
 end
 

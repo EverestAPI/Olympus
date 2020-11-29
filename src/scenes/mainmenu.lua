@@ -68,8 +68,8 @@ function scene.createInstalls()
 end
 
 
-function scene.reloadInstalls(cb)
-    local list = scener.current.root:findChild("installs")
+function scene.reloadInstalls(scene, cb)
+    local list = scene.root:findChild("installs")
     list.children = {}
 
     local installs = config.installs or {}
@@ -204,7 +204,7 @@ end
 
 
 function scene.enter()
-    scene.reloadInstalls(scene.updateMainList)
+    scene.reloadInstalls(scene, scene.updateMainList)
 
 end
 
