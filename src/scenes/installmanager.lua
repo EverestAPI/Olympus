@@ -2,6 +2,7 @@ local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
 local scener = require("scener")
+local alert = require("alert")
 local fs = require("fs")
 local config = require("config")
 local sharp = require("sharp")
@@ -141,12 +142,50 @@ function scene.createEntry(list, entry, manualIndex)
 
                 or
                 uie.button("Add", function()
-                    local installs = config.installs or {}
-                    entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
-                    installs[#installs + 1] = entry
-                    config.installs = installs
-                    config.save()
-                    scene.reloadAll()
+                    local function add()
+                        local installs = config.installs or {}
+                        entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
+                        installs[#installs + 1] = entry
+                        config.installs = installs
+                        config.save()
+                        scene.reloadAll()
+                    end
+
+                    if entry.type == "uwp" then
+                        local container = alert({
+                            force = true,
+                            body = [[
+The UWP version of Celeste is currently unsupported.
+All game data is encrypted, even dialog text files are uneditable.
+The game code itself is AOT-compiled - no existing code mods would work.
+Even Ahorn currently can't load the necessary game data either.
+
+Unless Everest gets rewritten or someone starts working on
+a mod loader just for this special version, don't expect
+anything to work in the near future, if at all.]],
+                            buttons = {
+                                { "OK", function(container)
+                                    if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                                        add()
+                                    end
+                                    container.close("OK")
+                                end }
+                            }
+                        })
+                        container:findChild("buttons").children[1]:hook({
+                            update = function(orig, self, dt)
+                                orig(self, dt)
+                                if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                                    self.text = "I know what I'm doing."
+                                else
+                                    self.text = "OK"
+                                end
+                            end
+                        })
+
+                    else
+                        add()
+                    end
                 end)
             )
 

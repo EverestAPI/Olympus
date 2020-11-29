@@ -18,9 +18,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe partial class CmdLaunch : Cmd<string, string> {
+    public unsafe partial class CmdLaunch : Cmd<string, string, string> {
 
-        public override string Run(string root) {
+        public override string Run(string root, string args) {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
 
             Process game = new Process();
@@ -34,6 +34,10 @@ namespace Olympus {
             }
 
             game.StartInfo.WorkingDirectory = root;
+
+            if (!string.IsNullOrEmpty(args))
+                game.StartInfo.Arguments = args;
+
             game.Start();
             return null;
         }

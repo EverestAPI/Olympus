@@ -68,7 +68,7 @@ function scene.createInstalls()
 end
 
 
-function scene.reloadInstalls()
+function scene.reloadInstalls(cb)
     local list = scener.current.root:findChild("installs")
     list.children = {}
 
@@ -91,6 +91,11 @@ function scene.reloadInstalls()
 
             item.text = {{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\n" .. version}
             item.data.version = version
+            item.data.versionCeleste = celeste
+            item.data.versionEverest = everest
+            if cb and item.data.index == config.install then
+                cb(item.data)
+            end
         end)
 
         list:addChild(item)
@@ -98,6 +103,10 @@ function scene.reloadInstalls()
 
     list.selected = list.children[config.install or 1] or list.children[1]
     list:reflow()
+
+    if cb then
+        cb()
+    end
 end
 
 
@@ -109,17 +118,17 @@ local root = uie.column({
         scene.createInstalls(),
 
         uie.column({
-            buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"),
+            buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):as("installbtn"),
             button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
             button("cogwheel", "Manage Installed Mods", "modlist"),
             button("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
                 alert([[
 Olympus is currently unable to install Ahorn.
 Please go to the Ahorn GitHub page for installation instructions.
-This will be implemented in a future update.]])
+This will probably be implemented in a future update.]])
             end),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
-        }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
+        }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist")
 
     }):with({
         style = {
@@ -132,12 +141,70 @@ This will be implemented in a future update.]])
 scene.root = root
 
 
+scene.installs = root:findChild("installs")
+scene.mainlist = root:findChild("mainlist")
+scene.launchrow = uie.row({
+    uie.group({
+        buttonBig("mainmenu/everest", "Launch Everest", function()
+            sharp.launch(config.installs[config.install].path)
+            alert([[
+Everest is now starting in the background.
+You can close this window.]])
+        end)
+    }):with(uiu.fillWidth(2.5)),
+    uie.group({
+        buttonBig("mainmenu/celeste", "Launch Celeste", function()
+            sharp.launch(config.installs[config.install].path, "--vanilla")
+            alert([[
+Celeste is now starting in the background.
+You can close this window.]])
+        end)
+    }):with(uiu.fillWidth(1.5)):with(uiu.at(0.5 + 2)),
+}):with({
+    activated = false,
+    style = {
+        bg = {},
+        padding = 0,
+        radius = 0
+    },
+    clip = false,
+    cacheable = false
+}):with(uiu.fillWidth):as("launchrow")
+scene.updatebtn = button("mainmenu/everest", "Update Everest (Mod Loader)", "everest"):as("updatebtn")
+scene.installbtn = root:findChild("installbtn")
+
+scene.installs:hook({
+    cb = function(orig, self, data)
+        orig(self, data)
+        scene.updateMainList(data)
+    end
+})
+
+
+function scene.updateMainList(install)
+    if scene.launchrow.parent then
+        scene.launchrow:removeSelf()
+        scene.updatebtn:removeSelf()
+    end
+    if scene.installbtn.parent then
+        scene.installbtn:removeSelf()
+    end
+
+    if install and install.versionEverest then
+        scene.mainlist:addChild(scene.launchrow, 1)
+        scene.mainlist:addChild(scene.updatebtn, 2)
+    else
+        scene.mainlist:addChild(scene.installbtn, 1)
+    end
+end
+
+
 function scene.load()
 end
 
 
 function scene.enter()
-    scene.reloadInstalls()
+    scene.reloadInstalls(scene.updateMainList)
 
 end
 

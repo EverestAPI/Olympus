@@ -37,17 +37,20 @@ function alert.show(data)
         },
         clip = false,
         cacheable = false
-    }):with(uiu.fill)
+    }):with(uiu.fill):as("bg")
     container:addChild(bg)
 
     if type(data) == "string" then
         data = {
-            body = data,
-            buttons = {
-                { "OK", function()
-                    container.close("ok")
-                end }
-            }
+            body = data
+        }
+    end
+
+    if not data.buttons then
+        data.buttons = {
+            { "OK", function(container)
+                container.close("OK")
+            end }
         }
     end
 
@@ -71,19 +74,19 @@ function alert.show(data)
             self.y = math.floor(self.parent.innerHeight * 0.5 - self.height * 0.5)
             self.realY = math.floor(self.parent.height * 0.5 - self.height * 0.5)
         end
-    })
+    }):as("box")
     local boxBG = box.style.bg
     box.style.bg = { boxBG[1], boxBG[2], boxBG[3], 1 }
 
     if data.title then
-        box:addChild(uie.label(data.title, ui.fontBig))
+        box:addChild(uie.label(data.title, ui.fontBig):as("title"))
     end
 
     if data.body then
         if type(data.body) == "string" then
-            box:addChild(uie.label(data.body))
+            box:addChild(uie.label(data.body):as("body"))
         else
-            box:addChild(data.body)
+            box:addChild(data.body:as("body"))
         end
     end
 
@@ -95,10 +98,16 @@ function alert.show(data)
                 radius = 0
             },
             clip = false
-        }):with(uiu.rightbound)
+        }):with(uiu.rightbound):as("buttons")
         for i = 1, #data.buttons do
-            local btn = data.buttons[i]
-            btn = uie.button(table.unpack(btn))
+            local btndata = data.buttons[i]
+            local btn = uie.button(btndata[1], function()
+                if btndata[2] then
+                    btndata[2](container)
+                else
+                    container.close(btndata[1])
+                end
+            end)
             row:addChild(btn)
         end
         box:addChild(row)
@@ -126,7 +135,7 @@ function alert.show(data)
             local time = container.time
             if container.closing then
                 time = time + dt
-                if time >= 0.3 then
+                if time >= 0.2 then
                     self:removeSelf()
                     return
                 end
@@ -169,7 +178,7 @@ end
 
 local mtAlert = {
     __call = function(self, ...)
-        self.show(...)
+        return self.show(...)
     end
 }
 
