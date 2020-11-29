@@ -2,6 +2,7 @@ local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
 local scener = require("scener")
+local alert = require("alert")
 local config = require("config")
 local sharp = require("sharp")
 
@@ -16,7 +17,7 @@ local function buttonBig(icon, text, scene)
             uie.image(icon):with({ scale = 48 / 256 }),
             uie.label(text, ui.fontBig):with({ y = 4 })
         }):with({ style = { bg = {}, padding = 0, spacing = 16 } }),
-        function()
+        type(scene) == "function" and scene or function()
             scener.push(scene)
         end
     ):with({ style = { padding = 16 } }):with(uiu.fillWidth(4))
@@ -28,7 +29,7 @@ local function button(icon, text, scene)
             uie.image(icon):with({ scale = 24 / 256 }),
             uie.label(text):with({ y = 2 })
         }):with({ style = { bg = {}, padding = 0 } }),
-        function()
+        type(scene) == "function" and scene or function()
             scener.push(scene)
         end
     ):with({ style = { padding = 8 } }):with(uiu.fillWidth(4))
@@ -111,7 +112,9 @@ local root = uie.column({
             buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"),
             button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
             button("cogwheel", "Manage Installed Mods", "modlist"),
-            button("mainmenu/ahorn", "Install Ahorn (Map Editor)", "dummy"),
+            button("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
+                alert("Soon.")
+            end),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
         }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
 

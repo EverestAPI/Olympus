@@ -8,6 +8,7 @@ local utils
 local threader
 local native
 local scener
+local alert
 local config
 local sharp
 local fs
@@ -88,6 +89,7 @@ function love.load(args)
     ui.fontBig = love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 28)
 
     scener = require("scener")
+    alert = require("alert")
 
     config = require("config")
     config.load()
@@ -128,6 +130,18 @@ function love.load(args)
                 cacheable = false,
                 clip = false,
             }):with(uiu.fill):as("wrapper"),
+
+            uie.group({
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0,
+                    radius = 0
+                },
+                clip = false,
+                cacheable = false
+            }):with(uiu.fill):as("alertroot"),
+
 
             uie.window("debug",
                 uie.label("", ui.fontMono):with({
@@ -311,6 +325,8 @@ function love.load(args)
 
         ui.root:recollect()
     end
+
+    alert.init(root:findChild("alertroot"))
 
     scener.set("mainmenu")
 end
