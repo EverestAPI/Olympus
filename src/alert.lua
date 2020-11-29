@@ -119,11 +119,12 @@ function alert.show(data)
             if not uiu.setColor(fade, fade, fade, fade) then
                 return
             end
-            local scale = 0.7 + 0.3 * math.sin(fade * math.pi * 0.5)
+            local sfade = math.sin(fade * math.pi * 0.5)
+            local scale = 0.7 + 0.3 * sfade
             local hw = math.floor(width * 0.5)
             local hh = math.floor(height * 0.5)
             love.graphics.setBlendMode("alpha", "premultiplied")
-            love.graphics.draw(canvas, x - padding + hw, y - padding + hh, 0, scale, scale, hw, hh)
+            love.graphics.draw(canvas, x - padding + hw, y - padding + hh + 20 * (1 - sfade), 0.2 * math.max(0, 0.8 - sfade), scale, scale, hw, hh)
             love.graphics.setBlendMode("alpha", "alphamultiply")
         end,
     })
