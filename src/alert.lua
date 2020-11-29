@@ -24,9 +24,7 @@ function alert.show(data)
     local bg = uie.group({}):hook({
         onClick = function(orig, self, x, y, button)
             orig(self, x, y, button)
-            if not data.force then
-                container:close("bypass")
-            end
+            container:close(false)
         end
     }):with({
         interactive = 1,
@@ -117,7 +115,7 @@ function alert.show(data)
 
 
     function container.close(self, reason)
-        if container.closing then
+        if container.closing or (data.force and not reason) then
             return
         end
         container.closing = true
