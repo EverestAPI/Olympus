@@ -71,10 +71,12 @@ function notify.show(data)
             self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
             self.y = math.floor(self.parent.innerHeight * 0.5 - self.height * 0.5)
             self.realY = math.floor(self.parent.height * 0.5 - self.height * 0.5)
+            local style = self.style
+            style.bg = nil
+            local boxBG = style.bg
+            style.bg = { boxBG[1], boxBG[2], boxBG[3], 1 }
         end
     }):as("box")
-    local boxBG = box.style.bg
-    box.style.bg = { boxBG[1], boxBG[2], boxBG[3], 1 }
 
     if data.title then
         box:addChild(uie.label(data.title, ui.fontBig):as("title"))
