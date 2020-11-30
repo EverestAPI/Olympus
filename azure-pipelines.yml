@@ -278,6 +278,18 @@ steps:
     cleanTargetFolder: false
     overWrite: true
     flattenFolders: false
+# Copy special additional mono dependencies.
+# Those usually come from Ubuntu Mono packages with a version close to the MonoKickstart version.
+- task: CopyFiles@2
+  displayName: 'Dist: Copy prebuilt mono libs'
+  continueOnError: true
+  inputs:
+    sourceFolder: '$(Build.SourcesDirectory)/lib-mono'
+    contents: '**/*'
+    targetFolder: 'love/$(loveBinaryDirectory)/sharp'
+    cleanTargetFolder: false
+    overWrite: true
+    flattenFolders: true
 
 # Per-platform cleanup.
 # Windows
