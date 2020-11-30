@@ -9,6 +9,7 @@ local threader
 local native
 local scener
 local alert
+local notify
 local config
 local themer
 local sharp
@@ -91,6 +92,7 @@ function love.load(args)
 
     scener = require("scener")
     alert = require("alert")
+    notify = require("notify")
     themer = require("themer")
 
     config = require("config")
@@ -137,14 +139,16 @@ function love.load(args)
 
             uie.group({
             }):with({
-                style = {
-                    bg = {},
-                    padding = 0,
-                    radius = 0
-                },
                 clip = false,
                 cacheable = false
             }):with(uiu.fill):as("alertroot"),
+
+            uie.group({
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.fill):as("notifyroot"),
+
 
 
             uie.window("debug",
@@ -329,6 +333,7 @@ function love.load(args)
     end
 
     alert.init(root:findChild("alertroot"))
+    notify.init(root:findChild("notifyroot"))
 
     scener.set("mainmenu")
 end
