@@ -19,6 +19,9 @@
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",
                 },
+            },
+            "linux": {
+                "cwd": "${workspaceFolder}/dist/"
             }
         },
         {
@@ -37,6 +40,9 @@
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",
                 },
+            },
+            "linux": {
+                "cwd": "${workspaceFolder}/dist/"
             }
         },
         {
@@ -55,6 +61,9 @@
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",
                 },
+            },
+            "linux": {
+                "cwd": "${workspaceFolder}/dist/"
             }
         },
         {
@@ -73,6 +82,9 @@
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",
                 },
+            },
+            "linux": {
+                "cwd": "${workspaceFolder}/dist/"
             }
         }
     ]
