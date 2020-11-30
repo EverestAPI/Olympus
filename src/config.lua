@@ -94,6 +94,7 @@ function config.load()
     default(data.quality, "id", "high")
     default(data.quality, "bg", true)
     default(data.quality, "bgBlur", true)
+    default(data.quality, "bgSnow", true)
 end
 
 function config.save()

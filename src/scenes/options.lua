@@ -50,16 +50,25 @@ local qualities = {
         id = "high",
         bg = true,
         bgBlur = true,
+        bgSnow = true,
     } },
     { text = "Medium", data = {
         id = "medium",
         bg = true,
-        bgBlur = false,
+        bgBlur = true,
+        bgSnow = false,
     } },
     { text = "Low", data = {
         id = "low",
+        bg = true,
+        bgBlur = false,
+        bgSnow = false,
+    } },
+    { text = "Minimal", data = {
+        id = "low",
         bg = false,
         bgBlur = false,
+        bgSnow = false,
     } },
 }
 
