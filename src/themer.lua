@@ -64,6 +64,7 @@ function themer.apply(theme)
 
     if ui.root then
         ui.root:reflowDown()
+        ui.root:repaintDown()
     end
 end
 
