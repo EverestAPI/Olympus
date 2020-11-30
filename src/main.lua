@@ -48,9 +48,6 @@ function love.errhand(...)
 end
 
 function love.load(args)
-    utils = require("utils")
-    threader = require("threader")
-
     for i = 1, #args do
         local arg = args[i]
 
@@ -73,6 +70,9 @@ function love.load(args)
             love.event.quit()
         end
     end
+
+    utils = require("utils")
+    threader = require("threader")
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")

@@ -1,1 +1,1 @@
-return require("luajit-request/luajit-request")
+return require("luajit-request.luajit-request.init")

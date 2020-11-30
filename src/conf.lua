@@ -1,3 +1,5 @@
+love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. ";xml2lua/?.lua")
+
 require("prethread")("main")
 
 function love.conf(t)
