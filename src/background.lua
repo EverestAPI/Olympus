@@ -16,9 +16,12 @@ for i, file in ipairs(love.filesystem.getDirectoryItems("data")) do
 
     local snow = file:match("^(snow%d+)%.png$")
     if snow then
-        background.snows[#background.snows + 1] = uiu.image(snow)
+        background.snows[#background.snows + 1] = "data/" .. snow .. ".png"
     end
 end
+
+background.snow = love.graphics.newArrayImage(background.snows)
+background.snows = #background.snows
 
 function background.refresh()
     background.bg = config.bg and config.bg > 0 and background.bgs[config.bg] or background.bgs[love.math.random(#background.bgs)]
@@ -67,7 +70,7 @@ function background.new()
 
                 if dot.time >= 1 or (dot.cx * (width - dot.rad) + dot.rad * 0.5 + dot.rad - mouseX * 0.12) < -128 then
                     dot.time = random() * 0.5 + 0.3
-                    dot.tex = snows[love.math.random(#snows)]
+                    dot.tex = love.math.random(snows)
                     dot.cx = (dot.cx and 1 or -1) + (768 + math.max(mouseX, -mouseX) * 0.12) / width + random() * (dot.cx and 1 or 3)
                     dot.cy = random()
                     dot.z = 0.5 + random()
@@ -139,6 +142,7 @@ function background.new()
             )
 
             local dots = self.dots
+            local snow = background.snow
             for i = 1, #dots do
                 local dot = dots[i]
 
@@ -165,7 +169,8 @@ function background.new()
                 dscale = dscale * (t * 0.8 + 0.2)
 
                 love.graphics.setColor(dr, dg, db, 0.05 * t * da)
-                love.graphics.draw(
+                love.graphics.drawLayer(
+                    snow,
                     dtex,
                     dx - mouseX * 0.08 * dz,
                     dy - mouseY * 0.08 * dz,
