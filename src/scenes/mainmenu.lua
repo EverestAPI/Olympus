@@ -160,7 +160,7 @@ You can close this window.]])
 Celeste is now starting in the background.
 You can close this window.]])
         end)
-    }):with(uiu.fillWidth(1.5)):with(uiu.at(0.5 + 2)),
+    }):with(uiu.fillWidth(1.5)):with(uiu.at(2.5)),
 }):with({
     activated = false,
     style = {

@@ -61,6 +61,10 @@ function themer.apply(theme)
 
         ::next::
     end
+
+    if ui.root then
+        ui.root:reflowDown()
+    end
 end
 
 themer.default = themer.dump()

@@ -1,30 +1,38 @@
 local ui, uiu, uie = require("ui").quick()
+local config = require("config")
 local moonshine = require("moonshine")
 
-local bgs = {}
-local snows = {}
-local cog = uiu.image("cogwheel")
+local background = {}
+
+background.bgs = {}
+background.snows = {}
+background.cog = uiu.image("cogwheel")
 
 for i, file in ipairs(love.filesystem.getDirectoryItems("data")) do
     local bg = file:match("^(bg%d+)%.png$")
     if bg then
-        bgs[#bgs + 1] = uiu.image(bg)
+        background.bgs[#background.bgs + 1] = uiu.image(bg)
     end
 
     local snow = file:match("^(snow%d+)%.png$")
     if snow then
-        snows[#snows + 1] = uiu.image(snow)
+        background.snows[#background.snows + 1] = uiu.image(snow)
     end
 end
 
-return function()
+function background.refresh()
+    background.bg = config.bg and config.bg > 0 and background.bgs[config.bg] or background.bgs[love.math.random(#background.bgs)]
+end
+
+function background.new()
+    if not background.bg then
+        background.refresh()
+    end
     return uie.new({
         id = "bg",
         width = 0,
         height = 0,
         cacheable = false,
-
-        bg = bgs[love.math.random(#bgs)],
 
         time = 8,
 
@@ -46,6 +54,7 @@ return function()
         update = function(self, dt)
             self.time = self.time + dt
 
+            local snows = background.snows
             local random = love.math.random
 
             local width, height = love.graphics.getWidth(), love.graphics.getHeight()
@@ -94,13 +103,14 @@ return function()
             local width, height = love.graphics.getWidth() + 4, love.graphics.getHeight() + 4
             local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
             local time = self.time
+            local cog = background.cog
 
             local scale = math.max(width / 540, height / 700)
             scale = (scale - 1) * 0.25 + 1
 
             love.graphics.setColor(1, 1, 1, 1)
             love.graphics.draw(
-                self.bg,
+                background.bg,
                 width / 2 - mouseX * 0.01,
                 height / 2 - mouseY * 0.01,
                 0,
@@ -177,3 +187,10 @@ return function()
         end
     })
 end
+
+
+return setmetatable(background, {
+    __call = function(self, ...)
+        return self.new(...)
+    end
+})

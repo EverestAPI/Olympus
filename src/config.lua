@@ -72,6 +72,10 @@ function config.load()
     elseif data.theme == nil then
         data.theme = "default"
     end
+
+    if data.bg == nil then
+        data.bg = 0
+    end
 end
 
 function config.save()

@@ -217,12 +217,8 @@ function alert.scene(scene)
 end
 
 
-local mtAlert = {
+return setmetatable(alert, {
     __call = function(self, ...)
         return self.show(...)
     end
-}
-
-setmetatable(alert, mtAlert)
-
-return alert
+})
