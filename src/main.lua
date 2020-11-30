@@ -274,8 +274,6 @@ function love.load(args)
         end
     end
 
-    love.graphics.setBackgroundColor(0.06, 0.06, 0.06, 1)
-
     local pathbar = root:findChild("pathbar")
     local wrapper = root:findChild("wrapper")
 
@@ -380,6 +378,9 @@ function love.update(dt)
     if profile then
         profile.stop()
     end
+
+    local bg = uie.__panel.__default.style.bg
+    love.graphics.setBackgroundColor(bg[1] * 0.5, bg[2] * 0.5, bg[3] * 0.5, 1)
 end
 
 function love.draw()

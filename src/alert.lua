@@ -10,6 +10,8 @@ end
 
 
 function alert.show(data)
+    scener.lock()
+
     local container = uie.group({}):with({
         time = 0,
         style = {
@@ -118,6 +120,7 @@ function alert.show(data)
         if container.closing or (data.force and not reason) then
             return
         end
+        scener.unlock()
         container.closing = true
         container.time = 0
         if data.cb then

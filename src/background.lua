@@ -180,9 +180,20 @@ function background.new()
         end,
 
         draw = function(self)
+            if not config.quality.bg then
+                return
+            end
+
             love.graphics.setColor(1, 1, 1, 1)
-            self.effect(self.drawBG, self)
+
+            if config.quality.bgBlur then
+                self.effect(self.drawBG, self)
+            else
+                self:drawBG()
+            end
+
             love.graphics.pop()
+
             uiu.resetColor()
         end
     })

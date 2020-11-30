@@ -13,6 +13,17 @@ local scene = {
 }
 
 
+local nobg = {
+    style = {
+        bg = {},
+        padding = 0,
+        radius = 0
+    },
+    clip = false,
+    cacheable = false
+}
+
+
 local themes = {}
 for i, file in ipairs(love.filesystem.getDirectoryItems("data/themes")) do
     local name = file:match("^(.+)%.json$")
@@ -32,6 +43,25 @@ local bgs = {
 for i = 1, #background.bgs do
     bgs[i + 1] = { text = "Background #" .. i, data = i }
 end
+
+
+local qualities = {
+    { text = "High (Default)", data = {
+        id = "high",
+        bg = true,
+        bgBlur = true,
+    } },
+    { text = "Medium", data = {
+        id = "medium",
+        bg = true,
+        bgBlur = false,
+    } },
+    { text = "Low", data = {
+        id = "low",
+        bg = false,
+        bgBlur = false,
+    } },
+}
 
 
 local root = uie.column({
@@ -58,7 +88,7 @@ local root = uie.column({
                                 end
                             end
                         end)
-                    }):with(uiu.fillWidth(4.5)),
+                    }):with(nobg):with(uiu.fillWidth(8.25)),
 
                     uie.column({
                         uie.label("Background"),
@@ -70,21 +100,46 @@ local root = uie.column({
                             self.selected = self:getItem(config.bg + 1)
                             self.text = self.selected.text
                         end)
-                    }):with(uiu.fillWidth(4.5)):with(uiu.at(4.5, 0))
+                    }):with(nobg):with(uiu.fillWidth(8.25)):with(uiu.at(0.25, 0)),
 
-                }):with({
-                    style = {
-                        bg = {},
-                        padding = 0,
-                        radius = 0
-                    },
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.fillWidth),
+                    uie.column({
+                        uie.label("Quality"),
+                        uie.dropdown(qualities, function(self, value)
+                            config.quality = value
+                            config.save()
+                        end):with(function(self)
+                            for i = 1, #qualities do
+                                if config.quality.id == qualities[i].data.id then
+                                    self.selected = self:getItem(i)
+                                    self.text = self.selected.text
+                                    return
+                                end
+                            end
+                            self.selected = self:getItem(1)
+                            self.text = "???"
+                        end)
+                    }):with(nobg):with(uiu.fillWidth(8.25)):with(uiu.at(0.25 * 2, 0)),
+
+                    uie.column({
+                        uie.label("Vertical Sync"),
+                        uie.dropdown({
+                            { text = "Enabled (Default)", data = true },
+                            { text = "Disabled", data = false },
+                        }, function(self, value)
+                            config.vsync = value
+                            config.save()
+                            love.window.setVSync(value and 1 or 0)
+                        end):with(function(self)
+                            self.selected = self:getItem(config.vsync and 1 or 2)
+                            self.text = self.selected.text
+                        end)
+                    }):with(nobg):with(uiu.fillWidth(8.25)):with(uiu.at(0.25 * 3, 0)),
+
+                }):with(nobg):with(uiu.fillWidth),
 
                 uie.row({
 
-                }):with(uiu.fillWidth)
+                }):with(nobg):with(uiu.fillWidth)
 
             }):with(uiu.fillWidth)
 

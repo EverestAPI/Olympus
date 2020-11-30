@@ -5,55 +5,75 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run (Windows)",
+            "name": "Run",
             "type": "lua-local",
             "request": "launch",
             "program": {
-                "command": "${workspaceFolder}/love/love.exe",
+                "command": "love"
             },
             "cwd": "${workspaceFolder}/src",
             "args": [
                 "${workspaceFolder}/src"
-            ]
+            ],
+            "windows": {
+                "program": {
+                    "command": "${workspaceFolder}/love/love.exe",
+                },
+            }
         },
         {
-            "name": "Debug Sharp (Windows)",
+            "name": "Debug Sharp",
             "type": "lua-local",
             "request": "launch",
             "program": {
-                "command": "${workspaceFolder}/love/love.exe",
+                "command": "love"
             },
             "cwd": "${workspaceFolder}/src",
             "args": [
                 "${workspaceFolder}/src",
                 "--debug-sharp"
-            ]
+            ],
+            "windows": {
+                "program": {
+                    "command": "${workspaceFolder}/love/love.exe",
+                },
+            }
         },
         {
-            "name": "Debug (Windows)",
+            "name": "Debug",
             "type": "lua-local",
             "request": "launch",
             "program": {
-                "command": "${workspaceFolder}/love/love.exe",
+                "command": "love"
             },
             "cwd": "${workspaceFolder}/src",
             "args": [
                 "${workspaceFolder}/src",
                 "--debug"
-            ]
+            ],
+            "windows": {
+                "program": {
+                    "command": "${workspaceFolder}/love/love.exe",
+                },
+            }
         },
         {
-            "name": "Profile (Windows)",
+            "name": "Profile",
             "type": "lua-local",
             "request": "launch",
             "program": {
-                "command": "${workspaceFolder}/love/love.exe",
+                "command": "love"
             },
             "cwd": "${workspaceFolder}/src",
             "args": [
                 "${workspaceFolder}/src",
                 "--profile"
-            ]
+            ],
+            "windows": {
+                "program": {
+                    "command": "${workspaceFolder}/love/love.exe",
+                },
+            }
         }
     ]
 }

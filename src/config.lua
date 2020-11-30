@@ -10,6 +10,20 @@ local mtConfig = {
 
 local config = {}
 
+local function default(value, key, default)
+    if type(key) == "string" and default ~= nil then
+        if value[key] == nil then
+            value[key] = default
+            return default
+        end
+        return value[key]
+
+    elseif value == nil then
+        return key
+    end
+    return value
+end
+
 function config.getName()
     return "config.json"
 end
@@ -43,7 +57,7 @@ function config.load()
     mtConfig.__index = data
     mtConfig.__newindex = data
 
-    data.installs = data.installs or {}
+    default(data, "installs", 0)
 
     local csd = os.getenv("OLYMPUS_CSD")
     if csd == "1" then
@@ -73,7 +87,13 @@ function config.load()
         data.theme = "default"
     end
 
-    data.bg = data.bg or 0
+    default(data, "bg", 0)
+
+    default(data, "quality", {})
+
+    default(data.quality, "id", "high")
+    default(data.quality, "bg", true)
+    default(data.quality, "bgBlur", true)
 end
 
 function config.save()
