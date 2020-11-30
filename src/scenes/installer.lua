@@ -258,19 +258,23 @@ uiu.hook(root, {
         end
 
 
-        love.graphics.setColor(0, 0, 0, 0.8)
-        love.graphics.rectangle(
-            "fill",
-            sx, sy + h - 128 - 16,
-            w, 128 + 16
-        )
+        uiu.resetColor()
 
-        love.graphics.setColor(1, 1, 1, 1)
-        love.graphics.draw(
-            scene.text,
-            math.floor(cx - scene.textWidth * 0.5),
-            math.floor(sy + h - 128)
-        )
+        if uiu.setColor(uie.__panel.__default.style.bg) then
+            love.graphics.rectangle(
+                "fill",
+                sx, sy + h - 128 - 16,
+                w, 128 + 16
+            )
+        end
+
+        if uiu.setColor(uie.__label.__default.style.color) then
+            love.graphics.draw(
+                scene.text,
+                math.floor(cx - scene.textWidth * 0.5),
+                math.floor(sy + h - 128)
+            )
+        end
 
         uiu.resetColor()
 

@@ -418,10 +418,12 @@ function love.keypressed(key, scancode, isrepeat)
         if #alert.root.children > 0 then
             alert.root.children[#alert.root.children]:close(false)
 
-        elseif #scener.stack > 0 then
-            scener.pop()
-        else
-            love.event.quit()
+        elseif not scener.locked then
+            if #scener.stack > 0 then
+                scener.pop()
+            else
+                love.event.quit()
+            end
         end
     end
 
