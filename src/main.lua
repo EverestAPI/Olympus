@@ -10,6 +10,7 @@ local native
 local scener
 local alert
 local config
+local themer
 local sharp
 local fs
 
@@ -90,9 +91,12 @@ function love.load(args)
 
     scener = require("scener")
     alert = require("alert")
+    themer = require("themer")
 
     config = require("config")
     config.load()
+
+    themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
 
     sharp = require("sharp")
     sharp.init(debugging or debuggingSharp, debuggingSharp)
@@ -449,6 +453,10 @@ function love.keypressed(key, scancode, isrepeat)
         else
             profile = nil
         end
+    end
+
+    if key == "f5" then
+        themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
     end
 
     if key == "f10" then

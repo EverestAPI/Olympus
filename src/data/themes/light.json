@@ -1,14 +1,14 @@
 {
 	"__name": "Light",
 	"button": {
-		"disabledBG": [0.05, 0.05, 0.05, 0.7],
+		"disabledBG": [0.4, 0.4, 0.4, 0.7],
 		"disabledBorder": [0, 0, 0, 0, 1],
-		"disabledFG": [0.7, 0.7, 0.7, 0.7],
+		"disabledFG": [0, 0, 0, 0.7],
 		"fadeDuration": 0.2,
 		"hoveredBG": [1, 1, 1, 0.7],
 		"hoveredBorder": [0, 0, 0, 0, 1],
 		"hoveredFG": [0, 0, 0, 1],
-		"normalBG": [0.8, 0.8, 0.8, 0.8],
+		"normalBG": [0.75, 0.75, 0.75, 0.8],
 		"normalBorder": [0, 0, 0, 0, 1],
 		"normalFG": [0, 0, 0, 1],
 		"padding": 8,
@@ -18,10 +18,10 @@
 		"spacing": 4
 	},
 	"buttonClose": {
-		"hoveredBG": [0.25, 0.25, 0.85, 1],
-		"normalBG": [0.1, 0.2, 0.3, 0.9],
+		"hoveredBG": [0.85, 0.25, 0.25, 1],
+		"normalBG": [0.9, 0.1, 0.2, 0.3],
 		"padding": 16,
-		"pressedBG": [0.08, 0.14, 0.6, 1]
+		"pressedBG": [0.6, 0.08, 0.14, 1]
 	},
 	"column": {
 		"spacing": 8
@@ -31,14 +31,14 @@
 	"field": {
 		"disabledBG": [0.5, 0.5, 0.5, 0.7],
 		"disabledBorder": [0, 0, 0, 0.7, 1],
-		"disabledFG": [0, 0, 0, 0, 0.7],
+		"disabledFG": [0, 0, 0, 0.7, 0],
 		"fadeDuration": 0.2,
-		"focusedBG": [0.9, 1, 1, 1],
+		"focusedBG": [1, 1, 1, 0.9],
 		"focusedBorder": [0, 0, 0, 0.9, 1],
 		"focusedFG": [0, 0, 0, 0.9, 1],
-		"normalBG": [0.9, 0.95, 0.95, 0.95],
+		"normalBG": [0.95, 0.95, 0.95, 0.9],
 		"normalBorder": [0.08, 0.08, 0.08, 0.6, 1],
-		"normalFG": [0, 0, 0, 0, 0.8],
+		"normalFG": [0, 0, 0, 0.8, 0],
 		"padding": 8,
 		"spacing": 4
 	},
@@ -67,14 +67,14 @@
 		"spacing": 1
 	},
 	"listItem": {
-		"disabledBG": [0.05, 0.05, 0.05, 1],
+		"disabledBG": [0.4, 0.4, 0.4, 0.7],
 		"disabledBorder": [0, 0, 0, 0, 1],
-		"disabledFG": [0.7, 0.7, 0.7, 0.7],
+		"disabledFG": [0, 0, 0, 0.7],
 		"fadeDuration": 0.2,
-		"hoveredBG": [0.36, 0.36, 0.36, 0.9],
+		"hoveredBG": [1, 1, 1, 0.7],
 		"hoveredBorder": [0, 0, 0, 0, 1],
-		"hoveredFG": [1, 1, 1, 1],
-		"normalBG": [0.8, 0.8, 0.8, 0.8],
+		"hoveredFG": [0, 0, 0, 1],
+		"normalBG": [0.75, 0.75, 0.75, 0.8],
 		"normalBorder": [0, 0, 0, 0, 1],
 		"normalFG": [0, 0, 0, 1],
 		"padding": 4,
@@ -95,14 +95,12 @@
 		"padding": 0,
 		"spacing": 1
 	},
-	"new": [],
 	"panel": {
-		"bg": [0.9, 0.9, 0.9, 0.9],
+		"bg": [0.95, 0.95, 0.95, 0.9],
 		"border": [0, 0, 0, 0],
 		"padding": 8,
 		"radius": 3
 	},
-	"root": [],
 	"row": {
 		"spacing": 8
 	},
@@ -123,26 +121,26 @@
 	"scrollhandleX": [],
 	"scrollhandleY": [],
 	"spinner": {
-		"color": [1, 1, 1, 1]
+		"color": [0, 0, 0, 1]
 	},
 	"titlebar": {
 		"border": [0, 0, 0, 0],
 		"fadeDuration": 0.3,
-		"focusedBG": [0.15, 0.15, 0.15, 1],
-		"focusedFG": [1, 1, 1, 1],
+		"focusedBG": [1, 1, 1, 1],
+		"focusedFG": [0, 0, 0, 1],
 		"radius": 0,
-		"unfocusedBG": [0.1, 0.1, 0.1, 1],
-		"unfocusedFG": [0.7, 0.9, 0.9, 0.9]
+		"unfocusedBG": [0.9, 0.9, 0.9, 1],
+		"unfocusedFG": [0.1, 0.1, 0.1, 0.7]
 	},
 	"topbar": {
-		"bg": [0.8, 0.8, 0.8, 0.8],
+		"bg": [0.95, 0.95, 0.95, 0.8],
 		"padding": 0,
 		"radius": 0,
 		"spacing": 1
 	},
 	"window": {
-		"bg": [0.12, 0.12, 0.12, 1],
-		"border": [0.15, 0.15, 0.15, 1],
+		"bg": [0.8, 0.8, 0.8, 1],
+		"border": [0.5, 0.5, 0.5, 1],
 		"padding": 1,
 		"spacing": 0
 	}

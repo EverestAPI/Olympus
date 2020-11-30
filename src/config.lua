@@ -62,6 +62,16 @@ function config.load()
     elseif data.vsync == nil then
         data.vsync = true
     end
+
+    local themeOlympus = os.getenv("OLYMPUS_THEME")
+    local themeOlympUI = os.getenv("OLYMPUI_THEME")
+    if themeOlympus and #themeOlympus > 0 then
+        data.theme = themeOlympus
+    elseif themeOlympUI and #themeOlympUI > 0 then
+        data.theme = themeOlympUI
+    elseif data.theme == nil then
+        data.theme = "default"
+    end
 end
 
 function config.save()

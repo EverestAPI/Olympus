@@ -34,6 +34,10 @@ function themer.dump()
 end
 
 function themer.apply(theme)
+    if not theme then
+        return
+    end
+
     for id, tel in pairs(theme) do
         local el = uie["__" .. id]
         if not el then
@@ -58,5 +62,7 @@ function themer.apply(theme)
         ::next::
     end
 end
+
+themer.default = themer.dump()
 
 return themer

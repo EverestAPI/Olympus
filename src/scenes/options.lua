@@ -35,7 +35,17 @@ local root = uie.column({
                 uie.row({
                     uie.label("Theme"),
                     uie.dropdown(themes, function(self, value)
-                        themer.apply(utils.loadJSON("data/themes/" .. value .. ".json"))
+                        themer.apply((value == "default" or not value) and themer.default or utils.loadJSON("data/themes/" .. value .. ".json"))
+                        config.theme = value
+                        config.save()
+                    end):with(function(self)
+                        for i = 1, #themes do
+                            if config.theme == themes[i].data then
+                                self.selected = self:getItem(i)
+                                self.text = self.selected.text
+                                break
+                            end
+                        end
                     end):with(uiu.rightbound)
                 }):with(uiu.fillWidth)
 

@@ -7,6 +7,13 @@ local scene = {
 }
 
 
+local white = {
+    style = {
+        color = { 1, 1, 1, 1 }
+    }
+}
+
+
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -150,16 +157,16 @@ function scene.item(info)
 
         uie.column({
 
-            uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, " ∙ " .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):as("title"),
+            uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, " ∙ " .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):with(white):as("title"),
 
             uie.row({
                 uie.group({
-                    uie.spinner():with({ time = love.math.random() }),
+                    uie.spinner():with({ time = love.math.random() }):with(white),
                 }):as("imgholder"),
 
                 uie.column({
-                    uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. " ∙ " .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
-                    description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
+                    uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. " ∙ " .. uiu.countformat(downloads, "%d download", "%d downloads"), }):with(white):as("stats"),
+                    description and #description ~= 0 and uie.label(description):with({ wrap = true }):with(white):as("description"),
                 }):with({
                     style = {
                         padding = 0,

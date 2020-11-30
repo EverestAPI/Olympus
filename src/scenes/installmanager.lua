@@ -78,9 +78,9 @@ function scene.createEntry(list, entry, manualIndex)
     end)
 
     local imgStatus, img
-    imgStatus, img = pcall(uie.image, "store/" .. entry.type)
+    imgStatus, img = pcall(uie.icon, "store/" .. entry.type)
     if not imgStatus then
-        imgStatus, img = pcall(uie.image, "store/manual")
+        imgStatus, img = pcall(uie.icon, "store/manual")
     end
 
     local row = uie.row({
