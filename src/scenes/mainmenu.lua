@@ -20,7 +20,7 @@ local function buttonBig(icon, text, scene)
         type(scene) == "function" and scene or function()
             scener.push(scene)
         end
-    ):with({ style = { padding = 16 } }):with(uiu.fillWidth(4))
+    ):with({ style = { padding = 8 } }):with(uiu.fillWidth(4))
 end
 
 local function button(icon, text, scene)
@@ -101,6 +101,18 @@ function scene.reloadInstalls(scene, cb)
         list:addChild(item)
     end
 
+    if #installs == 0 then
+        list:addChild(uie.group({
+            uie.label([[
+No installations found.
+Press the manage button.]])
+        }):with({
+            style = {
+                padding = 8
+            }
+        }))
+    end
+
     list.selected = list.children[config.install or 1] or list.children[1]
     list:reflow()
 
@@ -152,7 +164,7 @@ scene.launchrow = uie.row({
 Everest is now starting in the background.
 You can close this window.]])
         end)
-    }):with(uiu.fillWidth(2.5)),
+    }):with(uiu.fillWidth(2.5 + 36)):with(uiu.at(0, 0)),
     uie.group({
         buttonBig("mainmenu/celeste", "Celeste", function()
             sharp.launch(config.installs[config.install].path, "--vanilla")
@@ -160,7 +172,12 @@ You can close this window.]])
 Celeste is now starting in the background.
 You can close this window.]])
         end)
-    }):with(uiu.fillWidth(1.5)):with(uiu.at(2.5)),
+    }):with(uiu.fillWidth(2.5 + 36)):with(uiu.at(2.5 - 36, 0)),
+    uie.group({
+        buttonBig("cogwheel", "", "everest")
+    }):with({
+        width = 64 + 4
+    }):with(uiu.rightbound)
 }):with({
     activated = false,
     style = {
@@ -171,7 +188,6 @@ You can close this window.]])
     clip = false,
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
-scene.updatebtn = button("mainmenu/everest", "Update Everest", "everest"):as("updatebtn")
 scene.installbtn = root:findChild("installbtn")
 
 scene.installs:hook({
@@ -185,7 +201,6 @@ scene.installs:hook({
 function scene.updateMainList(install)
     if scene.launchrow.parent then
         scene.launchrow:removeSelf()
-        scene.updatebtn:removeSelf()
     end
     if scene.installbtn.parent then
         scene.installbtn:removeSelf()
@@ -193,7 +208,6 @@ function scene.updateMainList(install)
 
     if install and install.versionEverest then
         scene.mainlist:addChild(scene.launchrow, 1)
-        scene.mainlist:addChild(scene.updatebtn, 2)
     else
         scene.mainlist:addChild(scene.installbtn, 1)
     end

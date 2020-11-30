@@ -230,7 +230,9 @@ function scene.reloadManual()
             end
 
         else
-            listManual:addChild(uie.label("This list is empty."))
+            listManual:addChild(uie.label([[
+Olympus needs to know which Celeste installations you want to manage.
+Add your installations from the list below if Olympus has found them, or press the browse button.]]))
         end
 
         listManual:addChild(uie.button("Browse", scene.browse))

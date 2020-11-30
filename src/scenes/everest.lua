@@ -67,7 +67,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
-        uie.button("Step 3: Install", function()
+        uie.button("Install", function()
             scene.install()
         end):hook({
             update = function(orig, self, ...)
@@ -76,7 +76,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 self.enabled = selected and root:findChild("versions").selected
                 selected = selected and selected.data
                 selected = selected and selected.version
-                self.text = (selected and selected:match("%+")) and "Step 3: Update" or "Step 3: Install"
+                self.text = (selected and selected:match("%+")) and "Update" or "Install"
                 orig(self, ...)
             end
         }):with(uiu.fillWidth(8, true)):as("install"),
