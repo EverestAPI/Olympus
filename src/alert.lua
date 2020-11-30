@@ -121,7 +121,7 @@ function alert.show(data)
         container.closing = true
         container.time = 0
         if data.cb then
-            data.cb(reason)
+            data.cb(self, reason)
         end
     end
 
@@ -168,6 +168,10 @@ function alert.show(data)
             love.graphics.setBlendMode("alpha", "alphamultiply")
         end,
     })
+
+    if data.init then
+        data.init(container)
+    end
 
     alert.root:addChild(container)
     return container

@@ -110,7 +110,7 @@ function scene.createEntry(list, entry, manualIndex)
 
         uie.row({
 
-            manualIndex and uie.button(uie.image("up"), function()
+            manualIndex and uie.button(uie.icon("up"), function()
                 local installs = config.installs
                 table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
                 config.installs = installs
@@ -120,7 +120,7 @@ function scene.createEntry(list, entry, manualIndex)
                 enabled = manualIndex > 1
             }),
 
-            manualIndex and uie.button(uie.image("down"), function()
+            manualIndex and uie.button(uie.icon("down"), function()
                 local installs = config.installs
                 table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
                 config.installs = installs

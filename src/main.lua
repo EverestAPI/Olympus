@@ -86,7 +86,7 @@ function love.load(args)
     love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
     ui.fontDebug = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 8)
     ui.fontMono = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 16)
-    ui.fontBig = love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 28)
+    ui.fontBig = love.graphics.newFont("data/fonts/Renogare-Regular.otf", 28)
 
     scener = require("scener")
     alert = require("alert")

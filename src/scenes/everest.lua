@@ -338,14 +338,14 @@ function scene.load()
                 item.label.wrap = true
                 if branch == "stable" then
                     item.style.normalBG = { 0.2, 0.4, 0.2, 0.7 }
-                    item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.8 }
-                    item.style.pressedBG = { 0.1, 0.5, 0.2, 0.8 }
-                    item.style.selectedBG = { 0.5, 0.8, 0.5, 0.8 }
+                    item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.9 }
+                    item.style.pressedBG = { 0.1, 0.5, 0.2, 0.9 }
+                    item.style.selectedBG = { 0.5, 0.8, 0.5, 0.9 }
                 elseif branch == "beta" then
                     item.style.normalBG = { 0.6, 0.6, 0.1, 0.7 }
-                    item.style.hoveredBG = { 0.7, 0.7, 0.3, 0.8 }
-                    item.style.pressedBG = { 0.4, 0.4, 0.2, 0.8 }
-                    item.style.selectedBG = { 0.8, 0.8, 0.3, 0.8 }
+                    item.style.hoveredBG = { 0.7, 0.7, 0.3, 0.9 }
+                    item.style.pressedBG = { 0.4, 0.4, 0.2, 0.9 }
+                    item.style.selectedBG = { 0.8, 0.8, 0.3, 0.9 }
                 end
                 list:addChild(item)
             end

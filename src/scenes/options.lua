@@ -5,10 +5,24 @@ local scener = require("scener")
 local alert = require("alert")
 local config = require("config")
 local sharp = require("sharp")
+local themer = require("themer")
 
 local scene = {
     name = "Options"
 }
+
+
+local themes = {}
+for i, file in ipairs(love.filesystem.getDirectoryItems("data/themes")) do
+    local name = file:match("^(.+)%.json$")
+    if name then
+        local theme = utils.loadJSON("data/themes/" .. name .. ".json")
+        themes[#themes + 1] = {
+            text = theme.__name or tostring(theme),
+            data = name
+        }
+    end
+end
 
 
 local root = uie.column({
@@ -20,11 +34,8 @@ local root = uie.column({
 
                 uie.row({
                     uie.label("Theme"),
-                    uie.dropdown({
-                        "Dark (Default)",
-                        "Light"
-                    }, function(self, value)
-                        -- TODO
+                    uie.dropdown(themes, function(self, value)
+                        themer.apply(utils.loadJSON("data/themes/" .. value .. ".json"))
                     end):with(uiu.rightbound)
                 }):with(uiu.fillWidth)
 

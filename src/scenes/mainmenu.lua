@@ -14,8 +14,8 @@ local scene = {
 local function buttonBig(icon, text, scene)
     return uie.button(
         uie.row({
-            uie.image(icon):with({ scale = 48 / 256 }),
-            uie.label(text, ui.fontBig):with({ y = 4 })
+            uie.icon(icon):with({ scale = 48 / 256 }),
+            uie.label(text, ui.fontBig):with({ x = -4, y = 11 })
         }):with({ style = { bg = {}, padding = 0, spacing = 16 } }),
         type(scene) == "function" and scene or function()
             scener.push(scene)
@@ -26,7 +26,7 @@ end
 local function button(icon, text, scene)
     return uie.button(
         uie.row({
-            uie.image(icon):with({ scale = 24 / 256 }),
+            uie.icon(icon):with({ scale = 24 / 256 }),
             uie.label(text):with({ y = 2 })
         }):with({ style = { bg = {}, padding = 0 } }),
         type(scene) == "function" and scene or function()
@@ -120,7 +120,7 @@ local root = uie.column({
         uie.column({
             buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):as("installbtn"),
             button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
-            button("cogwheel", "Manage Installed Mods", "modlist"),
+            button("mainmenu/berry", "Manage Installed Mods", "modlist"),
             button("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
                 alert([[
 Olympus is currently unable to install Ahorn.
