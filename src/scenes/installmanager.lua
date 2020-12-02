@@ -106,7 +106,7 @@ function scene.createEntry(list, entry, manualIndex)
 
             clip = false,
             cacheable = false
-        }):with(uiu.fillWidth(16, true)),
+        }):with(uiu.fillWidth(8, true)),
 
         uie.row({
 
