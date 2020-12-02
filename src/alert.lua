@@ -59,7 +59,6 @@ function alert.show(data)
         style = {
             padding = 16
         },
-        cachePadding = 0,
         cacheForce = true
     }):hook({
         layoutLateLazy = function(orig, self)

@@ -3,6 +3,7 @@ local utils = require("utils")
 local threader = require("threader")
 local scener = require("scener")
 local alert = require("alert")
+local notify = require("notify")
 local config = require("config")
 local sharp = require("sharp")
 
@@ -62,7 +63,8 @@ function scene.createInstalls()
             style = {
                 padding = 0,
                 bg = {}
-            }
+            },
+            clip = false
         }):with(uiu.fillWidth):with(uiu.fillHeight(true))
     }):with(uiu.fillHeight)
 end
@@ -138,9 +140,16 @@ local root = uie.column({
 Olympus is currently unable to install Ahorn.
 Please go to the Ahorn GitHub page for installation instructions.
 This will probably be implemented in a future update.]])
+                -- notify("OOPS.")
             end),
             button("cogwheel", "Options", "options"),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),
+        }):with({
+            style = {
+                padding = 0,
+                bg = {}
+            },
+            clip = false
         }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist")
 
     }):with({

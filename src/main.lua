@@ -75,6 +75,9 @@ function love.load(args)
     utils = require("utils")
     threader = require("threader")
 
+    fs = require("fs")
+    love.filesystem.mountUnsandboxed(fs.getStorageDir(), "/", 0)
+
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
     print(love.versionStr)
@@ -102,8 +105,6 @@ function love.load(args)
 
     sharp = require("sharp")
     sharp.init(debugging or debuggingSharp, debuggingSharp)
-
-    fs = require("fs")
 
     local root = uie.column({
         require("background")(),

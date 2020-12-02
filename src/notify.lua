@@ -1,7 +1,8 @@
 local ui, uiu, uie = require("ui").quick()
-local scener = require("scener")
 
 local notify = {}
+
+notify.notifications = {}
 
 
 function notify.init(root)
@@ -10,54 +11,12 @@ end
 
 
 function notify.show(data)
-    local container = uie.group({}):with({
+    local notif = uie.column({}):with({
         time = 0,
-        style = {
-            bg = {},
-            padding = 0,
-            radius = 0
-        },
-        clip = false,
-        cacheable = false
-    }):with(uiu.fill)
-
-    local bg = uie.group({}):hook({
-        onClick = function(orig, self, x, y, button)
-            orig(self, x, y, button)
-            container:close(false)
-        end
-    }):with({
-        interactive = 1,
-        style = {
-            bg = { 0.1, 0.1, 0.1, 0 },
-            padding = 0,
-            radius = 0
-        },
-        clip = false,
-        cacheable = false
-    }):with(uiu.fill):as("bg")
-    container:addChild(bg)
-
-    if type(data) == "string" then
-        data = {
-            body = data
-        }
-    end
-
-    if not data.buttons then
-        data.buttons = {
-            { "OK", function(container)
-                container:close("OK")
-            end }
-        }
-    end
-
-    local box = uie.column({}):with({
         interactive = 2,
         style = {
             padding = 16
         },
-        cachePadding = 0,
         cacheForce = true
     }):hook({
         layoutLateLazy = function(orig, self)
@@ -76,89 +35,67 @@ function notify.show(data)
             local boxBG = style.bg
             style.bg = { boxBG[1], boxBG[2], boxBG[3], 1 }
         end
-    }):as("box")
+    })
+
+    if type(data) == "string" then
+        data = {
+            body = data
+        }
+    end
+
+    if not data.time then
+        data.time = 5
+    end
 
     if data.title then
-        box:addChild(uie.label(data.title, ui.fontBig):as("title"))
+        notif:addChild(uie.label(data.title, ui.fontBig):as("title"))
     end
 
     if data.body then
         if type(data.body) == "string" then
-            box:addChild(uie.label(data.body):as("body"))
+            notif:addChild(uie.label(data.body):as("body"))
         else
-            box:addChild(data.body:as("body"))
+            notif:addChild(data.body:as("body"))
         end
     end
 
-    if data.buttons then
-        local row = uie.row():with({
-            style = {
-                bg = {},
-                padding = 0,
-                radius = 0
-            },
-            clip = false
-        }):with(uiu.rightbound):as("buttons")
-        for i = 1, #data.buttons do
-            local btndata = data.buttons[i]
-            local btn = uie.button(btndata[1], function()
-                if btndata[2] then
-                    btndata[2](container)
-                else
-                    container:close(btndata[1])
-                end
-            end)
-            row:addChild(btn)
-        end
-        box:addChild(row)
-    end
-
-    container:addChild(box)
-
-
-    function container.close(self, reason)
-        if container.closing or (data.force and not reason) then
+    function notif.close(self, reason)
+        if notif.closing or (data.force and not reason) then
             return
         end
-        scener.unlock()
-        container.closing = true
-        container.time = 0
+        notif.closing = true
+        notif.time = 0
         if data.cb then
             data.cb(self, reason)
         end
     end
 
-
-    container:hook({
+    notif:hook({
         update = function(orig, self, dt)
             orig(self, dt)
 
-            local time = container.time
-            if container.closing then
+            local time = notif.time
+            if notif.closing then
                 time = time + dt
                 if time >= 0.2 then
                     self:removeSelf()
                     return
                 end
-                bg.style.bg[4] = math.min(0.6, 1 - time * 6)
-                box.fade = math.min(1, 1 - time * 7)
+                notif.fade = math.min(1, 1 - time * 7)
 
             else
                 time = time + dt
                 if time > 1 then
                     time = 1
                 end
-                bg.style.bg[4] = math.min(0.6, time * 6)
-                box.fade = math.min(1, time * 7)
+                notif.fade = math.min(1, time * 7)
             end
 
-            container.time = time
-        end
-    })
+            notif.time = time
+        end,
 
-    box:hook({
         __drawCachedCanvas = function(orig, self, canvas, x, y, width, height, padding)
-            local fade = box.fade
+            local fade = notif.fade
             if not uiu.setColor(fade, fade, fade, fade) then
                 return
             end
@@ -173,11 +110,11 @@ function notify.show(data)
     })
 
     if data.init then
-        data.init(container)
+        data.init(notif)
     end
 
-    notify.root:addChild(container)
-    return container
+    notify.root:addChild(notif)
+    return notif
 end
 
 

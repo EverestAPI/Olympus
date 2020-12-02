@@ -25,7 +25,7 @@ local root = uie.column({
 Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.8, 0.5, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]})),
             }):with({
                 style = {
-                    radius = 3,
+                    patch = false
                 }
             }):with(uiu.fillWidth),
 
@@ -53,17 +53,21 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
 
             }):with({
                 style = {
+                    bg = {},
                     padding = 0,
-                    bg = {}
-                }
+                    radius = 0
+                },
+                clip = false
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)):as("versionsParent")
-        }):with(uiu.fillWidth(-1, true)):with(uiu.fillHeight),
+        }):with(uiu.fillWidth(true)):with(uiu.fillHeight),
 
     }):with({
         style = {
+            bg = {},
             padding = 0,
-            bg = {}
-        }
+            radius = 0
+        },
+        clip = false
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
@@ -116,9 +120,11 @@ Steam, EGS and the itch.io app let you do that without a full reinstall.]],
         }):with(uiu.rightbound):as("uninstall")
     }):with({
         style = {
+            bg = {},
             padding = 0,
-            bg = {}
-        }
+            radius = 0
+        },
+        clip = false
     }):with(uiu.fillWidth):with(uiu.bottombound)
 
 })
@@ -337,12 +343,12 @@ function scene.load()
                 local item = uie.listItem(text, build):with(uiu.fillWidth)
                 item.label.wrap = true
                 if branch == "stable" then
-                    item.style.normalBG = { 0.2, 0.4, 0.2, 0.7 }
+                    item.style.normalBG = { 0.2, 0.4, 0.2, 0.8 }
                     item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.9 }
                     item.style.pressedBG = { 0.1, 0.5, 0.2, 0.9 }
                     item.style.selectedBG = { 0.5, 0.8, 0.5, 0.9 }
                 elseif branch == "beta" then
-                    item.style.normalBG = { 0.6, 0.6, 0.1, 0.7 }
+                    item.style.normalBG = { 0.6, 0.6, 0.1, 0.8 }
                     item.style.hoveredBG = { 0.7, 0.7, 0.3, 0.9 }
                     item.style.pressedBG = { 0.4, 0.4, 0.2, 0.9 }
                     item.style.selectedBG = { 0.8, 0.8, 0.3, 0.9 }
