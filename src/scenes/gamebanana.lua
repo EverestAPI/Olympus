@@ -151,7 +151,8 @@ function scene.item(info)
             style = {
                 padding = 0,
                 radius = 0,
-                bg = { 0, 0, 0, 0.8 }
+                bg = { 0, 0, 0, 0.8 },
+                patch = false
             }
         }):with(uiu.fill):as("bgdarken"),
 
