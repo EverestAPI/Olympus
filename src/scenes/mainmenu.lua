@@ -140,7 +140,6 @@ local root = uie.column({
 Olympus is currently unable to install Ahorn.
 Please go to the Ahorn GitHub page for installation instructions.
 This will probably be implemented in a future update.]])
-                --notify("OOPS.")
             end),
             button("cogwheel", "Options", "options"),
             button("cogwheel", "[DEBUG] Scene List", "scenelist"),

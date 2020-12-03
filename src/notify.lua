@@ -2,7 +2,7 @@ local ui, uiu, uie = require("ui").quick()
 
 local notify = {}
 
-notify.notifications = {}
+notify.spacing = 16
 
 
 function notify.init(root)
@@ -11,12 +11,15 @@ end
 
 
 function notify.show(data)
+    local prevs = {}
+    for i = 1, #notify.root.children do
+        prevs[i] = notify.root.children[i]
+    end
+
     local notif = uie.column({}):with({
         time = 0,
+        offs = 0,
         interactive = 2,
-        style = {
-            padding = 16
-        },
         cacheForce = true
     }):hook({
         layoutLateLazy = function(orig, self)
@@ -26,10 +29,10 @@ function notify.show(data)
 
         layoutLate = function(orig, self)
             orig(self)
-            self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
-            self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
-            self.y = math.floor(self.parent.innerHeight * 0.5 - self.height * 0.5)
-            self.realY = math.floor(self.parent.height * 0.5 - self.height * 0.5)
+            self.x = 32
+            self.realX = 32 + (self.parent.style:get("padding") or 0)
+            self.y = self.parent.innerHeight - 32 - self.height - self.offs
+            self.realY = self.parent.height - 32 - self.height - self.offs
             local style = self.style
             style.bg = nil
             local boxBG = style.bg
@@ -44,7 +47,7 @@ function notify.show(data)
     end
 
     if not data.time then
-        data.time = 5
+        data.time = 3
     end
 
     if data.title then
@@ -59,14 +62,14 @@ function notify.show(data)
         end
     end
 
-    function notif.close(self, reason)
-        if notif.closing or (data.force and not reason) then
+    function notif.close(self)
+        if notif.closing then
             return
         end
         notif.closing = true
         notif.time = 0
         if data.cb then
-            data.cb(self, reason)
+            data.cb(self)
         end
     end
 
@@ -84,11 +87,30 @@ function notify.show(data)
                 notif.fade = math.min(1, 1 - time * 7)
 
             else
-                time = time + dt
-                if time > 1 then
-                    time = 1
+                local otime = time * 9
+                local odt = dt * 9
+                if otime > 1 then
+                    odt = 0
+                elseif otime < 1 and otime + odt > 1 then
+                    odt = 1 - otime
                 end
-                notif.fade = math.min(1, time * 7)
+
+                odt = odt * (self.height + notify.spacing)
+
+                for i = 1, #prevs do
+                    local prev = prevs[i]
+                    prev.offs = prev.offs + odt
+                    prev.y = prev.y - odt
+                    prev.realY = prev.realY - odt
+                end
+
+                time = time + dt
+                local t = time > 1 and 1 or time
+                notif.fade = math.min(1, t * 7)
+                if time >= data.time then
+                    notif.close()
+                    time = 0
+                end
             end
 
             notif.time = time
@@ -115,45 +137,6 @@ function notify.show(data)
 
     notify.root:addChild(notif)
     return notif
-end
-
-
-function notify.scene(scene)
-    scene = scener.preload(scene)
-    if not scene.loaded then
-        if scene.load then
-            scene.load()
-        end
-        scene.loaded = true
-    end
-
-    if scene.enter then
-        scene.enter()
-    end
-
-    local container = notify({
-        body = scene.root:with({
-            style = {
-                bg = {},
-                padding = scene.root._fullroot and 0 or 16
-            },
-
-            cacheable = false,
-            clip = false,
-        }):with(uiu.fill),
-        buttons = {}
-    })
-
-    container:findChild("box"):with({
-        style = {
-            padding = 0
-        },
-
-        cacheable = false,
-        clip = false,
-    }):with(uiu.fill(64))
-
-    return container
 end
 
 
