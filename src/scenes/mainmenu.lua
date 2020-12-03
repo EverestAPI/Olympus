@@ -133,8 +133,8 @@ local root = uie.column({
 
         uie.column({
             buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):as("installbtn"),
-            button("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
-            button("mainmenu/berry", "Manage Installed Mods", "modlist"),
+            buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
+            buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist"),
             button("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
                 alert([[
 Olympus is currently unable to install Ahorn.
