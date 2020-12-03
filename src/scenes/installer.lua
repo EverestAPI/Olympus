@@ -17,7 +17,7 @@ local root = uie.group({
 })
 scene.root = root
 
-scene.textFont = ui.font or uie.__label.__default.style.font or love.graphics.getFont()
+scene.textFont = ui.font or uie.label.__default.style.font or love.graphics.getFont()
 scene.text = love.graphics.newText(scene.textFont, "")
 
 
@@ -260,7 +260,7 @@ uiu.hook(root, {
 
         uiu.resetColor()
 
-        if uiu.setColor(uie.__panel.__default.style.bg) then
+        if uiu.setColor(uie.panel.__default.style.bg) then
             love.graphics.rectangle(
                 "fill",
                 sx, sy + h - 128 - 16,
@@ -268,7 +268,7 @@ uiu.hook(root, {
             )
         end
 
-        if uiu.setColor(uie.__label.__default.style.color) then
+        if uiu.setColor(uie.label.__default.style.color) then
             love.graphics.draw(
                 scene.text,
                 math.floor(cx - scene.textWidth * 0.5),

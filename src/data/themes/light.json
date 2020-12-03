@@ -4,13 +4,13 @@
 		"disabledBG": [0.4, 0.4, 0.4, 0.7],
 		"disabledBorder": [0, 0, 0, 0, 1],
 		"disabledFG": [0, 0, 0, 0.7],
-		"hoveredBG": [1, 1, 1, 0.7],
+		"hoveredBG": [1, 1, 1, 1],
 		"hoveredBorder": [0, 0, 0, 0, 1],
 		"hoveredFG": [0, 0, 0, 1],
 		"normalBG": [0.8, 0.8, 0.8, 0.9],
 		"normalBorder": [0, 0, 0, 0, 1],
 		"normalFG": [0, 0, 0, 1],
-		"pressedBG": [0.6, 0.6, 0.6, 0.7],
+		"pressedBG": [0.6, 0.6, 0.6, 0.9],
 		"pressedBorder": [0, 0, 0, 0, 1],
 		"pressedFG": [0, 0, 0, 1]
 	},
@@ -48,10 +48,10 @@
 		"font": false
 	},
 	"listItem": {
-		"disabledBG": [0.4, 0.4, 0.4, 0.7],
+		"disabledBG": [0.4, 0.4, 0.4, 0.9],
 		"disabledBorder": [0, 0, 0, 0, 1],
 		"disabledFG": [0, 0, 0, 0.7],
-		"hoveredBG": [1, 1, 1, 0.7],
+		"hoveredBG": [1, 1, 1, 1],
 		"hoveredBorder": [0, 0, 0, 0, 1],
 		"hoveredFG": [0, 0, 0, 1],
 		"normalBG": [0.8, 0.8, 0.8, 0.9],

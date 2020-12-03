@@ -322,7 +322,7 @@ function love.load(args)
 
         items[#scener.stack + 2] = { next.name }
 
-        pathbar.children = uiu.map(items, uie.__menuItem.map)
+        pathbar.children = uiu.map(items, uie.menuItem.map)
 
         for i = 1, #pathbar.children do
             pathbar.children[i].enabled = not scener.locked
@@ -367,7 +367,7 @@ function love.update(dt)
                 "dragging: " .. tostring(ui.dragging) .. "\n" ..
                 "focusing: " .. tostring(ui.focusing) .. "\n" ..
                 "debug: " .. tostring(lldb ~= nil) .. "\n" ..
-                "debugDraw: " .. tostring(ui.debugDraw) .. "\n" ..
+                "debugDraw: " .. tostring(ui.debug.draw) .. "\n" ..
                 -- "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState) ..
                 "\n" ..
                 "storageDir: " .. fs.getStorageDir() .. "\n" ..
@@ -385,7 +385,7 @@ function love.update(dt)
         profile.stop()
     end
 
-    local bg = uie.__panel.__default.style.bg
+    local bg = uie.panel.__default.style.bg
     love.graphics.setBackgroundColor(bg[1] * 0.5, bg[2] * 0.5, bg[3] * 0.5, 1)
 end
 
@@ -478,10 +478,10 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == "f11" then
         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-            ui.debugDraw = (ui.debugDraw ~= -1) and -1 or true
+            ui.debug.draw = (ui.debug.draw ~= -1) and -1 or true
 
         else
-            ui.debugDraw = not ui.debugDraw
+            ui.debug.draw = not ui.debug.draw
         end
     end
 end

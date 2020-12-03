@@ -266,7 +266,7 @@ function scene.item(info)
                 draw = function(orig, self)
                     love.graphics.push()
                     love.graphics.origin()
-                    if ui.debugDraw then
+                    if ui.debug.draw then
                         self:drawBG()
                         love.graphics.pop()
                         return
