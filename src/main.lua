@@ -401,7 +401,6 @@ function love.draw()
     -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
     ui.draw()
-    ui.repaintAll = false
 
     -- love.graphics.setScissor()
 
@@ -470,7 +469,7 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == "f10" then
         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-            ui.repaintAll = true
+            ui.globalReflowID = ui.globalReflowID + 1
         else
 
             ui.root:recollect()

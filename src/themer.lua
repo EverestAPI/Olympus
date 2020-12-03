@@ -63,8 +63,7 @@ function themer.apply(theme)
     end
 
     if ui.root then
-        ui.root:reflowDown()
-        ui.root:repaintDown()
+        ui.globalReflowID = ui.globalReflowID + 1
     end
 end
 
