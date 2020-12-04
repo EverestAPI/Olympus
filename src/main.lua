@@ -480,6 +480,10 @@ function love.keypressed(key, scancode, isrepeat)
         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             ui.debug.draw = (ui.debug.draw ~= -1) and -1 or true
 
+        elseif love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
+            ui.debug.draw = -2
+            ui.globalReflowID = ui.globalReflowID + 1
+
         else
             ui.debug.draw = not ui.debug.draw
         end

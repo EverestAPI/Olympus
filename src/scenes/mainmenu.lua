@@ -21,7 +21,7 @@ local function buttonBig(icon, text, scene)
         type(scene) == "function" and scene or function()
             scener.push(scene)
         end
-    ):with({ style = { padding = 8 } }):with(uiu.fillWidth(4))
+    ):with({ style = { padding = 8 } })
 end
 
 local function button(icon, text, scene)
@@ -33,7 +33,7 @@ local function button(icon, text, scene)
         type(scene) == "function" and scene or function()
             scener.push(scene)
         end
-    ):with({ style = { padding = 8 } }):with(uiu.fillWidth(4))
+    ):with({ style = { padding = 8 } })
 end
 
 
@@ -132,17 +132,17 @@ local root = uie.column({
         scene.createInstalls(),
 
         uie.column({
-            buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):as("installbtn"),
-            buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"),
-            buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist"),
-            button("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
+            buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(uiu.fillWidth):as("installbtn"),
+            buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"):with(uiu.fillWidth),
+            buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist"):with(uiu.fillWidth),
+            buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
                 alert([[
 Olympus is currently unable to install Ahorn.
 Please go to the Ahorn GitHub page for installation instructions.
 This will probably be implemented in a future update.]])
-            end),
-            button("cogwheel", "Options", "options"),
-            button("cogwheel", "[DEBUG] Scene List", "scenelist"),
+            end):with(uiu.fillWidth),
+            buttonBig("cogwheel", "Options", "options"):with(uiu.fillWidth),
+            button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
         }):with({
             style = {
                 padding = 0,
@@ -166,26 +166,20 @@ scene.root = root
 scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
-    uie.group({
-        buttonBig("mainmenu/everest", "Celeste + Everest", function()
-            sharp.launch(config.installs[config.install].path)
-            alert([[
+    buttonBig("mainmenu/everest", "Celeste + Everest", function()
+        sharp.launch(config.installs[config.install].path)
+        alert([[
 Everest is now starting in the background.
 You can close this window.]])
-        end)
-    }):with(uiu.fillWidth(2.5 + 36)):with(uiu.at(0, 0)),
-    uie.group({
-        buttonBig("mainmenu/celeste", "Celeste", function()
-            sharp.launch(config.installs[config.install].path, "--vanilla")
-            alert([[
+    end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
+    buttonBig("mainmenu/celeste", "Celeste", function()
+        sharp.launch(config.installs[config.install].path, "--vanilla")
+        alert([[
 Celeste is now starting in the background.
 You can close this window.]])
-        end)
-    }):with(uiu.fillWidth(2.5 + 36)):with(uiu.at(2.5 - 36, 0)),
-    uie.group({
-        buttonBig("cogwheel", "", "everest")
-    }):with({
-        width = 64 + 4
+    end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(2.5 - 32 - 2, 0)),
+    buttonBig("cogwheel", "", "everest"):with({
+        width = 48
     }):with(uiu.rightbound)
 }):with({
     activated = false,
