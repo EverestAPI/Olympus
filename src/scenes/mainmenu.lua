@@ -74,7 +74,7 @@ function scene.reloadInstalls(scene, cb)
     local list = scene.root:findChild("installs")
     list.children = {}
 
-    local installs = config.installs or {}
+    local installs = config.installs
     for i = 1, #installs do
         local entry = installs[i]
         local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { index = i, entry = entry, version = "???" })

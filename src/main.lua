@@ -104,7 +104,10 @@ function love.load(args)
     themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
 
     sharp = require("sharp")
-    sharp.init(debugging or debuggingSharp, debuggingSharp)
+    local sharpStatus, sharpError = pcall(sharp.init, debugging or debuggingSharp, debuggingSharp)
+    if not sharpStatus then
+        love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
+    end
 
     local root = uie.column({
         require("background")(),

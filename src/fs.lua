@@ -30,8 +30,8 @@ if lfsStatus then
         if not path then
             return false
         end
-        local attrs = lfs.attributes(path)
-        return attrs and attrs.mode == "file" and path
+        local attrsStatus, attrs = pcall(lfs.attributes, path)
+        return attrsStatus, attrs and attrs.mode == "file" and path
     end
 
     function fs.isDirectory(path)
@@ -39,8 +39,8 @@ if lfsStatus then
             return false
         end
         path = path:gsub("([^/\\])[/\\]$", "%1")
-        local attrs = lfs.attributes(path)
-        return attrs and attrs.mode == "directory" and path
+        local attrsStatus, attrs = pcall(lfs.attributes, path)
+        return attrsStatus and attrs and attrs.mode == "directory" and path
     end
 
 else
@@ -245,10 +245,15 @@ function fs.getStorageDir()
         return fs.joinpath(os.getenv("HOME"), "Library", "Application Support", name)
 
     elseif userOS == "Android" then
-        -- TODO
+        -- TODO - this isn't entirely accurate.
+        return fs.joinpath("/data/data/org.love2d.android/files/save/", "olympus")
 
     elseif userOS == "iOS" then
         -- TODO
+    end
+
+    if love.filesystem.getSaveDirectory then
+        return love.filesystem.getSaveDirectory()
     end
 end
 

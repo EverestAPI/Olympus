@@ -42,7 +42,7 @@ function scene.browse()
 
         local foundT = threader.wrap("finder").findAll()
 
-        local installs = config.installs or {}
+        local installs = config.installs
         for i = 1, #installs do
             if installs[i].path == path then
                 return
@@ -143,7 +143,7 @@ function scene.createEntry(list, entry, manualIndex)
                 or
                 uie.button("Add", function()
                     local function add()
-                        local installs = config.installs or {}
+                        local installs = config.installs
                         entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
                         installs[#installs + 1] = entry
                         config.installs = installs
@@ -220,7 +220,7 @@ function scene.reloadManual()
         listManual:addChild(uie.label("Your Installations", ui.fontBig))
         threader.await()
 
-        local installs = config.installs or {}
+        local installs = config.installs
 
         if #installs > 0 then
             for i = 1, #installs do
@@ -252,7 +252,7 @@ function scene.reloadFound()
 
         local found = threader.wrap("finder").findAll():result() or {}
 
-        local installs = config.installs or {}
+        local installs = config.installs
 
         for i = 1, #found do
             local entry = found[i]

@@ -49,7 +49,7 @@ function config.load()
 
     local content = fs.read(path)
     if not content then
-        return
+        content = "{}"
     end
 
     local data = utils.fromJSON(content)
@@ -57,7 +57,8 @@ function config.load()
     mtConfig.__index = data
     mtConfig.__newindex = data
 
-    default(data, "installs", 0)
+    default(data, "install", 0)
+    default(data, "installs", {})
 
     local csd = os.getenv("OLYMPUS_CSD")
     if csd == "1" then
