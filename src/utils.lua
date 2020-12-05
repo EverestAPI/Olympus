@@ -1,5 +1,5 @@
 require("love.filesystem")
-local request = require("luajit-request")
+local requestStatus, request = pcall(require, "luajit-request")
 local dkjson = require("dkjson")
 local tinyyaml = require("tinyyaml")
 local xml2lua = require("xml2lua")
@@ -29,6 +29,10 @@ function utils.load(path)
 end
 
 function utils.download(url, headers)
+    if not requestStatus then
+        return false, "luajit-request not loaded: " .. tostring(request)
+    end
+
     headers = headers or {
         ["User-Agent"] = "curl/7.64.1",
         ["Accept"] = "*/*"

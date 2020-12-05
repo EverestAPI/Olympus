@@ -2,36 +2,75 @@
 -- TODO: Create a common repo for things shared between Lönn and Olympus?
 
 require("love_filesystem_unsandboxing")
-local lfs = require("lfs_ffi")
-local nfd = require("nfd")
-local physfs = require("physfs")
+local lfsStatus, lfs = pcall(require, "lfs_ffi")
+local physfsStatus, physfs = pcall(require, "physfs")
 local threader = require("threader")
 require("love.system")
 require("love.filesystem")
 
 local fs = {}
 
-fs.chdir = lfs.chdir
-fs.dir = lfs.dir
-fs.rmdir = lfs.rmdir
-fs.rmdir = lfs.rmdir
-fs.getcwd = lfs.currentdir
+local function nop()
+end
 
 fs.remove = os.remove
 
-function fs.mkdir(path, mode)
-    return lfs.mkdir(path, mode or 755)
+if lfsStatus then
+    fs.chdir = lfs.chdir
+    fs.dir = lfs.dir
+    fs.rmdir = lfs.rmdir
+    fs.rmdir = lfs.rmdir
+    fs.getcwd = lfs.currentdir
+
+    function fs.mkdir(path, mode)
+        return lfs.mkdir(path, mode or 755)
+    end
+
+    function fs.isFile(path)
+        if not path then
+            return false
+        end
+        local attrs = lfs.attributes(path)
+        return attrs and attrs.mode == "file" and path
+    end
+
+    function fs.isDirectory(path)
+        if not path then
+            return false
+        end
+        path = path:gsub("([^/\\])[/\\]$", "%1")
+        local attrs = lfs.attributes(path)
+        return attrs and attrs.mode == "directory" and path
+    end
+
+else
+    fs.chdir = nop
+    fs.dir = nop
+    fs.rmdir = nop
+    fs.rmdir = nop
+    fs.getcwd = nop
+    fs.mkdir = nop
+    fs.isFile = nop
+    fs.isDirectory = nop
+end
+
+if physfsStatus then
+    fs.dirSeparator = physfs.getDirSeparator()
+
+else
+    fs.dirSeparator = "/"
+
 end
 
 function fs.filename(path, sep)
-    sep = sep or physfs.getDirSeparator()
+    sep = sep or fs.dirSeparator
 
     path = path:gsub("([^/\\])[/\\]$", "%1"):match("[^" .. sep .. "]+$")
     return path
 end
 
 function fs.dirname(path, sep)
-    sep = sep or physfs.getDirSeparator()
+    sep = sep or fs.dirSeparator
 
     path = path:match("(.*" .. sep .. ")"):gsub("([^/\\])[/\\]$", "%1")
     return path
@@ -41,12 +80,12 @@ end
 -- IE {"foo", "/bar/"} becomes "foo//bar", expected "foo/bar"
 function fs.joinpath(...)
     local parts = {...}
-    local sep = physfs.getDirSeparator()
+    local sep = fs.dirSeparator
     return table.concat(parts, sep)
 end
 
 function fs.splitpath(path)
-    local sep = physfs.getDirSeparator()
+    local sep = fs.dirSeparator
     local parts = {}
     local i = 1
     for part in path:gmatch("([^" .. sep .. "]*)") do
@@ -58,7 +97,7 @@ end
 
 function fs.normalize(path)
     path = path:gsub("([^/\\])[/\\]$", "%1")
-    local sep = physfs.getDirSeparator()
+    local sep = fs.dirSeparator
 
     local fixed = ""
     local real = true
@@ -96,23 +135,6 @@ end
 
 function fs.stripExtension(path)
     return path:sub(1, #path - #fs.fileExtension(path) - 1)
-end
-
-function fs.isFile(path)
-    if not path then
-        return false
-    end
-    local attrs = lfs.attributes(path)
-    return attrs and attrs.mode == "file" and path
-end
-
-function fs.isDirectory(path)
-    if not path then
-        return false
-    end
-    path = path:gsub("([^/\\])[/\\]$", "%1")
-    local attrs = lfs.attributes(path)
-    return attrs and attrs.mode == "directory" and path
 end
 
 function fs.read(path)
