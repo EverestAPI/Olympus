@@ -127,6 +127,12 @@ function love.load(args)
         end):as("titlebar"),
 
         uie.group({
+            uie.label(utils.load("version.txt") or "?"):with({
+                style = {
+                    color = { 1, 1, 1, 0.1 }
+                }
+            }):with(uiu.bottombound(4)):with(uiu.rightbound(4)),
+
             uie.group({
 
                 -- Filled dynamically.

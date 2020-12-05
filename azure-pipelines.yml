@@ -182,6 +182,15 @@ steps:
     script: |
       mkdir -p love
 
+# Update the version.txt in the src dir based on the build number.
+- task: PowerShell@2
+  condition: succeeded()
+  displayName: 'Dist: Update src/version.txt'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      echo $BUILD_BUILDNUMBER | Set-Content src/version.txt
 # Bundle src into olympus.love.
 - task: PowerShell@2
   condition: succeeded()
