@@ -190,7 +190,7 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      echo $BUILD_BUILDNUMBER | Set-Content src/version.txt
+      echo "$env:BUILD_BUILDNUMBER-azure-$env:BUILD_BUILDID-$(($env:BUILD_SOURCEVERSION).Substring(0, 5))"" | Set-Content src/version.txt
 # Bundle src into olympus.love.
 - task: PowerShell@2
   condition: succeeded()
