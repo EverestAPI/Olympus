@@ -31,7 +31,7 @@ if lfsStatus then
             return false
         end
         local attrsStatus, attrs = pcall(lfs.attributes, path)
-        return attrsStatus, attrs and attrs.mode == "file" and path
+        return attrsStatus and attrs and attrs.mode == "file" and path
     end
 
     function fs.isDirectory(path)
