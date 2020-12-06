@@ -353,6 +353,7 @@ steps:
     script: |
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       pushd love
+      mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/main
       zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip *
       popd
 
@@ -371,6 +372,6 @@ steps:
   continueOnError: true
   inputs:
     pathtoPublish: '$(Build.ArtifactStagingDirectory)/update'
-    artifactName: '$(artifactPrefix)update$(artifactSuffix)'
+    artifactName: 'update'
     publishLocation: 'Container'
 
