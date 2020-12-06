@@ -317,9 +317,9 @@ steps:
       Remove-Item -Path love/love.ico -Force
       Remove-Item -Path love/lovec.exe -Force
       Move-Item -Path love/love.exe -Destination love/main.exe
-      Create-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
+      New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
-      Create-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
+      New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       Copy-Item -Path olympus.love -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/olympus.love
       Compress-Archive -Path love/sharp/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/sharp.zip -Force
 
