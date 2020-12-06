@@ -57,6 +57,9 @@
                 "${workspaceFolder}/src",
                 "--debug"
             ],
+            "env": {
+                "OLYMPUS_DEBUG": "1"
+            },
             "windows": {
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",

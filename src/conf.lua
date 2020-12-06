@@ -1,8 +1,27 @@
--- require("lldebugger").start(); require("lldebugger").start()
+if os.getenv("OLYMPUS_DEBUG") == "1" then
+    if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+        local lldb = require("lldebugger")
+        lldb.start()
+    end
+end
 
 if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")) or -1) ~= 0 then
     local physfs = love.filesystem.load("physfs.lua")()
     local lfs = love.filesystem.load("lfs_ffi.lua")()
+
+    if lfs.attributes("./sharp", "mode") == "directory" and lfs.attributes("./sharp.new", "mode") == "directory" then
+        for name in lfs.dir("./sharp.new") do
+            if name ~= "." and name ~= ".." then
+                local new = "./sharp.new/" .. name
+                local old = "./sharp/" .. name
+                if lfs.attributes(old, "mode") == "file" then
+                    os.remove(old)
+                end
+                os.rename(new, old)
+            end
+        end
+        lfs.rmdir("./sharp.new")
+    end
 
     local isSeparated = false
     local paths = physfs.getSearchPath()
@@ -14,8 +33,8 @@ if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")
     end
 
     if not isSeparated then
-        if lfs.attributes("./olympus.new.love") then
-            if lfs.attributes("./olympus.love") then
+        if lfs.attributes("./olympus.new.love", "mode") == "file" then
+            if lfs.attributes("./olympus.love", "mode") == "file" then
                 os.remove("./olympus.love")
             end
             os.rename("./olympus.new.love", "./olympus.love")
@@ -27,7 +46,7 @@ if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")
         end
 
     else
-        if lfs.attributes("./olympus.old.love") then
+        if lfs.attributes("./olympus.old.love", "mode") == "file" then
             os.remove("./olympus.old.love")
         end
     end

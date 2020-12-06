@@ -30,8 +30,8 @@ if lfsStatus then
         if not path then
             return false
         end
-        local attrsStatus, attrs = pcall(lfs.attributes, path)
-        return attrsStatus and attrs and attrs.mode == "file" and path
+        local attrsStatus, attrs = pcall(lfs.attributes, path, "mode")
+        return attrsStatus and attrs == "file" and path
     end
 
     function fs.isDirectory(path)
@@ -39,8 +39,8 @@ if lfsStatus then
             return false
         end
         path = path:gsub("([^/\\])[/\\]$", "%1")
-        local attrsStatus, attrs = pcall(lfs.attributes, path)
-        return attrsStatus and attrs and attrs.mode == "directory" and path
+        local attrsStatus, attrs = pcall(lfs.attributes, path, "mode")
+        return attrsStatus and attrs == "directory" and path
     end
 
 else
