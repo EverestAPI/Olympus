@@ -7,6 +7,7 @@ local config = require("config")
 local sharp = require("sharp")
 local themer = require("themer")
 local background = require("background")
+local updater = require("updater")
 
 local scene = {
     name = "Options"
@@ -73,6 +74,12 @@ local qualities = {
 }
 
 
+local updatepaths = {
+    { text = "Stable (Default)", data = "stable" },
+    { text = "Development", data = "stable,main" }
+}
+
+
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -109,7 +116,7 @@ local root = uie.column({
                             self.selected = self:getItem(config.bg + 1)
                             self.text = self.selected.text
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8.25)):with(uiu.at(0.25, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(1 / 5, 0)),
 
                     uie.column({
                         uie.label("Quality"),
@@ -127,7 +134,7 @@ local root = uie.column({
                             self.selected = self:getItem(1)
                             self.text = "???"
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8.25)):with(uiu.at(0.25 * 2, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(2 / 5, 0)),
 
                     uie.column({
                         uie.label("Vertical Sync"),
@@ -142,7 +149,26 @@ local root = uie.column({
                             self.selected = self:getItem(config.vsync and 1 or 2)
                             self.text = self.selected.text
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8.25)):with(uiu.at(0.25 * 3, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(3 / 5, 0)),
+
+                    uie.column({
+                        uie.label("Updates"),
+                        uie.dropdown(updatepaths, function(self, value)
+                            config.updates = value
+                            config.save()
+                            updater.check()
+                        end):with(function(self)
+                            for i = 1, #updatepaths do
+                                if config.updates == updatepaths[i].data then
+                                    self.selected = self:getItem(i)
+                                    self.text = self.selected.text
+                                    return
+                                end
+                            end
+                            self.selected = self:getItem(1)
+                            self.text = "???"
+                        end)
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(4 / 5, 0)),
 
                 }):with(nobg):with(uiu.fillWidth),
 

@@ -57,6 +57,8 @@ function config.load()
     mtConfig.__index = data
     mtConfig.__newindex = data
 
+    default(data, "updates", "stable")
+
     default(data, "install", 0)
     default(data, "installs", {})
 

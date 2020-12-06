@@ -13,6 +13,7 @@ local notify
 local config
 local themer
 local sharp
+local updater
 local fs
 
 local ui
@@ -108,6 +109,8 @@ function love.load(args)
     if not sharpStatus then
         love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
     end
+
+    updater = require("updater")
 
     local root = uie.column({
         require("background")(),
@@ -346,6 +349,7 @@ function love.load(args)
     notify.init(root:findChild("notifyroot"))
 
     scener.set("mainmenu")
+    updater.check()
 end
 
 love.frame = 0

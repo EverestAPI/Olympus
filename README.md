@@ -22,6 +22,8 @@
 - [lua-subprocess](https://github.com/0x0ade/lua-subprocess)
 - [profile.lua](https://bitbucket.org/itraykov/profile.lua/src/master/)
 - [moonshine](https://github.com/vrld/moonshine)
+- [xml2lua](https://github.com/manoelcampos/xml2lua)
+- [patchy](https://github.com/excessive/patchy)
 - [OlympUI](https://github.com/EverestAPI/OlympUI)
 - Shared code between Olympus and [Lönn](https://github.com/CelestialCartographers/Loenn)
 

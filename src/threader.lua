@@ -132,7 +132,15 @@ function threadWrap:start(...)
     end
 
     self.running = true
-    self.thread:start(self.id, self.code, self.upvalues, self.channel, ...)
+    self.thread:start({
+        meta = {
+            id = self.id,
+            code = self.code,
+            upvalues = self.upvalues,
+            channel = self.channel
+        },
+        args = { ... }
+    })
     threader._threads[#threader._threads + 1] = self
 
     return self
@@ -266,30 +274,27 @@ function threader.new(fun)
             prethread(...)
         end
 
-        local args = {...}
+        local raw = ...
+        local meta = raw.meta
+        local args = raw.args
+        for k, v in pairs(meta) do
+            print(k, v)
+        end
 
-        local id = args[1]
-        table.remove(args, 1)
-
+        local id = meta.id
         require("threader").id = id
 
-        local code = args[1]
-        table.remove(args, 1)
-
         local load = load or loadstring
-        local fun = assert(load(code))
+        local fun = assert(load(meta.code))
 
-        local upvalues = args[1]
-        table.remove(args, 1)
-
-        local channel = args[1]
-        _G._channel = channel
-        table.remove(args, 1)
-
+        local upvalues = meta.upvalues
         for i = 1, #upvalues do
             local slot = upvalues[i]
             debug.setupvalue(fun, i, slot.value)
         end
+
+        local channel = meta.channel
+        _G._channel = channel
 
         local unpack = unpack or table.unpack
 
