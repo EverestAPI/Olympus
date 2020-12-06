@@ -2,9 +2,10 @@
 -- TODO: Create a common repo for things shared between Lönn and Olympus?
 
 local physfsStatus, physfs = pcall(require, "physfs")
+print(physfsStatus, physfs)
 require("love.filesystem")
 
-if not physfsStatus then
+if physfsStatus then
     love.filesystem.createDirectoryUnsandboxed = physfs.mkdir
     love.filesystem.mountUnsandboxed = physfs.mount
     love.filesystem.isDirectoryUnsandboxed = physfs.isDirectory

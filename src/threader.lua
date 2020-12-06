@@ -523,13 +523,9 @@ function mtThreadRequireWrap:__index(key)
             local args = {...}
 
             local dep = args[1]
-            table.remove(args, 1)
-
-            local key = args[1]
-            table.remove(args, 1)
-
+            local key = args[2]
             local unpack = unpack or table.unpack
-            return require(dep)[key](unpack(args))
+            return require(dep)[key](unpack(args, 3))
         ]] .. (threader.debugEnd and threader.debugEnd or ""), self[mtThreadRequireWrap], key, ...)
     end
 

@@ -14,6 +14,7 @@ function love.conf(t)
     end
 
     t.window.title = "Everest.Olympus"
+    t.window.icon = "data/icon.png"
     t.window.width = 1100
     t.window.minwidth = 1100
     t.window.height = 600
