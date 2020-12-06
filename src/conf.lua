@@ -1,6 +1,6 @@
 -- require("lldebugger").start(); require("lldebugger").start()
 
-if tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")) ~= 0 then
+if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")) or -1) ~= 0 then
     local physfs = love.filesystem.load("physfs.lua")()
 
     local isSeparated = false
@@ -12,7 +12,7 @@ if tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*"))
         end
     end
 
-    if not isSeparated and physfs.mount("olympus.love", "/", 0) ~= 0 then
+    if not isSeparated and physfs.mount("./olympus.love", "/", 0) ~= 0 and #paths ~= #physfs.getSearchPath() then
         love.filesystem.load("conf.lua")()
         return
     end
