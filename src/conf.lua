@@ -2,6 +2,7 @@
 
 if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")) or -1) ~= 0 then
     local physfs = love.filesystem.load("physfs.lua")()
+    local lfs = love.filesystem.load("lfs_ffi.lua")()
 
     local isSeparated = false
     local paths = physfs.getSearchPath()
@@ -12,9 +13,23 @@ if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")
         end
     end
 
-    if not isSeparated and physfs.mount("./olympus.love", "/", 0) ~= 0 and #paths ~= #physfs.getSearchPath() then
-        love.filesystem.load("conf.lua")()
-        return
+    if not isSeparated then
+        if lfs.attributes("./olympus.new.love") then
+            if lfs.attributes("./olympus.love") then
+                os.remove("./olympus.love")
+            end
+            os.rename("./olympus.new.love", "./olympus.love")
+        end
+
+        if physfs.mount("./olympus.love", "/", 0) ~= 0 and #paths ~= #physfs.getSearchPath() then
+            love.filesystem.load("conf.lua")()
+            return
+        end
+
+    else
+        if lfs.attributes("./olympus.old.love") then
+            os.remove("./olympus.old.love")
+        end
     end
 end
 
