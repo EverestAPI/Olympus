@@ -176,6 +176,17 @@ local root = uie.column({
 
                 }):with(nobg):with(uiu.fillWidth)
 
+            }):with(uiu.fillWidth),
+
+            uie.column({
+                uie.label("Update", ui.fontBig),
+
+                uie.label("Update machine broke, please fix."):as("changelog"),
+
+                uie.button("Install"):with({
+                    enabled = false
+                }):with(uiu.fillWidth):as("updatebtn")
+
             }):with(uiu.fillWidth)
 
         }):with({

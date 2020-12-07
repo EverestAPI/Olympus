@@ -15,9 +15,14 @@ using Newtonsoft.Json.Linq;
 namespace Olympus {
     public class Program {
 
+        public static string RootDirectory;
+
         public static void Main(string[] args) {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
+            RootDirectory = Path.GetDirectoryName(Environment.CurrentDirectory);
+            Console.Error.WriteLine(RootDirectory);
 
             if (args.Length == 1 && args[0] == "--test") {
                 new CmdGetUWPPackagePath().Run("MattMakesGamesInc.Celeste_79daxvg0dq3v6");

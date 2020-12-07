@@ -5,52 +5,53 @@ if os.getenv("OLYMPUS_DEBUG") == "1" then
     end
 end
 
-if (tonumber((love.filesystem.read("version.txt") or "?"):match(".*-.*-(.*)-.*")) or -1) ~= 0 then
-    local physfs = love.filesystem.load("physfs.lua")()
-    local lfs = love.filesystem.load("lfs_ffi.lua")()
 
-    if lfs.attributes("./sharp", "mode") == "directory" and lfs.attributes("./sharp.new", "mode") == "directory" then
-        for name in lfs.dir("./sharp.new") do
-            if name ~= "." and name ~= ".." then
-                local new = "./sharp.new/" .. name
-                local old = "./sharp/" .. name
-                if lfs.attributes(old, "mode") == "file" then
-                    os.remove(old)
-                end
-                os.rename(new, old)
+-- DON'T EVER UPDATE THESE TWO FILES.
+local physfs = require("physfs.lua")
+local lfs = require("lfs_ffi.lua")
+
+if lfs.attributes("./sharp", "mode") == "directory" and lfs.attributes("./sharp.new", "mode") == "directory" then
+    for name in lfs.dir("./sharp.new") do
+        if name ~= "." and name ~= ".." then
+            local new = "./sharp.new/" .. name
+            local old = "./sharp/" .. name
+            if lfs.attributes(old, "mode") == "file" then
+                os.remove(old)
             end
-        end
-        lfs.rmdir("./sharp.new")
-    end
-
-    local isSeparated = false
-    local paths = physfs.getSearchPath()
-    for i = 1, #paths do
-        if paths[i]:match("^.*[\\/]olympus%.love$") then
-            isSeparated = true
-            break
+            os.rename(new, old)
         end
     end
+    lfs.rmdir("./sharp.new")
+end
 
-    if not isSeparated then
-        if lfs.attributes("./olympus.new.love", "mode") == "file" then
-            if lfs.attributes("./olympus.love", "mode") == "file" then
-                os.remove("./olympus.love")
-            end
-            os.rename("./olympus.new.love", "./olympus.love")
-        end
-
-        if physfs.mount("./olympus.love", "/", 0) ~= 0 and #paths ~= #physfs.getSearchPath() then
-            love.filesystem.load("conf.lua")()
-            return
-        end
-
-    else
-        if lfs.attributes("./olympus.old.love", "mode") == "file" then
-            os.remove("./olympus.old.love")
-        end
+local isSeparated = false
+local paths = physfs.getSearchPath()
+for i = 1, #paths do
+    if paths[i]:match("^.*[\\/]olympus%.love$") then
+        isSeparated = true
+        break
     end
 end
+
+if not isSeparated then
+    if lfs.attributes("./olympus.new.love", "mode") == "file" then
+        if lfs.attributes("./olympus.love", "mode") == "file" then
+            os.remove("./olympus.love")
+        end
+        os.rename("./olympus.new.love", "./olympus.love")
+    end
+
+    if physfs.mount("./olympus.love", "/", 0) ~= 0 and #paths ~= #physfs.getSearchPath() then
+        love.filesystem.load("conf.lua")()
+        return
+    end
+
+else
+    if lfs.attributes("./olympus.old.love", "mode") == "file" then
+        os.remove("./olympus.old.love")
+    end
+end
+
 
 love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. ";xml2lua/?.lua")
 

@@ -20,9 +20,9 @@ local root = uie.column({
         uie.column({
             uie.label("Versions", ui.fontBig),
             uie.column({
-                uie.label(({{ 1, 1, 1, 1 },
+                uie.label({{ 1, 1, 1, 1 },
 [[Use the newest version for more features and bugfixes.
-Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.8, 0.5, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]})),
+Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.8, 0.5, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]}),
             }):with({
                 style = {
                     patch = false
@@ -145,30 +145,8 @@ function scene.install()
     local installer = scener.push("installer")
     installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
 
-    threader.routine(function()
-        local task = sharp.installEverest(install.entry.path, version.artifactBase):result()
-        while sharp.status(task):result() == "running" do
-            local result = { sharp.poll(task):result() }
-            installer.update(table.unpack(result[1]))
-        end
-
-        local last = sharp.poll(task):result()
-        local status = sharp.free(task):result()
-        if status == "error" then
-            installer.update(last[1], 1, "error")
-            installer.done({
-                {
-                    "Upload Log",
-                    function()
-                    end
-                },
-                {
-                    "OK",
-                    function()
-                        scener.pop(1)
-                    end
-                }
-            })
+    installer.sharpTask("installEverest", install.entry.path, version.artifactBase):calls(function(task, last)
+        if not last then
             return
         end
 
@@ -207,30 +185,8 @@ function scene.uninstall()
     local installer = scener.push("installer")
     installer.update("Preparing uninstallation of Everest", false, "backup")
 
-    threader.routine(function()
-        local task = sharp.uninstallEverest(install.entry.path):result()
-        while sharp.status(task):result() == "running" do
-            local result = { sharp.poll(task):result() }
-            installer.update(table.unpack(result[1]))
-        end
-
-        local last = sharp.poll(task):result()
-        local status = sharp.free(task):result()
-        if status == "error" then
-            installer.update(last[1], 1, "error")
-            installer.done({
-                {
-                    "Upload Log",
-                    function()
-                    end
-                },
-                {
-                    "OK",
-                    function()
-                        scener.pop(1)
-                    end
-                }
-            })
+    installer.sharpTask("uninstallEverest", install.entry.path):calls(function(task, last)
+        if not last then
             return
         end
 

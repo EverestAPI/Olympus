@@ -105,6 +105,9 @@ end
 
 function sharedWrap:calls(cb, cb2, ...)
     self.callbacks[#self.callbacks + 1] = cb
+    if not self.running then
+        cb(self, unpack(self.result))
+    end
     if cb2 then
         return self:calls(cb2, ...)
     end
@@ -113,6 +116,9 @@ end
 
 function sharedWrap:falls(cb, cb2, ...)
     self.fallbacks[#self.fallbacks + 1] = cb
+    if not self.running then
+        cb(self, self.error)
+    end
     if cb2 then
         return self:falls(cb2, ...)
     end
@@ -277,9 +283,6 @@ function threader.new(fun)
         local raw = ...
         local meta = raw.meta
         local args = raw.args
-        for k, v in pairs(meta) do
-            print(k, v)
-        end
 
         local id = meta.id
         require("threader").id = id

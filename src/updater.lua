@@ -2,8 +2,12 @@ local utils = require("utils")
 local config = require("config")
 local threader = require("threader")
 local notify = require("notify")
+local alert = require("alert")
+local scener = require("scener")
+local sharp = require("sharp")
 
 local updater = {}
+
 
 function updater.check()
     if updater.checking then
@@ -11,12 +15,19 @@ function updater.check()
     end
 
     updater.checking = threader.routine(function()
-        local idOld = tonumber((utils.load("version.txt") or "?"):match(".*-.*-(.*)-.*"))
+        local srcOld, idOld = (utils.load("version.txt") or "?"):match(".*-(.*)-(.*)-.*")
+        idOld = tonumber(idOld)
         if not idOld then
             notify("Cannot determine currently running version of Olympus!")
-        elseif idOld == 0 then
-            return
         end
+
+        local options = scener.preload("options")
+        local changelog = options.root:findChild("changelog")
+        local updatebtn = options.root:findChild("updatebtn")
+
+        changelog.text = "Checking for updates..."
+        updatebtn.enabled = false
+        updatebtn:reflow()
 
         local utilsAsync = threader.wrap("utils")
         local builds, buildsError = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds"):result()
@@ -35,18 +46,104 @@ function updater.check()
                 local branch = build.sourceBranch:gsub("refs/heads/", "")
                 if id <= idOld then
                     break
+
                 elseif config.updates:match(branch, 1, false) then
                     notify(string.format([[
 There's a newer version of Olympus available.
-Go to the options menu to update to %s]], build.buildNumber)) --, build.id, build.sourceVersion and build.sourceVersion:sub(1, 5) or "?????"))
-                    break
+Go to the options menu to update to %s]], build.buildNumber))
+
+                    local changelogTask = utilsAsync.download(string.format("https://raw.githubusercontent.com/EverestAPI/Olympus/%s/changelog.txt", build.sourceVersion))
+
+                    local versionOld, extraOld = utils.load("version.txt"):match("(.*)-(.*-.*-[^\n]*)")
+
+                    local function setChangelog(changelogText)
+                        changelog.text = {{ 1, 1, 1, 1 },
+                            "Currently installed:\n" .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
+                            "Newest available:\n" .. build.buildNumber, { 1, 1, 1, 0.5 }, string.format("-azure-%s-%s", build.id, build.sourceVersion and build.sourceVersion:sub(1, 5) or "?????") .. "\n\n", { 1, 1, 1, 1 },
+                            "Changelog:\n" .. changelogText
+                        }
+                    end
+
+                    setChangelog("Downloading...")
+                    changelogTask:calls(function(task, data, error)
+                        data = data and data:match("#changelog#\n(.*)")
+                        if not data then
+                            setChangelog("Failed to download:\n" .. tostring(error))
+                            return
+                        end
+
+                        setChangelog(data)
+                    end)
+
+                    updatebtn.enabled = true
+                    updatebtn.cb = function()
+                        if srcOld ~= "dev" then
+                            updater.update(tostring(build.id))
+                            return
+                        end
+
+                        alert({
+                            body = "One does not simply update a devbuild.",
+                            buttons = {
+                                { "OK", function(container)
+                                    if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                                        updater.update(tostring(build.id))
+                                    end
+                                    container:close("OK")
+                                end }
+                            },
+                            init = function(container)
+                                container:findChild("buttons").children[1]:hook({
+                                    update = function(orig, self, dt)
+                                        orig(self, dt)
+                                        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                                            self.text = "I know what I'm doing."
+                                        else
+                                            self.text = "OK"
+                                        end
+                                    end
+                                })
+                            end
+                        })
+                    end
+                    updatebtn:reflow()
+
+                    updater.checking = nil
+                    return
                 end
             end
         end
+
+        changelog.text = "No updates found."
+        updatebtn.enabled = false
+        updatebtn:reflow()
 
         updater.checking = nil
     end)
     return updater.checking
 end
+
+
+function updater.update(id)
+    local installer = scener.push("installer")
+    installer.update("Preparing update of Olympus", false, "")
+
+    installer.sharpTask("installOlympus", id):calls(function(task, last)
+        if not last then
+            return
+        end
+
+        installer.update("Olympus successfully updated", 1, "done")
+        installer.done({
+            {
+                "Close",
+                function()
+                    love.event.quit()
+                end
+            }
+        })
+    end)
+end
+
 
 return updater

@@ -69,7 +69,8 @@ namespace Olympus {
                     Status = "done";
                     return false;
                 }
-            } catch {
+            } catch (Exception e) {
+                Console.Error.WriteLine($"[sharp] Task {ID} failed: {e}");
                 Status = "error";
                 return false;
             }

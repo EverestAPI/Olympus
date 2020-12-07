@@ -152,7 +152,7 @@ function scene.createEntry(list, entry, manualIndex)
                     end
 
                     if entry.type == "uwp" then
-                        local container = alert({
+                        alert({
                             force = true,
                             body = [[
 The UWP version of Celeste is currently unsupported.
@@ -170,16 +170,18 @@ anything to work in the near future, if at all.]],
                                     end
                                     container:close("OK")
                                 end }
-                            }
-                        })
-                        container:findChild("buttons").children[1]:hook({
-                            update = function(orig, self, dt)
-                                orig(self, dt)
-                                if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-                                    self.text = "I know what I'm doing."
-                                else
-                                    self.text = "OK"
-                                end
+                            },
+                            init = function(container)
+                                container:findChild("buttons").children[1]:hook({
+                                    update = function(orig, self, dt)
+                                        orig(self, dt)
+                                        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                                            self.text = "I know what I'm doing."
+                                        else
+                                            self.text = "OK"
+                                        end
+                                    end
+                                })
                             end
                         })
 

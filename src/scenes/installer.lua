@@ -6,6 +6,7 @@ local config = require("config")
 local sharp = require("sharp")
 local native = require("native")
 local shaper = require("shaper")
+local alert = require("alert")
 
 local scene = {
     name = "Installer"
@@ -302,6 +303,45 @@ uiu.hook(root, {
         orig(self)
     end
 })
+
+
+function scene.sharpTask(id, ...)
+    local args = {...}
+    return threader.routine(function()
+        local task = sharp[id](table.unpack(args)):result()
+        while sharp.status(task):result() == "running" do
+            local result = { sharp.poll(task):result() }
+            scene.update(table.unpack(result[1]))
+        end
+
+        local last = sharp.poll(task):result()
+        local status = sharp.free(task):result()
+        if status == "error" then
+            scene.update(last[1], 1, "error")
+            scene.done({
+                {
+                    "Upload Log",
+                    function()
+                        alert([[
+Uploading logs hasn't been implemented just yet.
+For now, ask for help in the Celeste Discord server's modding help channel.
+You can find an invite on the Everest website.
+... if Olympus could open it right now, it would.]])
+                    end
+                },
+                {
+                    "OK",
+                    function()
+                        scener.pop(1)
+                    end
+                }
+            })
+            return false
+        end
+
+        return last
+    end)
+end
 
 
 function scene.enter()
