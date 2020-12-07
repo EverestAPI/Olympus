@@ -136,13 +136,23 @@ local root = uie.column({
             buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"):with(uiu.fillWidth),
             buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist"):with(uiu.fillWidth),
             buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
-                alert([[
+                alert({
+                    body = [[
 Olympus is currently unable to install Ahorn.
 Please go to the Ahorn GitHub page for installation instructions.
-This will probably be implemented in a future update.]])
+This will probably be implemented in a future update.]],
+                    buttons = {
+                        { "Open website", function(container)
+                            utils.openURL("https://github.com/CelestialCartographers/Ahorn#ahorn")
+                            container:close("website")
+                        end },
+
+                        { "OK" }
+                    }
+                })
             end):with(uiu.fillWidth),
             buttonBig("cogwheel", "Options", "options"):with(uiu.fillWidth),
-            button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
+            -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
         }):with({
             style = {
                 padding = 0,

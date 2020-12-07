@@ -1,6 +1,7 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
+local config = require("config")
 
 local scene = {
     name = "GameBanana"
@@ -15,6 +16,7 @@ local white = {
 
 
 local root = uie.column({
+
     uie.scrollbox(
         uie.column({
         }):with({
@@ -22,8 +24,7 @@ local root = uie.column({
                 bg = {},
                 padding = 0,
                 spacing = 2
-            }
-        }):with({
+            },
             cacheable = false
         }):with(uiu.fillWidth):as("mods")
     ):with({
@@ -32,51 +33,151 @@ local root = uie.column({
         },
         clip = false,
         cacheable = false
-    }):with(uiu.fill),
+    }):with(uiu.fillWidth):with(uiu.fillHeight(59)):with(uiu.at(0, 59)),
 
-    uie.row({
-        uie.label("Loading"),
-        uie.spinner():with({
-            width = 16,
-            height = 16
-        })
+    uie.column({
+        uie.group():with({
+            height = 32
+        }),
+
+        uie.row({
+
+            uie.button(
+                uie.row({
+                    uie.icon("browser"):with({ scale = 24 / 256 }),
+                    uie.label("Go to gamebanana.com"):with({ y = 2 })
+                }):with({ style = { bg = {}, padding = 0 } }),
+                function()
+                    utils.openURL("https://gamebanana.com/games/6460")
+                end
+            ),
+
+            uie.row({
+
+                uie.button("<<<", function()
+                    scene.loadPage(scene.page - 1)
+                end):as("pagePrev"),
+                uie.label("Page #?", ui.fontBig):with({
+                    y = 4
+                }):as("pageLabel"),
+                uie.button(">>>", function()
+                    scene.loadPage(scene.page + 1)
+                end):as("pageNext"),
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0,
+                    spacing = 24
+                },
+                cacheable = false,
+                clip = false
+            }):hook({
+                layoutLateLazy = function(orig, self)
+                    -- Always reflow this child whenever its parent gets reflowed.
+                    self:layoutLate()
+                end,
+
+                layoutLate = function(orig, self)
+                    orig(self)
+                    self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
+                    self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
+                end
+            })
+
+        }):with({
+            style = {
+                bg = {},
+                padding = 0
+            },
+            cacheable = false,
+            clip = false
+        }):with(uiu.fillWidth)
     }):with({
-        clip = false,
-        cacheable = false
-    }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingMods")
+        style = {
+            patch = "ui:patches/topbar",
+            spacing = 0
+        }
+    }):with(uiu.at(0, -32)):with(uiu.fillWidth),
 
 }):with({
+    style = {
+        spacing = 2
+    },
     cacheable = false,
     _fullroot = true
 })
 scene.root = root
 
 
-function scene.load()
-    threader.routine(function()
-        local list = root:findChild("mods")
+scene.cache = {}
 
-        local entries, entriesError = scene.downloadEntries(1):result()
+
+function scene.loadPage(page)
+    if scene.loadingPage then
+        return scene.loadingPage
+    end
+
+    scene.loadingPage = threader.routine(function()
+        local list, pagePrev, pageLabel, pageNext = root:findChild("mods", "pagePrev", "pageLabel", "pageNext")
+
+        if page < 1 then
+            page = 1
+        end
+
+        list.children = {}
+        list:reflow()
+        pagePrev.enabled = false
+        pageNext.enabled = false
+        pagePrev:reflow()
+        pageNext:reflow()
+        pageLabel.text = "Page #" .. tostring(page)
+
+        scene.page = page
+
+        local loading = uie.row({
+            uie.label("Loading"),
+            uie.spinner():with({
+                width = 16,
+                height = 16
+            })
+        }):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingMods")
+        scene.root:addChild(loading)
+
+        local entries, entriesError = scene.downloadEntries(page)
         if not entries then
-            root:findChild("loadingMods"):removeSelf()
+            loading:removeSelf()
             root:addChild(uie.row({
                 uie.label("Error downloading mod list: " .. tostring(entriesError)),
             }):with({
                 clip = false,
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            scene.loadingPage = nil
+            pagePrev.enabled = page > 1
+            pageNext.enabled = true
+            pagePrev:reflow()
+            pageNext:reflow()
             return
         end
 
-        local infos, infosError = scene.downloadInfo(entries):result()
+        local infos, infosError = scene.downloadInfo(entries)
         if not infos then
-            root:findChild("loadingMods"):removeSelf()
+            loading:removeSelf()
             root:addChild(uie.row({
                 uie.label("Error downloading mod info: " .. tostring(infosError)),
             }):with({
                 clip = false,
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            scene.loadingPage = nil
+            pagePrev.enabled = page > 1
+            pageNext.enabled = true
+            pagePrev:reflow()
+            pageNext:reflow()
             return
         end
 
@@ -84,8 +185,19 @@ function scene.load()
             list:addChild(scene.item(infos[ii]))
         end
 
-        root:findChild("loadingMods"):removeSelf()
+        loading:removeSelf()
+        scene.loadingPage = nil
+        pagePrev.enabled = page > 1
+        pageNext.enabled = true
+        pagePrev:reflow()
+        pageNext:reflow()
     end)
+    return scene.loadingPage
+end
+
+
+function scene.load()
+    scene.loadPage(1)
 
 end
 
@@ -96,7 +208,18 @@ end
 
 
 function scene.downloadEntries(page)
-    return threader.wrap("utils").downloadJSON("https://api.gamebanana.com/Core/List/New?gameid=6460&page=" .. tostring(page))
+    local url = "https://api.gamebanana.com/Core/List/New?gameid=6460&page=" .. tostring(page)
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadJSON(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
 end
 
 
@@ -127,7 +250,18 @@ function scene.downloadInfo(entries, id)
             mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles()")
     end
 
-    return threader.wrap("utils").downloadJSON("https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2))
+    local url = "https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2)
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadJSON(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
 end
 
 
@@ -216,18 +350,31 @@ function scene.item(info)
 
         local bg, img
 
+        local function downloadImage(name, url)
+            local img = scene.cache[url]
+            if img ~= nil then
+                return img
+            end
+
+            img = utilsAsync.download(url):result()
+            if not img then
+                return false
+            end
+
+            img = love.filesystem.newFileData(img, name)
+            img = love.graphics.newImage(img)
+            scene.cache[url] = img
+            return img
+        end
+
         if not screenshots[1]._sFile:match("%.webp$") then
             -- TODO: WEBP SUPPORT
-            img = utilsAsync.download("https://files.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. screenshots[1]._sFile100):result()
-            img = love.filesystem.newFileData(img, screenshots[1]._sFile)
-            img = love.graphics.newImage(img)
+            img = downloadImage(screenshots[1]._sFile, "https://files.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. screenshots[1]._sFile100)
         end
 
         if screenshots[2] and not screenshots[2]._sFile:match("%.webp$") then
             -- TODO: WEBP SUPPORT
-            bg = utilsAsync.download("https://files.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile):result()
-            bg = love.filesystem.newFileData(bg, screenshots[2]._sFile)
-            bg = love.graphics.newImage(bg)
+            bg = downloadImage(screenshots[2]._sFile, "https://files.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile)
         end
 
         bg = bg or img
@@ -267,17 +414,23 @@ function scene.item(info)
                 end,
 
                 draw = function(orig, self)
-                    love.graphics.push()
-                    love.graphics.origin()
-                    if ui.debug.draw then
-                        self:drawBG()
-                        love.graphics.pop()
+                    if not config.quality.bg then
                         return
                     end
 
+                    love.graphics.push()
+                    love.graphics.origin()
+
                     love.graphics.setColor(1, 1, 1, 1)
-                    effect(self.drawBG, self)
+
+                    if not ui.debug.draw and config.quality.bgBlur then
+                        effect(self.drawBG, self)
+                    else
+                        self:drawBG()
+                    end
+
                     love.graphics.pop()
+
                     uiu.resetColor()
                 end
             }):with(uiu.fill)

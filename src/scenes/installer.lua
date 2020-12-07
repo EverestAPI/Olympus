@@ -340,9 +340,7 @@ and to check your log for any info you don't want to share (f.e. your username).
                                     container:close("website")
                                 end },
 
-                                { "Close", function(container)
-                                    container:close("OK")
-                                end },
+                                { "Close" },
                             }
                         })
                     end

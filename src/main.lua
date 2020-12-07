@@ -480,6 +480,10 @@ function love.keypressed(key, scancode, isrepeat)
         themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
     end
 
+    if key == "f6" then
+        scener.push("scenelist")
+    end
+
     if key == "f10" then
         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             ui.globalReflowID = ui.globalReflowID + 1

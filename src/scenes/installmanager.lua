@@ -223,12 +223,7 @@ Do you want to continue?]],
                                 end
                             },
 
-                            {
-                                "No",
-                                function(container)
-                                    container:close("no")
-                                end
-                            },
+                            { "No" },
                         }
                     })
                 end),

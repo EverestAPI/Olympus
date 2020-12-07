@@ -22,8 +22,7 @@ function updater.check()
         end
 
         local options = scener.preload("options")
-        local changelog = options.root:findChild("changelog")
-        local updatebtn = options.root:findChild("updatebtn")
+        local changelog, updatebtn = options.root:findChild("changelog", "updatebtn")
 
         changelog.text = "Checking for updates..."
         updatebtn.enabled = false
