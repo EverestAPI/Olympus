@@ -130,6 +130,10 @@ function scene.createEntry(list, entry, manualIndex)
                 enabled = manualIndex < #config.installs
             }),
 
+            uie.button("Open", function()
+                love.system.openURL("file://" .. fs.fslash(entry.path))
+            end),
+
             entry.type ~= "debug" and (
                 manualIndex and
                 uie.button("Remove", function()
