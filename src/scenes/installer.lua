@@ -329,21 +329,19 @@ You can ask for help in the Celeste Discord server's modding help channel.
 An invite can be found on the Everest website.
 
 Please remember to use pastebin or another similar website
-and to check your log for any info you don't want to share (f.e. your username).
-
-Do you want to go there now?]],
+and to check your log for any info you don't want to share (f.e. your username).]],
                             buttons = {
-                                { "Yes", function(container)
-                                    love.system.openURL("https://everestapi.github.io/")
-                                    container:close("Yes")
+                                { "Go to log-sharp.txt", function(container)
+                                    utils.openFile(fs.getStorageDir())
                                 end },
 
-                                { "Open log", function(container)
-                                    love.system.openURL("file://" .. fs.fslash(fs.joinpath(fs.getStorageDir(), "log-sharp.txt")))
+                                { "Open Everest Website", function(container)
+                                    utils.openURL("https://everestapi.github.io/")
+                                    container:close("website")
                                 end },
 
-                                { "No", function(container)
-                                    container:close("No")
+                                { "Close", function(container)
+                                    container:close("OK")
                                 end },
                             }
                         })

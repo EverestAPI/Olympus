@@ -2,8 +2,11 @@ require("love.filesystem")
 local requestStatus, request = pcall(require, "luajit-request")
 local dkjson = require("dkjson")
 local tinyyaml = require("tinyyaml")
+local fs = require("fs")
+local threader = require("threader")
 local xml2lua = require("xml2lua")
 local xml2luaTree = require("xmlhandler.tree")
+local loveSystemAsync = threader.wrap("love.system")
 
 local utils = {}
 
@@ -22,6 +25,16 @@ function utils.concat(...)
         end
     end
     return all
+end
+
+function utils.openURL(path)
+    loveSystemAsync.openURL(path)
+    require("notify")("Opening " .. path)
+end
+
+function utils.openFile(path)
+    loveSystemAsync.openURL("file://" .. fs.fslash(path))
+    require("notify")("Opening " .. path)
 end
 
 function utils.load(path)

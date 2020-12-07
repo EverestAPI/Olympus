@@ -108,57 +108,55 @@ function scene.createEntry(list, entry, manualIndex)
             cacheable = false
         }):with(uiu.fillWidth(8, true)),
 
-        uie.row({
+        uie.column({
 
-            manualIndex and uie.button(uie.icon("up"), function()
-                local installs = config.installs
-                table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
-                config.installs = installs
-                config.save()
-                scene.reloadAll()
-            end):with({
-                enabled = manualIndex > 1
-            }),
+            uie.row({
 
-            manualIndex and uie.button(uie.icon("down"), function()
-                local installs = config.installs
-                table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
-                config.installs = installs
-                config.save()
-                scene.reloadAll()
-            end):with({
-                enabled = manualIndex < #config.installs
-            }),
-
-            uie.button("Open", function()
-                love.system.openURL("file://" .. fs.fslash(entry.path))
-            end),
-
-            entry.type ~= "debug" and (
-                manualIndex and
-                uie.button("Remove", function()
+                manualIndex and uie.button(uie.icon("up"), function()
                     local installs = config.installs
-                    table.remove(installs, manualIndex)
+                    table.insert(installs, manualIndex - 1, table.remove(installs, manualIndex))
                     config.installs = installs
                     config.save()
                     scene.reloadAll()
-                end)
+                end):with({
+                    enabled = manualIndex > 1
+                }),
 
-                or
-                uie.button("Add", function()
-                    local function add()
+                manualIndex and uie.button(uie.icon("down"), function()
+                    local installs = config.installs
+                    table.insert(installs, manualIndex + 1, table.remove(installs, manualIndex))
+                    config.installs = installs
+                    config.save()
+                    scene.reloadAll()
+                end):with({
+                    enabled = manualIndex < #config.installs
+                }),
+
+                entry.type ~= "debug" and (
+                    manualIndex and
+                    uie.button("Remove", function()
                         local installs = config.installs
-                        entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
-                        installs[#installs + 1] = entry
+                        table.remove(installs, manualIndex)
                         config.installs = installs
                         config.save()
                         scene.reloadAll()
-                    end
+                    end)
 
-                    if entry.type == "uwp" then
-                        alert({
-                            force = true,
-                            body = [[
+                    or
+                    uie.button("Add", function()
+                        local function add()
+                            local installs = config.installs
+                            entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
+                            installs[#installs + 1] = entry
+                            config.installs = installs
+                            config.save()
+                            scene.reloadAll()
+                        end
+
+                        if entry.type == "uwp" then
+                            alert({
+                                force = true,
+                                body = [[
 The UWP version of Celeste is currently unsupported.
 All game data is encrypted, even dialog text files are uneditable.
 The game code itself is AOT-compiled - no existing code mods would work.
@@ -167,41 +165,93 @@ Even Ahorn currently can't load the necessary game data either.
 Unless Everest gets rewritten or someone starts working on
 a mod loader just for this special version, don't expect
 anything to work in the near future, if at all.]],
-                            buttons = {
-                                { "OK", function(container)
-                                    if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-                                        add()
-                                    end
-                                    container:close("OK")
-                                end }
-                            },
-                            init = function(container)
-                                container:findChild("buttons").children[1]:hook({
-                                    update = function(orig, self, dt)
-                                        orig(self, dt)
+                                buttons = {
+                                    { "OK", function(container)
                                         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-                                            self.text = "I know what I'm doing."
-                                        else
-                                            self.text = "OK"
+                                            add()
                                         end
-                                    end
-                                })
-                            end
-                        })
+                                        container:close("OK")
+                                    end }
+                                },
+                                init = function(container)
+                                    container:findChild("buttons").children[1]:hook({
+                                        update = function(orig, self, dt)
+                                            orig(self, dt)
+                                            if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                                                self.text = "I know what I'm doing."
+                                            else
+                                                self.text = "OK"
+                                            end
+                                        end
+                                    })
+                                end
+                            })
 
-                    else
-                        add()
-                    end
-                end)
-            )
+                        else
+                            add()
+                        end
+                    end)
+                )
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0
+                },
+                clip = false
+            }):with(uiu.rightbound),
+
+            uie.row({
+
+                entry.type == "steam" and uie.button("Verify", function()
+                    alert({
+                        force = true,
+                        body = [[
+Verifying the file integrity will tell Steam to redownload
+any modified files, uninstalling Everest in the process.
+
+Don't use Olympus while Steam is downloading game files.
+You will need to check the download progress yourself.
+
+Do you want to continue?]],
+                        buttons = {
+                            {
+                                "Yes",
+                                function(container)
+                                    utils.openURL("steam://validate/504230")
+                                    container:close("yes")
+                                end
+                            },
+
+                            {
+                                "No",
+                                function(container)
+                                    container:close("no")
+                                end
+                            },
+                        }
+                    })
+                end),
+
+                uie.button("Open", function()
+                    utils.openFile(entry.path)
+                end),
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0
+                },
+                clip = false
+            }):with(uiu.rightbound)
 
         }):with({
             style = {
                 bg = {},
                 padding = 0
             },
-
-            clip = false
+            clip = false,
+            cacheable = false
         }):with(uiu.rightbound)
 
     }):with(uiu.fillWidth)
@@ -296,7 +346,7 @@ function scene.reloadAll()
             }):with({
                 style = {
                     bg = {},
-                    padding = 0,
+                    padding = 16,
                 }
             }):with(uiu.fillWidth):as("installs")
         ):with({
@@ -304,6 +354,9 @@ function scene.reloadAll()
             cacheable = false
         }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
+    }):with({
+        cacheable = false,
+        _fullroot = true
     })
     scene.root = root
     scener.onChange(scener.current, scener.current)

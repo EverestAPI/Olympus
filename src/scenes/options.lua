@@ -192,13 +192,16 @@ local root = uie.column({
         }):with({
             style = {
                 bg = {},
-                padding = 0,
+                padding = 16,
             }
         }):with(uiu.fillWidth):as("categories")
     ):with({
         clip = false,
         cacheable = false
     }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+}):with({
+    cacheable = false,
+    _fullroot = true
 })
 scene.root = root
 
