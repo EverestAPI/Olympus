@@ -7,8 +7,8 @@ end
 
 
 -- DON'T EVER UPDATE THESE TWO FILES.
-local physfs = require("physfs.lua")
-local lfs = require("lfs_ffi.lua")
+local physfs = require("physfs_core")
+local lfs = require("lfs_ffi")
 
 if lfs.attributes("./sharp", "mode") == "directory" and lfs.attributes("./sharp.new", "mode") == "directory" then
     for name in lfs.dir("./sharp.new") do
