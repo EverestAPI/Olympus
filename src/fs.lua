@@ -129,6 +129,10 @@ function fs.normalize(path)
     return fixed:sub(1, #fixed - 1)
 end
 
+function fs.fslash(path)
+    return (path:gsub("\\", "/"))
+end
+
 function fs.fileExtension(path)
     return path:match("[^.]+$")
 end

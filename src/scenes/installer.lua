@@ -1,4 +1,5 @@
 local ui, uiu, uie = require("ui").quick()
+local fs = require("fs")
 local utils = require("utils")
 local threader = require("threader")
 local scener = require("scener")
@@ -320,13 +321,32 @@ function scene.sharpTask(id, ...)
             scene.update(last[1], 1, "error")
             scene.done({
                 {
-                    "Upload Log",
+                    "Open log",
                     function()
-                        alert([[
-Uploading logs hasn't been implemented just yet.
-For now, ask for help in the Celeste Discord server's modding help channel.
-You can find an invite on the Everest website.
-... if Olympus could open it right now, it would.]])
+                        alert({
+                            body = [[
+You can ask for help in the Celeste Discord server's modding help channel.
+An invite can be found on the Everest website.
+
+Please remember to use pastebin or another similar website
+and to check your log for any info you don't want to share (f.e. your username).
+
+Do you want to go there now?]],
+                            buttons = {
+                                { "Yes", function(container)
+                                    love.system.openURL("https://everestapi.github.io/")
+                                    container:close("Yes")
+                                end },
+
+                                { "Open log", function(container)
+                                    love.system.openURL("file://" .. fs.fslash(fs.joinpath(fs.getStorageDir(), "log-sharp.txt")))
+                                end },
+
+                                { "No", function(container)
+                                    container:close("No")
+                                end },
+                            }
+                        })
                     end
                 },
                 {
