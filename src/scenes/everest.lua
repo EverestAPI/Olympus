@@ -22,7 +22,7 @@ local root = uie.column({
             uie.column({
                 uie.label({{ 1, 1, 1, 1 },
 [[Use the newest version for more features and bugfixes.
-Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.8, 0.5, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]}),
+Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.7, 0.3, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]}),
             }):with({
                 style = {
                     patch = false
@@ -304,10 +304,10 @@ function scene.load()
                     item.style.pressedBG = { 0.1, 0.5, 0.2, 0.9 }
                     item.style.selectedBG = { 0.5, 0.8, 0.5, 0.9 }
                 elseif branch == "beta" then
-                    item.style.normalBG = { 0.6, 0.6, 0.1, 0.8 }
-                    item.style.hoveredBG = { 0.7, 0.7, 0.3, 0.9 }
-                    item.style.pressedBG = { 0.4, 0.4, 0.2, 0.9 }
-                    item.style.selectedBG = { 0.8, 0.8, 0.3, 0.9 }
+                    item.style.normalBG = { 0.7, 0.6, 0.1, 0.8 }
+                    item.style.hoveredBG = { 0.8, 0.7, 0.3, 0.9 }
+                    item.style.pressedBG = { 0.5, 0.4, 0.2, 0.9 }
+                    item.style.selectedBG = { 0.8, 0.7, 0.3, 0.9 }
                 end
                 list:addChild(item)
             end
