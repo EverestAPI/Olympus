@@ -38,7 +38,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                     }):with(uiu.fillWidth):with(function(list)
                         list.selected = list.children[1]
                     end):as("versions")
-                ):with(uiu.fillWidth):with(uiu.fillHeight),
+                ):with(uiu.fill),
 
                 uie.row({
                     uie.label("Loading"),

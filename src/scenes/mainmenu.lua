@@ -50,7 +50,7 @@ function scene.createInstalls()
                 end):with({
                     grow = false
                 }):with(uiu.fillWidth):as("installs")
-            ):with(uiu.fillWidth):with(uiu.fillHeight),
+            ):with(uiu.fill),
 
             uie.button("Manage", function()
                 scener.push("installmanager")

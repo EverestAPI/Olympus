@@ -13,10 +13,16 @@ local root = uie.column({
         }):with({
             style = {
                 bg = {},
-                padding = 0,
+                padding = 16,
             }
         }):with(uiu.fillWidth):as("mods")
-    ):with(uiu.fillWidth):with(uiu.fillHeight),
+    ):with({
+        style = {
+            barPadding = 16,
+        },
+        clip = false,
+        cacheable = false
+    }):with(uiu.fill),
 
     uie.row({
         uie.label("Loading"),
@@ -29,6 +35,9 @@ local root = uie.column({
         cacheable = false
     }):with(uiu.bottombound):with(uiu.rightbound):as("loadingMods")
 
+}):with({
+    cacheable = false,
+    _fullroot = true
 })
 scene.root = root
 

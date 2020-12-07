@@ -196,6 +196,9 @@ local root = uie.column({
             }
         }):with(uiu.fillWidth):as("categories")
     ):with({
+        style = {
+            barPadding = 16,
+        },
         clip = false,
         cacheable = false
     }):with(uiu.fillWidth):with(uiu.fillHeight(true))

@@ -109,16 +109,22 @@ function scene.reloadAll()
             }):with({
                 style = {
                     bg = {},
-                    padding = 0,
+                    padding = 16,
                 }
             }):with(uiu.fillWidth):as("all")
         ):with({
+            style = {
+                barPadding = 16,
+            },
             clip = false,
             cacheable = false
         }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
         uie.button("Reload", scene.reloadAll):with(uiu.bottombound)
 
+    }):with({
+        cacheable = false,
+        _fullroot = true
     })
     scene.root = root
     scener.onChange(scener.current, scener.current)

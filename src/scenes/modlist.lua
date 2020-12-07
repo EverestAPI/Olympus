@@ -22,9 +22,12 @@ local root = uie.column({
             cacheable = false
         }):with(uiu.fillWidth):as("mods")
     ):with({
+        style = {
+            barPadding = 16,
+        },
         clip = false,
         cacheable = false
-    }):with(uiu.fillWidth):with(uiu.fillHeight),
+    }):with(uiu.fill),
 
     uie.row({
         uie.label("Loading"),
