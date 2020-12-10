@@ -57,8 +57,10 @@ function love.load(args)
             debugging = true
             if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" and not lldb then
                 lldb = require("lldebugger")
-                lldb.start()
-                local ffi = require("ffi")
+                if os.getenv("OLYMPUS_DEBUG") ~= "1" then
+                    lldb.start()
+                    local ffi = require("ffi")
+                end
             end
 
         elseif arg == "--debug-sharp" then

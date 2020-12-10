@@ -2,16 +2,10 @@ local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
 local config = require("config")
+local alert = require("alert")
 
 local scene = {
     name = "GameBanana"
-}
-
-
-local white = {
-    style = {
-        color = { 1, 1, 1, 1 }
-    }
 }
 
 
@@ -247,7 +241,7 @@ function scene.downloadInfo(entries, id)
         multicall = multicall ..
             mcitem(i, "itemtype", entry[1]) ..
             mcitem(i, "itemid", tostring(entry[2])) ..
-            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles()")
+            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetDownloadUrl()")
     end
 
     local url = "https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2)
@@ -270,10 +264,28 @@ function scene.item(info)
         return nil
     end
 
-    local withheld, name, owner, date, description, text, views, likes, downloads, screenshotsRaw, files = table.unpack(info)
+    local withheld, name, owner, date, description, text, views, likes, downloads, screenshotsRaw, files, website = table.unpack(info)
 
     if withheld then
         return nil
+    end
+
+    website = website:gsub("/download/", "/")
+    local file
+    for k, v in pairs(files) do
+        file = v
+        file._id = k
+        break
+    end
+
+    local containsEverestYaml
+    if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
+        for k, v in pairs(file._aMetadata._aArchiveFileTree) do
+            if v == "everest.yaml" then
+                containsEverestYaml = k
+                break
+            end
+        end
     end
 
     local item = uie.group({
@@ -284,56 +296,149 @@ function scene.item(info)
         }):with(uiu.fill):as("bgholder"),
 
         uie.panel({
+        }):hook({
+            layoutLateLazy = function(orig, self)
+                -- Always reflow this child whenever its parent gets reflowed.
+                self:layoutLate()
+            end,
+
+            layoutLate = function(orig, self)
+                orig(self)
+                local style = self.style
+                style.bg = nil
+                local boxBG = style.bg
+                style.bg = { boxBG[1], boxBG[2], boxBG[3], 0.5 }
+            end
         }):with({
             style = {
                 padding = 0,
                 radius = 0,
-                bg = { 0, 0, 0, 0.8 },
                 patch = false
             }
         }):with(uiu.fill):as("bgdarken"),
 
-        uie.column({
+        uie.group({
 
-            uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, " ∙ " .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):with(white):as("title"),
+            uie.column({
 
-            uie.row({
-                uie.group({
-                    uie.spinner():with({ time = love.math.random() }):with(white),
-                }):as("imgholder"),
+                uie.row({
 
-                uie.column({
-                    uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. " ∙ " .. uiu.countformat(downloads, "%d download", "%d downloads"), }):with(white):as("stats"),
-                    description and #description ~= 0 and uie.label(description):with({ wrap = true }):with(white):as("description"),
+                    uie.column({
+
+                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, " ∙ " .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):as("title"),
+
+                        uie.row({
+                            uie.group({
+                                uie.spinner():with({ time = love.math.random() }),
+                            }):as("imgholder"),
+
+                            uie.column({
+                                uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. " ∙ " .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
+                                description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
+                            }):with({
+                                style = {
+                                    padding = 0,
+                                    bg = {}
+                                }
+                            }):with(uiu.fillWidth(16, true))
+
+                        }):with({
+                            style = {
+                                padding = 0,
+                                spacing = 16,
+                                bg = {}
+                            }
+                        }):with(uiu.fillWidth),
+
+                    }):with({
+                        style = {
+                            padding = 0,
+                            bg = {}
+                        },
+                        clip = false,
+                        cacheable = false
+                    }):with(uiu.fillWidth(true)),
+
+                    uie.row({
+
+                        uie.button(
+                            uie.icon("browser"):with({ scale = 24 / 256 }),
+                            function()
+                                utils.openURL(website)
+                            end
+                        ),
+
+                        uie.button(
+                            uie.icon("article"):with({ scale = 24 / 256 }),
+                            function()
+                                alert({
+                                    title = name,
+                                    body = uie.scrollbox(
+                                        uie.label(utils.cleanHTML(text)):with({
+                                            wrap = true
+                                        })
+                                    ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+                                    buttons = {
+                                        {
+                                            "Open in browser",
+                                            function()
+                                                utils.openURL(website)
+                                            end
+                                        },
+                                        { "Close" }
+                                    },
+                                    init = function(container)
+                                        container:findChild("box"):with({
+                                            width = 800
+                                        }):with(uiu.fillHeight(64))
+                                        container:findChild("buttons"):with(uiu.bottombound)
+                                    end
+                                })
+                            end
+                        ),
+
+                        containsEverestYaml and uie.button(
+                            uie.icon("download"):with({ scale = 24 / 256 }),
+                            function()
+                                utils.openURL(website)
+                            end
+                        )
+
+                    }):with({
+                        style = {
+                            padding = 0,
+                            bg = {}
+                        },
+                        clip = false,
+                        cacheable = false
+                    }):with(uiu.rightbound)
+
                 }):with({
                     style = {
-                        padding = 0,
                         bg = {}
-                    }
-                }):with(uiu.fillWidth(16, true))
+                    },
+                    clip = false,
+                    cacheable = false
+                }):with(uiu.fillWidth),
+
+                --[[
+                uie.group({
+                    uie.label(utils.cleanHTML(text)):with({ wrap = true }):as("text")
+                }):with(uiu.fillWidth),
+                --]]
 
             }):with({
-                style = {
-                    padding = 0,
-                    spacing = 16,
-                    bg = {}
-                }
-            }):with(uiu.fillWidth),
-
-            --[[
-            uie.group({
-                uie.label(utils.cleanHTML(text)):with({ wrap = true }):as("text")
-            }):with(uiu.fillWidth),
-            --]]
+                clip = false,
+                cacheable = false
+            }):with(uiu.fillWidth):as("content"),
 
         }):with({
-            clip = false,
-            cacheable = false,
             style = {
-                bg = {},
-                padding = 24
-            }
-        }):with(uiu.fillWidth):as("content"),
+                padding = 16
+            },
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth)
 
     }):with({
         clip = false,
