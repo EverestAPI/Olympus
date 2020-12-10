@@ -416,7 +416,7 @@ function scene.item(info)
 
                                     if containsEverestYaml then
                                         btns[#btns + 1] = uie.button(
-                                            { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads") .. "\n" .. file._sDescription},
+                                            { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file._tsDateAdded) .. " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file._sDescription},
                                             function()
                                             end
                                         ):with({
@@ -428,6 +428,14 @@ function scene.item(info)
                                 table.sort(btns, function(a, b)
                                     return a.date > b.date
                                 end)
+
+                                btns[1]:with({
+                                    style = {
+                                        normalBG = { 0.2, 0.4, 0.2, 0.8 },
+                                        hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
+                                        pressedBG = { 0.2, 0.6, 0.2, 0.9 }
+                                    }
+                                })
 
                                 alert({
                                     title = name,
@@ -498,7 +506,13 @@ function scene.item(info)
                                     end
                                 })
                             end
-                        )
+                        ):with({
+                            style = {
+                                normalBG = { 0.2, 0.4, 0.2, 0.8 },
+                                hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
+                                pressedBG = { 0.2, 0.6, 0.2, 0.9 }
+                            }
+                        })
 
                     }):with({
                         style = {
@@ -554,7 +568,7 @@ function scene.item(info)
         local function downloadImage(name, url)
             local img = scene.cache[url]
             if img ~= nil then
-                return img
+                return love.graphics.newImage(img)
             end
 
             img = utilsAsync.download(url):result()
@@ -563,8 +577,8 @@ function scene.item(info)
             end
 
             img = love.filesystem.newFileData(img, name)
-            img = love.graphics.newImage(img)
             scene.cache[url] = img
+            img = love.graphics.newImage(img)
             return img
         end
 

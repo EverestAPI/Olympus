@@ -14,6 +14,7 @@ function alert.show(data)
 
     local container = uie.group({}):with({
         time = 0,
+        force = data.force,
         style = {
             bg = {},
             padding = 0,
@@ -118,7 +119,7 @@ function alert.show(data)
 
 
     function container.close(self, reason)
-        if container.closing or (data.force and not reason) then
+        if container.closing or (container.force and not reason) then
             return
         end
         scener.unlock()

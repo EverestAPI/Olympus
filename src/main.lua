@@ -352,6 +352,12 @@ function love.load(args)
 
     scener.set("mainmenu")
     updater.check()
+
+    --[[
+    alert.scene("oobe"):with({
+        force = true
+    })
+    ]]--
 end
 
 love.frame = 0
@@ -437,7 +443,7 @@ function love.keypressed(key, scancode, isrepeat)
             if #scener.stack > 0 then
                 scener.pop()
             else
-                love.event.quit()
+                -- love.event.quit()
             end
         end
     end
