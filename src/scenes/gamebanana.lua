@@ -271,6 +271,7 @@ function scene.item(info)
     end
 
     website = website:gsub("/download/", "/")
+
     local file
     for k, v in pairs(files) do
         file = v
@@ -278,7 +279,7 @@ function scene.item(info)
         break
     end
 
-    local containsEverestYaml
+    local containsEverestYaml = false
     if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
         for k, v in pairs(file._aMetadata._aArchiveFileTree) do
             if v == "everest.yaml" then
@@ -400,7 +401,102 @@ function scene.item(info)
                         containsEverestYaml and uie.button(
                             uie.icon("download"):with({ scale = 24 / 256 }),
                             function()
-                                utils.openURL(website)
+                                local btns = {}
+
+                                for _, file in pairs(files) do
+                                    local containsEverestYaml = false
+                                    if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
+                                        for k, v in pairs(file._aMetadata._aArchiveFileTree) do
+                                            if v == "everest.yaml" then
+                                                containsEverestYaml = k
+                                                break
+                                            end
+                                        end
+                                    end
+
+                                    if containsEverestYaml then
+                                        btns[#btns + 1] = uie.button(
+                                            { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads") .. "\n" .. file._sDescription},
+                                            function()
+                                            end
+                                        ):with({
+                                            date = file._tsDateAdded
+                                        })
+                                    end
+                                end
+
+                                table.sort(btns, function(a, b)
+                                    return a.date > b.date
+                                end)
+
+                                alert({
+                                    title = name,
+                                    body = uie.scrollbox(
+                                        uie.column(btns):with({
+                                            style = {
+                                                bg = {},
+                                                padding = 0
+                                            }
+                                        })
+                                    ),
+                                    init = function(container)
+                                        btns[#btns + 1] = uie.button("Close", function()
+                                            container:close("Close")
+                                        end)
+                                        container:findChild("buttons"):removeSelf()
+
+                                        local body = container:findChild("body")
+
+                                        if #btns < 6 then
+                                            body:with({
+                                                calcSize = uie.group.calcSize
+                                            })
+                                            container:hook({
+                                                awake = function(orig, self)
+                                                    orig(self)
+                                                    self:layoutLazy()
+                                                    self:layoutLateLazy()
+                                                    if self:findChild("title").width > body.width then
+                                                        body:with(uiu.fillWidth)
+                                                        local el = body.children[1]
+                                                        el:with(uiu.fillWidth)
+                                                        local children = el.children
+                                                        for i = 1, #children do
+                                                            children[i]:with(uiu.fillWidth)
+                                                        end
+                                                    else
+                                                        local el = body.children[1]
+                                                        local children = el.children
+                                                        local widest = 0
+                                                        for i = 1, #children do
+                                                            local width = children[i].width
+                                                            if width > widest then
+                                                                widest = width
+                                                            end
+                                                        end
+                                                        for i = 1, #children do
+                                                            if children[i].width < widest then
+                                                                children[i]:with(uiu.fillWidth):reflow()
+                                                            end
+                                                        end
+                                                    end
+                                                    self:reflowDown()
+                                                    self:reflow()
+                                                end
+                                            })
+
+                                        else
+                                            body:with(uiu.fillWidth):with(uiu.fillHeight(true))
+                                            local el = body.children[1]
+                                            el:with(uiu.fillWidth)
+                                            local children = el.children
+                                            for i = 1, #children do
+                                                children[i]:with(uiu.fillWidth)
+                                            end
+                                            container:findChild("box"):with(uiu.fillHeight(64))
+                                        end
+                                    end
+                                })
                             end
                         )
 
