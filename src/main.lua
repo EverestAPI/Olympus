@@ -352,12 +352,6 @@ function love.load(args)
 
     scener.set("mainmenu")
     updater.check()
-
-    --[[
-    alert.scene("oobe"):with({
-        force = true
-    })
-    ]]--
 end
 
 love.frame = 0

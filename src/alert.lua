@@ -100,7 +100,7 @@ function alert.show(data)
                 radius = 0
             },
             clip = false
-        }):with(uiu.rightbound):as("buttons")
+        }):with(uiu.rightbound):with(uiu.bottombound):as("buttons")
         for i = 1, #data.buttons do
             local btndata = data.buttons[i]
             local btn = uie.button(btndata[1], function()
@@ -176,6 +176,20 @@ function alert.show(data)
 
     if data.init then
         data.init(container)
+    end
+
+    if data.big then
+        if not data.title then
+            box:with({
+                style = {
+                    padding = 0
+                }
+            })
+        end
+        box:with({
+            cacheable = false,
+            clip = false,
+        }):with(uiu.fill(64))
     end
 
     alert.root:addChild(container)

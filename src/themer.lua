@@ -38,8 +38,14 @@ function themer.apply(theme)
         return
     end
 
+    if themer.current ~= themer.default and theme ~= themer.default then
+        themer.apply(themer.default)
+    end
+
+    themer.current = theme
+
     for id, tel in pairs(theme) do
-        local el = uie["__" .. id]
+        local el = uie[id]
         if not el then
             goto next
         end
@@ -67,6 +73,71 @@ function themer.apply(theme)
     end
 end
 
+function themer.skin(theme, el)
+    theme = theme or themer.default
+
+    local function skin(el)
+        local style = el.style
+        local types = el.__types
+
+        local custom = {}
+        for key, value in pairs(style) do
+            custom[key] = value
+        end
+
+        for i = #types, 1, -1 do
+            local type = types[i]
+            local sub = uie[type]
+            if sub then
+                sub = sub.__default.style
+                if sub then
+                    for key, value in pairs(sub) do
+                        if _G.type(value) == "table" then
+                            local copy = {}
+                            for k, v in pairs(value) do
+                                copy[k] = v
+                            end
+                            value = copy
+                        end
+                        style[key] = value
+                    end
+                end
+            end
+
+            local sub = theme[type]
+            if sub then
+                for key, value in pairs(sub) do
+                    if _G.type(value) == "table" then
+                        local copy = {}
+                        for k, v in pairs(value) do
+                            copy[k] = v
+                        end
+                        value = copy
+                    end
+                    style[key] = value
+                end
+            end
+        end
+
+        for key, value in pairs(custom) do
+            style[key] = value
+        end
+
+        local children = el.children
+        if children then
+            for i = 1, #children do
+                skin(children[i])
+            end
+        end
+    end
+
+    if el then
+        return skin(el)
+    end
+    return skin
+end
+
 themer.default = themer.dump()
+themer.current = themer.default
 
 return themer

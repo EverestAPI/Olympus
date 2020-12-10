@@ -32,7 +32,8 @@ for i, file in ipairs(love.filesystem.getDirectoryItems("data/themes")) do
         local theme = utils.loadJSON("data/themes/" .. name .. ".json")
         themes[#themes + 1] = {
             text = theme.__name or tostring(theme),
-            data = name
+            data = name,
+            theme = theme
         }
     end
 end
@@ -80,6 +81,73 @@ local updatepaths = {
 }
 
 
+local themePickerEntries = {}
+for i = 1, #themes do
+    local name = themes[i].data
+    local text = themes[i].text
+
+    local bigbtn = uie.button(
+        uie.group({
+            uie.label(text, ui.fontBig),
+
+            uie.row({
+                uie.column({
+                    uie.label([[
+Lorem ipsum dolor sit amet,
+consectetur adipiscing elit.]]),
+
+                    uie.list(uiu.map(uiu.listRange(1, 3), function(i)
+                        return string.format("Item %i!", i)
+                    end)):with(function(self)
+                        local children = self.children
+                        for i = 1, #children do
+                            children[i].interactive = 0
+                            children[i].owner = self
+                        end
+                        children[1].selected = true
+                    end):with(uiu.fillWidth)
+                }),
+
+                uie.column({
+                    uie.label([[
+Lorem ipsum dolor sit amet,
+consectetur adipiscing elit.]]),
+
+                    uie.list(uiu.map(uiu.listRange(1, 3), function(i)
+                        return string.format("Item %i!", i)
+                    end)):with(function(self)
+                        local children = self.children
+                        for i = 1, #children do
+                            children[i].interactive = 0
+                            children[i].owner = self
+                        end
+                        children[1].selected = true
+                    end):with(uiu.fillWidth)
+                })
+            }):with(nobg):with(uiu.rightbound)
+
+        }):with(uiu.fillWidth),
+        function()
+            themer.apply((name == "default" or not name) and themer.default or utils.loadJSON("data/themes/" .. name .. ".json"))
+            config.theme = name
+            config.save()
+            scene.root:findChild("themeDropdown"):updateSelected()
+        end
+    ):with({
+        height = 100
+    }):with(uiu.fillWidth):with(themer.skin((name == "default" or not name) and themer.default or themes[i].theme))
+
+    themePickerEntries[#themePickerEntries + 1] = bigbtn
+end
+
+scene.themePicker = uie.scrollbox(
+    uie.column(themePickerEntries):with(nobg):with(uiu.fillWidth)
+):with({
+    clip = false,
+    cacheable = false
+}):with(uiu.fillWidth):with(uiu.fillHeight(true))
+
+
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -91,19 +159,27 @@ local root = uie.column({
 
                     uie.column({
                         uie.label("Theme"),
-                        uie.dropdown(themes, function(self, value)
-                            themer.apply((value == "default" or not value) and themer.default or utils.loadJSON("data/themes/" .. value .. ".json"))
-                            config.theme = value
-                            config.save()
-                        end):with(function(self)
-                            for i = 1, #themes do
-                                if config.theme == themes[i].data then
-                                    self.selected = self:getItem(i)
-                                    self.text = self.selected.text
-                                    break
+                        uie.dropdown(themes):with({
+                            onClick = function(self)
+                                alert({
+                                    title = "Select your theme",
+                                    body = scene.themePicker,
+                                    big = true
+                                })
+                            end
+                        }):with(function(self)
+                            function self.updateSelected(self)
+                                for i = 1, #themes do
+                                    if config.theme == themes[i].data then
+                                        self.selected = self:getItem(i)
+                                        self.text = self.selected.text
+                                        break
+                                    end
                                 end
                             end
-                        end)
+
+                            self:updateSelected()
+                        end):as("themeDropdown")
                     }):with(nobg):with(uiu.fillWidth(8.25)),
 
                     uie.column({
