@@ -277,6 +277,14 @@ function scene.load()
                             end
 
                             local message = c.commit.message
+                            if c.commit.committer.email == "noreply@github.com" then
+                                local pr = ({message:match("(Merge pull request #[^\n]+\n\n)(.*)")})[2]
+                                if pr then
+                                    info = info .. " ∙ Pull Request"
+                                    message = pr
+                                end
+                            end
+
                             local nl = message:find("\n")
                             if nl then
                                 message = message:sub(1, nl - 1)
