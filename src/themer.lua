@@ -73,7 +73,7 @@ function themer.apply(theme)
     end
 end
 
-function themer.skin(theme, el)
+function themer.skin(theme, deep, el)
     theme = theme or themer.default
 
     local function skin(el)
@@ -123,16 +123,24 @@ function themer.skin(theme, el)
             style[key] = value
         end
 
-        local children = el.children
-        if children then
-            for i = 1, #children do
-                skin(children[i])
+        if deep then
+            local children = el.children
+            if children then
+                for i = 1, #children do
+                    skin(children[i])
+                end
             end
         end
     end
 
     if el then
         return skin(el)
+    end
+    if el == nil and type(deep) == "table" then
+        return skin(deep)
+    end
+    if deep == nil then
+        deep = true
     end
     return skin
 end

@@ -85,16 +85,17 @@ local themePickerEntries = {}
 for i = 1, #themes do
     local name = themes[i].data
     local text = themes[i].text
+    local theme = (name == "default" or not name) and themer.default or themes[i].theme
 
     local bigbtn = uie.button(
         uie.group({
-            uie.label(text, ui.fontBig),
+            uie.label(text, ui.fontBig):with(themer.skin(theme, false)),
 
             uie.row({
                 uie.column({
                     uie.label([[
-Lorem ipsum dolor sit amet,
-consectetur adipiscing elit.]]),
+This is your current theme.
+Insert some dummy text here.]]),
 
                     uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                         return string.format("Item %i!", i)
@@ -110,8 +111,8 @@ consectetur adipiscing elit.]]),
 
                 uie.column({
                     uie.label([[
-Lorem ipsum dolor sit amet,
-consectetur adipiscing elit.]]),
+This is the new theme.
+Insert some dummy text here.]]),
 
                     uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                         return string.format("Item %i!", i)
@@ -123,19 +124,19 @@ consectetur adipiscing elit.]]),
                         end
                         children[1].selected = true
                     end):with(uiu.fillWidth)
-                })
+                }):with(themer.skin(theme))
             }):with(nobg):with(uiu.rightbound)
 
         }):with(uiu.fillWidth),
         function()
-            themer.apply((name == "default" or not name) and themer.default or utils.loadJSON("data/themes/" .. name .. ".json"))
+            themer.apply(theme)
             config.theme = name
             config.save()
             scene.root:findChild("themeDropdown"):updateSelected()
         end
     ):with({
         height = 100
-    }):with(uiu.fillWidth):with(themer.skin((name == "default" or not name) and themer.default or themes[i].theme))
+    }):with(uiu.fillWidth):with(themer.skin(theme, false))
 
     themePickerEntries[#themePickerEntries + 1] = bigbtn
 end
