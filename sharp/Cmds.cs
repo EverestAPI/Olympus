@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 namespace Olympus {
     public static partial class Cmds {
         public static readonly Dictionary<string, Cmd> All = new Dictionary<string, Cmd>();
+        public static readonly Dictionary<Type, Cmd> AllByType = new Dictionary<Type, Cmd>();
 
         public static void Init() {
             foreach (Type type in typeof(Cmd).Assembly.GetTypes()) {
@@ -21,6 +22,7 @@ namespace Olympus {
 
                 Cmd cmd = (Cmd) Activator.CreateInstance(type);
                 All[cmd.ID.ToLowerInvariant()] = cmd;
+                AllByType[type] = cmd;
             }
         }
 
@@ -29,6 +31,9 @@ namespace Olympus {
 
         public static T Get<T>(string id) where T : Cmd
             => All.TryGetValue(id, out Cmd cmd) ? (T) cmd : null;
+
+        public static T Get<T>() where T : Cmd
+            => AllByType.TryGetValue(typeof(T), out Cmd cmd) ? (T) cmd : null;
     }
 
     public abstract class Cmd {

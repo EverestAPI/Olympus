@@ -20,6 +20,17 @@ namespace Olympus {
     public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
 
         public override IEnumerator Run(string root, string artifactBase) {
+            // MiniInstaller reads orig/Celeste.exe and copies Celeste.exe into it but only if missing.
+            // Olympus can help out and delete the orig folder if the existing Celeste.exe isn't modded.
+            string installedVersion = Cmds.Get<CmdGetVersionString>().Run(root);
+            if (installedVersion.StartsWith("Celeste ") && !installedVersion.Contains("Everest")) {
+                string orig = Path.Combine(root, "orig");
+                if (Directory.Exists(orig)) {
+                    yield return Status("Deleting previous backup", false, "");
+                    Directory.Delete(orig, true);
+                }
+            }
+
             // Only new builds offer olympus-meta and olympus-build artifacts.
             yield return Status("Downloading metadata", false, "");
 
