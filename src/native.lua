@@ -1,4 +1,4 @@
-local ffiStatus, ffi = pcall(require, "ffi")
+local ffiStatus, ffi = pcall(require, "ffix")
 if not ffiStatus then
     return false
 end

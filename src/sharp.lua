@@ -25,7 +25,7 @@ local function sharpthread()
         local threader = require("threader")
         local fs = require("fs")
         local subprocess = require("subprocess")
-        local ffi = require("ffi")
+        local ffi = require("ffix")
         local utils = require("utils")
         local socket = require("socket")
 

@@ -5,6 +5,7 @@ local notify = require("notify")
 local alert = require("alert")
 local scener = require("scener")
 local sharp = require("sharp")
+local ffi = require("ffix")
 
 local updater = {}
 
@@ -135,8 +136,9 @@ function updater.update(id)
         installer.update("Olympus successfully updated", 1, "done")
         installer.done({
             {
-                "Close",
+                "Restart",
                 function()
+                    sharp.restart(love.filesystem.getSource()):result()
                     love.event.quit()
                 end
             }

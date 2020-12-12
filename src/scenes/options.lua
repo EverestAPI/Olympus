@@ -95,7 +95,7 @@ for i = 1, #themes do
                 uie.column({
                     uie.label([[
 This is your current theme.
-Insert some dummy text here.]]),
+The quick brown fox jumps]]),
 
                     uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                         return string.format("Item %i!", i)
@@ -112,7 +112,7 @@ Insert some dummy text here.]]),
                 uie.column({
                     uie.label([[
 This is the new theme.
-Insert some dummy text here.]]),
+over the lazy dog.]]),
 
                     uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                         return string.format("Item %i!", i)
@@ -162,11 +162,14 @@ local root = uie.column({
                         uie.label("Theme"),
                         uie.dropdown(themes):with({
                             onClick = function(self)
-                                alert({
+                                local container = alert({
                                     title = "Select your theme",
                                     body = scene.themePicker,
                                     big = true
                                 })
+                                local btns = container:findChild("buttons")
+                                btns:with(uiu.fillWidth)
+                                btns.children[1]:with(uiu.fillWidth)
                             end
                         }):with(function(self)
                             function self.updateSelected(self)

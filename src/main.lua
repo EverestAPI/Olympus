@@ -59,7 +59,7 @@ function love.load(args)
                 lldb = require("lldebugger")
                 if os.getenv("OLYMPUS_DEBUG") ~= "1" then
                     lldb.start()
-                    local ffi = require("ffi")
+                    local ffi = require("ffix")
                 end
             end
 
@@ -79,7 +79,6 @@ function love.load(args)
     threader = require("threader")
 
     fs = require("fs")
-    love.filesystem.mountUnsandboxed(fs.getStorageDir(), "/", 0)
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
