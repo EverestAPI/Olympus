@@ -399,7 +399,7 @@ function scene.item(info)
                             end
                         ),
 
-                        containsEverestYaml and uie.button(
+                        uie.button(
                             uie.icon("download"):with({ scale = 24 / 256 }),
                             function()
                                 local btns = {}
@@ -426,6 +426,10 @@ function scene.item(info)
                                             date = file._tsDateAdded
                                         })
                                     end
+                                end
+
+                                if #btns == 0 then
+                                    return
                                 end
 
                                 table.sort(btns, function(a, b)
@@ -514,7 +518,8 @@ function scene.item(info)
                                 normalBG = { 0.2, 0.4, 0.2, 0.8 },
                                 hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
                                 pressedBG = { 0.2, 0.6, 0.2, 0.9 }
-                            }
+                            },
+                            enabled = containsEverestYaml
                         })
 
                     }):with({
