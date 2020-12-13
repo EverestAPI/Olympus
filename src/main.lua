@@ -49,6 +49,8 @@ function love.errhand(...)
 end
 
 function love.load(args)
+    local protocol
+
     for i = 1, #args do
         local arg = args[i]
 
@@ -73,9 +75,10 @@ function love.load(args)
             love.event.quit()
 
         else
-            local protocol = arg:match("^[Ee]verest:(.*)")
-            if protocol then
+            arg = arg:match("^[Ee]verest:(.*)")
+            if arg then
                 -- love.window.showMessageBox("Olympus Debug", "huh, neat.\n" .. require("fs").getcwd() .. "\n" .. protocol)
+                protocol = arg
             end
         end
     end
@@ -355,6 +358,12 @@ function love.load(args)
     scener.set("mainmenu")
     require("updater").check()
     require("modinstaller").register()
+
+    if protocol then
+        require("modinstaller").install(protocol, function()
+            love.event.quit()
+        end)
+    end
 end
 
 love.frame = 0

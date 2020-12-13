@@ -9,6 +9,7 @@ local registry = require("registry")
 
 local modinstaller = {}
 
+
 function modinstaller.register()
     local userOS = love.system.getOS()
 
@@ -28,9 +29,12 @@ function modinstaller.register()
     end
 end
 
+
 function modinstaller.install(modurl, cb)
     local install = config.installs[config.install]
     install = install and install.path
+
+    modurl = modurl and modurl:match("^(https://gamebanana.com/mmdl/.*),.*,.*$") or modurl
 
     if not install or not modurl then
         return
@@ -72,5 +76,6 @@ You can close this window.]])
     end)
 
 end
+
 
 return modinstaller
