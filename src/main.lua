@@ -13,7 +13,6 @@ local notify
 local config
 local themer
 local sharp
-local updater
 local fs
 
 local ui
@@ -72,6 +71,12 @@ function love.load(args)
         elseif arg == "--repl" then
             debug.debug()
             love.event.quit()
+
+        else
+            local protocol = arg:match("^[Ee]verest:(.*)")
+            if protocol then
+                -- love.window.showMessageBox("Olympus Debug", "huh, neat.\n" .. require("fs").getcwd() .. "\n" .. protocol)
+            end
         end
     end
 
@@ -110,8 +115,6 @@ function love.load(args)
     if not sharpStatus then
         love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
     end
-
-    updater = require("updater")
 
     local root = uie.column({
         require("background")(),
@@ -350,7 +353,8 @@ function love.load(args)
     notify.init(root:findChild("notifyroot"))
 
     scener.set("mainmenu")
-    updater.check()
+    require("updater").check()
+    require("modinstaller").register()
 end
 
 love.frame = 0

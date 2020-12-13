@@ -9,6 +9,10 @@ if os.getenv("OLYMPUS_DEBUG") == "1" then
     end
 end
 
+local src = love.filesystem.getSource()
+if not src:match("[/\\]src[/\\]?$") then
+    lfs.chdir(src:match("(.*[/\\])"):gsub("([^/\\])[/\\]$", "%1"))
+end
 
 if lfs.attributes("./sharp", "mode") == "directory" and lfs.attributes("./sharp.new", "mode") == "directory" then
     local restarterPID = tonumber(os.getenv("OLYMPUS_RESTARTER_PID"))
