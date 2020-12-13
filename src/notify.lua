@@ -38,7 +38,7 @@ function notify.show(data)
             local boxBG = style.bg
             style.bg = { boxBG[1], boxBG[2], boxBG[3], 1 }
         end
-    })
+    }):as("notif")
 
     if type(data) == "string" then
         data = {

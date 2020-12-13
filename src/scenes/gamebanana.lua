@@ -3,6 +3,7 @@ local utils = require("utils")
 local threader = require("threader")
 local config = require("config")
 local alert = require("alert")
+local modinstaller = require("modinstaller")
 
 local scene = {
     name = "GameBanana"
@@ -417,7 +418,9 @@ function scene.item(info)
                                     if containsEverestYaml then
                                         btns[#btns + 1] = uie.button(
                                             { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file._tsDateAdded) .. " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file._sDescription},
-                                            function()
+                                            function(self)
+                                                modinstaller.install(file._sDownloadUrl)
+                                                self:getParent("container"):close("OK")
                                             end
                                         ):with({
                                             date = file._tsDateAdded

@@ -22,7 +22,7 @@ function alert.show(data)
         },
         clip = false,
         cacheable = false
-    }):with(uiu.fill)
+    }):with(uiu.fill):as("container")
 
     local bg = uie.group({}):hook({
         onClick = function(orig, self, x, y, button)
