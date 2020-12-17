@@ -15,7 +15,10 @@ namespace Olympus {
     public unsafe class CmdFree : Cmd<string, string> {
         public override bool LogRun => false;
         public override string Run(string id) {
-            return CmdTasks.Remove(id)?.Status;
+            CmdTask task = CmdTasks.Remove(id);
+            string status = task?.Status;
+            task?.Dispose();
+            return status;
         }
     }
 }

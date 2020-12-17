@@ -15,6 +15,9 @@
             "args": [
                 "${workspaceFolder}/src"
             ],
+            "env": {
+                "OLYMPUS_SHARP_DEBUGLOG": "1"
+            },
             "windows": {
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",

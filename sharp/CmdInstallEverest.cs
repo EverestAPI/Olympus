@@ -41,7 +41,7 @@ namespace Olympus {
                 using (WebClient wc = new WebClient())
                     zipData = wc.DownloadData(artifactBase + "olympus-meta");
                 using (MemoryStream zipStream = new MemoryStream(zipData))
-                using (ZipArchive zip = new ZipArchive(zipStream)) {
+                using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                     using (Stream sizeStream = zip.GetEntry("olympus-meta/size.txt").Open())
                     using (StreamReader sizeReader = new StreamReader(sizeStream))
                         size = int.Parse(sizeReader.ReadToEnd().Trim());
@@ -59,9 +59,9 @@ namespace Olympus {
 
                     yield return Status("Unzipping olympus-build.zip", false, "download");
                     wrapStream.Seek(0, SeekOrigin.Begin);
-                    using (ZipArchive wrap = new ZipArchive(wrapStream)) {
+                    using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                         using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
-                        using (ZipArchive zip = new ZipArchive(zipStream)) {
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                             yield return Unpack(zip, root);
                         }
                     }
@@ -75,7 +75,7 @@ namespace Olympus {
 
                     yield return Status("Unzipping main.zip", false, "download");
                     zipStream.Seek(0, SeekOrigin.Begin);
-                    using (ZipArchive zip = new ZipArchive(zipStream)) {
+                    using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                         yield return Unpack(zip, root, "main/");
                     }
                 }

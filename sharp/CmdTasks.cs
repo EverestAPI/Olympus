@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
@@ -31,21 +32,28 @@ namespace Olympus {
             => All.TryGetValue(id, out CmdTask task) ? task : null;
     }
 
-    public class CmdTask {
+    public class CmdTask : IDisposable {
 
         public readonly string ID;
 
         public IEnumerator Enumerator;
-        public Stack<IEnumerator> Stack = new Stack<IEnumerator>();
+        public readonly Stack<IEnumerator> Stack = new Stack<IEnumerator>();
+        public readonly Queue<object> Queue = new Queue<object>();
         public readonly Task Task;
 
-        public object Current { get; private set; }
-        public string Status { get; private set; }
+        public readonly ManualResetEvent Event = new ManualResetEvent(false);
+        public readonly WaitHandle[] EventWaitHandles;
+
+        public object Current;
+        public string Status;
+        public bool Alive;
 
         public CmdTask(string id, IEnumerator enumerator) {
+            EventWaitHandles = new WaitHandle[] { Event };
             ID = id;
             Enumerator = enumerator;
             Status = "running";
+            Alive = true;
             Step();
             Task = Task.Run(Run);
         }
@@ -60,7 +68,13 @@ namespace Olympus {
                         Enumerator = pass;
                         goto Restep;
                     }
-                    Current = current;
+                    if (Current != current) {
+                        lock (Queue) {
+                            Queue.Enqueue(current);
+                            Event.Set();
+                        }
+                        Current = current;
+                    }
                     return true;
                 } else if (Stack.Count > 0) {
                     Enumerator = Stack.Pop();
@@ -77,7 +91,68 @@ namespace Olympus {
         }
 
         private void Run() {
-            while (Step()) ;
+            while (Alive = Step()) ;
+            try {
+                Event.Set();
+            } catch {
+            }
+        }
+
+        public object Dequeue() {
+            lock (Queue)
+                return Queue.Count > 0 ? Queue.Dequeue() : Current;
+        }
+
+        public object[] TryDequeue() {
+            lock (Queue)
+                return new object[] { Queue.Count > 0, Queue.Count > 0 ? Queue.Dequeue() : Current };
+        }
+
+        public object[] DequeueBatch(int max) {
+            lock (Queue) {
+                if (Queue.Count == 0)
+                    return new object[0];
+
+                object[] batch;
+
+                if (Queue.Count >= max) {
+                    batch = new object[max];
+                    for (int i = 0; i < batch.Length; i++) {
+                        batch[i] = Queue.Dequeue();
+                    }
+                    return batch;
+                }
+
+                batch = Queue.ToArray();
+                Queue.Clear();
+                return batch;
+            }
+        }
+
+        public object[] Wait(bool skip) {
+            lock (Queue)
+                if (Queue.Count > 0)
+                    return new object[] { Status, Queue.Count, Queue.Dequeue() };
+
+            if (Alive && !skip && Queue.Count == 0)
+                WaitHandle.WaitAny(EventWaitHandles);
+
+            lock (Queue) {
+                if (skip) {
+                    int count = Alive || Queue.Count > 0 ? 1 : 0;
+                    Queue.Clear();
+                    return new object[] { Status, count, Current };
+
+                } else {
+                    if (Queue.Count <= 1)
+                        Event.Reset();
+                    return new object[] { Status, Queue.Count, Queue.Count > 0 ? Queue.Dequeue() : Current };
+                }
+            }
+        }
+
+        public void Dispose() {
+            Event.Dispose();
         }
 
     }

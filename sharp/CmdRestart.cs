@@ -28,6 +28,7 @@ namespace Olympus {
             Process process = new Process();
 
             process.StartInfo.FileName = exe;
+            process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
 
             process.Start();
             return null;

@@ -310,9 +310,9 @@ function scene.sharpTask(id, ...)
     local args = {...}
     return threader.routine(function()
         local task = sharp[id](table.unpack(args)):result()
-        while sharp.status(task):result() == "running" do
-            local result = { sharp.poll(task):result() }
-            scene.update(table.unpack(result[1]))
+        while sharp.status(task):result()[1] == "running" do
+            local result = sharp.poll(task):result()
+            scene.update(result[1], result[2], result[3])
         end
 
         local last = sharp.poll(task):result()

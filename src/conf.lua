@@ -88,7 +88,11 @@ end
 
 love.filesystem.setRequirePath(love.filesystem.getRequirePath() .. ";xml2lua/?.lua")
 
-require("prethread")("main")
+require("prethread")({
+    meta = {
+        id = "main"
+    }
+})
 
 local fs = require("fs")
 love.filesystem.mountUnsandboxed(fs.getStorageDir(), "/", 0)

@@ -214,7 +214,7 @@ local function sharpthread()
                 threader.sleep(2)
                 goto retry
             end
-            clientOrStatus:settimeout(1)
+            -- clientOrStatus:settimeout(1) -- Lua-side timeout seems to cause issues, C#-side only timeout works perfectly fine:tm:
             return clientOrStatus
         end
 
@@ -385,7 +385,7 @@ function sharp.init(debug, debugSharp)
     end
 
     channelDebug:clear()
-    channelDebug:push({ debug and true or false, debugSharp and true or false })
+    channelDebug:push({ debug and true or os.getenv("OLYMPUS_SHARP_DEBUGLOG") == "1", debugSharp and true or false })
     channelStatus:clear()
     channelStatus:push("init")
 

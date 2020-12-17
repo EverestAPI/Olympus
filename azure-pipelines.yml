@@ -336,7 +336,6 @@ steps:
       plutil -replace CFBundleExecutable -string "olympus.sh" $PLIST
       plutil -remove CFBundleDocumentTypes $PLIST
       plutil -remove UTExportedTypeDeclarations $PLIST
-      defaults write $PLIST CFBundleURLTypes -array-add '<dict><key>CFBundleURLName</key><string>Olympus - Celeste Mod Installer</string><key>CFBundleURLSchemes</key><array><string>everest</string></array></dict>'
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       mv love/love.app love/Olympus.app

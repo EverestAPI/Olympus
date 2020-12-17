@@ -38,7 +38,7 @@ namespace Olympus {
 
                     yield return Status("Parsing everest.yaml", false, "download");
                     zipStream.Seek(0, SeekOrigin.Begin);
-                    using (ZipArchive zip = new ZipArchive(zipStream)) {
+                    using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                         ZipArchiveEntry entry = zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml");
                         if (entry == null)
                             throw new Exception("everest.yaml not found - is this a Celeste mod?");

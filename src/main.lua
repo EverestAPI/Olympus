@@ -15,6 +15,9 @@ local themer
 local sharp
 local fs
 
+local logChannel
+local logFile
+
 local ui
 local uie
 
@@ -87,6 +90,9 @@ function love.load(args)
     threader = require("threader")
 
     fs = require("fs")
+
+    logChannel = love.thread.getChannel("olympusLog")
+    logFile = io.open(fs.joinpath(fs.getStorageDir(), "log.txt"), "w+")
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
@@ -370,6 +376,14 @@ love.frame = 0
 function love.update(dt)
     if not love.graphics then
         return
+    end
+
+    while true do
+        local logLine = logChannel:pop()
+        if not logLine then
+            break
+        end
+        logFile:write(logLine, "\n")
     end
 
     love.frame = love.frame + 1

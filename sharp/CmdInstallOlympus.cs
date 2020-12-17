@@ -58,7 +58,7 @@ namespace Olympus {
                     wrapStream.Seek(0, SeekOrigin.Begin);
 
                     yield return Status($"Unwrapping {name}.zip", false, "download");
-                    using (ZipArchive wrap = new ZipArchive(wrapStream)) {
+                    using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                         yield return Unwrap(wrap, name);
                     }
                 }
@@ -101,7 +101,7 @@ namespace Olympus {
                     case "sharp.zip":
                         yield return Status("Unpacking sharp.zip", false, "download");
                         using (Stream zipStream = entry.Open())
-                        using (ZipArchive zip = new ZipArchive(zipStream)) {
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                             yield return Unpack(zip, Path.Combine(Program.RootDirectory, "sharp.new"));
                         }
                         break;
