@@ -383,7 +383,9 @@ function love.update(dt)
         if not logLine then
             break
         end
-        logFile:write(logLine, "\n")
+        if logFile then
+            logFile:write(logLine, "\n")
+        end
     end
 
     love.frame = love.frame + 1
