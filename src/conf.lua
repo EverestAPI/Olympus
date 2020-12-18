@@ -108,7 +108,7 @@ function love.conf(t)
     local config = require("config")
     config.load()
 
-    t.window.title = "Everest.Olympus"
+    t.window.title = "Olympus"
     t.window.icon = "data/icon.png"
     t.window.width = 1100
     t.window.minwidth = 1100

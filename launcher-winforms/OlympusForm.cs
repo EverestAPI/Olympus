@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Text;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -21,13 +23,15 @@ namespace Olympus {
 
         public OlympusForm() {
             InitializeComponent();
+
+            Icon = LoadAsset<Icon>("icon.ico");
+            BackgroundImage = LoadAsset<Bitmap>("logo.png");
         }
 
-        protected override void OnLoad(EventArgs e) {
-            base.OnLoad(e);
-
+        private void OlympusForm_Load(object sender, EventArgs e) {
             Thread = new Thread(RunDownloader) {
-                Name = "Olympus Downloader"
+                Name = "Olympus Downloader",
+                IsBackground = true
             };
             Thread.Start();
         }
@@ -92,6 +96,13 @@ namespace Olympus {
                     Console.WriteLine("Opening dist .zip");
                     using (Stream stream = wrapper.GetEntry("windows.main/dist.zip").Open())
                     using (ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Read)) {
+                        Console.WriteLine($"Wiping {Program.InstallDir}");
+                        try {
+                            Directory.Delete(Program.InstallDir);
+                            Directory.CreateDirectory(Program.InstallDir);
+                        } catch (Exception e) {
+                            Console.WriteLine(e);
+                        }
                         Console.WriteLine($"Extracting to {Program.InstallDir}");
                         zip.ExtractToDirectory(Program.InstallDir);
                     }
@@ -104,6 +115,41 @@ namespace Olympus {
                 Program.StartMain();
                 Application.Exit();
             });
+        }
+
+        public static unsafe T LoadAsset<T>(string name, bool fullPath = false) where T : class {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            Type t = typeof(T);
+
+            if (t == typeof(Image) || t == typeof(Bitmap)) {
+                // Stream must be kept open for the lifetime of the image!
+                if (name.EndsWith(".gif"))
+                    return Image.FromStream(assembly.GetManifestResourceStream(fullPath ? name : "Olympus." + name)) as T;
+
+                using (Stream s = assembly.GetManifestResourceStream(fullPath ? name : "Olympus." + name))
+                using (Image src = Image.FromStream(s))
+                    return new Bitmap(src) as T;
+            }
+
+            if (t == typeof(Icon)) {
+                using (Bitmap img = LoadAsset<Bitmap>(name, fullPath)) {
+                    return Icon.FromHandle(img.GetHicon()) as T;
+                }
+            }
+
+            if (t == typeof(PrivateFontCollection)) {
+                PrivateFontCollection pfc = new PrivateFontCollection();
+                byte[] data;
+                using (Stream s = assembly.GetManifestResourceStream(fullPath ? name : "Olympus." + name)) {
+                    data = new byte[s.Length];
+                    s.Read(data, 0, (int) s.Length);
+                }
+                fixed (byte* pData = data)
+                    pfc.AddMemoryFont((IntPtr) pData, data.Length);
+                return pfc as T;
+            }
+
+            return default(T);
         }
 
     }
