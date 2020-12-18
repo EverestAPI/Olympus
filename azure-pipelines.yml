@@ -158,8 +158,15 @@ steps:
 
 # Create and publish an artifact.
 # Download and unpack LÖVE.
-- task: PowerShell@2
+- task: Cache@2
   condition: and(succeeded(), ne(variables.loveURL, ''))
+  displayName: 'Dist: Grab cached LÖVE'
+  inputs:
+    key: 'love-zip-tar | "$(Agent.OS)"'
+    path: $(LOVEZIP)$(LOVETAR)
+    cacheHitVar: loveCached
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.loveURL, ''), ne(variables.loveCached, 'true'))
   displayName: 'Dist: Download LÖVE'
   continueOnError: true
   inputs:
@@ -341,6 +348,7 @@ steps:
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       Copy-Item -Path olympus.love -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/olympus.love
       Compress-Archive -Path love/sharp/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/sharp.zip -Force
+      New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/launcher-winforms -ItemType Directory
       Copy-Item -Path launcher-winforms/bin/Release/net452/Olympus.exe -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/launcher-winforms/Olympus.exe
 
 # macOS
