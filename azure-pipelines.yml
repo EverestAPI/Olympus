@@ -29,6 +29,7 @@ strategy:
       loveZIP: 'love.zip'
       loveBinaryDirectory: 'love.app/Contents/MacOS/'
       loveResourcesDirectory: 'love.app/Contents/Resources/'
+      launcher: ''
     linux:
       jobArchName: 'linux'
       imageName: 'ubuntu-latest'
@@ -41,6 +42,7 @@ strategy:
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
       loveBinaryDirectory: ''
       loveResourcesDirectory: ''
+      launcher: ''
 
 variables:
   netBuildPlatform: 'Any CPU'
@@ -135,6 +137,23 @@ steps:
   displayName: 'Build: mono: build sharp'
   inputs:
     script: 'msbuild sharp/*.sln "/p:Configuration=$(netBuildConfiguration)" "/p:Platform=$(netBuildPlatform)"'
+
+
+# Build launcher-winforms.
+- task: DotNetCoreCLI@2
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Build: dotnet: restore launcher-winforms'
+  inputs:
+    command: 'restore'
+    projects: 'launcher-winforms/*.csproj'
+
+- task: DotNetCoreCLI@2
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Build: dotnet: build launcher-winforms'
+  inputs:
+    command: 'build'
+    projects: 'launcher-winforms/*.csproj'
+    arguments: '--configuration $(netBuildConfiguration) "/p:Configuration=$(netBuildConfiguration)"'
 
 
 # Create and publish an artifact.
@@ -322,6 +341,7 @@ steps:
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       Copy-Item -Path olympus.love -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/olympus.love
       Compress-Archive -Path love/sharp/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/sharp.zip -Force
+      Copy-Item -Path launcher-winforms/bin/Release/net452/Olympus.exe -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/launcher-winforms/Olympus.exe
 
 # macOS
 - task: CmdLine@2
@@ -373,5 +393,13 @@ steps:
   inputs:
     pathtoPublish: '$(Build.ArtifactStagingDirectory)/update'
     artifactName: 'update'
+    publishLocation: 'Container'
+- task: PublishBuildArtifacts@1
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Dist: Publish launcher-winforms'
+  continueOnError: true
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)/launcher-winforms'
+    artifactName: 'launcher-winforms'
     publishLocation: 'Container'
 
