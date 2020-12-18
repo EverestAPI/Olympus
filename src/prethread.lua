@@ -21,7 +21,7 @@ return function(raw)
 
                 if rv[1] then
                     table.remove(rv, 1)
-                    return _ffi_load("libcurl.so.4")
+                    return unpack(rv)
                 end
 
                 print(debug.traceback("Skipping " .. name .. " variant " .. names[i] .. ":\n" .. rv[2], 2))
