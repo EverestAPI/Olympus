@@ -164,8 +164,8 @@ steps:
   condition: and(succeeded(), ne(variables.loveURL, ''))
   displayName: 'Dist: Grab cached LÖVE'
   inputs:
-    key: 'love-zip-tar | "$(Agent.OS)"'
-    path: $(loveZIP)$(loveTAR)
+    key: 'love-unpacked | "$(Agent.OS)"'
+    path: love-raw
     cacheHitVar: loveCached
 - task: PowerShell@2
   condition: and(succeeded(), ne(variables.loveURL, ''), ne(variables.loveCached, 'true'))
@@ -177,13 +177,33 @@ steps:
       Invoke-WebRequest -Uri $env:LOVEURL -OutFile $env:LOVEZIP$env:LOVETAR
 # Unzip love.zip.
 - task: PowerShell@2
-  condition: and(succeeded(), ne(variables.loveZIP, ''))
+  condition: and(succeeded(), ne(variables.loveZIP, ''), ne(variables.loveCached, 'true'))
   displayName: 'Dist: Unpack LÖVE (ZIP)'
   continueOnError: true
   inputs:
     targetType: 'inline'
     script: |
-      Expand-Archive -Path $env:LOVEZIP -DestinationPath love -Force
+      Expand-Archive -Path $env:LOVEZIP -DestinationPath love-raw -Force
+# Untar love.tar.gz.
+- task: CmdLine@2
+  condition: and(succeeded(), ne(variables.loveTAR, ''), ne(variables.loveCached, 'true'))
+  displayName: 'Dist: Unpack LÖVE (TAR)'
+  continueOnError: true
+  inputs:
+    script: |
+      mkdir -p love-raw && \
+      tar xvf $LOVETAR -C love-raw && \
+      mv love-raw/dest/* love-raw/ && \
+      rmdir love-raw/dest
+# Copy cached unpacked LÖVE, fix it up if needed
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.loveURL, ''))
+  displayName: 'Dist: Copy and fix cached LÖVE'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Copy-Item -Path love-raw -Destination love -Recurse
       if (Test-Path -Path love/love-11.3-win32 -PathType Container) {
         Move-Item -Path love/love-11.3-win32 -Destination love-win
         Remove-Item -Path love -Force -Recurse
@@ -191,17 +211,6 @@ steps:
         Invoke-WebRequest -Uri "https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe" -OutFile rcedit.exe
         ./rcedit.exe love/love.exe --set-icon icon.ico
       }
-# Untar love.tar.gz.
-- task: CmdLine@2
-  condition: and(succeeded(), ne(variables.loveTAR, ''))
-  displayName: 'Dist: Unpack LÖVE (TAR)'
-  continueOnError: true
-  inputs:
-    script: |
-      mkdir -p love && \
-      tar xvf $LOVETAR -C love && \
-      mv love/dest/* love/ && \
-      rmdir love/dest
 
 # Create a dummy dir for platforms which don't use prebuilt LÖVE.
 - task: CmdLine@2
