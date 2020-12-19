@@ -4,6 +4,8 @@
 
 ----
 
+[![Build Status](https://dev.azure.com/EverestAPI/Olympus/_apis/build/status/EverestAPI.Olympus?branchName=main)](https://dev.azure.com/EverestAPI/Olympus/_build?definitionId=4)
+
 <a href="https://discord.gg/6qjaePQ"><img align="right" alt="Mt. Celeste Climbing Association" src="https://discordapp.com/api/guilds/403698615446536203/embed.png?style=banner2" /></a>
 
 [**Check the website for installation / usage instructions.**](https://everestapi.github.io/)

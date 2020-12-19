@@ -62,7 +62,7 @@ function scene.browse()
             end
         end
 
-        entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
+        entry.name = string.format("%s (#%d)", entry.type, #installs + 1)
         installs[#installs + 1] = entry
         config.installs = installs
         config.save()
@@ -146,7 +146,7 @@ function scene.createEntry(list, entry, manualIndex)
                     uie.button("Add", function()
                         local function add()
                             local installs = config.installs
-                            entry.name = string.format("Celeste #%d (%s)", #installs + 1, entry.type)
+                            entry.name = string.format("%s (#%d)", entry.type, #installs + 1)
                             installs[#installs + 1] = entry
                             config.installs = installs
                             config.save()

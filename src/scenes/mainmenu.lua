@@ -162,7 +162,6 @@ local root = uie.column({
         scene.createInstalls(),
 
         uie.column({
-            buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(uiu.fillWidth):as("installbtn"),
             buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana", true):with(uiu.fillWidth),
             buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
             buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
@@ -231,7 +230,9 @@ You can close this window.]])
     clip = false,
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
-scene.installbtn = root:findChild("installbtn")
+
+scene.installbtn = buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(uiu.fillWidth):as("installbtn")
+
 
 scene.installs:hook({
     cb = function(orig, self, data)
@@ -242,18 +243,16 @@ scene.installs:hook({
 
 
 function scene.updateMainList(install)
-    if scene.launchrow.parent then
+    ui.runOnce(function(scene, install)
         scene.launchrow:removeSelf()
-    end
-    if scene.installbtn.parent then
         scene.installbtn:removeSelf()
-    end
 
-    if install and install.versionEverest then
-        scene.mainlist:addChild(scene.launchrow, 1)
-    else
-        scene.mainlist:addChild(scene.installbtn, 1)
-    end
+        if install and install.versionEverest then
+            scene.mainlist:addChild(scene.launchrow, 1)
+        else
+            scene.mainlist:addChild(scene.installbtn, 1)
+        end
+    end, scene, install)
 end
 
 
