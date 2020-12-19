@@ -255,7 +255,11 @@ function love.load(args)
                         uie.button("Unlock scroll", function(self)
                             logList.locked = not logList.locked
                             self.label.text = logList.locked and "Unlock scroll" or "Lock scroll"
-                            self.parent.children[#self.parent.children]:reflow()
+                            self.parent:reflowDown()
+                        end),
+
+                        uie.button("Open folder", function()
+                            utils.openFile(fs.getStorageDir())
                         end),
 
                         uie.button("Clear", function()
@@ -452,8 +456,6 @@ function love.load(args)
             love.event.quit()
         end)
     end
-
-    require("finder").findAll()
 end
 
 love.frame = 0

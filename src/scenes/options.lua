@@ -1,5 +1,6 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
+local fs = require("fs")
 local threader = require("threader")
 local scener = require("scener")
 local alert = require("alert")
@@ -254,7 +255,22 @@ local root = uie.column({
 
                 uie.row({
 
-                }):with(nobg):with(uiu.fillWidth)
+                    uie.button("Open installation folder", function()
+                        local src = love.filesystem.getSource()
+                        if src then
+                            src = fs.dirname(fs.normalize(src))
+                        else
+                            src = fs.getcwd()
+                        end
+                        utils.openFile(src)
+                    end):with(uiu.fillWidth(4.5)),
+
+                    uie.button("Open log and config folder", function()
+                        utils.openFile(fs.getStorageDir())
+                    end):with(uiu.fillWidth(4.5)):with(uiu.at(4.5)),
+
+
+                }):with(nobg):with(uiu.fillWidth),
 
             }):with(uiu.fillWidth),
 
