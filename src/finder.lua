@@ -20,16 +20,17 @@ finder.defaultUWPName = "MattMakesGamesInc.Celeste_79daxvg0dq3v6"
 
 function finder.findSteamRoot()
     local userOS = love.system.getOS()
+    local root
 
     if userOS == "Windows" then
         local steam =
             registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath]]) or
             registry.getKey([[HKLM\SOFTWARE\Valve\Steam\InstallPath]])
 
-        return fs.isDirectory(steam)
+        root = fs.isDirectory(steam)
 
     elseif userOS == "OS X" then
-        return fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Steam"))
+        root = fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Steam"))
 
     elseif userOS == "Linux" then
         local paths = {
@@ -40,12 +41,16 @@ function finder.findSteamRoot()
         for i = 1, #paths do
             local path = paths[i]
             if fs.isDirectory(path) then
-                return path
+                root = path
+                break
             end
         end
-
-        return false
     end
+
+    if root then
+        print("[finder]", "steam root", root)
+    end
+    return root
 end
 
 function finder.findSteamCommon(root)
@@ -57,6 +62,7 @@ function finder.findSteamCommon(root)
     for i = 1, #commons do
         local path = commons[i]
         if fs.isDirectory(path) then
+            print("[finder]", "steam common", path)
             return path
         end
     end
@@ -89,6 +95,7 @@ function finder.findSteamLibraries()
         path = utils.fromJSON(path)
         path = finder.findSteamCommon(path)
         if path then
+            print("[finder]", "steam additional library", path)
             libraries[#libraries + 1] = path
         end
     end
@@ -183,6 +190,7 @@ function finder.findSteamInstalls(id)
         local path = libraries[i]
         path = fs.joinpath(path, "Celeste")
         if fs.isDirectory(path) then
+            print("[finder]", "steam install", path)
             list[#list + 1] = {
                 type = "steam",
                 path = path
@@ -198,6 +206,7 @@ function finder.findSteamInstalls(id)
         local path = shortcut.exe
         path = path and fs.isDirectory(fs.dirname(path:match("^\"?([^\" ]*)")))
         if fs.isDirectory(path) then
+            -- print("[finder]", "steam shortcut", path)
             list[#list + 1] = {
                 type = "steam_shortcut",
                 path = path
@@ -206,6 +215,7 @@ function finder.findSteamInstalls(id)
 
         path = shortcut.startdir
         if fs.isDirectory(path) then
+            -- print("[finder]", "steam shortcut", path)
             list[#list + 1] = {
                 type = "steam_shortcut",
                 path = path
@@ -219,20 +229,23 @@ end
 
 function finder.findEpicRoot()
     local userOS = love.system.getOS()
+    local root
 
     if userOS == "Windows" then
         local epic =
             registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Epic Games\EpicGamesLauncher\AppDataPath]]) or
             registry.getKey([[HKLM\SOFTWARE\Epic Games\EpicGamesLauncher\AppDataPath]])
 
-        return fs.isDirectory(epic)
+        root = fs.isDirectory(epic)
 
     elseif userOS == "OS X" then
-        return fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Epic", "EpicGamesLauncher", "Data"))
-
-    elseif userOS == "Linux" then
-        return false
+        root = fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Epic", "EpicGamesLauncher", "Data"))
     end
+
+    if root then
+        print("[finder]", "epic root", root)
+    end
+    return root
 end
 
 function finder.findEpicInstalls(name)
@@ -250,6 +263,7 @@ function finder.findEpicInstalls(name)
         if data and data.DisplayName == name then
             local path = data.InstallLocation
             if fs.isDirectory(path) then
+                print("[finder]", "epic install", path)
                 list[#list + 1] = {
                     type = "epic",
                     path = path
@@ -264,16 +278,22 @@ end
 
 function finder.findItchDatabase()
     local userOS = love.system.getOS()
+    local db
 
     if userOS == "Windows" then
-        return fs.isFile(fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db"))
+        db = fs.isFile(fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db"))
 
     elseif userOS == "OS X" then
-        return fs.isFile(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db"))
+        db = fs.isFile(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db"))
 
     elseif userOS == "Linux" then
-        return fs.isFile(fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db"))
+        db = fs.isFile(fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db"))
     end
+
+    if db then
+        print("[finder]", "itch db", db)
+    end
+    return db
 end
 
 function finder.findItchInstalls(name)
@@ -299,6 +319,7 @@ function finder.findItchInstalls(name)
         local data = utils.fromJSON(body)
         local path = data.basePath
         if fs.isDirectory(path) then
+            print("[finder]", "itch install", path)
             list[#list + 1] = {
                 type = "itch",
                 path = path
@@ -336,6 +357,8 @@ function finder.fixRoot(path, appname)
         return nil
     end
 
+    local pathRaw = path
+
     path = fs.normalize(path)
     appname = appname or finder.defaultName
 
@@ -345,6 +368,9 @@ function finder.fixRoot(path, appname)
     end
 
     if not fs.isFile(fs.joinpath(path, "Celeste.exe")) then
+        if path:match("[Cc]eleste") then
+            print("[finder]", "found install root without Celeste.exe", pathRaw, pathRaw == path and "<same>" or path)
+        end
         return nil
     end
 
