@@ -112,24 +112,9 @@ elseif storageDirAttrs.mode == "file" then
     print("storageDir is actually file - trying to delete")
     print(os.remove(storageDir))
 
-elseif not storageDirAttrs.permissions:match("rwx......") then
-    print("storageDir permissions are broken - trying to delete")
-    local function deldir(dir)
-        for name in lfs.dir(dir) do
-            if name ~= "." and name ~= ".." then
-                local path = dir .. "/" .. name
-                local mode = lfs.attributes(path, "mode")
-                if mode == "directory" then
-                    deldir(path)
-                else
-                    print(path, os.remove(path))
-                end
-            end
-        end
-        print(storageDir, lfs.rmdir(dir))
-    end
-    deldir(storageDir)
-    print(fs.mkdir(storageDir))
+elseif not storageDirAttrs.permissions:match("rwx......") and (love.system.getOS() == "Linux" or love.system.getOS() == "OS X") then
+    print("storageDir permissions are broken - trying to fix")
+    print(os.execute([["chmod" "u+rwx" "]] .. storageDir .. [["]]))
 end
 
 love.filesystem.mountUnsandboxed(storageDir, "/", 0)
