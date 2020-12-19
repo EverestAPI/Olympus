@@ -364,17 +364,19 @@ function finder.fixRoot(path, appname)
 
     local appdir = fs.isDirectory(fs.joinpath(path, appname .. ".app"))
     if appdir then
-        path = fs.isDirectory(fs.joinpath(appdir, "Contents", "MacOS"))
+        print("[finder]", "found Celeste.app", path)
+        path = fs.isDirectory(fs.joinpath(appdir, "Contents", "MacOS")) or path
     end
 
-    if not fs.isFile(fs.joinpath(path, "Celeste.exe")) then
-        if path:match("[Cc]eleste") then
-            print("[finder]", "found install root without Celeste.exe", pathRaw, pathRaw == path and "<same>" or path)
-        end
-        return nil
+    if fs.isFile(fs.joinpath(path, "Celeste.exe")) then
+        print("[finder]", "found Celeste.exe root", path)
+        return path
     end
 
-    return path
+    if path:match("[Cc]eleste") then
+        print("[finder]", "found install root without Celeste.exe", pathRaw, pathRaw == path and "<same>" or path)
+    end
+    return nil
 end
 
 
