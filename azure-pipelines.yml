@@ -377,6 +377,7 @@ steps:
       plutil -remove UTExportedTypeDeclarations $PLIST
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
+      codesign --remove-signature love/$LOVEBINARYDIRECTORY/love
       mv love/love.app love/Olympus.app
       pushd love
       mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/main
