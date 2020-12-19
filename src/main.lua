@@ -470,7 +470,12 @@ function love.update(dt)
         if logFile then
             logFile:write(logLine, "\n")
         end
-        logList:addChild(uie.label(logLine))
+        if not lldb then
+            if logList.children[100] then
+                table.remove(logList.children, 1)
+            end
+            logList:addChild(uie.label(logLine))
+        end
     end
 
     love.frame = love.frame + 1
