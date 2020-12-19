@@ -24,6 +24,16 @@ namespace Olympus {
             RootDirectory = Path.GetDirectoryName(Environment.CurrentDirectory);
             Console.Error.WriteLine(RootDirectory);
 
+            if (Type.GetType("Mono.Runtime") != null) {
+                // Mono hates HTTPS.
+                ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => {
+                    return true;
+                };
+            }
+
+            // Enable TLS 1.2 to fix connecting to GitHub.
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+
             if (args.Length == 1 && args[0] == "--test") {
                 new CmdGetUWPPackagePath().Run("MattMakesGamesInc.Celeste_79daxvg0dq3v6");
                 return;
