@@ -370,6 +370,8 @@ function love.load(args)
             love.event.quit()
         end)
     end
+
+    require("finder").findAll()
 end
 
 love.frame = 0

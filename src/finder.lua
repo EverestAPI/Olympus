@@ -366,20 +366,12 @@ function finder.findAll(uncached)
     )
 
     for i = #all, 1, -1 do
-        local entry = all[i]
-        local path = entry and finder.fixRoot(entry.path, finder.defaultName)
-        if not path then
+        local entryA = all[i]
+        local pathA = finder.fixRoot(entryA and entryA.path)
+        if not pathA then
             table.remove(all, i)
         else
-            entry.path = path
-        end
-    end
-
-    for i = 1, #all do
-        local entryA = all[i]
-        local pathA = entryA.path
-        if pathA then
-            for j = #all, i + 1, -1 do
+            for j = i + 1, #all do
                 local entryB = all[j]
                 local pathB = entryB.path
                 if pathB and pathB == pathA then
