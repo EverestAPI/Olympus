@@ -11,9 +11,13 @@ return function(raw)
         function ffi.load(name, ...)
             local names = { name }
 
-            -- libcurl is a versioned library, at least on Ubuntu.
-            if ffi.os == "Linux" and name == "libcurl" then
-                names = { name, name .. ".so.4", name .. ".so.3" }
+            -- libcurl is a versioned library, at least on Ubuntu and some macOS installs.
+            if name == "libcurl" then
+                if ffi.os == "Linux" then
+                    names = { name, name .. ".so.4", name .. ".so.3" }
+                elseif ffi.os == "OSX" then
+                    names = { name, name .. ".4.dylib", name .. ".so.4", name .. ".3.dylib", name .. ".so.3" }
+                end
             end
 
             for i = 1, #names - 1 do
