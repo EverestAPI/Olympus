@@ -18,9 +18,7 @@ local function sharpthread()
         local debuggingFlags = channelDebug:peek()
         local debugging, debuggingSharp = debuggingFlags[1], debuggingFlags[2]
 
-        if debugging then
-            print("[sharp init]", "starting thread")
-        end
+        print("[sharp init]", "starting thread")
 
         local threader = require("threader")
         local fs = require("fs")
@@ -81,10 +79,8 @@ local function sharpthread()
             fs.mkdir(fs.dirname(logpath))
         end
 
-        if debugging then
-            print("[sharp init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
-            print("[sharp init]", "logging to", logpath)
-        end
+        print("[sharp init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
+        print("[sharp init]", "logging to", logpath)
 
         local pargs = {
             exe,
@@ -184,13 +180,9 @@ local function sharpthread()
         local unpack = table.unpack or _G.unpack
 
         -- The child process immediately sends a status message.
-        if debugging then
-            print("[sharp init]", "reading init")
-        end
+        print("[sharp init]", "reading init")
         local initStatus = readBlob()
-        if debugging then
-            print("[sharp init]", "read init", initStatus)
-        end
+        print("[sharp init]", "read init", initStatus)
 
         -- The status message contains the TCP port we're actually supposed to listen to.
         -- Switch from STDIN / STDOUT to sockets.
@@ -208,9 +200,7 @@ local function sharpthread()
                     channelStatus:push("connect error " .. tostring(clientError))
                     error(clientError, 2)
                 end
-                if debugging then
-                    print("[sharp init]", "failed to connect, retrying in 2s", clientError)
-                end
+                print("[sharp init]", "failed to connect, retrying in 2s", clientError)
                 threader.sleep(2)
                 goto retry
             end
@@ -261,7 +251,7 @@ local function sharpthread()
                 channelReturn:push(initStatus)
 
             elseif cid == "_die" then
-                dprint("dying")
+                print("[sharp queue]", "time to _die")
                 channelReturn:push({ value = "ok" })
                 break
 

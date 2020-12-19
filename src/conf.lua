@@ -95,6 +95,11 @@ require("prethread")({
 })
 
 local fs = require("fs")
+
+print("pre-initializing")
+print("cwd:", fs.getcwd())
+print("storageDir:", fs.getStorageDir())
+
 love.filesystem.mountUnsandboxed(fs.getStorageDir(), "/", 0)
 
 for i, file in ipairs(love.filesystem.getDirectoryItems("preload")) do
@@ -119,4 +124,6 @@ function love.conf(t)
     t.window.vsync = config.vsync and 1 or 0
     t.window.highdpi = true
     t.console = false
+
+    print("pre-initialized")
 end

@@ -332,6 +332,10 @@ end
 
 
 function finder.fixRoot(path, appname)
+    if not path or #path == 0 then
+        return path
+    end
+
     path = fs.normalize(path)
     appname = appname or finder.defaultName
 

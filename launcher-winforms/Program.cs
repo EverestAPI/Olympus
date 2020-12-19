@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,10 +17,14 @@ namespace Olympus {
         public static string ConfigDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus");
         public static string LogPath = Path.Combine(ConfigDir, "log-launcher.txt");
 
+        public static string[] Args;
+
         [STAThread]
-        static void Main() {
+        static void Main(string[] args) {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
+
+            Args = args;
 
             if (!Directory.Exists(InstallDir))
                 Directory.CreateDirectory(InstallDir);
@@ -85,6 +90,11 @@ namespace Olympus {
             Process process = new Process();
             process.StartInfo.FileName = MainPath;
             process.StartInfo.WorkingDirectory = InstallDir;
+            process.StartInfo.Arguments = string.Join(" ", Args.Select(arg => {
+                arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1\$0");
+                arg = Regex.Replace(arg, @"^(.*\s.*?)(\\*)$", "\"$1$2$2\"");
+                return arg;
+            }));
             process.Start();
             return true;
         }
