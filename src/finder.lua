@@ -333,7 +333,7 @@ end
 
 function finder.fixRoot(path, appname)
     if not path or #path == 0 then
-        return path
+        return nil
     end
 
     path = fs.normalize(path)
@@ -371,11 +371,14 @@ function finder.findAll(uncached)
         if not pathA then
             table.remove(all, i)
         else
-            for j = i + 1, #all do
+            local j = i + 1
+            while j <= #all do
                 local entryB = all[j]
                 local pathB = entryB.path
                 if pathB and pathB == pathA then
                     table.remove(all, j)
+                else
+                    j = j + 1
                 end
             end
         end
