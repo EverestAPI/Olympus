@@ -145,6 +145,7 @@ function scene.install()
         version = version and version.data
 
         if not install or not version then
+            scene.installing = nil
             return
         end
 
