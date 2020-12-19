@@ -27,10 +27,10 @@ function finder.findSteamRoot()
             registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Valve\Steam\InstallPath]]) or
             registry.getKey([[HKLM\SOFTWARE\Valve\Steam\InstallPath]])
 
-        root = fs.isDirectory(steam)
+        root = steam
 
     elseif userOS == "OS X" then
-        root = fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Steam"))
+        root = fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Steam")
 
     elseif userOS == "Linux" then
         local paths = {
@@ -48,9 +48,9 @@ function finder.findSteamRoot()
     end
 
     if root then
-        print("[finder]", "steam root", root)
+        local rootReal = fs.isDirectory(root)
+        print("[finder]", "steam root", root, root == rootReal and "<same>" or rootReal)
     end
-    return root
 end
 
 function finder.findSteamCommon(root)
@@ -236,16 +236,16 @@ function finder.findEpicRoot()
             registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Epic Games\EpicGamesLauncher\AppDataPath]]) or
             registry.getKey([[HKLM\SOFTWARE\Epic Games\EpicGamesLauncher\AppDataPath]])
 
-        root = fs.isDirectory(epic)
+        root = epic
 
     elseif userOS == "OS X" then
-        root = fs.isDirectory(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Epic", "EpicGamesLauncher", "Data"))
+        root = fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "Epic", "EpicGamesLauncher", "Data")
     end
 
     if root then
-        print("[finder]", "epic root", root)
+        local rootReal = fs.isDirectory(root)
+        print("[finder]", "epic root", root, root == rootReal and "<same>" or rootReal)
     end
-    return root
 end
 
 function finder.findEpicInstalls(name)
