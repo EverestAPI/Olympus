@@ -60,6 +60,9 @@ function config.load()
     default(data, "updates", "stable")
 
     default(data, "install", 1)
+    if data.install < 1 then
+        data.install = 1 -- Old versions of Olympus defaulted to 0
+    end
     default(data, "installs", {})
 
     local csd = os.getenv("OLYMPUS_CSD")
