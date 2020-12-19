@@ -96,11 +96,43 @@ require("prethread")({
 
 local fs = require("fs")
 
+local storageDir = fs.getStorageDir()
+
 print("pre-initializing")
 print("cwd:", fs.getcwd())
-print("storageDir:", fs.getStorageDir())
+print("storageDir:", storageDir)
 
-love.filesystem.mountUnsandboxed(fs.getStorageDir(), "/", 0)
+local storageDirAttrs = lfs.attributes(storageDir)
+
+if not storageDirAttrs then
+    print("storageDir is missing - creating")
+    print(fs.mkdir(storageDir))
+
+elseif storageDirAttrs.mode == "file" then
+    print("storageDir is actually file - trying to delete")
+    print(os.remove(storageDir))
+
+elseif not storageDirAttrs.permissions:match("rwx......") then
+    print("storageDir permissions are broken - trying to delete")
+    local function deldir(dir)
+        for name in lfs.dir(dir) do
+            if name ~= "." and name ~= ".." then
+                local path = dir .. "/" .. name
+                local mode = lfs.attributes(path, "mode")
+                if mode == "directory" then
+                    deldir(path)
+                else
+                    print(path, os.remove(path))
+                end
+            end
+        end
+        print(storageDir, lfs.rmdir(dir))
+    end
+    deldir(storageDir)
+    print(fs.mkdir(storageDir))
+end
+
+love.filesystem.mountUnsandboxed(storageDir, "/", 0)
 
 for i, file in ipairs(love.filesystem.getDirectoryItems("preload")) do
     local name = file:match("^(.*).lua$")

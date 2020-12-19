@@ -16,6 +16,8 @@ end
 fs.remove = os.remove
 
 if lfsStatus then
+    fs.lfs = fs
+
     fs.chdir = lfs.chdir
     fs.dir = lfs.dir
     fs.rmdir = lfs.rmdir
