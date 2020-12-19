@@ -59,7 +59,7 @@ function config.load()
 
     default(data, "updates", "stable")
 
-    default(data, "install", 0)
+    default(data, "install", 1)
     default(data, "installs", {})
 
     local csd = os.getenv("OLYMPUS_CSD")
