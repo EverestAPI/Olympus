@@ -16,6 +16,29 @@
                 "${workspaceFolder}/src"
             ],
             "env": {
+                "OLYMPUS_SHARP_DEBUGLOG": "0"
+            },
+            "windows": {
+                "program": {
+                    "command": "${workspaceFolder}/love/love.exe",
+                },
+            },
+            "linux": {
+                "cwd": "${workspaceFolder}/dist/"
+            }
+        },
+        {
+            "name": "Verbose Sharp",
+            "type": "lua-local",
+            "request": "launch",
+            "program": {
+                "command": "love"
+            },
+            "cwd": "${workspaceFolder}/src",
+            "args": [
+                "${workspaceFolder}/src"
+            ],
+            "env": {
                 "OLYMPUS_SHARP_DEBUGLOG": "1"
             },
             "windows": {

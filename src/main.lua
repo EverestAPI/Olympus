@@ -22,6 +22,8 @@ local ui
 local uie
 
 local debugLabel
+local logWindow
+local logList
 
 -- Needed to avoid running the same frame twice on resize
 -- and to avoid Löve2D's default sleep throttle.
@@ -199,14 +201,73 @@ function love.load(args)
                 }):as("debug")
             ):with({
                 style = {
-                    bg = { 0.02, 0.02, 0.02, 0.9 },
+                    bg = { 0.02, 0.02, 0.02, 0.96 },
                     padding = 8
                 },
                 visible = profile ~= nil,
                 interactive = profile ~= nil and 1 or -1
             }):with(function(el)
                 table.remove(el.children, 1).parent = el
-            end)
+            end),
+
+            uie.window("log",
+                uie.column({
+
+                    uie.scrollbox(
+                        uie.column({}):with({
+                            style = {
+                                bg = {},
+                                padding = 0
+                            },
+                            clip = false,
+                            cacheable = false,
+
+                            interactive = 2,
+
+                            onPress = function(self, ...)
+                                logWindow.titlebar:onPress(...)
+                            end,
+
+                            onRelease = function(self, ...)
+                                logWindow.titlebar:onRelease(...)
+                            end,
+
+                            onDrag = function(self, ...)
+                                logWindow.titlebar:onDrag(...)
+                            end
+                        }):as("log")
+                    ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+
+                    uie.row({
+                        uie.button("Clear", function()
+                            logList.children = {}
+                            logList:reflow()
+                        end):with(uiu.fillWidth)
+                    }):with({
+                        style = {
+                            bg = {},
+                            padding = 0
+                        },
+                        clip = false
+                    }):with(uiu.fillWidth):with(uiu.bottombound)
+
+                }):with({
+                    style = {
+                        bg = {}
+                    }
+                }):with(uiu.fill)
+            ):with({
+                style = {
+                    bg = { 0.02, 0.02, 0.02, 0.96 },
+                    padding = 8
+                },
+                width = 800,
+                height = 500,
+                visible = false,
+                interactive = -1
+            }):with(function(el)
+                table.remove(el.children, 1).parent = el
+            end):as("logWindow")
 
         }):with({
             style = {
@@ -232,6 +293,8 @@ function love.load(args)
     })
 
     debugLabel = root:findChild("debug")
+    logWindow = root:findChild("logWindow")
+    logList = logWindow:findChild("log")
 
     ui.init(root, false)
     ui.hookLove(false, true)
@@ -388,6 +451,7 @@ function love.update(dt)
         if logFile then
             logFile:write(logLine, "\n")
         end
+        logList:addChild(uie.label(logLine))
     end
 
     love.frame = love.frame + 1
@@ -494,6 +558,12 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f2" then
+        logWindow.visible = not logWindow.visible
+        logWindow.interactive = logWindow.visible and 1 or -1
+        ui.root:recollect(false, true)
+    end
+
+    if key == "f3" then
         if not profile then
             debugLabel.parent.visible = true
             debugLabel.parent.interactive = 1
