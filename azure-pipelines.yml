@@ -292,7 +292,7 @@ steps:
     sourceFolder: '$(Build.SourcesDirectory)/sharp/bin'
     contents: '**/!(xunit.*|System.*|Microsoft.*|*.Tests.dll|*.pdb)'
     targetFolder: 'love/$(loveBinaryDirectory)/sharp'
-    cleanTargetFolder: true
+    cleanTargetFolder: false
     overWrite: true
     flattenFolders: true
 
