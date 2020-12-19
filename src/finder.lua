@@ -50,6 +50,7 @@ function finder.findSteamRoot()
     if root then
         local rootReal = fs.isDirectory(root)
         print("[finder]", "steam root", root, root == rootReal and "<same>" or rootReal)
+        return rootReal
     end
 end
 
@@ -245,6 +246,7 @@ function finder.findEpicRoot()
     if root then
         local rootReal = fs.isDirectory(root)
         print("[finder]", "epic root", root, root == rootReal and "<same>" or rootReal)
+        return rootReal
     end
 end
 
@@ -281,19 +283,20 @@ function finder.findItchDatabase()
     local db
 
     if userOS == "Windows" then
-        db = fs.isFile(fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db"))
+        db = fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db")
 
     elseif userOS == "OS X" then
-        db = fs.isFile(fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db"))
+        db = fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db")
 
     elseif userOS == "Linux" then
-        db = fs.isFile(fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db"))
+        db = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db")
     end
 
     if db then
-        print("[finder]", "itch db", db)
+        local dbReal = fs.isFile(db)
+        print("[finder]", "itch db", db, db == dbReal and "<same>" or dbReal)
+        return dbReal
     end
-    return db
 end
 
 function finder.findItchInstalls(name)
@@ -352,29 +355,30 @@ function finder.findUWPInstalls(package)
 end
 
 
-function finder.fixRoot(path, appname)
-    if not path or #path == 0 then
+function finder.fixRoot(root, appname)
+    if not root or #root == 0 then
         return nil
     end
 
-    local pathRaw = path
-
-    path = fs.normalize(path)
+    root = fs.normalize(root)
     appname = appname or finder.defaultName
 
-    local appdir = fs.isDirectory(fs.joinpath(path, appname .. ".app"))
-    if appdir then
-        print("[finder]", "found Celeste.app", path)
-        path = fs.isDirectory(fs.joinpath(appdir, "Contents", "MacOS")) or path
+    local dirs = {
+        root,
+        fs.joinpath(root, appname .. ".app", "Contents", "MacOS"), -- pre 1.3.3.0
+        fs.joinpath(root, appname .. ".app", "Contents", "Resources") -- 1.3.3.0 and newer
+    }
+
+    for i = 1, #dirs do
+        local path = dirs[i]
+        if fs.isFile(fs.joinpath(path, "Celeste.exe")) then
+            print("[finder]", "found Celeste.exe root", path)
+            return path
+        end
     end
 
-    if fs.isFile(fs.joinpath(path, "Celeste.exe")) then
-        print("[finder]", "found Celeste.exe root", path)
-        return path
-    end
-
-    if path:match("[Cc]eleste") then
-        print("[finder]", "found install root without Celeste.exe", pathRaw, pathRaw == path and "<same>" or path)
+    if root:match("[Cc]eleste") then
+        print("[finder]", "found install root without Celeste.exe", root)
     end
     return nil
 end
@@ -399,6 +403,7 @@ function finder.findAll(uncached)
         if not pathA then
             table.remove(all, i)
         else
+            all[i].path = pathA
             local j = i + 1
             while j <= #all do
                 local entryB = all[j]
