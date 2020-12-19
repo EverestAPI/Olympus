@@ -281,7 +281,7 @@ steps:
     targetFolder: 'love/$(loveBinaryDirectory)'
     cleanTargetFolder: false
     overWrite: true
-    flattenFolders: true
+    flattenFolders: false
 
 # Copy sharp.
 - task: CopyFiles@2
