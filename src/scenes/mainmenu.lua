@@ -12,26 +12,56 @@ local scene = {
 }
 
 
-local function buttonBig(icon, text, scene)
+local function checkInstall(forceInstall)
+    if not forceInstall or config.installs[config.install] then
+        return true
+    end
+
+    alert({
+        body = [[
+Your Celeste installation list is still empty.
+Do you want to go to the Celeste installation manager?
+]],
+        buttons = {
+            {
+                "Yes",
+                function(container)
+                    scener.push("installmanager")
+                    container:close("OK")
+                end
+            },
+            { "No" }
+        }
+    })
+
+    return false
+end
+
+
+local function buttonBig(icon, text, scene, forceInstall)
     return uie.button(
         uie.row({
             uie.icon(icon):with({ scale = 48 / 256 }),
             uie.label(text, ui.fontBig):with({ x = -4, y = 11 })
         }):with({ style = { bg = {}, padding = 0, spacing = 16 } }),
         type(scene) == "function" and scene or function()
-            scener.push(scene)
+            if checkInstall(forceInstall) then
+                scener.push(scene)
+            end
         end
     ):with({ style = { padding = 8 } })
 end
 
-local function button(icon, text, scene)
+local function button(icon, text, scene, forceInstall)
     return uie.button(
         uie.row({
             uie.icon(icon):with({ scale = 24 / 256 }),
             uie.label(text):with({ y = 2 })
         }):with({ style = { bg = {}, padding = 0 } }),
         type(scene) == "function" and scene or function()
-            scener.push(scene)
+            if checkInstall(forceInstall) then
+                scener.push(scene)
+            end
         end
     ):with({ style = { padding = 8 } })
 end
@@ -133,8 +163,8 @@ local root = uie.column({
 
         uie.column({
             buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(uiu.fillWidth):as("installbtn"),
-            buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana"):with(uiu.fillWidth),
-            buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist"):with(uiu.fillWidth),
+            buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana", true):with(uiu.fillWidth),
+            buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
             buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
                 alert({
                     body = [[
@@ -151,7 +181,7 @@ This will probably be implemented in a future update.]],
                     }
                 })
             end):with(uiu.fillWidth),
-            buttonBig("cogwheel", "Options", "options"):with(uiu.fillWidth),
+            buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth),
             -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
         }):with({
             style = {
