@@ -378,6 +378,10 @@ end
 function scene.leave()
     scener.unlock()
     native.setProgress("none", 0)
+    if scene.onLeave then
+        scene.onLeave()
+    end
+    scene.onLeave = nil
 end
 
 

@@ -1,5 +1,6 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
+local fs = require("fs")
 local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
@@ -83,7 +84,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 self.text = (selected and selected:match("%+")) and "Update" or "Install"
                 orig(self, ...)
             end
-        }):with(uiu.fillWidth(8, true)):as("install"),
+        }):with(uiu.fillWidth(true)):as("install"),
 
         uie.button("Uninstall", function()
             alert({
@@ -132,45 +133,90 @@ scene.root = root
 
 
 function scene.install()
-    local install = root:findChild("installs").selected
-    install = install and install.data
-
-    local version = root:findChild("versions").selected
-    version = version and version.data
-
-    if not install or not version then
-        return
+    if scene.installing then
+        return scene.installing
     end
 
-    local installer = scener.push("installer")
-    installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
+    scene.installing = threader.routine(function()
+        local install = root:findChild("installs").selected
+        install = install and install.data
 
-    installer.sharpTask("installEverest", install.entry.path, version.artifactBase):calls(function(task, last)
-        if not last then
+        local version = root:findChild("versions").selected
+        version = version and version.data
+
+        if not install or not version then
             return
         end
 
-        installer.update(string.format("Everest %s successfully installed", version.version), 1, "done")
-        installer.done({
-            {
-                "Launch",
-                function()
-                    sharp.launch(install.entry.path)
-                    alert([[
-Everest is now starting in the background.
-You can close this window.]])
-                    scener.pop(2)
-                end
-            },
-            {
-                "OK",
-                function()
-                    scener.pop(2)
-                end
-            }
-        })
-    end)
+        local installer = scener.push("installer")
+        installer.onLeave = function()
+            scene.installing = nil
+        end
 
+        local url
+        if version == "manual" then
+            installer.update("Select your Everest .zip file", false, "")
+
+            local path = fs.openDialog("zip"):result()
+            if not path then
+                installer.update("Installation canceled", 1, "error")
+                installer.done({
+                    {
+                        "Retry",
+                        function()
+                            scener.pop()
+                            scene.install()
+                        end
+                    },
+                    {
+                        "OK",
+                        function()
+                            scener.pop()
+                        end
+                    }
+                })
+                return
+            end
+
+            url = "file://" .. path
+
+        else
+            installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
+            url = version.artifactBase
+        end
+
+        installer.sharpTask("installEverest", install.entry.path, url):calls(function(task, last)
+            if not last then
+                return
+            end
+
+            if version == "manual" then
+                installer.update("Everest successfully installed", 1, "done")
+            else
+                installer.update(string.format("Everest %s successfully installed", version.version), 1, "done")
+            end
+            installer.done({
+                {
+                    "Launch",
+                    function()
+                        sharp.launch(install.entry.path)
+                        alert([[
+    Everest is now starting in the background.
+    You can close this window.]])
+                        scener.pop(2)
+                    end
+                },
+                {
+                    "OK",
+                    function()
+                        scener.pop(2)
+                    end
+                }
+            })
+        end)
+
+    end)
+    return scene.installing
 end
 
 
@@ -222,6 +268,10 @@ function scene.load()
         -- TODO: Limit commits range
         local commitsTask = utilsAsync.downloadJSON("https://api.github.com/repos/EverestAPI/Everest/commits")
 
+        local list = root:findChild("versions")
+
+        local manualItem = uie.listItem("Select .zip from disk", "manual"):with(uiu.fillWidth)
+
         local builds, buildsError = buildsTask:result()
         if not builds then
             root:findChild("loadingVersions"):removeSelf()
@@ -231,6 +281,7 @@ function scene.load()
                 clip = false,
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            list:addChild(manualItem)
             return
         end
         builds = builds.value
@@ -246,7 +297,6 @@ function scene.load()
         end
 
         local offset = 700
-        local list = root:findChild("versions")
         for bi = 1, #builds do
             local build = builds[bi]
 
@@ -312,7 +362,7 @@ function scene.load()
                     item.style.pressedBG = { 0.1, 0.5, 0.2, 0.9 }
                     item.style.selectedBG = { 0.5, 0.8, 0.5, 0.9 }
                 elseif branch == "beta" then
-                    item.style.normalBG = { 0.7, 0.6, 0.1, 0.8 }
+                    item.style.normalBG = { 0.5, 0.4, 0.1, 0.8 }
                     item.style.hoveredBG = { 0.8, 0.7, 0.3, 0.9 }
                     item.style.pressedBG = { 0.5, 0.4, 0.2, 0.9 }
                     item.style.selectedBG = { 0.8, 0.7, 0.3, 0.9 }
@@ -322,6 +372,7 @@ function scene.load()
         end
 
         root:findChild("loadingVersions"):removeSelf()
+        list:addChild(manualItem)
     end)
 
 end
