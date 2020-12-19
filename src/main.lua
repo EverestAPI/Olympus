@@ -222,6 +222,8 @@ function love.load(args)
                             clip = false,
                             cacheable = false,
 
+                            locked = true,
+
                             interactive = 2,
 
                             onPress = function(self, ...)
@@ -235,14 +237,31 @@ function love.load(args)
                             onDrag = function(self, ...)
                                 logWindow.titlebar:onDrag(...)
                             end
+                        }):hook({
+                            layoutLateLazy = function(orig, self)
+                                self:layoutLate()
+                            end,
+
+                            layoutLate = function(orig, self)
+                                orig(self)
+                                if self.locked then
+                                    self.y = -self.height
+                                end
+                            end
                         }):as("log")
                     ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
                     uie.row({
+                        uie.button("Unlock scroll", function(self)
+                            logList.locked = not logList.locked
+                            self.label.text = logList.locked and "Unlock scroll" or "Lock scroll"
+                            self.parent.children[#self.parent.children]:reflow()
+                        end),
+
                         uie.button("Clear", function()
                             logList.children = {}
                             logList:reflow()
-                        end):with(uiu.fillWidth)
+                        end):with(uiu.fillWidth(true))
                     }):with({
                         style = {
                             bg = {},

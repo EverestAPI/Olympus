@@ -17,9 +17,9 @@ function spike:start(tag, threshold, thresholdTotal, thresholdPrint)
     pool[self.index] = nil
 
     self.tag = tag
-    self.threshold = threshold or 0.001
-    self.thresholdTotal = thresholdTotal or threshold or 0.001
-    self.thresholdPrint = thresholdPrint or 0.0001
+    self.threshold = threshold or 0.003
+    self.thresholdTotal = thresholdTotal or threshold or 0.003
+    self.thresholdPrint = thresholdPrint or 0.0003
     self.spiked = false
     self.steps = {}
     self.timeTotal = 0
