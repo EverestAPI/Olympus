@@ -22,7 +22,6 @@ namespace Olympus {
 
         public override string Run(string root, string args) {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
-            Environment.CurrentDirectory = root;
 
             Process game = new Process();
 
@@ -37,11 +36,12 @@ namespace Olympus {
                 game.StartInfo.FileName = Path.Combine(root, "Celeste.exe");
             }
 
-            game.StartInfo.WorkingDirectory = root;
+            Environment.CurrentDirectory = game.StartInfo.WorkingDirectory = Path.GetDirectoryName(game.StartInfo.FileName);
 
             if (!string.IsNullOrEmpty(args))
                 game.StartInfo.Arguments = args;
 
+            Console.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
             game.Start();
             return null;
         }

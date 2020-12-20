@@ -23,7 +23,6 @@ namespace Olympus {
         public override string Run(string exe) {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
             Environment.SetEnvironmentVariable("OLYMPUS_RESTARTER_PID", Process.GetCurrentProcess().Id.ToString());
-            Environment.CurrentDirectory = Path.GetDirectoryName(exe);
 
             Process process = new Process();
 
@@ -34,8 +33,9 @@ namespace Olympus {
             }
 
             process.StartInfo.FileName = exe;
-            process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
+            Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
 
+            Console.WriteLine($"Starting Olympus process: {exe}");
             process.Start();
             return null;
         }
