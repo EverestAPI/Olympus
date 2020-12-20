@@ -1,4 +1,5 @@
 local utils = require("utils")
+local fs = require("fs")
 local config = require("config")
 local threader = require("threader")
 local notify = require("notify")
@@ -42,12 +43,17 @@ function modinstaller.install(modurl, cb)
 
     if not cb then
         cb = function()
-            scener.pop(1)
+            scener.pop()
         end
     end
 
+    local modname = modurl
+    if modurl:match("^file://") then
+        modname = fs.filename(modurl)
+    end
+
     local installer = scener.push("installer")
-    installer.update(string.format("Preparing installation of %s", modurl), false, "")
+    installer.update(string.format("Preparing installation of %s", modname), false, "")
 
     installer.sharpTask("installMod", install, modurl):calls(function(task, last)
         if not last then

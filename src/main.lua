@@ -451,6 +451,8 @@ function love.load(args)
     require("updater").check()
     require("modinstaller").register()
 
+    require("dragndrop")
+
     if protocol then
         require("modinstaller").install(protocol, function()
             love.event.quit()

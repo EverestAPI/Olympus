@@ -20,24 +20,35 @@ namespace Olympus {
     public unsafe class CmdInstallMod : Cmd<string, string, IEnumerator> {
 
         public override IEnumerator Run(string root, string url) {
-            yield return Status($"Downloading {url}", false, "download");
-
             string mods = Path.Combine(root, "Mods");
             if (!Directory.Exists(mods))
                 Directory.CreateDirectory(mods);
 
-            string tmp = Path.Combine(mods, $"tmpdownload-{DateTime.Now:yyyyMMdd-HHmmss}.zip.part");
-            if (File.Exists(tmp))
-                File.Delete(tmp);
+            string from = null;
+            bool fromIsTmp = false;
 
             try {
                 List<object> yamlRoot = null;
 
-                using (FileStream zipStream = new FileStream(tmp, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
-                    yield return Download(url, 0, zipStream);
+                if (url.StartsWith("file://")) {
+                    fromIsTmp = false;
+                    from = url.Substring("file://".Length).Replace('/', Path.DirectorySeparatorChar);
+                    if (from.StartsWith(mods + "/"))
+                        throw new Exception($"{Path.GetFileName(from)} is already in the mods folder");
 
+                } else {
+                    fromIsTmp = true;
+                    Path.Combine(mods, $"tmpdownload-{DateTime.Now:yyyyMMdd-HHmmss}.zip.part");
+                    if (File.Exists(from))
+                        File.Delete(from);
+
+                    yield return Status($"Downloading {url}", false, "download");
+                    using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
+                        yield return Download(url, 0, zipStream);
+                }
+
+                using (FileStream zipStream = File.Open(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
                     yield return Status("Parsing everest.yaml", false, "download");
-                    zipStream.Seek(0, SeekOrigin.Begin);
                     using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                         ZipArchiveEntry entry = zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml");
                         if (entry == null)
@@ -54,17 +65,25 @@ namespace Olympus {
                     !(yamlName is string name))
                     throw new Exception("everest.yaml malformed - is this a Celeste mod?");
 
-                yield return Status($"Moving mod to {name}.zip", false, "download");
+                if (fromIsTmp)
+                    yield return Status($"Moving mod to {name}.zip", false, "download");
+                else
+                    yield return Status($"Copying mod to {name}.zip", false, "download");
+
                 string path = Path.Combine(mods, $"{name}.zip");
                 if (File.Exists(path))
                     File.Delete(path);
-                File.Move(tmp, path);
+
+                if (fromIsTmp)
+                    File.Move(from, path);
+                else
+                    File.Copy(from, path);
 
                 yield return Status($"Successfully installed {name}", 1f, "done");
 
             } finally {
-                if (File.Exists(tmp))
-                    File.Delete(tmp);
+                if (fromIsTmp && !string.IsNullOrEmpty(from) && File.Exists(from))
+                    File.Delete(from);
             }
         }
 
