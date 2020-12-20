@@ -33,7 +33,7 @@ if lfs.attributes("./sharp", "mode") == "directory" and lfs.attributes("./sharp.
         else
             ffi.cdef[[
                 int kill(int pid, int sig);
-                int usleep(int usec)
+                int usleep(int usec);
             ]]
             for _ = 1, 50 do
                 if C.kill(restarterPID, 0) then
