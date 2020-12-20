@@ -65,7 +65,7 @@ namespace Olympus {
             for (int i = 0; i < files.Length; i++) {
                 string file = files[i];
                 string name = Path.GetFileName(file);
-                if (file == "Cache" || blacklist.Contains(file))
+                if (name == "Cache" || blacklist.Contains(name))
                     continue;
 
                 ModInfo info = new ModInfo() {
