@@ -26,10 +26,13 @@ namespace Olympus {
 
             Process game = new Process();
 
-            // Unix-likes use the wrapper script
+            // Unix-likes use a MonoKickstart wrapper script / launch binary.
             if (Environment.OSVersion.Platform == PlatformID.Unix ||
                 Environment.OSVersion.Platform == PlatformID.MacOSX) {
                 game.StartInfo.FileName = Path.Combine(root, "Celeste");
+                // 1.3.3.0 splits Celeste into two, so to speak.
+                if (!File.Exists(game.StartInfo.FileName) && Path.GetFileName(root) == "Resources")
+                    game.StartInfo.FileName = Path.Combine(Path.GetDirectoryName(root), "MacOS", "Celeste");
             } else {
                 game.StartInfo.FileName = Path.Combine(root, "Celeste.exe");
             }
