@@ -35,7 +35,7 @@ namespace Olympus {
             process.StartInfo.FileName = exe;
             Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
 
-            Console.WriteLine($"Starting Olympus process: {exe}");
+            Console.Error.WriteLine($"Starting Olympus process: {exe}");
             process.Start();
             return null;
         }
