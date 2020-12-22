@@ -292,7 +292,8 @@ function native.setProgress(state, progress)
     sdl.SDL_GetWindowWMInfo(sdlWindow, sdlWMinfo)
 
     if ffi.os == "Windows" then
-        sharp.setProgressWin32(tostring(sdlWMinfo[0].info.win.window):sub(#"cdata<void *>: 0x" + 1), state, progress)
+        -- FIXME: This likes to crash for some reason!
+        -- sharp.setProgressWin32(tostring(sdlWMinfo[0].info.win.window):sub(#"cdata<void *>: 0x" + 1), state, progress)
     end
 end
 
