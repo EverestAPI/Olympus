@@ -592,12 +592,12 @@ function scene.item(info)
 
         if not screenshots[1]._sFile:match("%.webp$") then
             -- TODO: WEBP SUPPORT
-            img = downloadImage(screenshots[1]._sFile, "https://files.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. screenshots[1]._sFile100)
+            img = downloadImage(screenshots[1]._sFile, "https://screenshots.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. (screenshots[1]._sFile220 or screenshots[1]._sFile100))
         end
 
         if screenshots[2] and not screenshots[2]._sFile:match("%.webp$") then
             -- TODO: WEBP SUPPORT
-            bg = downloadImage(screenshots[2]._sFile, "https://files.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile)
+            bg = downloadImage(screenshots[2]._sFile, "https://screenshots.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile)
         end
 
         bg = bg or img
@@ -660,7 +660,12 @@ function scene.item(info)
             bgholder:addChild(bg)
         end
         if img then
-            imgholder:addChild(uie.image(img))
+            local imgel = uie.image(img)
+            -- FIXME: UPDATE OLYMPUI TO HAVE IMAGES EXPOSE .image
+            if img:getWidth() > 100 then
+                imgel.scale = 100 / img:getWidth()
+            end
+            imgholder:addChild(imgel)
         end
         item:reflowDown()
     end)
