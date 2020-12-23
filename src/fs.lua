@@ -1,6 +1,7 @@
 -- Based on filesystem.lua from Lönn
 -- TODO: Create a common repo for things shared between Lönn and Olympus?
 
+require("love_filesystem_unsandboxing")
 local lfsStatus, lfs = pcall(require, "lfs_ffi")
 local physfsStatus, physfs = pcall(require, "physfs")
 local threader = require("threader")
@@ -222,6 +223,17 @@ function fs.copyFromLove(mountPoint, output, folder)
             fs.copyFromLove(mountPoint, output, path)
         end
     end
+end
+
+-- Unzip using physfs unsandboxed mount system, and then manually copying out files
+function fs.unzip(zipPath, outputDir)
+    local tmp = "tmp-zip-" .. tostring(love.timer.getTime())
+
+    love.filesystem.mountUnsandboxed(zipPath, tmp .. "/", 0)
+
+    fs.copyFromLove(tmp, outputDir)
+
+    love.filesystem.unmount(tmp)
 end
 
 function fs.getStorageDir()

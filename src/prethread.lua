@@ -1,5 +1,7 @@
 -- This file runs before every threader thread and in main.lua.
 return function(raw)
+    require("love_filesystem_unsandboxing")
+
     local id = raw.meta.id
 
     -- Needed to make luajit-request work properly on Linux.
