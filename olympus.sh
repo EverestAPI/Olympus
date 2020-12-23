@@ -22,9 +22,7 @@ else
     export LD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:$(pwd)"
 fi
 
-if [ -f "love/love" ]; then
-    ./love/love --fused olympus.love $@
-elif [ -f "love" ]; then
+if [ -f "love" ]; then
     ./love --fused olympus.love $@
 elif command -v love &> /dev/null; then
     love --fused olympus.love $@
