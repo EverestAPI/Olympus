@@ -36,7 +36,58 @@ function modinstaller.register()
         return false
 
     elseif userOS == "Linux" then
-        return false
+        -- While we're here, might as well create a helpful .desktop
+        if config.currentrun == 0 then
+            return false
+        end
+
+        local srcdir = love.filesystem.getSource()
+        if srcdir then
+            srcdir = fs.dirname(fs.normalize(srcdir))
+        else
+            srcdir = fs.getcwd()
+        end
+
+        local shpath = fs.joinpath(srcdir, "olympus.sh")
+        if not fs.isFile(shpath) then
+            return false
+        end
+
+        local iconpath = fs.joinpath(srcdir, "icon.png")
+        if not fs.isFile(iconpath) then
+            local fh = io.open(iconpath, "wb")
+            if fh then
+                fh:write(love.filesystem.read("data/icon.png"))
+                fh:close()
+            end
+        end
+
+        local desktoppath = fs.joinpath(os.getenv("HOME"), ".local", "share", "applications")
+        if fs.isDirectory(desktoppath) then
+            desktoppath = fs.joinpath(desktoppath, "Olympus.desktop")
+            if not fs.isFile(desktoppath) then
+                print("creating Olympus.desktop at", desktoppath)
+                local fh = io.open(desktoppath, "w+")
+                if fh then
+                    fh:write(string.format([[
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Name=Olympus
+Exec=%s %%u
+Icon=%s
+StartupNotify=false
+MimeType=x-scheme-handler/everest;
+]], shpath, iconpath))
+                    fh:close()
+                    print("registering everest url handler", pcall(os.execute, [["xdg-mime" "default" "]] .. desktoppath .. [[" "x-scheme-handler/everest"]])
+                end
+            end
+        end
+
+        return true
     end
 end
 
