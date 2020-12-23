@@ -71,12 +71,11 @@ function modinstaller.register()
                 if fh then
                     fh:write(string.format([[
 [Desktop Entry]
-Encoding=UTF-8
-Version=1.0
 Type=Application
 Terminal=false
+Categories=Game;
 Name=Olympus
-Exec=%s %%u
+Exec="%s" %%u
 Icon=%s
 StartupNotify=false
 MimeType=x-scheme-handler/everest;
