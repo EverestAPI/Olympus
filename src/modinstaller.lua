@@ -62,9 +62,9 @@ function modinstaller.register()
             end
         end
 
-        local desktoppath = fs.joinpath(os.getenv("HOME"), ".local", "share", "applications")
-        if fs.isDirectory(desktoppath) then
-            desktoppath = fs.joinpath(desktoppath, "Olympus.desktop")
+        local appsdir = fs.joinpath(os.getenv("HOME"), ".local", "share", "applications")
+        if fs.isDirectory(appsdir) then
+            local desktoppath = fs.joinpath(appsdir, "Olympus.desktop")
             if not fs.isFile(desktoppath) then
                 print("creating Olympus.desktop at", desktoppath)
                 local fh = io.open(desktoppath, "w+")
@@ -82,6 +82,7 @@ MimeType=x-scheme-handler/everest;
 ]], shpath, iconpath))
                     fh:close()
                     print("registering everest url handler", pcall(os.execute, [["xdg-mime" "default" "]] .. desktoppath .. [[" "x-scheme-handler/everest"]]))
+                    print("updating desktop database", pcall(os.execute, [["update-desktop-database" "]] .. appsdir .. [["]]))
                 end
             end
         end
