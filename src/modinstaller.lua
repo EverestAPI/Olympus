@@ -82,7 +82,7 @@ StartupNotify=false
 MimeType=x-scheme-handler/everest;
 ]], shpath, iconpath))
                     fh:close()
-                    print("registering everest url handler", pcall(os.execute, [["xdg-mime" "default" "]] .. desktoppath .. [[" "x-scheme-handler/everest"]])
+                    print("registering everest url handler", pcall(os.execute, [["xdg-mime" "default" "]] .. desktoppath .. [[" "x-scheme-handler/everest"]]))
                 end
             end
         end
