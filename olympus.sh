@@ -16,7 +16,15 @@ if [ -f "olympus.new.love" ]; then
     mv "olympus.new.love" "olympus.love"
 fi
 
-if [ -f "love" ]; then
+if [ "$UNAME" == "Darwin" ]; then
+	export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:$(pwd)"
+else
+    export LD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:$(pwd)"
+fi
+
+if [ -f "love/love" ]; then
+    ./love/love --fused olympus.love $@
+elif [ -f "love" ]; then
     ./love --fused olympus.love $@
 elif command -v love &> /dev/null; then
     love --fused olympus.love $@
