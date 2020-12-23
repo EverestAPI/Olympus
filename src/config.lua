@@ -59,10 +59,10 @@ function config.load()
 
     default(data, "updates", "stable")
 
-    local id = (utils.load("version.txt") or "?-?-0-?"):match(".*-.*-(.*)-.*")
+    local id = tonumber((utils.load("version.txt") or "?-?-0-?"):match(".*-.*-(.*)-.*"))
 
     if data.currentrun then
-        data.lastrun = data.currentrun
+        data.lastrun = tonumber(data.currentrun)
     end
     default(data, "lastrun", -1)
     data.currentrun = id

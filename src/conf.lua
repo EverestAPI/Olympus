@@ -117,8 +117,6 @@ elseif not storageDirAttrs.permissions:match("rwx......") and (love.system.getOS
     print(os.execute([["chmod" "u+rwx" "]] .. storageDir .. [["]]))
 end
 
-love.filesystem.mountUnsandboxed(storageDir, "/", 0)
-
 for i, file in ipairs(love.filesystem.getDirectoryItems("preload")) do
     local name = file:match("^(.*).lua$")
     if name then
