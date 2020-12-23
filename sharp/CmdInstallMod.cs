@@ -38,7 +38,7 @@ namespace Olympus {
 
                 } else {
                     fromIsTmp = true;
-                    Path.Combine(mods, $"tmpdownload-{DateTime.Now:yyyyMMdd-HHmmss}.zip.part");
+                    from = Path.Combine(mods, $"tmpdownload-{DateTime.Now:yyyyMMdd-HHmmss}.zip.part");
                     if (File.Exists(from))
                         File.Delete(from);
 
