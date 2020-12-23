@@ -16,11 +16,21 @@ function modinstaller.register()
 
     if userOS == "Windows" then
         local exepath = love.filesystem.getSource()
-        return exepath:match(".exe$") and
+        if (exepath:match(".exe$") and
             registry.setKey([[HKCU\Software\Classes\Everest\]], "URL:Everest") and
             registry.setKey([[HKCU\Software\Classes\Everest\URL Protocol]], "") and
-            registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]], string.format([["%s" "%%1"]], exepath))
+            registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]], string.format([["%s" "%%1"]], exepath)))
+            then
+            -- While we're here, might as well create some helpful .lnks
 
+            -- INTRODUCED AFTER BUILD 1531
+            if 0 < config.lastrun or config.lastrun <= 1531 then
+                print("creating shortcuts", exepath)
+                sharp.createShortcutsWin32(exepath)
+            end
+
+            return true
+        end
 
     elseif userOS == "OS X" then
         return false

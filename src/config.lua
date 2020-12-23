@@ -59,6 +59,14 @@ function config.load()
 
     default(data, "updates", "stable")
 
+    local id = (utils.load("version.txt") or "?-?-0-?"):match(".*-.*-(.*)-.*")
+
+    if data.currentrun then
+        data.lastrun = data.currentrun
+    end
+    default(data, "lastrun", -1)
+    data.currentrun = id
+
     default(data, "install", 1)
     if data.install < 1 then
         data.install = 1 -- Old versions of Olympus defaulted to 0
