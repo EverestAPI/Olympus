@@ -220,7 +220,8 @@ You can close this window.]])
                 container:close()
                 alert([[
 Olympus couldn't find the Celeste launch binary.
-Does the installed version of Celeste match your platform?]])
+Please check if the installed version of Celeste matches your OS.
+If you are using Lutris or similar, you are on your own.]])
             end
         end)
     end)
