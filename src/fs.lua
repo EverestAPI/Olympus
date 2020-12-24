@@ -114,13 +114,18 @@ function fs.normalize(path)
         if #fixed ~= 0 and real then
             local partLow = part:lower()
             real = false
-            for realpart in fs.dir(fixed) do
-                if realpart:lower() == partLow then
-                    real = realpart
-                    break
+            local status, rv = pcall(function()
+                for realpart in fs.dir(fixed) do
+                    if realpart:lower() == partLow then
+                        real = realpart
+                        break
+                    end
                 end
+                part = real or part
+            end)
+            if not status then
+                print("failed to normalize path", path, rv)
             end
-            part = real or part
         end
 
         ::add::
