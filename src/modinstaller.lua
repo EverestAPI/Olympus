@@ -126,10 +126,7 @@ function modinstaller.install(modurl, cb)
             {
                 "Launch",
                 function()
-                    sharp.launch(install)
-                    alert([[
-Everest is now starting in the background.
-You can close this window.]])
+                    utils.launch(install)
                     cb()
                 end
             },

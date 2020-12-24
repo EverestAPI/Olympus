@@ -42,6 +42,11 @@ namespace Olympus {
                 game.StartInfo.Arguments = args;
 
             Console.Error.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
+            if (!File.Exists(game.StartInfo.FileName)) {
+                Console.Error.WriteLine($"{game.StartInfo.FileName} not found!");
+                return "missing";
+            }
+
             game.Start();
             return null;
         }

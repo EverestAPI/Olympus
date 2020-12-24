@@ -186,4 +186,44 @@ function utils.cleanHTML(body)
     return body
 end
 
+function utils.launch(path, vanilla)
+    return threader.routine(function()
+        if not path then
+            local config = require("config")
+            if config then
+                path = config.installs[config.install].path
+            end
+        end
+
+        if not path then
+            return
+        end
+
+        local sharp = require("sharp")
+        local alert = require("alert")
+
+        local launching = sharp.launch(path, vanilla and "--vanilla" or nil)
+        local container
+
+        if vanilla then
+            container = alert([[
+Celeste is now starting in the background.
+You can close this window.]])
+        else
+            container = alert([[
+Everest is now starting in the background.
+You can close this window.]])
+        end
+
+        launching:calls(function(task, rv)
+            if rv == "missing" then
+                container:close()
+                alert([[
+Olympus couldn't find the Celeste launch binary.
+Does the installed version of Celeste match your platform?]])
+            end
+        end)
+    end)
+end
+
 return utils

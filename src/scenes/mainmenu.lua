@@ -206,16 +206,10 @@ scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
     buttonBig("mainmenu/everest", "Celeste + Everest", function()
-        sharp.launch(config.installs[config.install].path)
-        alert([[
-Everest is now starting in the background.
-You can close this window.]])
+        utils.launch(nil)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
     buttonBig("mainmenu/celeste", "Celeste", function()
-        sharp.launch(config.installs[config.install].path, "--vanilla")
-        alert([[
-Celeste is now starting in the background.
-You can close this window.]])
+        utils.launch(nil, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(2.5 - 32 - 2, 0)),
     buttonBig("cogwheel", "", "everest"):with({
         width = 48

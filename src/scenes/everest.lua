@@ -200,10 +200,7 @@ function scene.install()
                 {
                     "Launch",
                     function()
-                        sharp.launch(install.entry.path)
-                        alert([[
-    Everest is now starting in the background.
-    You can close this window.]])
+                        utils.launch(install.entry.path)
                         scener.pop(2)
                     end
                 },
