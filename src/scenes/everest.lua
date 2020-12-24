@@ -240,9 +240,6 @@ function scene.uninstall()
                 "Launch",
                 function()
                     sharp.launch(install.entry.path)
-                    alert([[
-Celeste is now starting in the background.
-You can close this window.]])
                     scener.pop(2)
                 end
             },

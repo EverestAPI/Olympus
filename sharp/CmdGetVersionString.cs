@@ -10,24 +10,30 @@ using System.Threading.Tasks;
 
 namespace Olympus {
     public class CmdGetVersionString : Cmd<string, string> {
-        public override string Run(string path) {
-            if (File.Exists(Path.Combine(path, "Celeste.exe")) &&
-                File.Exists(Path.Combine(path, "AppxManifest.xml")) &&
-                File.Exists(Path.Combine(path, "xboxservices.config"))) {
+
+        public override string Run(string root) {
+            Tuple<string, Version, Version> data = GetVersion(root);
+            return data.Item1;
+        }
+
+        public static Tuple<string, Version, Version> GetVersion(string root) {
+            if (File.Exists(Path.Combine(root, "Celeste.exe")) &&
+                File.Exists(Path.Combine(root, "AppxManifest.xml")) &&
+                File.Exists(Path.Combine(root, "xboxservices.config"))) {
                 try {
-                    using (File.Open(Path.Combine(path, "Celeste.exe"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
+                    using (File.Open(Path.Combine(root, "Celeste.exe"), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
                         // no-op, just try to see if the file can be opened at all.
                     }
                 } catch {
-                    return "Unsupported version of Celeste.";
+                    return new Tuple<string, Version, Version>("Unsupported version of Celeste.", null, null);
                 }
             }
 
             try {
-                using (ModuleDefinition game = ModuleDefinition.ReadModule(Path.Combine(path, "Celeste.exe"))) {
+                using (ModuleDefinition game = ModuleDefinition.ReadModule(Path.Combine(root, "Celeste.exe"))) {
                     TypeDefinition t_Celeste = game.GetType("Celeste.Celeste");
                     if (t_Celeste == null)
-                        return "Not Celeste!";
+                        return new Tuple<string, Version, Version>("Not Celeste!", null, null);
 
                     // Find Celeste .ctor (luckily only has one)
 
@@ -89,17 +95,20 @@ namespace Olympus {
                     TypeDefinition t_Everest = game.GetType("Celeste.Mod.Everest");
                     if (t_Everest != null) {
                         // The first operation in .cctor is ldstr with the version string.
-                        string versionMod = (string) t_Everest.FindMethod("System.Void .cctor()").Body.Instructions[0].Operand;
-                        int versionSplitIndex = versionMod.IndexOf('-');
-                        status = $"{status} + Everest {versionMod}";
+                        string versionModStr = (string) t_Everest.FindMethod("System.Void .cctor()").Body.Instructions[0].Operand;
+                        status = $"{status} + Everest {versionModStr}";
+                        int versionSplitIndex = versionModStr.IndexOf('-');
+                        if (versionSplitIndex != -1 && Version.TryParse(versionModStr.Substring(0, versionSplitIndex), out Version versionMod))
+                            return new Tuple<string, Version, Version>(status, version, versionMod);
                     }
 
-                    return status;
+                    return new Tuple<string, Version, Version>(status, version, null);
                 }
 
             } catch (Exception e) {
-                return $"? - {e.Message}";
+                return new Tuple<string, Version, Version>($"? - {e.Message}", null, null);
             }
         }
+
     }
 }

@@ -36,16 +36,31 @@ namespace Olympus {
                 game.StartInfo.FileName = Path.Combine(root, "Celeste.exe");
             }
 
+            if (!File.Exists(game.StartInfo.FileName)) {
+                Console.Error.WriteLine($"Can't start Celeste: {game.StartInfo.FileName} not found!");
+                return "missing";
+            }
+
             Environment.CurrentDirectory = game.StartInfo.WorkingDirectory = Path.GetDirectoryName(game.StartInfo.FileName);
+
+            // Everest versions 1550 + 700 or newer support nextLaunchIsVanilla.txt
+            if (args.Trim() == "--vanilla") {
+                Version version = CmdGetVersionString.GetVersion(root).Item3;
+                if (version == null || version.Minor == 0 || version.Minor >= (1550 + 700)) {
+                    try {
+                        File.WriteAllText(Path.Combine(root, "nextLaunchIsVanilla.txt"), "This file was created by Olympus and will be deleted automatically.");
+                        args = "";
+                        Console.Error.WriteLine("nextLaunchIsVanilla.txt created");
+                    } catch (Exception e) {
+                        Console.Error.WriteLine($"Failed to create nextLaunchIsVanilla.txt: {e}");
+                    }
+                }
+            }
 
             if (!string.IsNullOrEmpty(args))
                 game.StartInfo.Arguments = args;
 
             Console.Error.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
-            if (!File.Exists(game.StartInfo.FileName)) {
-                Console.Error.WriteLine($"{game.StartInfo.FileName} not found!");
-                return "missing";
-            }
 
             game.Start();
             return null;
