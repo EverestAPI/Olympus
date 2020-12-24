@@ -44,7 +44,7 @@ namespace Olympus {
             Environment.CurrentDirectory = game.StartInfo.WorkingDirectory = Path.GetDirectoryName(game.StartInfo.FileName);
 
             // Everest versions 1550 + 700 or newer support nextLaunchIsVanilla.txt
-            if (args.Trim() == "--vanilla") {
+            if (args?.Trim() == "--vanilla") {
                 Version version = CmdGetVersionString.GetVersion(root).Item3;
                 if (version == null || version.Minor == 0 || version.Minor >= (1550 + 700)) {
                     try {
