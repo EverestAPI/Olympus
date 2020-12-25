@@ -16,7 +16,8 @@ function updater.check()
     end
 
     updater.checking = threader.routine(function()
-        local srcOld, idOld = (utils.load("version.txt") or "?"):match(".*-(.*)-(.*)-.*")
+        local versionOld, extraOld = utils.load("version.txt"):match("(.*)-(.*-.*-[^\n]*)")
+        local srcOld, idOld = (extraOld or "?"):match("(.*)-(.*)-.*")
         idOld = tonumber(idOld)
         if not idOld then
             notify("Cannot determine currently running version of Olympus!")
@@ -53,8 +54,6 @@ There's a newer version of Olympus available.
 Go to the options menu to update to %s]], build.buildNumber))
 
                     local changelogTask = utilsAsync.download(string.format("https://raw.githubusercontent.com/EverestAPI/Olympus/%s/changelog.txt", build.sourceVersion))
-
-                    local versionOld, extraOld = utils.load("version.txt"):match("(.*)-(.*-.*-[^\n]*)")
 
                     local function setChangelog(changelogText)
                         changelog.text = {{ 1, 1, 1, 1 },
@@ -114,7 +113,10 @@ Go to the options menu to update to %s]], build.buildNumber))
             end
         end
 
-        changelog.text = "No updates found."
+        changelog.text = {{ 1, 1, 1, 1 },
+            "Currently installed:\n" .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
+            "No updates found."
+        }
         updatebtn.enabled = false
         updatebtn:reflow()
 
