@@ -25,6 +25,23 @@ local debugLabel
 local logWindow
 local logList
 
+
+local function askExit()
+    alert({
+        body = [[
+Do you want to close Olympus?]],
+        buttons = {
+            {
+                "Yes",
+                function()
+                    love.event.quit()
+                end
+            },
+            { "No" }
+        }
+    })
+end
+
 -- Needed to avoid running the same frame twice on resize
 -- and to avoid Löve2D's default sleep throttle.
 local _love_timer = love.timer
@@ -419,7 +436,11 @@ function love.load(args)
 
             { "<<<",
                 function()
-                    scener.pop()
+                    if #scener.stack > 0 then
+                        scener.pop()
+                    else
+                        askExit()
+                    end
                 end
             }
 
@@ -559,6 +580,7 @@ function love.keypressed(key, scancode, isrepeat)
             if #scener.stack > 0 then
                 scener.pop()
             else
+                askExit()
                 -- love.event.quit()
             end
         end
