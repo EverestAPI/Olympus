@@ -242,7 +242,8 @@ namespace Olympus {
                     }
 
                 } catch (Exception e) {
-                    Console.Error.WriteLine($"[sharp] Failed parsing: {e}");
+                    if (!(e is IOException))
+                        Console.Error.WriteLine($"[sharp] Failed parsing: {e}");
                     writer.WriteLine(@"null");
                     writer.Flush();
                     jsonWriter.WriteStartObject();
