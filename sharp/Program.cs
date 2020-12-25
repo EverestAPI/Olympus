@@ -129,7 +129,10 @@ namespace Olympus {
                                 using (StreamWriter writer = new StreamWriter(stream))
                                     MainLoop(parentProc, reader, writer, verbose);
                             } catch (Exception e) {
-                                Console.Error.WriteLine($"[sharp] Failed communicating with {ep}: {e}");
+                                if (e is ObjectDisposedException)
+                                    Console.Error.WriteLine($"[sharp] Failed communicating with {ep}: {e.GetType()}: {e.Message}");
+                                else
+                                    Console.Error.WriteLine($"[sharp] Failed communicating with {ep}: {e}");
                                 client.Close();
 
                             }
@@ -242,7 +245,9 @@ namespace Olympus {
                     }
 
                 } catch (Exception e) {
-                    if (!(e is IOException))
+                    if (e is IOException)
+                        Console.Error.WriteLine($"[sharp] Failed parsing: {e.GetType()}: {e.Message}");
+                    else
                         Console.Error.WriteLine($"[sharp] Failed parsing: {e}");
                     writer.WriteLine(@"null");
                     writer.Flush();
