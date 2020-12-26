@@ -13,7 +13,7 @@ local scene = {
 local root = uie.column({
 
     uie.scrollbox(
-        uie.column({
+        uie.row({
         }):with({
             style = {
                 bg = {},
@@ -21,7 +21,7 @@ local root = uie.column({
                 spacing = 2
             },
             cacheable = false
-        }):with(uiu.fillWidth):as("mods")
+        }):with(uiu.fillWidth):as("modColumns")
     ):with({
         style = {
             barPadding = 16,
@@ -114,14 +114,30 @@ function scene.loadPage(page)
     end
 
     scene.loadingPage = threader.routine(function()
-        local list, pagePrev, pageLabel, pageNext = root:findChild("mods", "pagePrev", "pageLabel", "pageNext")
+        local lists, pagePrev, pageLabel, pageNext = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext")
 
         if page < 1 then
             page = 1
         end
 
-        list.children = {}
-        list:reflow()
+        lists.children = {}
+        lists:reflow()
+
+        local listcount = 3
+        for i = 1, listcount do
+            lists:addChild(
+                uie.column({
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0,
+                        spacing = 2
+                    },
+                    cacheable = false
+                }):with(uiu.fillWidth(1 / listcount + 1)):with(uiu.at((i == 1 and 0 or 1) + (i - 1) / listcount, 0)):as("mods" .. tostring(i))
+            )
+        end
+
         pagePrev.enabled = false
         pageNext.enabled = false
         pagePrev:reflow()
@@ -176,8 +192,8 @@ function scene.loadPage(page)
             return
         end
 
-        for ii = 1, #infos do
-            list:addChild(scene.item(infos[ii]))
+        for i = 1, #infos do
+            lists.children[((i - 1) % listcount) + 1]:addChild(scene.item(infos[i]))
         end
 
         loading:removeSelf()
@@ -309,7 +325,8 @@ function scene.item(info)
                 local style = self.style
                 style.bg = nil
                 local boxBG = style.bg
-                style.bg = { boxBG[1], boxBG[2], boxBG[3], 0.5 }
+                -- FIXME: blur is very taxing!
+                style.bg = { boxBG[1], boxBG[2], boxBG[3], 0.7 }
             end
         }):with({
             style = {
@@ -323,11 +340,11 @@ function scene.item(info)
 
             uie.column({
 
-                uie.row({
+                uie.column({
 
                     uie.column({
 
-                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, " ∙ " .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):as("title"),
+                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, "\n" .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):as("title"),
 
                         uie.row({
                             uie.group({
@@ -335,7 +352,7 @@ function scene.item(info)
                             }):as("imgholder"),
 
                             uie.column({
-                                uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. " ∙ " .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
+                                uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
                                 description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
                             }):with({
                                 style = {
@@ -359,7 +376,7 @@ function scene.item(info)
                         },
                         clip = false,
                         cacheable = false
-                    }):with(uiu.fillWidth(true)),
+                    }):with(uiu.fillWidth),
 
                     uie.row({
 
@@ -539,12 +556,6 @@ function scene.item(info)
                     cacheable = false
                 }):with(uiu.fillWidth),
 
-                --[[
-                uie.group({
-                    uie.label(utils.cleanHTML(text)):with({ wrap = true }):as("text")
-                }):with(uiu.fillWidth),
-                --]]
-
             }):with({
                 clip = false,
                 cacheable = false
@@ -646,11 +657,12 @@ function scene.item(info)
 
                     love.graphics.setColor(1, 1, 1, 1)
 
-                    if not ui.debug.draw and config.quality.bgBlur then
-                        effect(self.drawBG, self)
-                    else
+                    -- FIXME: blur is very taxing!
+                    -- if not ui.debug.draw and config.quality.bgBlur then
+                    --     effect(self.drawBG, self)
+                    -- else
                         self:drawBG()
-                    end
+                    -- end
 
                     love.graphics.pop()
 
@@ -660,12 +672,11 @@ function scene.item(info)
             bgholder:addChild(bg)
         end
         if img then
-            local imgel = uie.image(img)
-            -- FIXME: UPDATE OLYMPUI TO HAVE IMAGES EXPOSE .image
-            if img:getWidth() > 100 then
-                imgel.scale = 100 / img:getWidth()
+            img = uie.image(img)
+            if img.image:getWidth() > 100 then
+                img.scale = 100 / img.image:getWidth()
             end
-            imgholder:addChild(imgel)
+            imgholder:addChild(img)
         end
         item:reflowDown()
     end)
