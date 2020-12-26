@@ -672,7 +672,9 @@ function scene.item(info)
             bgholder:addChild(bg)
         end
         if img then
-            img = uie.image(img)
+            img = uie.image(img):with({
+                scaleRoundAuto = "auto"
+            })
             if img.image:getWidth() > 100 then
                 img.scale = 100 / img.image:getWidth()
             end
