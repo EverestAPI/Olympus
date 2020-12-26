@@ -13,14 +13,31 @@ local scene = {
 local root = uie.column({
 
     uie.scrollbox(
-        uie.row({
-        }):with({
-            style = {
-                bg = {},
-                padding = 0,
-                spacing = 2
-            },
-            cacheable = false
+        uie.dynamic():with({
+            cacheable = false,
+
+            generate = function(self, children)
+                local listcount = math.max(1, math.min(6, math.floor(love.graphics.getWidth() / 350)))
+                if self.listcount == listcount then
+                    return nil
+                end
+                self.listcount = listcount
+
+                local lists = {}
+                for i = 1, listcount do
+                    lists[i] = uie.column({
+                    }):with({
+                        style = {
+                            bg = {},
+                            padding = 0,
+                            spacing = 2
+                        },
+                        cacheable = false
+                    }):with(uiu.fillWidth(1 / listcount + 1)):with(uiu.at((i == 1 and 0 or 1) + (i - 1) / listcount, 0)):as("mods" .. tostring(i))
+                end
+
+                return lists
+            end
         }):with(uiu.fillWidth):as("modColumns")
     ):with({
         style = {
@@ -120,23 +137,7 @@ function scene.loadPage(page)
             page = 1
         end
 
-        lists.children = {}
-        lists:reflow()
-
-        local listcount = 3
-        for i = 1, listcount do
-            lists:addChild(
-                uie.column({
-                }):with({
-                    style = {
-                        bg = {},
-                        padding = 0,
-                        spacing = 2
-                    },
-                    cacheable = false
-                }):with(uiu.fillWidth(1 / listcount + 1)):with(uiu.at((i == 1 and 0 or 1) + (i - 1) / listcount, 0)):as("mods" .. tostring(i))
-            )
-        end
+        lists.all = {}
 
         pagePrev.enabled = false
         pageNext.enabled = false
@@ -193,7 +194,7 @@ function scene.loadPage(page)
         end
 
         for i = 1, #infos do
-            lists.children[((i - 1) % listcount) + 1]:addChild(scene.item(infos[i]))
+            lists.next:addChild(scene.item(infos[i]))
         end
 
         loading:removeSelf()
