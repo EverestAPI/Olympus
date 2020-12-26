@@ -383,9 +383,11 @@ steps:
   inputs:
     script: |
       PLIST=love/love.app/Contents/Info.plist
-      rm $PLIST
-      mv love/$LOVEBINARYDIRECTORY/Info.plist $PLIST
-      plutil -replace CFBundleExecutable -string "$BUILD_BUILDNUMBER" $PLIST
+      plutil -replace CFBundleIdentifier -string "everest.olympus" $PLIST
+      plutil -replace CFBundleName -string "olympus" $PLIST
+      plutil -replace CFBundleExecutable -string "olympus.sh" $PLIST
+      plutil -remove CFBundleDocumentTypes $PLIST
+      plutil -remove UTExportedTypeDeclarations $PLIST
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
