@@ -300,7 +300,16 @@ function finder.findLegendaryInstalls(name)
         return list
     end
 
-    local installed = utils.fromJSON(fs.read(fs.joinpath(legendary, "installed.json")))
+    local installed = fs.isFile(fs.joinpath(legendary, "installed.json"))
+    if not installed then
+        return list
+    end
+
+    installed = utils.fromJSON(fs.read(installed))
+    if not installed then
+        return list
+    end
+
     for _, install in pairs(installed) do
         if install and install.title == name then
             local path = install.install_path
