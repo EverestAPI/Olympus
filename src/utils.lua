@@ -15,6 +15,35 @@ for k, v in pairs(uiu) do
     utils[k] = v
 end
 
+function utils.important(size, check)
+    return function(el)
+        local uie = require("ui.elements")
+        local config = require("config")
+        if el.style:get("spacing") ~= nil then
+            el.style.spacing = 0
+        end
+        el:addChild(uie.image("important"):with({
+            scale = size / 256
+        }):hook({
+            update = function(orig, self)
+                orig(self)
+                if uiu.isCallback(check) then
+                    self.visible = check()
+                end
+            end,
+            calcSize = function(orig, self)
+                self.width = 0
+                self.height = 0
+            end,
+            layoutLate = function(orig, self)
+                orig(self)
+                self.realX = -8
+                self.realY = -8
+            end
+        }):as("important"))
+    end
+end
+
 function utils.concat(...)
     local all = {}
     local tables = {...}

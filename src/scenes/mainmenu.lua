@@ -84,7 +84,7 @@ function scene.createInstalls()
 
             uie.button("Manage", function()
                 scener.push("installmanager")
-            end):with({
+            end):with(utils.important(24, function() return #config.installs == 0 end)):with({
                 clip = false,
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
@@ -225,7 +225,7 @@ scene.launchrow = uie.row({
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
 
-scene.installbtn = buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(uiu.fillWidth):as("installbtn")
+scene.installbtn = buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
 
 
 scene.installs:hook({
@@ -238,10 +238,14 @@ scene.installs:hook({
 
 function scene.updateMainList(install)
     ui.runOnce(function(scene, install)
+        if not install then
+            return
+        end
+
         scene.launchrow:removeSelf()
         scene.installbtn:removeSelf()
 
-        if install and install.versionEverest then
+        if install.versionEverest then
             scene.mainlist:addChild(scene.launchrow, 1)
         else
             scene.mainlist:addChild(scene.installbtn, 1)
