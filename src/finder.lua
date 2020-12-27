@@ -278,6 +278,46 @@ function finder.findEpicInstalls(name)
 end
 
 
+function finder.findLegendaryRoot()
+    local userOS = love.system.getOS()
+
+    -- As of the time of writing this, Legendary is only supported for Windows and Linux.
+    -- It follows XDG_CONFIG_HOME and ~/.config/legendary on all platforms.
+    local root = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(userOS == "Windows" and os.getenv("USERPROFILE") or os.getenv("HOME"), ".config"), "legendary")
+
+    if root then
+        local rootReal = fs.isDirectory(root)
+        print("[finder]", "legendary root", root, root == rootReal and "<same>" or rootReal)
+        return rootReal
+    end
+end
+
+function finder.findLegendaryInstalls(name)
+    local list = {}
+
+    local legendary = finder.findLegendaryRoot()
+    if not legendary then
+        return list
+    end
+
+    local installed = utils.fromJSON(fs.read(fs.joinpath(legendary, "installed.json")))
+    for _, install in pairs(installed) do
+        if install and install.title == name then
+            local path = install.install_path
+            if fs.isDirectory(path) then
+                print("[finder]", "legendary install", path)
+                list[#list + 1] = {
+                    type = "legendary",
+                    path = path
+                }
+            end
+        end
+    end
+
+    return list
+end
+
+
 function finder.findItchDatabase()
     local userOS = love.system.getOS()
     local db
@@ -393,6 +433,7 @@ function finder.findAll(uncached)
     all = utils.concat(
         finder.findSteamInstalls(finder.defaultName),
         finder.findEpicInstalls(finder.defaultName),
+        finder.findLegendaryInstalls(finder.defaultName),
         finder.findItchInstalls(finder.defaultName),
         finder.findUWPInstalls(finder.defaultUWPName)
     )
