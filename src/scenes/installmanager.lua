@@ -373,7 +373,7 @@ function scene.reloadAll()
     }):with({
         clip = false,
         cacheable = false
-    }):with(uiu.bottombound):with(uiu.rightbound):as("loadingInstalls")
+    }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingInstalls")
     root:addChild(loading)
 
     local left = 2
