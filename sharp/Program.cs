@@ -47,7 +47,7 @@ namespace Olympus {
                 Console.WriteLine(@"null");
                 Console.Out.Flush();
                 Cmds.Init();
-                MainLoop(null, Console.In, Console.Out, true);
+                MainLoop(null, Console.In, Console.Out, true, '\n');
                 Console.Error.WriteLine("[sharp] Goodbye");
                 Console.In.ReadLine();
                 return;
@@ -162,7 +162,7 @@ namespace Olympus {
 
         }
 
-        public static void MainLoop(Process parentProc, TextReader reader, TextWriter writer, bool verbose) {
+        public static void MainLoop(Process parentProc, TextReader reader, TextWriter writer, bool verbose, char delimiter = '\0') {
             JsonSerializer jsonSerializer = new JsonSerializer();
 
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
@@ -175,7 +175,7 @@ namespace Olympus {
                             Console.Error.WriteLine("[sharp] Awaiting next command");
 
                         // Unique ID
-                        string uid = JsonConvert.DeserializeObject<string>(reader.ReadNullTerminatedString());
+                        string uid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter));
                         if (verbose)
                             Console.Error.WriteLine($"[sharp] Receiving command {uid}");
                         jsonSerializer.Serialize(jsonWriter, uid, typeof(string));
@@ -184,10 +184,10 @@ namespace Olympus {
                         writer.Flush();
 
                         // Command ID
-                        string cid = JsonConvert.DeserializeObject<string>(reader.ReadNullTerminatedString()).ToLowerInvariant();
+                        string cid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter)).ToLowerInvariant();
                         Cmd cmd = Cmds.Get(cid);
                         if (cmd == null) {
-                            reader.ReadNullTerminatedString();
+                            reader.ReadTerminatedString(delimiter);
                             Console.Error.WriteLine($"[sharp] Unknown command {cid}");
                             writer.WriteLine(@"null");
                             writer.Flush();
@@ -205,7 +205,7 @@ namespace Olympus {
                             Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
 
                         // Payload
-                        object input = JsonConvert.DeserializeObject(reader.ReadNullTerminatedString(), cmd.InputType);
+                        object input = JsonConvert.DeserializeObject(reader.ReadTerminatedString(delimiter), cmd.InputType);
                         object output;
                         try {
                             if (verbose || cmd.LogRun)
@@ -259,14 +259,15 @@ namespace Olympus {
         [DllImport("kernel32")]
         public static extern bool AllocConsole();
 
-        public static string ReadNullTerminatedString(this TextReader reader) {
+        public static string ReadTerminatedString(this TextReader reader, char delimiter) {
             StringBuilder sb = new StringBuilder();
-            int c;
-            while ((c = reader.Read()) != 0) {
+            char c;
+            while ((c = (char) reader.Read()) != delimiter) {
                 if (c < 0) {
+                    // TODO: handle network stream end?
                     continue;
                 }
-                sb.Append((char) c);
+                sb.Append(c);
             }
             return sb.ToString();
         }

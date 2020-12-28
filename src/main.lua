@@ -142,6 +142,13 @@ function love.load(args)
     local sharpStatus, sharpError = pcall(sharp.init, debugging or debuggingSharp, debuggingSharp)
     if not sharpStatus then
         love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
+    else
+        threader.routine(function()
+            for i = 1, 1000 do
+                sharp.echo("warmup #" .. tostring(i)):result()
+                threader.sleep(0.1)
+            end
+        end)
     end
 
     local root = uie.column({

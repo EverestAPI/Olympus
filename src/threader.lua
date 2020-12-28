@@ -31,10 +31,28 @@ function sharedWrap:update(...)
 
     local wasRunning = self.running
     if not wasRunning then
+        -- For the odd chance that the running field got changed externally...
+        -- This should NEVER happen BUT love2d has got enough window minimize maximize quirks.
+        local all = threader._threads
+        for i = #all, 1, -1 do
+            if all[i] == self then
+                table.remove(all, i)
+                return
+            end
+        end
+
         error(self.id .. " not running!", 2)
     end
 
-    local rv = self:__update(...) or {}
+    local rv = self:__update(...)
+    if rv ~= nil then
+        self.__lastRV = rv
+    else
+        rv = self.__lastRV
+        if rv == nil then
+            rv = {}
+        end
+    end
 
     local running = self.running
     local errorMsg = self.error
@@ -221,9 +239,22 @@ end
 function routineWrap:__update(...)
     local co = self.routine
 
-    local rv = {coroutine.resume(co, ...)}
-    local passed = rv[1]
-    table.remove(rv, 1)
+    -- For the odd chance that the coroutine died externally...
+    -- COROUTINES SHOULD NEVER DIE BEFORE RESUME BUT love2d has got enough window minimize maximize quirks.
+    local rv, passed
+    if coroutine.status(co) ~= "dead" then
+        rv = {coroutine.resume(co, ...)}
+        passed = rv[1]
+        table.remove(rv, 1)
+        -- OH F~ YOU love2d
+        if not passed and rv[1] == "cannot resume dead coroutine" and not rv[2] then
+            rv = nil
+            passed = true
+        end
+    else
+        rv = nil
+        passed = true
+    end
 
     local running = coroutine.status(co) ~= "dead"
     self.running = running

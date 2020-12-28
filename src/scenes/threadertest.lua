@@ -5,6 +5,7 @@ local scener = require("scener")
 local fs = require("fs")
 local config = require("config")
 local sharp = require("sharp")
+local native = require("native")
 
 local scene = {
     name = "Threader Test"
@@ -53,6 +54,25 @@ function scene.reloadSharp()
     }))
 
     list:addChild(uie.button("Reload", scene.reloadSharp))
+
+    list:addChild(uie.button("Dummy Task", function()
+        local installer = scener.push("installer")
+        installer.sharpTask("dummyTask", 1000, 10):calls(function(task, last)
+            if not last then
+                return
+            end
+
+            installer.update("done", 1, "done")
+            installer.done({
+                {
+                    "OK",
+                    function()
+                        scener.pop()
+                    end
+                }
+            })
+        end)
+    end))
 end
 
 
