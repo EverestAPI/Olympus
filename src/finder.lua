@@ -389,6 +389,116 @@ function finder.findItchInstalls(name)
 end
 
 
+function finder.findLutrisDatabase()
+    local userOS = love.system.getOS()
+    local db
+
+    if userOS == "Linux" then
+        db = fs.joinpath(os.getenv("HOME"), ".local", "share", "lutris", "pga.db")
+    end
+
+    if db then
+        local dbReal = fs.isFile(db)
+        print("[finder]", "lutris db", db, db == dbReal and "<same>" or dbReal)
+        return dbReal
+    end
+end
+
+function finder.findLutrisDatabaseInstalls(name)
+    local list = {}
+
+    local dbPath = finder.findLutrisDatabase()
+    if not dbPath then
+        return list
+    end
+
+    local db = sqlite3.open(dbPath)
+
+    local query = db:prepare([[
+        SELECT directory FROM games
+        WHERE name == ?
+    ]])
+    query:bind_values(name)
+
+    for path in query:urows() do
+        if fs.isDirectory(path) then
+            print("[finder]", "lutris db install", path)
+            list[#list + 1] = {
+                type = "lutris",
+                path = path
+            }
+        end
+    end
+
+    query:finalize()
+    db:close()
+    return list
+end
+
+function finder.findLutrisRoot()
+    local userOS = love.system.getOS()
+    local root
+
+    if userOS == "Linux" then
+        root = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "lutris")
+    end
+
+    if root then
+        local rootReal = fs.isDirectory(root)
+        print("[finder]", "lutris root", root, root == rootReal and "<same>" or rootReal)
+        return rootReal
+    end
+end
+
+function finder.findLutrisYamlInstalls(name)
+    local list = {}
+
+    local epic = finder.findLutrisRoot()
+    if not epic then
+        return list
+    end
+
+    local games = fs.joinpath(epic, "games")
+    if not fs.isDirectory(games) then
+        return list
+    end
+
+    for game in fs.dir(games) do
+        game = game:match("^celeste-.+%.yml$") and fs.joinpath(games, game)
+        local data = game and utils.fromYAML(fs.read(game))
+        if data and data.game and data.game then
+            local path = data.game.exe
+            if path and path:match("Celeste.exe$") and fs.isFile(path) then
+                path = fs.dirname(path)
+                print("[finder]", "lutris yml install", path)
+                list[#list + 1] = {
+                    type = "lutris",
+                    path = path
+                }
+            end
+        end
+    end
+
+    return list
+end
+
+function finder.findLutrisInstalls(name)
+    local list = {}
+
+    local fromDB = finder.findLutrisDatabaseInstalls(name)
+    for i = 1, #fromDB do
+        list[#list + 1] = fromDB[i]
+    end
+
+    local fromYAML = finder.findLutrisYamlInstalls(name)
+    for i = 1, #fromYAML do
+        list[#list + 1] = fromYAML[i]
+    end
+
+    return list
+end
+
+
 function finder.findUWPInstalls(package)
     if not sharpStatus then
         return {}
@@ -446,8 +556,9 @@ function finder.findAll(uncached)
     all = utils.concat(
         finder.findSteamInstalls(finder.defaultName),
         finder.findEpicInstalls(finder.defaultName),
-        finder.findLegendaryInstalls(finder.defaultName),
         finder.findItchInstalls(finder.defaultName),
+        finder.findLutrisInstalls(finder.defaultName),
+        finder.findLegendaryInstalls(finder.defaultName),
         finder.findUWPInstalls(finder.defaultUWPName)
     )
 
