@@ -259,6 +259,10 @@ function finder.findEpicInstalls(name)
     end
 
     local manifests = fs.joinpath(epic, "Manifests")
+    if not fs.isDirectory(manifests) then
+        return list
+    end
+
     for manifest in fs.dir(manifests) do
         manifest = manifest:match("%.item$") and fs.joinpath(manifests, manifest)
         local data = manifest and utils.fromJSON(fs.read(manifest))
