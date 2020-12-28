@@ -8,12 +8,13 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Olympus {
-    public class Program {
+    public static class Program {
 
         public static string RootDirectory;
 
@@ -166,82 +167,75 @@ namespace Olympus {
 
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
                 try {
-                    using (JsonTextReader jsonReader = new JsonTextReader(reader) {
-                        SupportMultipleContent = true
-                    }) {
-                        while (!(parentProc?.HasExited ?? false)) {
-                            // Commands from Olympus come in pairs of two objects:
+                    // JsonTextReader would be neat here but Newtonsoft.Json is unaware of NetworkStreams and tries to READ PAST STRINGS
+                    while (!(parentProc?.HasExited ?? false)) {
+                        // Commands from Olympus come in pairs of two objects:
 
-                            if (verbose)
-                                Console.Error.WriteLine("[sharp] Awaiting next command");
+                        if (verbose)
+                            Console.Error.WriteLine("[sharp] Awaiting next command");
 
-                            // Unique ID
-                            jsonReader.Read();
-                            string uid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
-                            if (verbose)
-                                Console.Error.WriteLine($"[sharp] Receiving command {uid}");
-                            jsonSerializer.Serialize(jsonWriter, uid, typeof(string));
-                            jsonWriter.Flush();
-                            writer.WriteLine();
-                            writer.Flush();
+                        // Unique ID
+                        string uid = JsonConvert.DeserializeObject<string>(reader.ReadNullTerminatedString());
+                        if (verbose)
+                            Console.Error.WriteLine($"[sharp] Receiving command {uid}");
+                        jsonSerializer.Serialize(jsonWriter, uid, typeof(string));
+                        jsonWriter.Flush();
+                        writer.WriteLine();
+                        writer.Flush();
 
-                            // Command ID
-                            jsonReader.Read();
-                            string cid = jsonSerializer.Deserialize<string>(jsonReader).ToLowerInvariant();
-                            Cmd cmd = Cmds.Get(cid);
-                            if (cmd == null) {
-                                jsonReader.Read();
-                                jsonReader.Skip();
-                                Console.Error.WriteLine($"[sharp] Unknown command {cid}");
-                                writer.WriteLine(@"null");
-                                writer.Flush();
-                                jsonWriter.WriteStartObject();
-                                jsonWriter.WritePropertyName("error");
-                                jsonWriter.WriteValue("cmd failed running: not found: " + cid);
-                                jsonWriter.WriteEndObject();
-                                jsonWriter.Flush();
-                                writer.WriteLine();
-                                writer.Flush();
-                                continue;
-                            }
-
-                            if (verbose)
-                                Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
-
-                            // Payload
-                            jsonReader.Read();
-                            object input = jsonSerializer.Deserialize(jsonReader, cmd.InputType);
-                            object output;
-                            try {
-                                if (verbose || cmd.LogRun)
-                                    Console.Error.WriteLine($"[sharp] Executing {cid}");
-                                output = cmd.Run(input);
-
-                            } catch (Exception e) {
-                                Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
-                                writer.WriteLine(@"null");
-                                writer.Flush();
-                                jsonWriter.WriteStartObject();
-                                jsonWriter.WritePropertyName("error");
-                                jsonWriter.WriteValue("cmd failed running: " + e);
-                                jsonWriter.WriteEndObject();
-                                jsonWriter.Flush();
-                                writer.WriteLine();
-                                writer.Flush();
-                                continue;
-                            }
-
-                            if (output is IEnumerator enumerator) {
-                                CmdTasks.Add(new CmdTask(uid, enumerator));
-                                output = uid;
-                            }
-
-                            jsonSerializer.Serialize(jsonWriter, output, cmd.OutputType);
-                            jsonWriter.Flush();
-                            writer.WriteLine();
+                        // Command ID
+                        string cid = JsonConvert.DeserializeObject<string>(reader.ReadNullTerminatedString()).ToLowerInvariant();
+                        Cmd cmd = Cmds.Get(cid);
+                        if (cmd == null) {
+                            reader.ReadNullTerminatedString();
+                            Console.Error.WriteLine($"[sharp] Unknown command {cid}");
                             writer.WriteLine(@"null");
                             writer.Flush();
+                            jsonWriter.WriteStartObject();
+                            jsonWriter.WritePropertyName("error");
+                            jsonWriter.WriteValue("cmd failed running: not found: " + cid);
+                            jsonWriter.WriteEndObject();
+                            jsonWriter.Flush();
+                            writer.WriteLine();
+                            writer.Flush();
+                            continue;
                         }
+
+                        if (verbose)
+                            Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
+
+                        // Payload
+                        object input = JsonConvert.DeserializeObject(reader.ReadNullTerminatedString(), cmd.InputType);
+                        object output;
+                        try {
+                            if (verbose || cmd.LogRun)
+                                Console.Error.WriteLine($"[sharp] Executing {cid}");
+                            output = cmd.Run(input);
+
+                        } catch (Exception e) {
+                            Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
+                            writer.WriteLine(@"null");
+                            writer.Flush();
+                            jsonWriter.WriteStartObject();
+                            jsonWriter.WritePropertyName("error");
+                            jsonWriter.WriteValue("cmd failed running: " + e);
+                            jsonWriter.WriteEndObject();
+                            jsonWriter.Flush();
+                            writer.WriteLine();
+                            writer.Flush();
+                            continue;
+                        }
+
+                        if (output is IEnumerator enumerator) {
+                            CmdTasks.Add(new CmdTask(uid, enumerator));
+                            output = uid;
+                        }
+
+                        jsonSerializer.Serialize(jsonWriter, output, cmd.OutputType);
+                        jsonWriter.Flush();
+                        writer.WriteLine();
+                        writer.WriteLine(@"null");
+                        writer.Flush();
                     }
 
                 } catch (Exception e) {
@@ -264,6 +258,18 @@ namespace Olympus {
 
         [DllImport("kernel32")]
         public static extern bool AllocConsole();
+
+        public static string ReadNullTerminatedString(this TextReader reader) {
+            StringBuilder sb = new StringBuilder();
+            int c;
+            while ((c = reader.Read()) != 0) {
+                if (c < 0) {
+                    continue;
+                }
+                sb.Append((char) c);
+            }
+            return sb.ToString();
+        }
 
     }
 }

@@ -150,15 +150,15 @@ local function sharpthread()
         local function run(uid, cid, argsLua)
             channelStatus:clear()
             channelStatus:push("txcmd " .. tostring(uid) .. " " .. cid)
-            write(utils.toJSON(uid, { indent = false }) .. "\n")
-            write(utils.toJSON(cid, { indent = false }) .. "\n")
+            write(utils.toJSON(uid, { indent = false }) .. "\n\0")
+            write(utils.toJSON(cid, { indent = false }) .. "\n\0")
 
             local argsSharp = {}
             -- Olympus.Sharp expects C# Tuples, which aren't lists.
             for i = 1, #argsLua do
                 argsSharp["Item" .. i] = argsLua[i]
             end
-            write(utils.toJSON(argsSharp, { indent = false }) .. "\n")
+            write(utils.toJSON(argsSharp, { indent = false }) .. "\n\0")
 
             flush()
 
@@ -260,9 +260,9 @@ local function sharpthread()
                 dprint("running", cid, unpack(args))
                 local rv = checkTimeout(run, uid, cid, args)
                 if rv == "timeout" then
+                    print("[sharp queue]", "timeout reconnecting", channelStatus:peek(), rv.value, rv.status, rv.status and rv.status.error)
                     channelStatus:clear()
                     channelStatus:push("reruncmd " .. tostring(uid) .. " " .. cid)
-                    dprint("timeout reconnecting", rv.value, rv.status, rv.status and rv.status.error)
                     client:close()
                     client = connect()
                     goto rerun

@@ -37,6 +37,21 @@ function scene.reloadSharp()
         list:addChild(item)
     end
 
+    list:addChild(uie.label("stresstest label please ignore #-"):with({
+        stressCount = 1,
+    }):hook({
+        update = function(orig, self, ...)
+            orig(self, ...)
+            if not self.stress then
+                self.stress = sharp.echo("stresstest label please ignore #" .. tostring(self.stressCount)):calls(function(t, text)
+                    self.stress = false
+                    self.text = text
+                    self.stressCount = self.stressCount + 1
+                end)
+            end
+        end
+    }))
+
     list:addChild(uie.button("Reload", scene.reloadSharp))
 end
 
