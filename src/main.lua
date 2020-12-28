@@ -25,8 +25,6 @@ local debugLabel
 local logWindow
 local logList
 
-local unsafe = false
-
 
 local function askExit()
     alert({
@@ -372,9 +370,7 @@ function love.load(args)
                 end
 
                 if _love_runStep and event[0].type == 0x200 and event[0].window.event == 3 then -- SDL_WINDOWEVENT and SDL_WINDOWEVENT_EXPOSED
-                    unsafe = true
                     pcall(_love_runStep)
-                    unsafe = false
                     love.graphics = nil -- Don't redraw, we've already redrawn.
                     return 0
                 end

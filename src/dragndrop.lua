@@ -12,6 +12,9 @@ local modinstaller = require("modinstaller")
 
 function love.filedropped(file)
     threader.routine(function()
+        file = file:getFilename()
+        print("file drag n dropped", file)
+
         if #alert.root.children > 0 or scener.locked then
             return
         end
@@ -37,7 +40,16 @@ Do you want to go to the Celeste installation manager?
             return
         end
 
-        file = file:getFilename()
+        -- On macOS, launching an app via the browser requires special event handling.
+        -- SDL2 exposes that as... a file drop event.
+        local protocol = file:match("^[Ee]verest:(.*)")
+        if protocol then
+            modinstaller.install(protocol, function()
+                love.event.quit()
+            end)
+            return
+        end
+
         if not fs.isFile(file) then
             print("user drag-n-dropped pathless file?")
             notify("Olympus can't handle that file - does it exist?")
