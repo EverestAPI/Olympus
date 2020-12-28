@@ -25,6 +25,8 @@ local debugLabel
 local logWindow
 local logList
 
+local unsafe = false
+
 
 local function askExit()
     alert({
@@ -144,9 +146,11 @@ function love.load(args)
         love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
     else
         threader.routine(function()
-            for i = 1, 1000 do
-                sharp.echo("warmup #" .. tostring(i)):result()
-                threader.sleep(0.1)
+            for i = 1, 4 do
+                for j = 1, 10 do
+                    sharp.echo("warmup " .. tostring(i) .. " " .. tostring(j)):result()
+                end
+                threader.sleep(0.2)
             end
         end)
     end
@@ -350,8 +354,27 @@ function love.load(args)
         if love.system.getOS() == "Windows" then
             -- Shamelessly based off of how FNA force-repaints the window on resize.
             native.setEventFilter(function(userdata, event)
+                --[==[
+                local caller = debug.getinfo(2, "Sn")
+                local co = coroutine.running()
+                if co ~= nil or caller.source ~= "=[C]" or caller.name ~= "pump" then
+                    print("SDL_EventFilter ran outside of event pump!")
+                    print("userdata:", tostring(userdata))
+                    print("event:", tostring(event))
+                    print("coroutine:", co)
+                    print(debug.traceback())
+                    return 1
+                end
+                ]==]
+
+                if threader.unsafe > 0 then
+                    return 1
+                end
+
                 if _love_runStep and event[0].type == 0x200 and event[0].window.event == 3 then -- SDL_WINDOWEVENT and SDL_WINDOWEVENT_EXPOSED
-                    _love_runStep()
+                    unsafe = true
+                    pcall(_love_runStep)
+                    unsafe = false
                     love.graphics = nil -- Don't redraw, we've already redrawn.
                     return 0
                 end
@@ -565,7 +588,7 @@ function love.draw()
 
     -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-    ui.draw()
+    pcall(ui.draw)
 
     -- love.graphics.setScissor()
 

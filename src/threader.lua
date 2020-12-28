@@ -9,7 +9,10 @@ local threader = {
     _routines = {},
     _wrapCache = {},
 
-    id = "main"
+    id = "main",
+
+    -- Native callbacks (such as SDL_EventFilter) can run during coroutine yields. This counter is to be used in native callbacks where threader updates can happen.
+    unsafe = 0
 }
 
 
@@ -31,27 +34,12 @@ function sharedWrap:update(...)
 
     local wasRunning = self.running
     if not wasRunning then
-        -- For the odd chance that the running field got changed externally...
-        -- This should NEVER happen BUT love2d has got enough window minimize maximize quirks.
-        local all = threader._threads
-        for i = #all, 1, -1 do
-            if all[i] == self then
-                table.remove(all, i)
-                return
-            end
-        end
-
         error(self.id .. " not running!", 2)
     end
 
     local rv = self:__update(...)
-    if rv ~= nil then
-        self.__lastRV = rv
-    else
-        rv = self.__lastRV
-        if rv == nil then
-            rv = {}
-        end
+    if rv == nil then
+        return
     end
 
     local running = self.running
@@ -103,14 +91,17 @@ function sharedWrap:wait(...)
         error(self.id .. " not running!", 2)
     end
 
-    local co = coroutine.running()
-    local routine = threader._routines[co]
+    local routine = threader._routines[coroutine.running()]
     if routine then
         routine.waiting = true
         self:calls(function(...)
             routine.waiting = false
         end)
-        return coroutine.yield(self)
+        -- SDL_EventFilters and other native callbacks can run during coroutine.yield
+        threader.unsafe = threader.unsafe + 1
+        local rv = coroutine.yield(self)
+        threader.unsafe = threader.unsafe - 1
+        return rv
     end
 
     self:__wait()
@@ -239,25 +230,39 @@ end
 function routineWrap:__update(...)
     local co = self.routine
 
-    -- For the odd chance that the coroutine died externally...
-    -- COROUTINES SHOULD NEVER DIE BEFORE RESUME BUT love2d has got enough window minimize maximize quirks.
-    local rv, passed
-    if coroutine.status(co) ~= "dead" then
-        rv = {coroutine.resume(co, ...)}
-        passed = rv[1]
-        table.remove(rv, 1)
-        -- OH F~ YOU love2d
-        if not passed and rv[1] == "cannot resume dead coroutine" and not rv[2] then
-            rv = nil
-            passed = true
-        end
-    else
-        rv = nil
-        passed = true
+    -- Sanity-check the status before resuming the coroutine in question.
+    local status = coroutine.status(co)
+
+    -- cannot resume running coroutine
+    if status == "running" then
+        -- There is a special place in hell for whenever this happens.
+        -- The only reasonable way this should even happen is a threader.update from inside a threader coroutine, but CTRL+F SDL_EventFilters.
+        print("[thread warning]", "coroutine " .. self.id .. " is the currently running coroutine, can't resume!")
+        print(debug.traceback())
+        return nil -- and hope that the caller knows how to handle this.
     end
+
+    -- cannot resume dead coroutine
+    if status == "dead" then
+        -- Coroutines should never die outside of our control.
+        -- Sadly we don't fully control the environment - CTRL+F SDL_EventFilters.
+        print("[threader warning]", "coroutine " .. self.id .. " died outside of our control - assuming graceful death!")
+        print(debug.traceback())
+        self.running = false
+        self.error = nil
+        return nil -- and hope that the caller knows how to handle this.
+    end
+
+    local rv = {coroutine.resume(co, ...)}
+    local passed = rv[1]
+    table.remove(rv, 1)
 
     local running = coroutine.status(co) ~= "dead"
     self.running = running
+
+    if not passed and rv[2] == nil and rv[1] == "cannot resume dead coroutine" then
+        print("[threader warning]", "coroutine " .. self.id .. " cannot be resumed because it's supposedly dead but the status was " .. status .. " and is " .. coroutine.status(co))
+    end
 
     local errorMsg = not passed and (rv[1] or "???")
     self.error = errorMsg
@@ -498,13 +503,23 @@ function threader.sleep(duration)
 end
 
 function threader.update()
+    local running = threader._routines[coroutine.running()]
+    if running then
+        local status = coroutine.status(running.routine)
+        if status ~= "running" then
+            print("[threader warning]", "threader.update called from within a " .. (running.waiting and "waiting " or "") .. " ZOMBIE threader coroutine (" .. running.id .. ", " .. status .. "), possibly via a native callback during coroutine.yield")
+        else
+            print("[threader warning]", "threader.update called from within a " .. (running.waiting and "waiting " or "") .. "threader coroutine (" .. running.id .. "), possibly via a native callback during coroutine.yield")
+        end
+    end
+
     local spiker = spiker
     local spike = spiker and spiker("threader.update", 0.005)
 
     local all = threader._threads
     for i = #all, 1, -1 do
         local t = all[i]
-        if not t.waiting then
+        if running ~= t and not t.waiting then
             t:update()
         end
         spike = spike and spike(t.id)
