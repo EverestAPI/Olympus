@@ -325,13 +325,13 @@ function scene.sharpTask(id, ...)
                     function()
                         alert({
                             body = [[
-You can ask for help in the Celeste Discord server's modding help channel.
+You can ask for help in the Celeste Discord server.
 An invite can be found on the Everest website.
 
-Please remember to use pastebin or another similar website
-and to check your log for any info you don't want to share (f.e. your username).]],
+Please drag and drop your files into the #modding_help channel.
+Before uploading, check your logs for sensitive info (f.e. your username).]],
                             buttons = {
-                                { "Go to log-sharp.txt", function(container)
+                                { "Open log folder", function(container)
                                     utils.openFile(fs.getStorageDir())
                                 end },
 

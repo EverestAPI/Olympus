@@ -97,7 +97,6 @@ function sharedWrap:wait(...)
         self:calls(function(...)
             routine.waiting = false
         end)
-        -- SDL_EventFilters and other native callbacks can run during coroutine.yield
         threader.unsafe = threader.unsafe + 1
         local rv = coroutine.yield(self)
         threader.unsafe = threader.unsafe - 1
