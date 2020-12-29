@@ -572,6 +572,14 @@ function love.update(dt)
 
     local bg = uie.panel.__default.style.bg
     love.graphics.setBackgroundColor(bg[1] * 0.5, bg[2] * 0.5, bg[3] * 0.5, 1)
+
+    if dt < (1 / 300) then
+        if not love.window.isVisible() then
+            love.timer.sleep(1 / 10)
+        elseif not love.window.hasFocus() and not love.window.hasMouseFocus() then
+            love.timer.sleep(1 / 50)
+        end
+    end
 end
 
 function love.draw()
