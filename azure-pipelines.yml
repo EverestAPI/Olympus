@@ -389,7 +389,7 @@ steps:
       curl https://www.libsdl.org/release/SDL2-2.0.14.dmg -o sdl2.dmg
       hdiutil attach -mountpoint sdl2mount sdl2.dmg
       rm -rf love/love.app/Contents/Frameworks/SDL2.framework
-      cp -rf sdl2mount/SDL2/SDL2.framework love/love.app/Contents/Frameworks/SDL2.framework
+      cp -rf sdl2mount/SDL2.framework love/love.app/Contents/Frameworks/SDL2.framework
       hdiutil detach sdl2mount
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
