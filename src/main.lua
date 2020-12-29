@@ -115,11 +115,17 @@ function love.load(args)
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
-    print(love.versionStr)
+    print("love2d version", love.versionStr)
 
     require("spiker")(os.getenv("OLYMPUS_SPIKER") == "1")
 
     native = require("native")
+
+    if native then
+        love.versionSDL = native.getSDLVersion()
+        love.versionSDLStr = table.concat(love.versionSDL, ".")
+        print("SDL2 version", love.versionSDLStr)
+    end
 
     ui = require("ui")
     uie = require("ui.elements")
@@ -351,8 +357,6 @@ function love.load(args)
     ui.hookLove(false, true)
 
     if native then
-        local os = love.system.getOS()
-
         native.setEventFilter(function(userdata, event)
             -- print(string.format("sdl event 0x%x", event[0].type))
 
@@ -505,6 +509,33 @@ function love.load(args)
         require("modinstaller").install(protocol, function()
             love.event.quit()
         end)
+    end
+
+    if os == "OS X" and love.versionSDL and love.versionSDL.major == 2 and love.versionSDL.minor == 0 and love.versionSDL.patch < 12 then
+        alert({
+            body = [[
+The Olympus app is out of date.
+Sometimes, new features and huge fixes require updates
+under the hood of Olympus, which it can't apply itself.
+
+Most notably, the one-click installer buttons found on GameBanana
+were broken on macOS. To fix this, you will need to reinstall Olympus.
+
+Please go to the Everest website for further instructions.
+Keeping Olympus outdated can cause crashes in the future.]],
+            buttons = {
+                { "Open Everest Website", function(container)
+                    container:close("ok")
+                    scener.set("installer")
+                    utils.openURL("https://everestapi.github.io/"):calls(function()
+                        threader.routine(function()
+                            threader.sleep(1)
+                            love.event.quit()
+                        end)
+                    end)
+                end }
+            }
+        })
     end
 end
 

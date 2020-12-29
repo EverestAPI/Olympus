@@ -57,13 +57,13 @@ function utils.concat(...)
 end
 
 function utils.openURL(path)
-    loveSystemAsync.openURL(path)
     require("notify")("Opening " .. path)
+    return loveSystemAsync.openURL(path)
 end
 
 function utils.openFile(path)
-    loveSystemAsync.openURL("file://" .. fs.fslash(path))
     require("notify")("Opening " .. path)
+    return loveSystemAsync.openURL("file://" .. fs.fslash(path))
 end
 
 function utils.load(path)

@@ -23,6 +23,8 @@ ffi.cdef[[
         char patch;
     } SDL_version;
 
+    void SDL_GetVersion(SDL_version* ver);
+
     typedef struct {
         int x;
         int y;
@@ -222,6 +224,20 @@ native.bit = bit
 native.sdl = sdl
 native.sys = sys
 native.os = ffi.os
+
+function native.getSDLVersion()
+    local sdlVersion = ffi.new("SDL_version[1]")
+    sdl.SDL_GetVersion(sdlVersion)
+    return {
+        sdlVersion[0].major,
+        sdlVersion[0].minor,
+        sdlVersion[0].patch,
+
+        major = sdlVersion[0].major,
+        minor = sdlVersion[0].minor,
+        patch = sdlVersion[0].patch,
+    }
+end
 
 function native.getCurrentWindow()
     return sdl.SDL_GL_GetCurrentWindow()
