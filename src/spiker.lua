@@ -77,9 +77,22 @@ local mtSpike = {
     __call = spike.step
 }
 
+local config = {
+    enabled = true
+}
+
 local function next(arg1, ...)
     if type(arg1) == "table" and getmetatable(arg1) == mtSpike then
         return arg1:stop()
+    end
+
+    if type(arg1) == "boolean" then
+        config.enabled = arg1
+        return
+    end
+
+    if not config.enabled then
+        return
     end
 
     local s = pool[index]

@@ -117,6 +117,8 @@ function love.load(args)
     love.versionStr = table.concat(love.version, ".")
     print(love.versionStr)
 
+    require("spiker")(os.getenv("OLYMPUS_SPIKER") == "1")
+
     native = require("native")
 
     ui = require("ui")
