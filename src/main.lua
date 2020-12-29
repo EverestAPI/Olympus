@@ -369,19 +369,6 @@ function love.load(args)
             end
             ]==]
 
-            -- On macOS, launching an app via the browser requires special event handling.
-            -- SDL2 "misuses" SDL_SendDropFile for this purpose.
-            -- love2d doesn't want to give this event to us though so we'll grab it the hard way.
-            if event[0].type == 0x1000 then -- SDL_DROPFILE
-                local file = native.ffi.string(event[0].drop.file)
-                print("SDL_DropEvent", file, event[0].drop.windowID)
-                local protocol = file:match("^[Ee]verest:(.*)")
-                if protocol then
-                    require("modinstaller").install(protocol)
-                end
-                return 1 -- Let love2d also handle this and free anything necessary.
-            end
-
             -- Shamelessly based off of how FNA force-repaints the window on resize.
             if os == "Windows" and threader.unsafe == 0 and _love_runStep and event[0].type == 0x200 and event[0].window.event == 3 then -- SDL_WINDOWEVENT and SDL_WINDOWEVENT_EXPOSED
                 pcall(_love_runStep)
@@ -390,7 +377,6 @@ function love.load(args)
             end
 
             return 1
-
         end)
 
         if root._titlebar then

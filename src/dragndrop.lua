@@ -16,6 +16,7 @@ function love.filedropped(file)
         print("file drag n dropped", file)
 
         if #alert.root.children > 0 or scener.locked then
+            notify("Olympus is currently busy with something else.")
             return
         end
 
@@ -36,6 +37,15 @@ Do you want to go to the Celeste installation manager?]],
                     { "No" }
                 }
             })
+            return
+        end
+
+        -- On macOS, launching an app via the browser requires special event handling.
+        -- SDL2 exposes that as a file drop event.
+        -- See https://bugzilla.libsdl.org/show_bug.cgi?id=5073
+        local protocol = file:match("^[Ee]verest:(.*)")
+        if protocol then
+            modinstaller.install(protocol)
             return
         end
 
