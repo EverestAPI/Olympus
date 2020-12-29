@@ -24,8 +24,7 @@ function love.filedropped(file)
             alert({
                 body = [[
 Your Celeste installation list is still empty.
-Do you want to go to the Celeste installation manager?
-]],
+Do you want to go to the Celeste installation manager?]],
                 buttons = {
                     {
                         "Yes",
