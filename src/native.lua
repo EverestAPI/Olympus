@@ -115,10 +115,17 @@ ffi.cdef[[
         int data1;
         int data2;
     } SDL_WindowEvent;
+    typedef struct SDL_DropEvent {
+        unsigned int type;
+        unsigned int timestamp;
+        char* file;
+        unsigned int windowID;
+    } SDL_DropEvent;
     typedef union SDL_Event {
         unsigned int type;
         SDL_CommonEvent common;
         SDL_WindowEvent window;
+        SDL_DropEvent drop;
         unsigned char padding[56];
     } SDL_Event;
     typedef int (*SDL_EventFilter)(void* userdata, SDL_Event* event);
@@ -211,6 +218,7 @@ end
 local native = {}
 
 native.ffi = ffi
+native.bit = bit
 native.sdl = sdl
 native.sys = sys
 native.os = ffi.os
