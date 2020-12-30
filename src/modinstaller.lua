@@ -24,7 +24,7 @@ function modinstaller.register()
             -- While we're here, might as well create some helpful .lnks
 
             -- INTRODUCED AFTER BUILD 1531
-            if 0 < config.lastrun or config.lastrun <= 1531 then
+            if config.lastrun < 0 or config.lastrun <= 1531 then
                 print("creating shortcuts", exepath)
                 sharp.createShortcutsWin32(exepath)
             end

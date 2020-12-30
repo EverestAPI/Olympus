@@ -537,6 +537,8 @@ Keeping Olympus outdated can cause crashes in the future.]],
             }
         })
     end
+
+    config.save()
 end
 
 love.frame = 0
