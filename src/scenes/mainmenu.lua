@@ -163,7 +163,7 @@ local root = uie.column({
         uie.column({
             buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana", true):with(uiu.fillWidth),
             buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
-            buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
+            false and buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
                 alert({
                     body = [[
 Olympus is currently unable to install Ahorn.
@@ -236,20 +236,20 @@ scene.installs:hook({
 
 
 function scene.updateMainList(install)
-    ui.runOnce(function(scene, install)
-        if not install then
+    ui.runOnce(function(config, scene, install)
+        if not install and #config.installs ~= 0 then
             return
         end
 
         scene.launchrow:removeSelf()
         scene.installbtn:removeSelf()
 
-        if install.versionEverest then
+        if install and install.versionEverest then
             scene.mainlist:addChild(scene.launchrow, 1)
         else
             scene.mainlist:addChild(scene.installbtn, 1)
         end
-    end, scene, install)
+    end, config, scene, install)
 end
 
 
