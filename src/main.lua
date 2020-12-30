@@ -26,6 +26,25 @@ local logWindow
 local logList
 
 
+local function logDump()
+    while true do
+        local logLine = logChannel:pop()
+        if not logLine then
+            break
+        end
+        if logFile then
+            logFile:write(logLine, "\n")
+        end
+        if logList and not lldb then
+            if logList.children[100] then
+                table.remove(logList.children, 1)
+            end
+            logList:addChild(uie.label(logLine))
+        end
+    end
+end
+
+
 local function askExit()
     alert({
         body = [[
@@ -67,6 +86,8 @@ end
 local _love_errhand = love.errhand
 function love.errhand(...)
     _love_runStep = nil
+    logList = nil
+    logDump()
     return _love_errhand(...)
 end
 
@@ -549,21 +570,7 @@ function love.update(dt)
         return
     end
 
-    while true do
-        local logLine = logChannel:pop()
-        if not logLine then
-            break
-        end
-        if logFile then
-            logFile:write(logLine, "\n")
-        end
-        if not lldb then
-            if logList.children[100] then
-                table.remove(logList.children, 1)
-            end
-            logList:addChild(uie.label(logLine))
-        end
-    end
+    logDump()
 
     love.frame = love.frame + 1
 
