@@ -71,6 +71,8 @@ function love.errhand(...)
 end
 
 function love.load(args)
+    local userOS = love.system.getOS()
+
     local protocol
 
     for i = 1, #args do
@@ -374,7 +376,7 @@ function love.load(args)
             ]==]
 
             -- Shamelessly based off of how FNA force-repaints the window on resize.
-            if os == "Windows" and threader.unsafe == 0 and _love_runStep and event[0].type == 0x200 and event[0].window.event == 3 then -- SDL_WINDOWEVENT and SDL_WINDOWEVENT_EXPOSED
+            if userOS == "Windows" and threader.unsafe == 0 and _love_runStep and event[0].type == 0x200 and event[0].window.event == 3 then -- SDL_WINDOWEVENT and SDL_WINDOWEVENT_EXPOSED
                 pcall(_love_runStep)
                 love.graphics = nil -- Don't redraw, we've already redrawn.
                 return 0
@@ -511,7 +513,7 @@ function love.load(args)
         end)
     end
 
-    if os == "OS X" and love.versionSDL and love.versionSDL.major == 2 and love.versionSDL.minor == 0 and love.versionSDL.patch < 12 then
+    if userOS == "OS X" and love.versionSDL and love.versionSDL.major == 2 and love.versionSDL.minor == 0 and love.versionSDL.patch < 12 then
         alert({
             body = [[
 The Olympus app is out of date.
@@ -590,6 +592,7 @@ function love.update(dt)
                 "\n" ..
                 "storageDir: " .. fs.getStorageDir() .. "\n" ..
                 "sharp: " .. sharp.getStatus() .. "\n" ..
+                "threader: " .. tostring(threader.unsafe) .. "\n" ..
                 ""
             debugLabel.parent:reflow()
         end
