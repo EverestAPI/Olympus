@@ -87,6 +87,8 @@ local _love_errhand = love.errhand
 function love.errhand(...)
     _love_runStep = nil
     logList = nil
+    print("ERROR")
+    print(...)
     logDump()
     return _love_errhand(...)
 end
