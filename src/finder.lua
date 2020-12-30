@@ -110,11 +110,16 @@ function finder.findSteamShortcuts()
         return {}
     end
 
+    local userdata = fs.isDirectory(fs.joinpath(steam, "userdata"))
+    if not userdata then
+        -- FIXME: At least one Windows user reported not having a Steam userdata folder!
+        return {}
+    end
+
     local byte = string.byte
 
     local allLists = {}
 
-    local userdata = fs.isDirectory(fs.joinpath(steam, "userdata"))
     for userid in fs.dir(userdata) do
         local path = userid:match("%d+") and fs.isFile(fs.joinpath(userdata, userid, "config", "shortcuts.vdf"))
         local data = path and fs.read(path)
