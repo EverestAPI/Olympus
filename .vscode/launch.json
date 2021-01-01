@@ -16,6 +16,7 @@
                 "${workspaceFolder}/src"
             ],
             "env": {
+                "OLYMPUS_EXPERIMENT_AHORN": "1",
                 "OLYMPUS_SHARP_DEBUGLOG": "0"
             },
             "windows": {
@@ -39,6 +40,7 @@
                 "${workspaceFolder}/src"
             ],
             "env": {
+                "OLYMPUS_EXPERIMENT_AHORN": "1",
                 "OLYMPUS_SHARP_DEBUGLOG": "1"
             },
             "windows": {
@@ -62,6 +64,9 @@
                 "${workspaceFolder}/src",
                 "--debug-sharp"
             ],
+            "env": {
+                "OLYMPUS_EXPERIMENT_AHORN": "1"
+            },
             "windows": {
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",
@@ -84,6 +89,7 @@
                 "--debug"
             ],
             "env": {
+                "OLYMPUS_EXPERIMENT_AHORN": "1",
                 "OLYMPUS_DEBUG": "1"
             },
             "windows": {
@@ -107,6 +113,9 @@
                 "${workspaceFolder}/src",
                 "--profile"
             ],
+            "env": {
+                "OLYMPUS_EXPERIMENT_AHORN": "1"
+            },
             "windows": {
                 "program": {
                     "command": "${workspaceFolder}/love/love.exe",

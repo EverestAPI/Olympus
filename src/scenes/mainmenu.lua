@@ -163,7 +163,12 @@ local root = uie.column({
         uie.column({
             buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana", true):with(uiu.fillWidth),
             buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
-            false and buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
+            (config.experimentAhorn or os.getenv("OLYMPUS_EXPERIMENT_AHORN") == "1") and buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
+                if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                    scener.push("ahornsetup")
+                    return
+                end
+
                 alert({
                     body = [[
 Olympus is currently unable to install Ahorn.
@@ -171,7 +176,7 @@ Please go to the Ahorn GitHub page for installation instructions.
 This will probably be implemented in a future update.]],
                     buttons = {
                         { "Open website", function(container)
-                            utils.openURL("https://github.com/CelestialCartographers/Ahorn#ahorn")
+                            utils.openURL("https://github.com/CelestialCartographers/Ahorn")
                             container:close("website")
                         end },
 
