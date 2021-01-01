@@ -531,7 +531,8 @@ function love.load(args)
     require("dragndrop")
 
     if protocol then
-        require("modinstaller").install(protocol, function()
+        require("modinstaller").install(protocol, function(task)
+            task:result()
             love.event.quit()
         end)
     end
