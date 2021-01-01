@@ -532,8 +532,17 @@ function love.load(args)
 
     if protocol then
         require("modinstaller").install(protocol, function(task)
-            task:result()
-            love.event.quit()
+            if task then
+                scener.set("installer")
+                task:calls(function()
+                    threader.routine(function()
+                        threader.sleep(1)
+                        love.event.quit()
+                    end)
+                end)
+            else
+                love.event.quit()
+            end
         end)
     end
 
