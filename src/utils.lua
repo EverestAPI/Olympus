@@ -244,15 +244,14 @@ Everest is now starting in the background.
 You can close this window.]])
         end
 
-        launching:calls(function(task, rv)
-            if rv == "missing" then
-                container:close()
-                alert([[
+        local rv = launching:result()
+        if rv == "missing" then
+            container:close()
+            alert([[
 Olympus couldn't find the Celeste launch binary.
 Please check if the installed version of Celeste matches your OS.
 If you are using Lutris or similar, you are on your own.]])
-            end
-        end)
+        end
     end)
 end
 
