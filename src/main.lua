@@ -152,6 +152,8 @@ function love.load(args)
         print("SDL2 version", love.versionSDLStr)
     end
 
+    print("Olympus version", utils.trim(utils.load("version.txt") or "?"))
+
     ui = require("ui")
     uie = require("ui.elements")
     uiu = require("ui.utils")
