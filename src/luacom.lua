@@ -1,6 +1,15 @@
-local jit = _G.jit
-if jit and jit.os ~= "Windows" then
-    return false
+local love = _G.love
+if love then
+    if love.system.getOS() ~= "Windows" then
+        return false
+    end
+else
+    local jit = _G.jit
+    if jit then
+        if jit.os ~= "Windows" then
+            return false
+        end
+    end
 end
 
 -- LuaCOM dumps itself into _G
