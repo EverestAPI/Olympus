@@ -16,14 +16,14 @@ using Newtonsoft.Json.Linq;
 namespace Olympus {
     public static class Program {
 
-        public static string RootDirectory;
+        public static string RootPath;
 
         public static void Main(string[] args) {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
-            RootDirectory = Path.GetDirectoryName(Environment.CurrentDirectory);
-            Console.Error.WriteLine(RootDirectory);
+            RootPath = Path.GetDirectoryName(Environment.CurrentDirectory);
+            Console.Error.WriteLine(RootPath);
 
             if (Type.GetType("Mono.Runtime") != null) {
                 // Mono hates HTTPS.

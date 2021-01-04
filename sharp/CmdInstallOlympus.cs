@@ -83,7 +83,7 @@ namespace Olympus {
                 switch (name) {
                     case "olympus.love":
                         yield return Status("Unpacking olympus.love", false, "download");
-                        string to = Path.Combine(Program.RootDirectory, "olympus.new.love");
+                        string to = Path.Combine(Program.RootPath, "olympus.new.love");
                         string toParent = Path.GetDirectoryName(to);
                         Console.Error.WriteLine($"{name} -> {to}");
 
@@ -102,7 +102,7 @@ namespace Olympus {
                         yield return Status("Unpacking sharp.zip", false, "download");
                         using (Stream zipStream = entry.Open())
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                            yield return Unpack(zip, Path.Combine(Program.RootDirectory, "sharp.new"));
+                            yield return Unpack(zip, Path.Combine(Program.RootPath, "sharp.new"));
                         }
                         break;
                 }
