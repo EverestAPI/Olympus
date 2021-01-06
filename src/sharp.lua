@@ -270,7 +270,11 @@ local function sharpthread()
                 if uid == "_timeoutping" then
                     dprint("timeoutping returning", rv.value, rv.status, rv.status and rv.status.error)
                 else
-                    dprint("returning", rv.value, rv.status, rv.status and rv.status.error)
+                    local value = tostring(rv.value)
+                    if #value > 128 then
+                        value = "<insert long string here - " .. tostring(#value) .. " bytes>"
+                    end
+                    dprint("returning", value, rv.status, rv.status and rv.status.error)
                     channelReturn:push(rv)
                 end
             end
@@ -313,7 +317,7 @@ end
 
 local sharp = setmetatable({}, mtSharp)
 
-local function _run(cid, ...)
+function sharp._run(cid, ...)
     local debugging = channelDebug:peek()[1]
     local uid = string.format("(%s)#%d", require("threader").id, tuid)
     tuid = tuid + 1
@@ -365,7 +369,7 @@ local function _run(cid, ...)
     return rv.value
 end
 function sharp.run(id, ...)
-    return threader.run(_run, id, ...)
+    return threader.run(sharp._run, id, ...)
 end
 
 sharp.initStatus = false

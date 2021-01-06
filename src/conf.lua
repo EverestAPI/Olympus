@@ -4,8 +4,7 @@ local lfs = require("lfs_ffi")
 
 if os.getenv("OLYMPUS_DEBUG") == "1" then
     if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
-        local lldb = require("lldebugger")
-        lldb.start()
+        require("lldebugger").start()
     end
 end
 

@@ -1,5 +1,10 @@
 require("love.filesystem")
 local requestStatus, request = pcall(require, "luajit-request")
+if not requestStatus then
+    print("luajit-request not loaded")
+    print(request)
+    request = nil
+end
 local dkjson = require("dkjson")
 local tinyyaml = require("tinyyaml")
 local fs = require("fs")
@@ -71,8 +76,19 @@ function utils.load(path)
 end
 
 function utils.download(url, headers)
-    if not requestStatus then
-        return false, "luajit-request not loaded: " .. tostring(request)
+    if not request then
+        if headers then
+            return false, "luajit-request not loaded: " .. tostring(request)
+        end
+
+        local status, data = pcall(function(url)
+            return require("sharp")._run("webGet", url)
+        end, url)
+
+        if status then
+            return data, 0
+        end
+        return false, 0, data
     end
 
     headers = headers or {
@@ -110,7 +126,11 @@ function utils.downloadJSON(url, headers)
     if not data then
         return data, error
     end
-    return utils.fromJSON(data)
+    local status, rv = pcall(utils.fromJSON, data)
+    if not status then
+        return status, rv
+    end
+    return rv
 end
 
 function utils.fromJSON(body)
@@ -130,7 +150,11 @@ function utils.downloadYAML(url, headers)
     if not data then
         return data, error
     end
-    return utils.fromYAML(data)
+    local status, rv = pcall(utils.fromYAML, data)
+    if not status then
+        return status, rv
+    end
+    return rv
 end
 
 function utils.fromYAML(body)
@@ -150,7 +174,11 @@ function utils.downloadXML(url, headers)
     if not data then
         return data, error
     end
-    return utils.fromXML(data)
+    local status, rv = pcall(utils.fromXML, data)
+    if not status then
+        return status, rv
+    end
+    return rv
 end
 
 function utils.fromXML(body)
