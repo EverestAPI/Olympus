@@ -17,12 +17,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornDownloadJulia : Cmd<IEnumerable> {
+    public unsafe class CmdAhornInstallJulia : Cmd<IEnumerable> {
 
         public override IEnumerable Run() {
 
-
-
+            yield break;
         }
 
     }

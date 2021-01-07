@@ -27,7 +27,7 @@ namespace Olympus {
 
             public string RootPath = AhornHelper.RootPath;
 
-            public string JuliaPath = AhornHelper.FindJulia();
+            public string JuliaPath = AhornHelper.JuliaPath;
             public string JuliaVersion = AhornHelper.GetJuliaVersion();
 
             // FIXME: Implement!
