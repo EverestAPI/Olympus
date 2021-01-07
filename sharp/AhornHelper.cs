@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public static class AhornHelper {
 
+        private static string OrigJuliaDepotPath = Environment.GetEnvironmentVariable("JULIA_DEPOT_PATH") ?? "";
+
         // FIXME: Easily configurable as Julia can grow big!
         private static string _RootPath;
 
@@ -45,6 +47,7 @@ namespace Olympus {
         }
 
         public static string JuliaPath;
+        public static bool JuliaIsLocal;
 
         public static string RunProcess(string name, string args, out string err) {
             Process process = new Process();
@@ -66,10 +69,19 @@ namespace Olympus {
             return data;
         }
 
-        public static string RunJulia(string script) {
+        public static string RunJulia(string script, bool? localDepot = null) {
             string julia = FindJulia(false);
             if (string.IsNullOrEmpty(julia) || !File.Exists(julia))
                 return null;
+
+            if (localDepot ?? JuliaIsLocal) {
+                string depot = Path.Combine(RootPath, "julia-depot");
+                if (!Directory.Exists(depot))
+                    Directory.CreateDirectory(depot);
+                Environment.SetEnvironmentVariable("JULIA_DEPOT_PATH", $"{depot}{Path.PathSeparator}{OrigJuliaDepotPath}");
+            } else {
+                Environment.SetEnvironmentVariable("JULIA_DEPOT_PATH", string.IsNullOrEmpty(OrigJuliaDepotPath) ? Path.PathSeparator.ToString() : OrigJuliaDepotPath);
+            }
 
             string tmp = Path.GetTempFileName();
             File.WriteAllText(tmp, script);
@@ -88,12 +100,16 @@ namespace Olympus {
                 juliaName,
                 out _
             ).Split('\n').FirstOrDefault()?.Trim();
-            if (!string.IsNullOrEmpty(juliaPath) && File.Exists(juliaPath))
+            if (!string.IsNullOrEmpty(juliaPath) && File.Exists(juliaPath)) {
+                JuliaIsLocal = false;
                 return JuliaPath = juliaPath;
+            }
 
             juliaPath = Path.Combine(RootPath, "julia", "bin", juliaName);
-            if (File.Exists(juliaPath))
+            if (File.Exists(juliaPath)) {
+                JuliaIsLocal = true;
                 return JuliaPath = juliaPath;
+            }
 
             return null;
         }
