@@ -190,7 +190,7 @@ anything to work in the near future, if at all.]],
                         else
                             add()
                         end
-                    end)
+                    end):with(utils.important(24, function() return #config.installs == 0 end))
                 )
 
             }):with({
@@ -286,7 +286,7 @@ Olympus needs to know which Celeste installations you want to manage.
 Add your installations from the list below if Olympus has found them, or press the browse button.]]))
         end
 
-        listManual:addChild(uie.button("Browse", scene.browse))
+        listManual:addChild(uie.button("Browse", scene.browse):with(utils.important(24, function() return #config.installs == 0 end)))
     end)
 end
 

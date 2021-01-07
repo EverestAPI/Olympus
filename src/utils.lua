@@ -79,9 +79,11 @@ function utils.important(size, check)
             end,
 
             draw = function(orig, self)
-                local time = self.time
-                self.realY = -6 + -6 * math.sin(time * time * time * math.pi * 6) * (1 - time)
-                orig(self)
+                if self.visible then
+                    local time = self.time
+                    self.realY = -4 + -8 * math.abs(math.sin(time * time * math.pi * 4)) * (1 - time)
+                    orig(self)
+                end
             end
         }):as("important"))
     end

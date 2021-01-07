@@ -492,7 +492,7 @@ function love.load(args)
 
         local items = {
 
-            { "<<<",
+            { uie.icon("back"):with({ scale = 21 / 256 }),
                 function()
                     if #scener.stack > 0 then
                         scener.pop()
