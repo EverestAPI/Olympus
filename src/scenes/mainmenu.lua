@@ -6,6 +6,7 @@ local alert = require("alert")
 local notify = require("notify")
 local config = require("config")
 local sharp = require("sharp")
+local updater = require("updater")
 
 local scene = {
     name = "Main Menu"
@@ -179,7 +180,7 @@ This will probably be implemented in a future update.]],
                     }
                 })
             end):with(uiu.fillWidth),
-            buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth),
+            buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
             -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
         }):with({
             style = {

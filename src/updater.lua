@@ -16,6 +16,8 @@ function updater.check()
     end
 
     updater.checking = threader.routine(function()
+        updater.latest = nil
+
         local versionOld, extraOld = utils.load("version.txt"):match("(.*)-(.*-.*-[^\n]*)")
         local srcOld, idOld = (extraOld or "?"):match("(.*)-(.*)-.*")
         idOld = tonumber(idOld)
@@ -49,6 +51,12 @@ function updater.check()
                     break
 
                 elseif config.updates:match(branch, 1, false) then
+                    updater.latest = {
+                        id = id,
+                        branch = branch,
+                        version = build.buildNumber
+                    }
+
                     notify(string.format([[
 There's a newer version of Olympus available.
 Go to the options menu to update to %s]], build.buildNumber))
@@ -71,6 +79,7 @@ Go to the options menu to update to %s]], build.buildNumber))
                             return
                         end
 
+                        updater.latest.changelog = data
                         setChangelog(data)
                     end)
 
