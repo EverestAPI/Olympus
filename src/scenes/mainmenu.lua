@@ -83,10 +83,10 @@ function scene.createInstalls()
 
             uie.button("Manage", function()
                 scener.push("installmanager")
-            end):with(utils.important(24, function() return #config.installs == 0 end)):with({
+            end):with({
                 clip = false,
                 cacheable = false
-            }):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
+            }):with(utils.important(24, function() return #config.installs == 0 end)):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
 
         }):with({
             style = {

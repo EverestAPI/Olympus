@@ -71,7 +71,7 @@ function background.new()
 
                     if dot.time >= 1 or (dot.cx * (width - dot.rad) + dot.rad * 0.5 + dot.rad - mouseX * 0.12) < -128 then
                         dot.time = random() * 0.5 + 0.3
-                        dot.tex = love.math.random(snows)
+                        dot.tex = random(snows)
                         dot.cx = (dot.cx and 1 or -1) + (768 + math.max(mouseX, -mouseX) * 0.12) / width + random() * (dot.cx and 1 or 3)
                         dot.cy = random()
                         dot.z = 0.5 + random()

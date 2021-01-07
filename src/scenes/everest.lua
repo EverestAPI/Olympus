@@ -84,7 +84,10 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 self.text = (selected and selected:match("%+")) and "Update" or "Install"
                 orig(self, ...)
             end
-        }):with(uiu.fillWidth(true)):as("install"),
+        }):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth(true)):with(utils.important(24, function(self) return self.parent.enabled end)):as("install"),
 
         uie.button("Uninstall", function()
             alert({
