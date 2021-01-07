@@ -27,6 +27,10 @@ namespace Olympus {
             if (!Directory.Exists(tmp))
                 Directory.CreateDirectory(tmp);
 
+            string julia = Path.Combine(root, "julia");
+            if (Directory.Exists(julia))
+                Directory.Delete(julia, true);
+
             if (PlatformHelper.Is(Platform.Windows)) {
                 string zipPath = Path.Combine(tmp, $"juliadownload.zip.part");
                 if (File.Exists(zipPath))
@@ -45,7 +49,7 @@ namespace Olympus {
 
                     yield return Status("Unzipping Julia", false, "download");
                     using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                        yield return Unpack(zip, Path.Combine(root, "julia"), "julia-1.5.3/");
+                        yield return Unpack(zip, julia, "julia-1.5.3/");
                     }
                 }
 

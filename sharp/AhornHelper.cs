@@ -59,11 +59,23 @@ namespace Olympus {
 
             process.Start();
             process.WaitForExit();
-            string data = process.StandardOutput.ReadToEnd();
-            err = process.StandardError.ReadToEnd();
+            string data = process.StandardOutput.ReadToEnd().Trim();
+            err = process.StandardError.ReadToEnd().Trim();
 
             process.Dispose();
             return data;
+        }
+
+        public static string RunJulia(string script) {
+            string julia = FindJulia(false);
+            if (string.IsNullOrEmpty(julia) || !File.Exists(julia))
+                return null;
+
+            string tmp = Path.GetTempFileName();
+            File.WriteAllText(tmp, script);
+            string rv = RunProcess(julia, tmp, out _);
+            File.Delete(tmp);
+            return rv;
         }
 
         public static string FindJulia(bool force) {
@@ -87,7 +99,9 @@ namespace Olympus {
         }
 
         public static string GetJuliaVersion() {
-            return null; // FIXME: Implement!
+            return RunJulia(@"
+print(VERSION)
+");
         }
 
     }
