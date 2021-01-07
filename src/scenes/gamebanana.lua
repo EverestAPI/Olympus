@@ -66,13 +66,13 @@ local root = uie.column({
 
             uie.row({
 
-                uie.button("<<<", function()
+                uie.button(uie.icon("back"):with({ scale = 24 / 256 }), function()
                     scene.loadPage(scene.page - 1)
                 end):as("pagePrev"),
                 uie.label("Page #?", ui.fontBig):with({
                     y = 4
                 }):as("pageLabel"),
-                uie.button(">>>", function()
+                uie.button(uie.icon("forward"):with({ scale = 24 / 256 }), function()
                     scene.loadPage(scene.page + 1)
                 end):as("pageNext"),
 

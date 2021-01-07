@@ -1,5 +1,10 @@
 require("love.filesystem")
 local requestStatus, request = pcall(require, "luajit-request")
+if not requestStatus then
+    print("luajit-request not loaded")
+    print(request)
+    request = nil
+end
 local dkjson = require("dkjson")
 local tinyyaml = require("tinyyaml")
 local fs = require("fs")
@@ -19,26 +24,66 @@ function utils.important(size, check)
     return function(el)
         local uie = require("ui.elements")
         local config = require("config")
+
         if el.style:get("spacing") ~= nil then
             el.style.spacing = 0
         end
+
         el:addChild(uie.image("important"):with({
+            check = check,
+            time = love.math.random() * 0.3,
             scale = size / 256
         }):hook({
-            update = function(orig, self)
-                orig(self)
+            update = function(orig, self, dt)
+                orig(self, dt)
+
+                local check = self.check
                 if uiu.isCallback(check) then
-                    self.visible = check()
+                    local visible = check(self) and true or false
+                    if visible ~= self.visible then
+                        self.visible = visible
+                        self:reflow()
+                        if not self.visible then
+                            self.time = love.math.random() * 0.3
+                        end
+                    end
+                end
+
+                if self.visible then
+                    local time = self.time + dt
+                    if time >= 1 then
+                        time = time - 1
+                    end
+                    self.time = time
+                    self:repaint()
                 end
             end,
+
+            updateHidden = function(orig, self, dt)
+                -- The parent might be too stupid to have onscreen set to true.
+                self:update(dt)
+                orig(dt)
+            end,
+
             calcSize = function(orig, self)
                 self.width = 0
                 self.height = 0
+            end,
+            layoutLateLazy = function(orig, self)
+                self:layoutLate()
             end,
             layoutLate = function(orig, self)
                 orig(self)
                 self.realX = -8
                 self.realY = -8
+            end,
+
+            draw = function(orig, self)
+                if self.visible then
+                    local time = self.time
+                    self.realY = -4 + -8 * math.abs(math.sin(time * time * math.pi * 4)) * (1 - time)
+                    orig(self)
+                end
             end
         }):as("important"))
     end
@@ -71,8 +116,19 @@ function utils.load(path)
 end
 
 function utils.download(url, headers)
-    if not requestStatus then
-        return false, "luajit-request not loaded: " .. tostring(request)
+    if not request then
+        if headers then
+            return false, "luajit-request not loaded: " .. tostring(request)
+        end
+
+        local status, data = pcall(function(url)
+            return require("sharp")._run("webGet", url)
+        end, url)
+
+        if status then
+            return data, 0
+        end
+        return false, 0, data
     end
 
     headers = headers or {
@@ -110,7 +166,11 @@ function utils.downloadJSON(url, headers)
     if not data then
         return data, error
     end
-    return utils.fromJSON(data)
+    local status, rv = pcall(utils.fromJSON, data)
+    if not status then
+        return status, rv
+    end
+    return rv
 end
 
 function utils.fromJSON(body)
@@ -130,7 +190,11 @@ function utils.downloadYAML(url, headers)
     if not data then
         return data, error
     end
-    return utils.fromYAML(data)
+    local status, rv = pcall(utils.fromYAML, data)
+    if not status then
+        return status, rv
+    end
+    return rv
 end
 
 function utils.fromYAML(body)
@@ -150,7 +214,11 @@ function utils.downloadXML(url, headers)
     if not data then
         return data, error
     end
-    return utils.fromXML(data)
+    local status, rv = pcall(utils.fromXML, data)
+    if not status then
+        return status, rv
+    end
+    return rv
 end
 
 function utils.fromXML(body)

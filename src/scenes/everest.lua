@@ -72,7 +72,14 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
-        uie.button("Install", function()
+        uie.button(uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install") }):with({
+            style = {
+                bg = {},
+                padding = 0
+            },
+            clip = false,
+            cacheable = false
+        }):with(uiu.styleDeep), function()
             scene.install()
         end):hook({
             update = function(orig, self, ...)
@@ -84,7 +91,15 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 self.text = (selected and selected:match("%+")) and "Update" or "Install"
                 orig(self, ...)
             end
-        }):with(uiu.fillWidth(true)):as("install"),
+        }):with({
+            style = {
+                normalBG = { 0.2, 0.4, 0.2, 0.8 },
+                hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
+                pressedBG = { 0.2, 0.6, 0.2, 0.9 }
+            },
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth(true)):with(utils.important(24, function(self) return self.parent.enabled end)):as("install"),
 
         uie.button("Uninstall", function()
             alert({

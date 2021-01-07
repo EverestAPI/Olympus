@@ -171,7 +171,15 @@ function threadWrap:__update()
     self.error = error
 
     if wasRunning and not running then
-        return self.channel:pop()
+        local rv = self.channel:pop()
+        if rv then
+            if rv[1] then
+                return rv[2]
+            end
+
+            self.error = error or rv[2]
+            return nil
+        end
     end
 
     return nil
@@ -350,10 +358,12 @@ function threader.new(fun)
         )
 
         if not status then
-            error(rv)
+            -- error(rv) -- interferes with love.threaderror and skips debugEnd
+            channel:push({ false, rv })
+        else
+            channel:push({ true, rv })
         end
 
-        channel:push(rv)
     ]] .. (threader.debugEnd and threader.debugEnd or ""))
 
     local suffix = ""
