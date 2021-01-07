@@ -316,6 +316,7 @@ function scene.sharpTask(id, ...)
         end
 
         local last = sharp.poll(task):result()
+        last = tostring(last)
         local status = sharp.free(task):result()
         if status == "error" then
             scene.update(last[1], 1, "error")

@@ -227,6 +227,7 @@ namespace Olympus {
                         }
 
                         if (output is IEnumerator enumerator) {
+                            Console.Error.WriteLine($"[sharp] New CmdTask: {uid} = {cid}");
                             CmdTasks.Add(new CmdTask(uid, enumerator));
                             output = uid;
                         }

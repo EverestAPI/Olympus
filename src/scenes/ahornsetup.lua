@@ -59,6 +59,26 @@ local root = uie.column({
 scene.root = root
 
 
+function scene.installJulia()
+    local installer = scener.push("installer")
+    installer.sharpTask("ahornInstallJulia"):calls(function(task, last)
+        if not last then
+            return
+        end
+
+        installer.update("Julia successfully installed", 1, "done")
+        installer.done({
+            {
+                "OK",
+                function()
+                    scener.pop()
+                end
+            }
+        })
+    end)
+end
+
+
 function scene.reload()
     if scene.reloading then
         return scene.reloading
@@ -91,7 +111,7 @@ function scene.reload()
 
         local function btnInstallJulia()
             return uie.button(
-                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install Julia 1.5.2") }):with({
+                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install Julia " .. tostring(info.JuliaVersionRecommended)) }):with({
                     style = {
                         bg = {},
                         padding = 0
@@ -144,7 +164,7 @@ No supported installation of Julia was found.
 Ahorn is programmed in the Julia programming language and thus needs Julia to be installed.
 
 You can either install Julia yourself, or Olympus can install it into an isolated environment.
-As of the time of writing this, version 1.3+ is the minimum requirement, 1.5.2 is recommended.]]
+As of the time of writing this, version 1.3+ is the minimum requirement.]]
                 ),
                 btnInstallJulia()
             }):with(uiu.fillWidth))
@@ -157,7 +177,7 @@ The currently installed version of Julia isn't working as expected.
 Found installation path: %s
 
 Olympus can download and set up an isolated Julia environment for you.
-As of the time of writing this, version 1.3+ is the minimum requirement, 1.5.2 is recommended.]],
+As of the time of writing this, version 1.3+ is the minimum requirement.]],
                     tostring(info.JuliaPath)
                 )),
                 btnInstallJulia()

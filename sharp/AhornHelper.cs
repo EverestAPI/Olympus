@@ -81,7 +81,7 @@ namespace Olympus {
 
             juliaPath = Path.Combine(RootPath, "julia", "bin", juliaName);
             if (File.Exists(juliaPath))
-                return juliaPath;
+                return JuliaPath = juliaPath;
 
             return null;
         }

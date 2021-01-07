@@ -17,11 +17,50 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornInstallJulia : Cmd<IEnumerable> {
+    public unsafe class CmdAhornInstallJulia : Cmd<IEnumerator> {
 
-        public override IEnumerable Run() {
+        public override IEnumerator Run() {
+            yield return Status("Preparing installation of Julia", false, "");
 
-            yield break;
+            string root = AhornHelper.RootPath;
+            string tmp = Path.Combine(root, "tmp");
+            if (!Directory.Exists(tmp))
+                Directory.CreateDirectory(tmp);
+
+            if (PlatformHelper.Is(Platform.Windows)) {
+                string zipPath = Path.Combine(tmp, $"juliadownload.zip.part");
+                if (File.Exists(zipPath))
+                    File.Delete(zipPath);
+
+                string url =
+                    PlatformHelper.Is(Platform.Bits64) ?
+                    "https://julialang-s3.julialang.org/bin/winnt/x64/1.5/julia-1.5.3-win64.zip" :
+                    "https://julialang-s3.julialang.org/bin/winnt/x86/1.5/julia-1.5.3-win32.zip";
+
+                yield return Status($"Downloading {url}", false, "download");
+                using (FileStream zipStream = File.Open(zipPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
+                    yield return Download(url, 0, zipStream);
+
+                    zipStream.Seek(0, SeekOrigin.Begin);
+
+                    yield return Status("Unzipping Julia", false, "download");
+                    using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
+                        yield return Unpack(zip, Path.Combine(root, "julia"), "julia-1.5.3/");
+                    }
+                }
+
+
+            } else if (PlatformHelper.Is(Platform.Linux)) {
+                throw new NotImplementedException();
+
+
+            } else if (PlatformHelper.Is(Platform.MacOS)) {
+                throw new NotImplementedException();
+
+
+            } else {
+                throw new PlatformNotSupportedException($"Unsupported platform: {PlatformHelper.Current}");
+            }
         }
 
     }
