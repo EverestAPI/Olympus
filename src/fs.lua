@@ -64,8 +64,13 @@ else
 
 end
 
+
+function fs.getexe()
+    return love.filesystem.getExecutablePath and love.filesystem.getExecutablePath()
+end
+
 function fs.getsrc()
-    local src = fs.normalize(love.filesystem.getSource())
+    local src = fs.normalize(fs.getexe()) or fs.normalize(love.filesystem.getSource())
     return src and (fs.isDirectory(src) and src or fs.dirname(src)) or fs.getcwd()
 end
 
