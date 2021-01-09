@@ -51,11 +51,12 @@ function updater.check()
                     break
 
                 elseif config.updates:match(branch, 1, false) then
-                    updater.latest = {
+                    local latest = {
                         id = id,
                         branch = branch,
                         version = build.buildNumber
                     }
+                    updater.latest = latest
 
                     notify(string.format([[
 There's a newer version of Olympus available.
@@ -79,7 +80,7 @@ Go to the options menu to update to %s]], build.buildNumber))
                             return
                         end
 
-                        updater.latest.changelog = data
+                        latest.changelog = data
                         setChangelog(data)
                     end)
 
