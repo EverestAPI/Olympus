@@ -103,7 +103,7 @@ function modinstaller.install(modurl, cb)
     end
 
     if not cb then
-        cb = function(task)
+        cb = function()
             scener.pop()
         end
     end
@@ -126,7 +126,8 @@ function modinstaller.install(modurl, cb)
             {
                 "Launch",
                 function()
-                    cb(utils.launch(install))
+                    utils.launch(install)
+                    cb()
                 end
             },
             {
