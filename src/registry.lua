@@ -1,4 +1,4 @@
-local luacomStatus, luacom = false, nil -- pcall(require, "luacom")
+local luacomStatus, luacom = pcall(require, "luacom")
 if luacomStatus and luacom then
   local registry = {}
 
