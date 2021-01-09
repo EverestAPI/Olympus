@@ -41,12 +41,7 @@ function modinstaller.register()
             return false
         end
 
-        local srcdir = love.filesystem.getSource()
-        if srcdir then
-            srcdir = fs.dirname(fs.normalize(srcdir))
-        else
-            srcdir = fs.getcwd()
-        end
+        local srcdir = fs.getsrc()
 
         local shpath = fs.joinpath(srcdir, "olympus.sh")
         if not fs.isFile(shpath) then

@@ -99,6 +99,7 @@ local storageDir = fs.getStorageDir()
 
 print("pre-initializing")
 print("cwd:", fs.getcwd())
+print("src:", fs.getsrc())
 print("storageDir:", storageDir)
 
 local storageDirAttrs = lfs.attributes(storageDir)

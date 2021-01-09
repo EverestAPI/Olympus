@@ -64,6 +64,11 @@ else
 
 end
 
+function fs.getsrc()
+    local src = fs.normalize(love.filesystem.getSource())
+    return src and (fs.isDirectory(src) and src or fs.dirname(src)) or fs.getcwd()
+end
+
 function fs.filename(path, sep)
     sep = sep or fs.dirSeparator
 
@@ -98,6 +103,10 @@ function fs.splitpath(path)
 end
 
 function fs.normalize(path)
+    if not path then
+        return path
+    end
+
     path = path:gsub("([^/\\])[/\\]$", "%1")
     local sep = fs.dirSeparator
 

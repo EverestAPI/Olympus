@@ -305,13 +305,7 @@ local root = uie.column({
                 uie.row({
 
                     uie.button("Open installation folder", function()
-                        local src = love.filesystem.getSource()
-                        if src then
-                            src = fs.dirname(fs.normalize(src))
-                        else
-                            src = fs.getcwd()
-                        end
-                        utils.openFile(src)
+                        utils.openFile(fs.getsrc())
                     end):with(uiu.fillWidth(4.5)),
 
                     uie.button("Open log and config folder", function()
