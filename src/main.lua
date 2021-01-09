@@ -611,7 +611,7 @@ function love.update(dt)
                 "debugDraw: " .. tostring(ui.debug.draw) .. "\n" ..
                 -- "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState) ..
                 "\n" ..
-                "storageDir: " .. fs.getStorageDir() .. "\n" ..
+                -- "storageDir: " .. fs.getStorageDir() .. "\n" .. -- Can contain invalid UTF-8!
                 "sharp: " .. sharp.getStatus() .. "\n" ..
                 "threader: " .. tostring(threader.unsafe) .. "\n" ..
                 ""
