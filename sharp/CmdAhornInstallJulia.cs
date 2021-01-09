@@ -41,16 +41,22 @@ namespace Olympus {
                     "https://julialang-s3.julialang.org/bin/winnt/x64/1.5/julia-1.5.3-win64.zip" :
                     "https://julialang-s3.julialang.org/bin/winnt/x86/1.5/julia-1.5.3-win32.zip";
 
-                yield return Status($"Downloading {url}", false, "download");
-                using (FileStream zipStream = File.Open(zipPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
-                    yield return Download(url, 0, zipStream);
+                try {
+                    yield return Status($"Downloading {url}", false, "download");
+                    using (FileStream zipStream = File.Open(zipPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
+                        yield return Download(url, 0, zipStream);
 
-                    zipStream.Seek(0, SeekOrigin.Begin);
+                        zipStream.Seek(0, SeekOrigin.Begin);
 
-                    yield return Status("Unzipping Julia", false, "download");
-                    using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                        yield return Unpack(zip, julia, "julia-1.5.3/");
+                        yield return Status("Unzipping Julia", false, "download");
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
+                            yield return Unpack(zip, julia, "julia-1.5.3/");
+                        }
                     }
+
+                } finally {
+                    if (File.Exists(zipPath))
+                        File.Delete(zipPath);
                 }
 
 
