@@ -160,7 +160,7 @@ function scene.reload()
             mainlist:addChild(uie.column({
                 uie.label("Julia not found", ui.fontBig),
                 uie.label([[
-Ahorn uses the Julia programming language. Julia to be installed for Ahorn, like Java for Minecraft.
+Ahorn uses the Julia programming language, similar to how Minecraft uses the Java programming language.
 No supported installation of Julia was found on your computer.
 
 You can either install Julia yourself, or Olympus can install it into an isolated environment.
@@ -173,7 +173,7 @@ As of the time of writing this, version 1.3+ is the minimum requirement.]]
             mainlist:addChild(uie.column({
                 uie.label("Julia not recognized", ui.fontBig),
                 uie.label(string.format([[
-Ahorn uses the Julia programming language. Julia to be installed for Ahorn, like Java for Minecraft.
+Ahorn uses the Julia programming language, similar to how Minecraft uses the Java programming language.
 The currently installed version of Julia isn't working as expected.
 Found installation path: %s
 
@@ -188,7 +188,7 @@ As of the time of writing this, version 1.3+ is the minimum requirement.]],
             mainlist:addChild(uie.column({
                 uie.label("Julia", ui.fontBig),
                 uie.label(string.format([[
-Ahorn uses the Julia programming language. Julia to be installed for Ahorn, like Java for Minecraft.
+Ahorn uses the Julia programming language, similar to how Minecraft uses the Java programming language.
 Found installation path: %s
 Found version: %s]],
                     tostring(info.JuliaPath), tostring(info.JuliaVersion))
