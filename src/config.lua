@@ -109,6 +109,10 @@ function config.load()
     default(data.quality, "bg", true)
     default(data.quality, "bgBlur", true)
     default(data.quality, "bgSnow", true)
+
+    default(data, "ahorn", {})
+
+    default(data.ahorn, "rootPath", "")
 end
 
 function config.save()
