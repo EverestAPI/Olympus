@@ -98,9 +98,46 @@ local fs = require("fs")
 local storageDir = fs.getStorageDir()
 
 print("pre-initializing")
-print("cwd:", fs.getcwd())
-print("src:", fs.getsrc())
+local cwd = fs.getcwd()
+print("cwd:", cwd)
+local src = fs.getsrc()
+print("src:", src)
 print("storageDir:", storageDir)
+
+if love.system.getOS() == "Windows" and cwd ~= src then
+    local ffi = require("ffi")
+    local C = ffi.C
+
+    ffi.cdef[[
+        int SetCurrentDirectoryW(wchar_t* lpPathName);
+        int MultiByteToWideChar(
+            unsigned int CodePage,
+            int dwFlags,
+            char* lpMultiByteStr,
+            int cbMultiByte,
+            wchar_t* lpWideCharStr,
+            int cchWideChar
+        );
+        int GetLastError();
+    ]]
+
+    -- CP_UTF8 = 65001
+
+    local length = #src + 1
+    local srcC = ffi.new("char[?]", length)
+    ffi.copy(srcC, src)
+    srcC[#src] = 0
+    local size = C.MultiByteToWideChar(65001, 0, srcC, length, nil, 0)
+    assert(size ~= 0)
+    local srcW = ffi.new("wchar_t[?]", size)
+    length = C.MultiByteToWideChar(65001, 0, srcC, length, srcW, size)
+    assert(size == length)
+
+    assert(C.SetCurrentDirectoryW(srcW) ~= 0)
+
+    cwd = fs.getcwd()
+    print("cwd (new):", cwd)
+end
 
 local storageDirAttrs = lfs.attributes(storageDir)
 
