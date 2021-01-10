@@ -70,7 +70,7 @@ function fs.getexe()
 end
 
 function fs.getsrc()
-    local src = fs.normalize(fs.getexe()) or fs.normalize(love.filesystem.getSource())
+    local src = love.system.getOS() == "Windows" and fs.normalize(fs.getexe()) or fs.normalize(love.filesystem.getSource())
     return src and (fs.isDirectory(src) and src or fs.dirname(src)) or fs.getcwd()
 end
 
