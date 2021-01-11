@@ -112,7 +112,7 @@ local root = uie.column({
                     placeholder = "Search"
                 }):as("searchBox"),
                 uie.button(uie.icon("search"):with({ scale = 24 / 256 }), function()
-                    scene.search(scene.root:findChild("searchBox").text)
+                    scene.loadPage(scene.root:findChild("searchBox").text)
                 end):as("searchBtn"),
 
             }):with({
@@ -413,7 +413,7 @@ function scene.item(info)
 
                     uie.column({
 
-                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, "\n" .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):as("title"),
+                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, "\n" .. owner }):as("title"),
 
                         uie.row({
                             uie.group({
@@ -421,8 +421,7 @@ function scene.item(info)
                             }):as("imgholder"),
 
                             uie.column({
-                                uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
-                                description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
+                                uie.label({ { 1, 1, 1, 0.5 }, os.date("%Y-%m-%d %H:%M:%S", date) .. "\n" .. uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
                             }):with({
                                 style = {
                                     padding = 0,
@@ -437,6 +436,8 @@ function scene.item(info)
                                 bg = {}
                             }
                         }):with(uiu.fillWidth),
+
+                        description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
 
                     }):with({
                         style = {
