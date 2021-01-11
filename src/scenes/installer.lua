@@ -312,7 +312,11 @@ function scene.sharpTask(id, ...)
         local task = sharp[id](table.unpack(args)):result()
         while sharp.status(task):result()[1] == "running" do
             local result = sharp.poll(task):result()
-            scene.update(result[1], result[2], result[3])
+            if result ~= nil then
+                scene.update(result[1], result[2], result[3])
+            else
+                print("installer.sharpTask encountered nil on poll", task)
+            end
         end
 
         local last = sharp.poll(task):result()
