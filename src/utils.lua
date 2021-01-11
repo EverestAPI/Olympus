@@ -6,7 +6,7 @@ if not requestStatus then
     request = nil
 end
 local dkjson = require("dkjson")
-local tinyyaml = require("tinyyaml")
+local yaml = require("yaml")
 local fs = require("fs")
 local threader = require("threader")
 local xml2lua = require("xml2lua")
@@ -99,6 +99,14 @@ function utils.concat(...)
         end
     end
     return all
+end
+
+function utils.toURLComponent(value)
+    return value and value:gsub("([^%w _%%%-%.~])", function(c) return string.format("%%%02X", string.byte(c)) end):gsub(" ", "+")
+end
+
+function utils.fromURLComponent(value)
+    return value and value:gsub("+", " "):gsub("%%(%x%x)", function(c) return string.char(tonumber(c, 16)) end)
 end
 
 function utils.openURL(path)
@@ -198,7 +206,7 @@ function utils.downloadYAML(url, headers)
 end
 
 function utils.fromYAML(body)
-    return tinyyaml.parse(body)
+    return yaml.eval(body)
 end
 
 function utils.toYAML(table)

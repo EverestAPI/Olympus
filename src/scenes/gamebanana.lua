@@ -95,7 +95,35 @@ local root = uie.column({
                     self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
                     self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
                 end
-            })
+            }),
+
+            uie.row({
+
+                uie.field(
+                    "",
+                    function(value, prev)
+                        if scene.loadPage and value == prev then
+                            scene.loadPage(value)
+                        end
+                    end
+                ):with({
+                    width = 200,
+                    height = 24,
+                    placeholder = "Search"
+                }):as("searchBox"),
+                uie.button(uie.icon("search"):with({ scale = 24 / 256 }), function()
+                    scene.search(scene.root:findChild("searchBox").text)
+                end):as("searchBtn"),
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0,
+                    spacing = 8
+                },
+                cacheable = false,
+                clip = false
+            }):with(uiu.rightbound)
 
         }):with({
             style = {
@@ -125,15 +153,29 @@ scene.root = root
 scene.cache = {}
 
 
+scene.searchLast = ""
+
 function scene.loadPage(page)
     if scene.loadingPage then
         return scene.loadingPage
     end
 
+    page = page or scene.page
+    if scene.searchLast == page then
+        return threader.routine(function() end)
+    end
+
+    if page == "" then
+        scene.searchLast = ""
+        page = scene.page
+    end
+
     scene.loadingPage = threader.routine(function()
         local lists, pagePrev, pageLabel, pageNext = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext")
 
-        if page < 1 then
+        local isQuery = type(page) == "string"
+
+        if not isQuery and page < 1 then
             page = 1
         end
 
@@ -143,9 +185,14 @@ function scene.loadPage(page)
         pageNext.enabled = false
         pagePrev:reflow()
         pageNext:reflow()
-        pageLabel.text = "Page #" .. tostring(page)
 
-        scene.page = page
+        if not isQuery then
+            pageLabel.text = "Page #" .. tostring(page)
+            scene.page = page
+        else
+            pageLabel.text = page
+            scene.searchLast = page
+        end
 
         local loading = uie.row({
             uie.label("Loading"),
@@ -159,7 +206,13 @@ function scene.loadPage(page)
         }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingMods")
         scene.root:addChild(loading)
 
-        local entries, entriesError = scene.downloadEntries(page)
+        local entries, entriesError
+        if not isQuery then
+            entries, entriesError = scene.downloadEntries(page)
+        else
+            entries, entriesError = scene.downloadSearchEntries(page)
+        end
+
         if not entries then
             loading:removeSelf()
             root:addChild(uie.row({
@@ -169,8 +222,8 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = page > 1
-            pageNext.enabled = true
+            pagePrev.enabled = not isQuery and page > 1
+            pageNext.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
             return
@@ -186,8 +239,8 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = page > 1
-            pageNext.enabled = true
+            pagePrev.enabled = not isQuery and page > 1
+            pageNext.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
             return
@@ -199,8 +252,8 @@ function scene.loadPage(page)
 
         loading:removeSelf()
         scene.loadingPage = nil
-        pagePrev.enabled = page > 1
-        pageNext.enabled = true
+        pagePrev.enabled = not isQuery and page > 1
+        pageNext.enabled = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
     end)
@@ -234,6 +287,21 @@ function scene.downloadEntries(page)
     return data, msg
 end
 
+function scene.downloadSearchEntries(query)
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadYAML(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
+end
+
 
 function scene.downloadInfo(entries, id)
     if not entries then
@@ -257,8 +325,8 @@ function scene.downloadInfo(entries, id)
 
         local i = ei - 1
         multicall = multicall ..
-            mcitem(i, "itemtype", entry[1]) ..
-            mcitem(i, "itemid", tostring(entry[2])) ..
+            mcitem(i, "itemtype", entry[1] or entry.itemtype) ..
+            mcitem(i, "itemid", tostring(entry[2] or entry.itemid)) ..
             mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetDownloadUrl()")
     end
 

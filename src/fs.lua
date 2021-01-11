@@ -118,8 +118,8 @@ function fs.normalize(path)
     local fixed = ""
     local real = true
     for part in path:gmatch("([^/\\]*)") do
-        if #part == 0 then
-            if #fixed == 0 then
+        if part == "" then
+            if fixed == "" then
                 goto add
             end
             goto skip
