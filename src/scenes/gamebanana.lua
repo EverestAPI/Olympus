@@ -101,7 +101,7 @@ local root = uie.column({
 
                 uie.field(
                     "",
-                    function(value, prev)
+                    function(self, value, prev)
                         if scene.loadPage and value == prev then
                             scene.loadPage(value)
                         end

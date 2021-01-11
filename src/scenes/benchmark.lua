@@ -122,12 +122,17 @@ local root = uie.column({
                     }),
 
                     uie.button("This is a button.", function(btn)
-                        if btn.counter == nil then
-                            btn.counter = 0
-                        end
                         btn.counter = btn.counter + 1
-                        btn.text = "Pressed " .. tostring(btn.counter) .. " time" .. (btn.counter == 1 and "" or "s")
-                    end),
+                    end):with({
+                        getCounter = function(self)
+                            return self._counter or 0
+                        end,
+
+                        setCounter = function(self, value)
+                            self._counter = value
+                            self.text = "Pressed " .. tostring(value) .. " time" .. (value == 1 and "" or "s")
+                        end
+                    }):as("counterButton"),
 
                     uie.button("Disabled"):with({ enabled = false }),
 

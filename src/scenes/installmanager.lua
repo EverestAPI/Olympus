@@ -91,7 +91,7 @@ function scene.createEntry(list, entry, manualIndex)
         uie.column({
             manualIndex and uie.field(
                 entry.name,
-                function(value)
+                function(self, value)
                     entry.name = value
                     config.save()
                 end
