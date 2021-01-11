@@ -175,8 +175,11 @@ function scene.loadPage(page)
 
         local isQuery = type(page) == "string"
 
-        if not isQuery and page < 1 then
-            page = 1
+        if not isQuery then
+            scene.searchLast = ""
+            if page < 1 then
+                page = 1
+            end
         end
 
         lists.all = {}
