@@ -21,7 +21,7 @@ namespace Olympus {
                 return false;
 
             try {
-                RegWin32Helper.OpenOrCreateKey(key.Substring(0, indexOfSlash)).SetValue(key.Substring(indexOfSlash + 1), value);
+                RegWin32Helper.OpenOrCreateKey(key.Substring(0, indexOfSlash), true).SetValue(key.Substring(indexOfSlash + 1), value);
             } catch (Exception e) {
                 Console.Error.WriteLine($"Cannot set registry value: {key} = {value}");
                 Console.Error.WriteLine(e);

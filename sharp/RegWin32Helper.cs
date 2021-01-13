@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace Olympus {
     public static class RegWin32Helper {
 
-        public static RegistryKey OpenOrCreateKey(string path) {
+        public static RegistryKey OpenOrCreateKey(string path, bool writable) {
             string[] parts = path.Split('\\');
             
             RegistryKey key;
@@ -47,8 +47,14 @@ namespace Olympus {
                     return null;
             }
 
-            for (int i = 1; i < parts.Length && key != null; i++)
-                key = key.OpenSubKey(parts[i], true) ?? key.CreateSubKey(parts[i]);
+            if (writable) {
+                for (int i = 1; i < parts.Length && key != null; i++)
+                    key = key.OpenSubKey(parts[i], true) ?? key.CreateSubKey(parts[i]);
+            } else {
+                for (int i = 1; i < parts.Length && key != null; i++)
+                    key = key.OpenSubKey(parts[i], false);
+            }
+
             return key;
         }
 

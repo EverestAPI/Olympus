@@ -21,7 +21,7 @@ namespace Olympus {
                 return null;
 
             try {
-                return RegWin32Helper.OpenOrCreateKey(key.Substring(0, indexOfSlash))?.GetValue(key.Substring(indexOfSlash + 1));
+                return RegWin32Helper.OpenOrCreateKey(key.Substring(0, indexOfSlash), false)?.GetValue(key.Substring(indexOfSlash + 1));
             } catch (Exception e) {
                 Console.Error.WriteLine($"Cannot get registry value: {key}");
                 Console.Error.WriteLine(e);
