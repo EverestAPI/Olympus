@@ -660,7 +660,8 @@ function scene.item(info)
         local function downloadImage(name, url)
             local img = scene.cache[url]
             if img ~= nil then
-                return love.graphics.newImage(img)
+                local status, rv = pcall(love.graphics.newImage, img)
+                return status and rv
             end
 
             img = utilsAsync.download(url):result()
@@ -670,8 +671,8 @@ function scene.item(info)
 
             img = love.filesystem.newFileData(img, name)
             scene.cache[url] = img
-            img = love.graphics.newImage(img)
-            return img
+            local status, rv = pcall(love.graphics.newImage, img)
+            return status and rv
         end
 
         if not screenshots[1]._sFile:match("%.webp$") then
