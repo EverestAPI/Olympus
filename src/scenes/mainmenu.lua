@@ -145,7 +145,7 @@ Press the manage button.]])
         }))
     end
 
-    list.selected = list.children[config.install or 1] or list.children[1]
+    list.selected = list.children[config.install or 1] or list.children[1] or false
     list:reflow()
 
     if cb then

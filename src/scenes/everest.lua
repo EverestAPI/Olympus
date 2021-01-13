@@ -37,7 +37,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                     }):with({
                         grow = false
                     }):with(uiu.fillWidth):with(function(list)
-                        list.selected = list.children[1]
+                        list.selected = list.children[1] or false
                     end):as("versions")
                 ):with(uiu.fill),
 
@@ -85,9 +85,9 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             update = function(orig, self, ...)
                 local root = scene.root
                 local selected = root:findChild("installs").selected
-                self.enabled = selected and root:findChild("versions").selected
                 selected = selected and selected.data
                 selected = selected and selected.version
+                self.enabled = selected and root:findChild("versions").selected
                 self.text = (selected and selected:match("%+")) and "Update" or "Install"
                 orig(self, ...)
             end

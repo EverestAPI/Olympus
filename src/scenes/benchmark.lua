@@ -77,7 +77,7 @@ local root = uie.column({
             ):with({
                 grow = false
             }):with(uiu.fillWidth):with(function(list)
-                list.selected = list.children[1]
+                list.selected = list.children[1] or false
             end):as("versions")
         ):with(uiu.fillWidth(4.25)):with(uiu.fillHeight),
 
@@ -89,7 +89,7 @@ local root = uie.column({
             ):with({
                 grow = false
             }):with(uiu.fillWidth):with(function(list)
-                list.selected = list.children[1]
+                list.selected = list.children[1] or false
             end):as("versions")
         ):with(uiu.fillWidth(4.25)):with(uiu.fillHeight):with(uiu.at(0.25 + 8)),
 
