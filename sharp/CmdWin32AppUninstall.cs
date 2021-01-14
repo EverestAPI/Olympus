@@ -67,14 +67,8 @@ namespace Olympus {
                 return null;
             }
 
-            if (!quiet && MessageBox.Show($"Do you really want to uninstall Olympus from the following folder?\n{root}\n\nEverest and all your mods will stay installed.", "Olympus", MessageBoxButtons.YesNo) != DialogResult.Yes)
+            if (!quiet && MessageBox.Show($"Do you want to uninstall Olympus from the following folder?\n{root}\n\nEverest and all your mods will stay installed.", "Olympus", MessageBoxButtons.YesNo) != DialogResult.Yes)
                 return null;
-
-            try {
-                using (RegistryKey key = Win32RegHelper.OpenOrCreateKey(@"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall", true))
-                    key?.DeleteSubKeyTree("Olympus");
-            } catch {
-            }
 
             try {
                 Directory.Delete(root, true);
@@ -82,6 +76,12 @@ namespace Olympus {
                 if (!quiet)
                     MessageBox.Show("The Olympus uninstaller has encountered an error:\nCan't delete the Olympus folder.\n\nPlease delete %AppData%/Olympus manually.", "Olympus", MessageBoxButtons.OK);
                 return null;
+            }
+
+            try {
+                using (RegistryKey key = Win32RegHelper.OpenOrCreateKey(@"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall", true))
+                    key?.DeleteSubKeyTree("Olympus");
+            } catch {
             }
 
             if (!quiet)
