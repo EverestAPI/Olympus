@@ -104,7 +104,7 @@ please ping the Everest team on the Celeste Discord server.
                 if (string.IsNullOrEmpty(urlMain) && (branch == "main" || branch == "dev"))
                     urlMain = string.Format(artifactFormat, id);
 
-                if (!string.IsNullOrEmpty(urlStable) && !string.IsNullOrEmpty(urlMain))
+                if (!string.IsNullOrEmpty(urlWindowsInit) && !string.IsNullOrEmpty(urlStable) && !string.IsNullOrEmpty(urlMain))
                     break;
             }
 
