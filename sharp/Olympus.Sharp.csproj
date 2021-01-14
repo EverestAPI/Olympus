@@ -22,6 +22,7 @@
 
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 
 </Project>

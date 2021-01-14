@@ -28,11 +28,11 @@ local sharp = require("sharp")
 local registry = {}
 
 function registry.getKey(key)
-  return sharp._run("regWin32Get", key)
+  return sharp._run("Win32RegGet", key)
 end
 
 function registry.setKey(key, value)
-  return sharp._run("regWin32Set", key, value)
+  return sharp._run("Win32RegSet", key, value)
 end
 
 return registry

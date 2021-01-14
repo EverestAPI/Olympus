@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public class CmdCreateShortcutsWin32 : Cmd<string, string> {
+    public class CmdWin32CreateShortcuts : Cmd<string, string> {
 
         public override string Run(string exepath) {
             CreateShortcut(exepath, Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Olympus.lnk"));

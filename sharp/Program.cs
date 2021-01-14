@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using MonoMod.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -17,11 +18,13 @@ namespace Olympus {
     public static class Program {
 
         public static string RootDirectory;
+        public static string SelfPath;
 
         public static void Main(string[] args) {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
+            SelfPath = Assembly.GetExecutingAssembly().Location;
             RootDirectory = Path.GetDirectoryName(Environment.CurrentDirectory);
             Console.Error.WriteLine(RootDirectory);
 
@@ -35,8 +38,8 @@ namespace Olympus {
             // Enable TLS 1.2 to fix connecting to GitHub.
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
-            if (args.Length == 1 && args[0] == "--test") {
-                new CmdGetUWPPackagePath().Run("MattMakesGamesInc.Celeste_79daxvg0dq3v6");
+            if (args.Length >= 1 && args[0] == "--uninstall" && PlatformHelper.Is(Platform.Windows)) {
+                new CmdWin32AppUninstall().Run(args.Length >= 2 && args[1] == "--quiet");
                 return;
             }
 

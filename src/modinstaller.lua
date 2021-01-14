@@ -21,12 +21,16 @@ function modinstaller.register()
             registry.setKey([[HKCU\Software\Classes\Everest\URL Protocol]], "") and
             registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]], string.format([["%s" "%%1"]], exepath)))
             then
-            -- While we're here, might as well create some helpful .lnks
 
+            -- While we're here, might as well register the application properly.
+            print("updating installed application listing")
+            sharp.win32AppAdd(exepath, utils.trim(utils.load("version.txt") or "?"))
+
+            -- While we're here, might as well create some helpful .lnks
             -- INTRODUCED AFTER BUILD 1531
             if config.lastrun < 0 or config.lastrun <= 1531 then
                 print("creating shortcuts", exepath)
-                sharp.createShortcutsWin32(exepath)
+                sharp.win32CreateShortcuts(exepath)
             end
 
             return true

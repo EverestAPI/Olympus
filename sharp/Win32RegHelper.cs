@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public static class RegWin32Helper {
+    public static class Win32RegHelper {
 
         public static RegistryKey OpenOrCreateKey(string path, bool writable) {
             string[] parts = path.Split('\\');

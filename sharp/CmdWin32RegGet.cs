@@ -13,20 +13,20 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public class CmdRegWin32Set : Cmd<string, object, bool> {
+    public class CmdWin32RegGet : Cmd<string, object> {
         public override bool LogRun => false;
-        public override bool Run(string key, object value) {
+        public override object Run(string key) {
             int indexOfSlash = key.LastIndexOf('\\');
             if (indexOfSlash == -1)
-                return false;
+                return null;
 
             try {
-                RegWin32Helper.OpenOrCreateKey(key.Substring(0, indexOfSlash), true).SetValue(key.Substring(indexOfSlash + 1), value);
+                return Win32RegHelper.OpenOrCreateKey(key.Substring(0, indexOfSlash), false)?.GetValue(key.Substring(indexOfSlash + 1));
             } catch (Exception e) {
-                Console.Error.WriteLine($"Cannot set registry value: {key} = {value}");
+                Console.Error.WriteLine($"Cannot get registry value: {key}");
                 Console.Error.WriteLine(e);
+                return null;
             }
-            return true;
         }
     }
 }
