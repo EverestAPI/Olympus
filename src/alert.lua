@@ -159,7 +159,7 @@ function alert.show(data)
     })
 
     box:hook({
-        __drawCachedCanvas = function(orig, self, canvas, x, y, width, height, padding)
+        __drawCachedCanvas = function(orig, self, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
             local fade = box.fade
             if not uiu.setColor(fade, fade, fade, fade) then
                 return
@@ -169,7 +169,7 @@ function alert.show(data)
             local hw = math.floor(width * 0.5)
             local hh = math.floor(height * 0.5)
             love.graphics.setBlendMode("alpha", "premultiplied")
-            love.graphics.draw(canvas, x - padding + hw, y - padding + hh + 20 * (1 - sfade), 0.1 * math.max(0, 0.7 - sfade * 1.2), scale, scale, hw, hh)
+            love.graphics.draw(canvas, x - paddingL + hw, y - paddingT + hh + 20 * (1 - sfade), 0.1 * math.max(0, 0.7 - sfade * 1.2), scale, scale, hw, hh)
             love.graphics.setBlendMode("alpha", "alphamultiply")
         end,
     })

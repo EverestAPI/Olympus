@@ -248,7 +248,7 @@ end
 
 -- trim6 from http://lua-users.org/wiki/StringTrim
 function utils.trim(s)
-    return s:match("^()%s*$") and "" or s:match("^%s*(.*%S)")
+    return s and (s:match("^()%s*$") and "" or s:match("^%s*(.*%S)"))
 end
 
 function utils.dateToTimestamp(dateString)
