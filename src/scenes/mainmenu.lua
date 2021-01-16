@@ -67,6 +67,10 @@ local function button(icon, text, scene, forceInstall)
 end
 
 local function newsEntry(data)
+    if not data then
+        return nil
+    end
+
     local item = uie.column({
 
         data.title and uie.label(data.title, ui.fontMedium),
@@ -466,6 +470,11 @@ function scene.load()
                         error = true,
                         preview = "A news entry was contained invalid metadata."
                     }
+                    goto next
+                end
+
+                if data.ignore then
+                    all[i] = false
                     goto next
                 end
 
