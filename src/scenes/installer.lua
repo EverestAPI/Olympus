@@ -90,7 +90,7 @@ function scene.done(buttons)
             self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
             self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
             self.y = self.parent.innerHeight - 84
-            self.realY = self.parent.height - 84 - self.parent.style.padding
+            self.realY = self.parent.height - 84 - self.parent.style:getIndex("padding", 4)
         end
     })
     for i = 1, #buttons do
@@ -312,7 +312,11 @@ function scene.sharpTask(id, ...)
         local task = sharp[id](table.unpack(args)):result()
         while sharp.status(task):result()[1] == "running" do
             local result = sharp.poll(task):result()
-            scene.update(result[1], result[2], result[3])
+            if result ~= nil then
+                scene.update(result[1], result[2], result[3])
+            else
+                print("installer.sharpTask encountered nil on poll", task)
+            end
         end
 
         local last = sharp.poll(task):result()

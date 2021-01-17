@@ -43,7 +43,34 @@ namespace Olympus {
         public void RunDownloader() {
             Console.WriteLine("Downloader thread running");
 
-            Thread.Sleep(2000);
+            if (Directory.Exists(Program.InstallDir) && Directory.GetFiles(Program.InstallDir).Length != 0) {
+                Invoke(() => {
+                    MessageBox.Show(
+                        @"
+A previous version of Olympus was already downloaded.
+Sadly, some important files went missing or are corrupted.
+
+The Olympus downloader will now try to redownload them.
+If Olympus is still crashing or if this happens often:
+please ping the Everest team on the Celeste Discord server.
+                        ".Trim().Replace("\r\n", "\n"),
+                        "Olympus Downloader",
+                        MessageBoxButtons.OK
+                    );
+                });
+            }
+
+            Console.WriteLine($"Wiping {Program.InstallDir}");
+            try {
+                Directory.Delete(Program.InstallDir, true);
+            } catch (Exception e) {
+                Console.WriteLine(e);
+            }
+            try {
+                Directory.CreateDirectory(Program.InstallDir);
+            } catch (Exception e) {
+                Console.WriteLine(e);
+            }
 
             const string artifactFormat = "https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds/{0}/artifacts?artifactName=windows.main&$format=zip";
             const string index = "https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds";
@@ -55,6 +82,7 @@ namespace Olympus {
             using (JsonTextReader jsonReader = new JsonTextReader(reader))
                 root = (JObject) JToken.ReadFrom(jsonReader);
 
+            string urlWindowsInit = null;
             string urlStable = null;
             string urlMain = null;
 
@@ -69,16 +97,18 @@ namespace Olympus {
 
                 int id = build.Value<int>("id");
                 string branch = build.Value<string>("sourceBranch").Replace("refs/heads/", "");
+                if (string.IsNullOrEmpty(urlWindowsInit) && branch == "windows-init")
+                    urlWindowsInit = string.Format(artifactFormat, id);
                 if (string.IsNullOrEmpty(urlStable) && branch == "stable")
                     urlStable = string.Format(artifactFormat, id);
                 if (string.IsNullOrEmpty(urlMain) && (branch == "main" || branch == "dev"))
                     urlMain = string.Format(artifactFormat, id);
 
-                if (!string.IsNullOrEmpty(urlStable) && !string.IsNullOrEmpty(urlMain))
+                if (!string.IsNullOrEmpty(urlWindowsInit) && !string.IsNullOrEmpty(urlStable) && !string.IsNullOrEmpty(urlMain))
                     break;
             }
 
-            string url = !string.IsNullOrEmpty(urlStable) ? urlStable : urlMain;
+            string url = !string.IsNullOrEmpty(urlWindowsInit) ? urlWindowsInit : !string.IsNullOrEmpty(urlStable) ? urlStable : urlMain;
             if (string.IsNullOrEmpty(url))
                 throw new Exception("Couldn't find valid latest build entry.");
 
@@ -96,13 +126,6 @@ namespace Olympus {
                     Console.WriteLine("Opening dist .zip");
                     using (Stream stream = wrapper.GetEntry("windows.main/dist.zip").Open())
                     using (ZipArchive zip = new ZipArchive(stream, ZipArchiveMode.Read)) {
-                        Console.WriteLine($"Wiping {Program.InstallDir}");
-                        try {
-                            Directory.Delete(Program.InstallDir);
-                            Directory.CreateDirectory(Program.InstallDir);
-                        } catch (Exception e) {
-                            Console.WriteLine(e);
-                        }
                         Console.WriteLine($"Extracting to {Program.InstallDir}");
                         zip.ExtractToDirectory(Program.InstallDir);
                     }

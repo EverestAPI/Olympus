@@ -95,7 +95,35 @@ local root = uie.column({
                     self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
                     self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
                 end
-            })
+            }),
+
+            uie.row({
+
+                uie.field(
+                    "",
+                    function(self, value, prev)
+                        if scene.loadPage and value == prev then
+                            scene.loadPage(value)
+                        end
+                    end
+                ):with({
+                    width = 200,
+                    height = 24,
+                    placeholder = "Search"
+                }):as("searchBox"),
+                uie.button(uie.icon("search"):with({ scale = 24 / 256 }), function()
+                    scene.loadPage(scene.root:findChild("searchBox").text)
+                end):as("searchBtn"),
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0,
+                    spacing = 8
+                },
+                cacheable = false,
+                clip = false
+            }):with(uiu.rightbound)
 
         }):with({
             style = {
@@ -125,16 +153,33 @@ scene.root = root
 scene.cache = {}
 
 
+scene.searchLast = ""
+
 function scene.loadPage(page)
     if scene.loadingPage then
         return scene.loadingPage
     end
 
+    page = page or scene.page
+    if scene.searchLast == page then
+        return threader.routine(function() end)
+    end
+
+    if page == "" then
+        scene.searchLast = ""
+        page = scene.page
+    end
+
     scene.loadingPage = threader.routine(function()
         local lists, pagePrev, pageLabel, pageNext = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext")
 
-        if page < 1 then
-            page = 1
+        local isQuery = type(page) == "string"
+
+        if not isQuery then
+            scene.searchLast = ""
+            if page < 1 then
+                page = 1
+            end
         end
 
         lists.all = {}
@@ -143,9 +188,14 @@ function scene.loadPage(page)
         pageNext.enabled = false
         pagePrev:reflow()
         pageNext:reflow()
-        pageLabel.text = "Page #" .. tostring(page)
 
-        scene.page = page
+        if not isQuery then
+            pageLabel.text = "Page #" .. tostring(page)
+            scene.page = page
+        else
+            pageLabel.text = page
+            scene.searchLast = page
+        end
 
         local loading = uie.row({
             uie.label("Loading"),
@@ -159,7 +209,13 @@ function scene.loadPage(page)
         }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingMods")
         scene.root:addChild(loading)
 
-        local entries, entriesError = scene.downloadEntries(page)
+        local entries, entriesError
+        if not isQuery then
+            entries, entriesError = scene.downloadEntries(page)
+        else
+            entries, entriesError = scene.downloadSearchEntries(page)
+        end
+
         if not entries then
             loading:removeSelf()
             root:addChild(uie.row({
@@ -169,8 +225,8 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = page > 1
-            pageNext.enabled = true
+            pagePrev.enabled = not isQuery and page > 1
+            pageNext.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
             return
@@ -186,8 +242,8 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = page > 1
-            pageNext.enabled = true
+            pagePrev.enabled = not isQuery and page > 1
+            pageNext.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
             return
@@ -199,8 +255,8 @@ function scene.loadPage(page)
 
         loading:removeSelf()
         scene.loadingPage = nil
-        pagePrev.enabled = page > 1
-        pageNext.enabled = true
+        pagePrev.enabled = not isQuery and page > 1
+        pageNext.enabled = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
     end)
@@ -234,6 +290,21 @@ function scene.downloadEntries(page)
     return data, msg
 end
 
+function scene.downloadSearchEntries(query)
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadYAML(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
+end
+
 
 function scene.downloadInfo(entries, id)
     if not entries then
@@ -257,8 +328,8 @@ function scene.downloadInfo(entries, id)
 
         local i = ei - 1
         multicall = multicall ..
-            mcitem(i, "itemtype", entry[1]) ..
-            mcitem(i, "itemid", tostring(entry[2])) ..
+            mcitem(i, "itemtype", entry[1] or entry.itemtype) ..
+            mcitem(i, "itemid", tostring(entry[2] or entry.itemid)) ..
             mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetDownloadUrl()")
     end
 
@@ -345,7 +416,7 @@ function scene.item(info)
 
                     uie.column({
 
-                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, "\n" .. owner .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", date) }):as("title"),
+                        uie.label({ { 1, 1, 1, 1 }, name, { 1, 1, 1, 0.5 }, "\n" .. owner }):as("title"),
 
                         uie.row({
                             uie.group({
@@ -353,8 +424,7 @@ function scene.item(info)
                             }):as("imgholder"),
 
                             uie.column({
-                                uie.label({ { 1, 1, 1, 0.5 }, uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
-                                description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
+                                uie.label({ { 1, 1, 1, 0.5 }, os.date("%Y-%m-%d %H:%M:%S", date) .. "\n" .. uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
                             }):with({
                                 style = {
                                     padding = 0,
@@ -369,6 +439,8 @@ function scene.item(info)
                                 bg = {}
                             }
                         }):with(uiu.fillWidth),
+
+                        description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
 
                     }):with({
                         style = {
@@ -588,7 +660,8 @@ function scene.item(info)
         local function downloadImage(name, url)
             local img = scene.cache[url]
             if img ~= nil then
-                return love.graphics.newImage(img)
+                local status, rv = pcall(love.graphics.newImage, img)
+                return status and rv
             end
 
             img = utilsAsync.download(url):result()
@@ -598,8 +671,8 @@ function scene.item(info)
 
             img = love.filesystem.newFileData(img, name)
             scene.cache[url] = img
-            img = love.graphics.newImage(img)
-            return img
+            local status, rv = pcall(love.graphics.newImage, img)
+            return status and rv
         end
 
         if not screenshots[1]._sFile:match("%.webp$") then

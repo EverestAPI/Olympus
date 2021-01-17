@@ -502,6 +502,7 @@ function threader.sleep(duration)
 
     local routine = threader._routines[coroutine.running()]
     if routine then
+        coroutine.yield()
         while love.timer.getTime() - timeStart < duration do
             coroutine.yield()
         end

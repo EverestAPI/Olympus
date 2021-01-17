@@ -6,6 +6,7 @@ local alert = require("alert")
 local notify = require("notify")
 local config = require("config")
 local sharp = require("sharp")
+local updater = require("updater")
 
 local scene = {
     name = "Main Menu"
@@ -65,10 +66,104 @@ local function button(icon, text, scene, forceInstall)
     ):with({ style = { padding = 8 } })
 end
 
+local function newsEntry(data)
+    if not data then
+        return nil
+    end
+
+    local item = uie.column({
+
+        data.title and uie.label(data.title, ui.fontMedium),
+
+        data.image and uie.group({
+            uie.spinner():with({ time = love.math.random() }),
+        }):as("imgholder"),
+
+        data.preview and uie.label(data.preview):with({ wrap = true }),
+
+        uie.row({
+
+            data.link and uie.button(
+                uie.icon("browser"):with({ scale = 24 / 256 }),
+                function()
+                    utils.openURL(data.link)
+                end
+            ),
+
+            data.text and uie.button(
+                uie.icon("article"):with({ scale = 24 / 256 }),
+                function()
+                    alert({
+                        title = data.title,
+                        body = uie.label(data.text),
+                        buttons = data.link and {
+                            {
+                                "Open in browser",
+                                function()
+                                    utils.openURL(data.link)
+                                end
+                            },
+                            { "Close" }
+                        } or { { "Close" }}
+                    })
+                end
+            ),
+
+        }):with({
+            style = {
+                padding = 0,
+                bg = {}
+            },
+            clip = false
+        }):with(uiu.rightbound)
+    }):with(uiu.fillWidth)
+
+    if data.image then
+        threader.routine(function()
+            local utilsAsync = threader.wrap("utils")
+            local imgholder = item:findChild("imgholder")
+
+            local url = data.image
+            if url:sub(1, 1) == "." then
+                url = "https://everestapi.github.io/olympusnews" .. url:sub(2)
+            end
+
+            local imgData = utilsAsync.download(url):result()
+            if not imgData then
+                imgholder:removeSelf()
+                item:reflowDown()
+                return
+            end
+
+            imgData = love.filesystem.newFileData(imgData, url)
+            local status, img = pcall(love.graphics.newImage, imgData)
+            if not status or not img then
+                imgholder:removeSelf()
+                item:reflowDown()
+                return
+            end
+
+            imgholder.children[1]:removeSelf()
+            if img then
+                img = uie.image(img):with({
+                    scaleRoundAuto = "auto"
+                })
+                if img.image:getWidth() > (256 - 8 * 2) then
+                    img.scale = (256 - 8 * 2) / img.image:getWidth()
+                end
+                imgholder:addChild(img)
+            end
+            item:reflowDown()
+        end)
+    end
+
+    return item
+end
+
 
 function scene.createInstalls()
     return uie.column({
-        uie.label("Your Installations", ui.fontBig),
+        uie.label("Installations", ui.fontBig),
 
         uie.column({
 
@@ -95,7 +190,9 @@ function scene.createInstalls()
             },
             clip = false
         }):with(uiu.fillWidth):with(uiu.fillHeight(true))
-    }):with(uiu.fillHeight)
+    }):with{
+        width = 256
+    }:with(uiu.fillHeight)
 end
 
 
@@ -144,7 +241,7 @@ Press the manage button.]])
         }))
     end
 
-    list.selected = list.children[config.install or 1] or list.children[1]
+    list.selected = list.children[config.install or 1] or list.children[1] or false
     list:reflow()
 
     if cb then
@@ -153,54 +250,98 @@ Press the manage button.]])
 end
 
 
-local root = uie.column({
-    uie.image("header_olympus"),
+local root = uie.row({
+    uie.column({
+        uie.icon("header_olympus"),
 
-    uie.row({
+        uie.row({
 
-        scene.createInstalls(),
+            scene.createInstalls(),
 
-        uie.column({
-            buttonBig("mainmenu/gamebanana", "Download Mods From GameBanana", "gamebanana", true):with(uiu.fillWidth),
-            buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
-            (config.experimentAhorn or os.getenv("OLYMPUS_EXPERIMENT_AHORN") == "1") and buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
-                if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-                    scener.push("ahornsetup")
-                    return
-                end
+            uie.column({
+                buttonBig("mainmenu/gamebanana", "Download Mods", "gamebanana", true):with(uiu.fillWidth),
+                buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
+                (config.experimentAhorn or os.getenv("OLYMPUS_EXPERIMENT_AHORN") == "1") and buttonBig("mainmenu/ahorn", "Install Ahorn (Map Editor)", function()
+                    if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+                        scener.push("ahornsetup")
+                        return
+                    end
 
-                alert({
-                    body = [[
-Olympus is currently unable to install Ahorn.
-Please go to the Ahorn GitHub page for installation instructions.
-This will probably be implemented in a future update.]],
-                    buttons = {
-                        { "Open website", function(container)
-                            utils.openURL("https://github.com/CelestialCartographers/Ahorn")
-                            container:close("website")
-                        end },
+                    alert({
+                        body = [[
+    Olympus is currently unable to install Ahorn.
+    Please go to the Ahorn GitHub page for installation instructions.
+    This will probably be implemented in a future update.]],
+                        buttons = {
+                            { "Open website", function(container)
+                                utils.openURL("https://github.com/CelestialCartographers/Ahorn")
+                                container:close("website")
+                            end },
 
-                        { "OK" }
-                    }
-                })
-            end):with(uiu.fillWidth),
-            buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth),
-            -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
+                            { "OK" }
+                        }
+                    })
+                end):with(uiu.fillWidth),
+                buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
+                -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
+            }):with({
+                style = {
+                    padding = 0,
+                    bg = {}
+                },
+                clip = false
+            }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist"),
+
         }):with({
             style = {
                 padding = 0,
                 bg = {}
             },
             clip = false
-        }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist")
+        }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
+    }):hook({
+        layoutLateLazy = function(orig, self)
+            -- Always reflow this child whenever its parent gets reflowed.
+            self:layoutLate()
+        end,
+
+        layoutLate = function(orig, self)
+            orig(self)
+            local style = self.style
+            style.bg = nil
+            local boxBG = style.bg
+            style.bg = { boxBG[1], boxBG[2], boxBG[3], 0.6 }
+        end
+    }):with(uiu.fillWidth(true)):with(uiu.fillHeight),
+
+    uie.column({
+        uie.label("News", ui.fontBig),
+        uie.scrollbox(
+            uie.column({
+
+                newsEntry({
+                    preview = "News machine broke, please fix."
+                })
+
+            }):with({
+                style = {
+                    padding = 0,
+                    bg = {}
+                },
+                clip = false
+            }):with(uiu.fillWidth):as("newsfeed")
+        ):with({
+            style = {
+                padding = 0,
+                bg = {}
+            },
+            clip = false,
+            cachePadding = { 8, 4, 8, 8 }
+        }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
     }):with({
-        style = {
-            padding = 0,
-            bg = {}
-        },
-        clip = false
-    }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+        width = 256,
+    }):with(uiu.fillHeight):with(uiu.rightbound),
 
 })
 scene.root = root
@@ -209,7 +350,7 @@ scene.root = root
 scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
-    buttonBig("mainmenu/everest", "Celeste + Everest", function()
+    buttonBig("mainmenu/everest", "Everest", function()
         utils.launch(nil)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
     buttonBig("mainmenu/celeste", "Celeste", function()
@@ -259,6 +400,113 @@ end
 
 
 function scene.load()
+    threader.routine(function()
+        local newsfeed = scene.root:findChild("newsfeed")
+
+        newsfeed.children = {}
+        newsfeed:addChild(uie.row({
+            uie.label("Loading"),
+            uie.spinner():with({
+                width = 16,
+                height = 16
+            }):with(uiu.rightbound)
+        }):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth))
+
+        local all = threader.run(function()
+            local utils = require("utils")
+            local list, err = utils.download("https://everestapi.github.io/olympusnews/index.txt")
+            if not list then
+                print("failed fetching news index")
+                print(err)
+                return {
+                    {
+                        error = true,
+                        preview = "Olympus failed fetching the news feed."
+                    }
+                }
+            end
+
+            local all = {
+            }
+
+            for entryName in list:gmatch("[^\r\n]+") do
+                if entryName:match("%.md$") then
+                    all[#all + 1] = entryName
+                end
+            end
+
+            table.sort(all, function(a, b)
+                return b < a
+            end)
+
+            for i = 1, #all do
+                local entryName = all[i]
+                local data, err = utils.download("https://everestapi.github.io/olympusnews/" .. entryName)
+                if not data then
+                    print("failed fetching news entry", entryName)
+                    print(err)
+                    all[i] = {
+                        error = true,
+                        preview = "Olympus failed fetching a news entry."
+                    }
+                    goto next
+                end
+
+                local text
+                data, text = data:match("^%-%-%-\n(.-)\n%-%-%-\n(.*)$")
+                if not data or not text then
+                    print("news entry not in expected format", entryName)
+                    all[i] = {
+                        error = true,
+                        preview = "A news entry was in an unexpected format."
+                    }
+                    goto next
+                end
+
+                local status
+                status, data = pcall(utils.fromYAML, data)
+                if not status or not data or not data.title then
+                    print("news entry contains malformed yaml", entryName)
+                    print(data)
+                    all[i] = {
+                        error = true,
+                        preview = "A news entry was contained invalid metadata."
+                    }
+                    goto next
+                end
+
+                if data.ignore then
+                    all[i] = false
+                    goto next
+                end
+
+                local preview, body = text:match("^(.-)\n%-%-%-\n(.*)$")
+                if not data.preview and preview and body then
+                    data.preview = utils.trim(preview)
+                    data.text = utils.trim(body)
+                else
+                    data.preview = utils.trim(text)
+                end
+
+                all[i] = data
+
+                ::next::
+            end
+
+            return all
+        end):result()
+
+        scene.news = all
+
+        newsfeed.children = {}
+
+        for i = 1, #all do
+            newsfeed:addChild(newsEntry(all[i]))
+        end
+    end)
 end
 
 

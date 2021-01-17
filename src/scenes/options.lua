@@ -44,7 +44,11 @@ local bgs = {
     { text = "Random (Default)", data = 0 }
 }
 for i = 1, #background.bgs do
-    bgs[i + 1] = { text = "Background #" .. i, data = i }
+    bgs[i + 1] = {
+        text = "Background #" .. i,
+        data = i,
+        bg = background.bgs[i]
+    }
 end
 
 
@@ -145,7 +149,41 @@ end
 scene.themePicker = uie.scrollbox(
     uie.column(themePickerEntries):with(nobg):with(uiu.fillWidth)
 ):with({
-    clip = false,
+    clip = true,
+    cacheable = false
+}):with(uiu.fillWidth):with(uiu.fillHeight(true))
+
+
+local bgPickerEntries = {}
+for i = 1, #bgs do
+    local id = bgs[i].data
+    local text = bgs[i].text
+    local bg = bgs[i].bg
+
+    local bigbtn = uie.button(
+        uie.group({
+            uie.label(text, ui.fontBig),
+
+            bg and uie.image(bg):with({
+
+            }):with(uiu.rightbound)
+
+        }):with(uiu.fillWidth),
+        function()
+            config.bg = id
+            config.save()
+            background.refresh()
+            scene.root:findChild("bgDropdown"):updateSelected()
+        end
+    ):with(uiu.fillWidth)
+
+    bgPickerEntries[#bgPickerEntries + 1] = bigbtn
+end
+
+scene.bgPicker = uie.scrollbox(
+    uie.column(bgPickerEntries):with(nobg):with(uiu.fillWidth)
+):with({
+    clip = true,
     cacheable = false
 }):with(uiu.fillWidth):with(uiu.fillHeight(true))
 
@@ -189,14 +227,25 @@ local root = uie.column({
 
                     uie.column({
                         uie.label("Background"),
-                        uie.dropdown(bgs, function(self, value)
-                            config.bg = value
-                            config.save()
-                            background.refresh()
-                        end):with(function(self)
-                            self.selected = self:getItem(config.bg + 1)
-                            self.text = self.selected.text
-                        end)
+                        uie.dropdown(bgs):with({
+                            onClick = function(self)
+                                local container = alert({
+                                    title = "Select your background",
+                                    body = scene.bgPicker,
+                                    big = true
+                                })
+                                local btns = container:findChild("buttons")
+                                btns:with(uiu.fillWidth)
+                                btns.children[1]:with(uiu.fillWidth)
+                            end
+                        }):with(function(self)
+                            function self.updateSelected(self)
+                                self.selected = self:getItem(config.bg + 1)
+                                self.text = self.selected.text
+                            end
+
+                            self:updateSelected()
+                        end):as("bgDropdown")
                     }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(1 / 5, 0)),
 
                     uie.column({
@@ -256,13 +305,7 @@ local root = uie.column({
                 uie.row({
 
                     uie.button("Open installation folder", function()
-                        local src = love.filesystem.getSource()
-                        if src then
-                            src = fs.dirname(fs.normalize(src))
-                        else
-                            src = fs.getcwd()
-                        end
-                        utils.openFile(src)
+                        utils.openFile(fs.getsrc())
                     end):with(uiu.fillWidth(4.5)),
 
                     uie.button("Open log and config folder", function()

@@ -12,16 +12,17 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="0.11.3" />
-    <PackageReference Include="MonoMod" Version="20.11.16.1" />
-    <PackageReference Include="MonoMod.RuntimeDetour" Version="20.11.16.1" />
-    <PackageReference Include="MonoMod.RuntimeDetour.HookGen" Version="20.11.16.1" />
-    <PackageReference Include="MonoMod.Utils" Version="20.11.16.1" />
+    <PackageReference Include="MonoMod" Version="21.01.11.1" />
+    <PackageReference Include="MonoMod.RuntimeDetour" Version="21.01.11.1" />
+    <PackageReference Include="MonoMod.RuntimeDetour.HookGen" Version="21.01.11.1" />
+    <PackageReference Include="MonoMod.Utils" Version="21.01.11.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="YamlDotNet" Version="9.1.0" />
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
 
 </Project>

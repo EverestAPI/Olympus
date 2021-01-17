@@ -1,11 +1,8 @@
-local luacom = require("luacom")
-if not luacom then
-    return false
-end
+local luacomStatus, luacom = pcall(require, "luacom")
+if luacomStatus and luacom then
+  local registry = {}
 
-local registry = {}
-
-function registry.getKey(key)
+  function registry.getKey(key)
     local sh = luacom.CreateObject("WScript.Shell")
     local status, rv = pcall(sh.RegRead, sh, key)
     if status then
@@ -13,17 +10,29 @@ function registry.getKey(key)
     else
       return nil
     end
+  end
+
+  function registry.setKey(key, value)
+    local sh = luacom.CreateObject("WScript.Shell")
+    if value == nil then
+      return pcall(sh.RegDelete, sh, key)
+    end
+    return pcall(sh.RegWrite, sh, key, value)
+  end
+
+  return registry
 end
 
-function registry.setKey(key, value, type)
-  if type ~= nil then
-    value, type = type, value
-  end
-  local sh = luacom.CreateObject("WScript.Shell")
-  if not value and not type then
-    return pcall(sh.RegDelete, sh, key)
-  end
-  return pcall(sh.RegWrite, sh, key, value, type)
+local sharp = require("sharp")
+
+local registry = {}
+
+function registry.getKey(key)
+  return sharp._run("Win32RegGet", key)
+end
+
+function registry.setKey(key, value)
+  return sharp._run("Win32RegSet", key, value)
 end
 
 return registry

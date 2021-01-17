@@ -15,7 +15,7 @@
 ## Dependencies
 - [LÖVE](https://love2d.org/)
 - [dkjson](https://github.com/LuaDist/dkjson)
-- [lua-tinyyaml](https://github.com/peposso/lua-tinyyaml)
+- [lua-yaml](https://github.com/exosite/lua-yaml)
 - [nativefiledialog](https://github.com/Vexatos/nativefiledialog/tree/master/lua)
 - [luajit-request](https://github.com/LPGhatguy/luajit-request)
 - [libcurl](https://curl.haxx.se/libcurl/)

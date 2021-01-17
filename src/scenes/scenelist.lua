@@ -15,7 +15,7 @@ local root = uie.column({
         }):with({
             grow = false
         }):with(uiu.fillWidth):with(function(list)
-            list.selected = list.children[1]
+            list.selected = list.children[1] or false
         end):as("scenes")
     ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 

@@ -38,7 +38,7 @@ namespace Olympus {
                     if (!string.IsNullOrEmpty(appdata))
                         return _RootPath = Path.Combine(appdata, "Olympus-Ahorn");
 
-                    return _RootPath = Path.Combine(Path.GetDirectoryName(Program.RootPath), "ahorn");
+                    return _RootPath = Path.Combine(Path.GetDirectoryName(Program.RootDirectory), "ahorn");
                 }
             }
             set {

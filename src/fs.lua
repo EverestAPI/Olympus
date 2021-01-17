@@ -64,6 +64,16 @@ else
 
 end
 
+
+function fs.getexe()
+    return love.filesystem.getExecutablePath and love.filesystem.getExecutablePath()
+end
+
+function fs.getsrc()
+    local src = love.system.getOS() == "Windows" and fs.normalize(fs.getexe()) or fs.normalize(love.filesystem.getSource())
+    return src and (fs.isDirectory(src) and src or fs.dirname(src)) or fs.getcwd()
+end
+
 function fs.filename(path, sep)
     sep = sep or fs.dirSeparator
 
@@ -98,14 +108,18 @@ function fs.splitpath(path)
 end
 
 function fs.normalize(path)
+    if not path then
+        return path
+    end
+
     path = path:gsub("([^/\\])[/\\]$", "%1")
     local sep = fs.dirSeparator
 
     local fixed = ""
     local real = true
     for part in path:gmatch("([^/\\]*)") do
-        if #part == 0 then
-            if #fixed == 0 then
+        if part == "" then
+            if fixed == "" then
                 goto add
             end
             goto skip

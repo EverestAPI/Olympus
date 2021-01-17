@@ -29,7 +29,7 @@ local function sharpthread()
 
         -- Olympus.Sharp is stored in the sharp subdir.
         -- Running love src/ sets the cwd to the src folder.
-        local cwd = fs.getcwd()
+        local cwd = fs.getsrc()
         if fs.filename(cwd) == "src" then
             cwd = fs.joinpath(fs.dirname(cwd), "love")
         end
