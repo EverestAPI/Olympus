@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdAhornInstallJulia : Cmd<IEnumerator> {
 
+        public static readonly string Version = "1.5.3";
+
         public override IEnumerator Run() {
             yield return Status("Preparing installation of Julia", false, "");
 

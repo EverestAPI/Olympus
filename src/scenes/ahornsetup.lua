@@ -206,6 +206,16 @@ Olympus can download Ahorn and start the installation process for you.]]
                 ),
                 btnInstallAhorn()
             }):with(uiu.fillWidth))
+
+        else
+            mainlist:addChild(uie.column({
+                uie.label("Ahorn", ui.fontBig),
+                uie.label(string.format([[
+Found installation path: %s
+Found version: %s]],
+                    tostring(info.AhornPath), tostring(info.AhornVersion))
+                ),
+            }):with(uiu.fillWidth))
         end
 
 

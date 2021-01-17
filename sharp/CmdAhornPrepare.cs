@@ -22,6 +22,7 @@ namespace Olympus {
         public override CmdAhornGetInfo.Info Run(string rootPath) {
             AhornHelper.RootPath = rootPath;
             AhornHelper.FindJulia(true);
+            AhornHelper.FindAhorn(true);
             return new CmdAhornGetInfo.Info();
         }
 

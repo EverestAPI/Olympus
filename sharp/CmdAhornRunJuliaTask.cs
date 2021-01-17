@@ -17,10 +17,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornRunJulia : Cmd<string, bool?, string> {
+    public unsafe class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
         public override bool LogRun => false;
-        public override string Run(string script, bool? localDepot) {
-            return AhornHelper.GetJuliaOutput(script, localDepot);
+        public override IEnumerator Run(string script, bool? localDepot) {
+            yield return AhornHelper.GetJuliaOutput(script, localDepot);
         }
     }
 }
