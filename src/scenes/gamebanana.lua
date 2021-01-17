@@ -10,35 +10,46 @@ local scene = {
 }
 
 
+local function generateModColumns(self)
+    local listcount = math.max(1, math.min(6, math.floor(love.graphics.getWidth() / 350)))
+    if self.listcount == listcount then
+        return nil
+    end
+    self.listcount = listcount
+
+    local lists = {}
+    for i = 1, listcount do
+        lists[i] = uie.column({
+        }):with({
+            style = {
+                bg = {},
+                padding = 0,
+                spacing = 2
+            },
+            cacheable = false
+        }):with(uiu.fillWidth(1 / listcount + 1)):with(uiu.at((i == 1 and 0 or 1) + (i - 1) / listcount, 0)):as("mods" .. tostring(i))
+    end
+
+    return lists
+end
+
+
 local root = uie.column({
 
     uie.scrollbox(
-        uie.dynamic():with({
-            cacheable = false,
-
-            generate = function(self, children)
-                local listcount = math.max(1, math.min(6, math.floor(love.graphics.getWidth() / 350)))
-                if self.listcount == listcount then
-                    return nil
-                end
-                self.listcount = listcount
-
-                local lists = {}
-                for i = 1, listcount do
-                    lists[i] = uie.column({
-                    }):with({
-                        style = {
-                            bg = {},
-                            padding = 0,
-                            spacing = 2
-                        },
-                        cacheable = false
-                    }):with(uiu.fillWidth(1 / listcount + 1)):with(uiu.at((i == 1 and 0 or 1) + (i - 1) / listcount, 0)):as("mods" .. tostring(i))
-                end
-
-                return lists
-            end
-        }):with(uiu.fillWidth):as("modColumns")
+        uie.column({
+            uie.dynamic():with({
+                cacheable = false,
+                generate = generateModColumns
+            }):with(uiu.fillWidth):as("modColumns")
+        }):with({
+            style = {
+                padding = 0,
+                bg = {}
+            },
+            clip = false,
+            cacheable = false
+        }):with(uiu.fillWidth)
     ):with({
         style = {
             barPadding = 16,
@@ -177,8 +188,8 @@ function scene.loadPage(page)
 
         if not isQuery then
             scene.searchLast = ""
-            if page < 1 then
-                page = 1
+            if page < 0 then
+                page = 0
             end
         end
 
@@ -190,7 +201,11 @@ function scene.loadPage(page)
         pageNext:reflow()
 
         if not isQuery then
-            pageLabel.text = "Page #" .. tostring(page)
+            if page == 0 then
+                pageLabel.text = "Featured"
+            else
+                pageLabel.text = "Page #" .. tostring(page)
+            end
             scene.page = page
         else
             pageLabel.text = page
@@ -225,7 +240,7 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 1
+            pagePrev.enabled = not isQuery and page > 0
             pageNext.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
@@ -242,7 +257,7 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 1
+            pagePrev.enabled = not isQuery and page > 0
             pageNext.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
@@ -255,7 +270,7 @@ function scene.loadPage(page)
 
         loading:removeSelf()
         scene.loadingPage = nil
-        pagePrev.enabled = not isQuery and page > 1
+        pagePrev.enabled = not isQuery and page > 0
         pageNext.enabled = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
@@ -265,7 +280,7 @@ end
 
 
 function scene.load()
-    scene.loadPage(1)
+    scene.loadPage(0)
 
 end
 
@@ -276,6 +291,10 @@ end
 
 
 function scene.downloadEntries(page)
+    if page == 0 then
+        return scene.downloadFeaturedEntries()
+    end
+
     local url = "https://api.gamebanana.com/Core/List/New?gameid=6460&page=" .. tostring(page)
     local data = scene.cache[url]
     if data ~= nil then
@@ -305,6 +324,33 @@ function scene.downloadSearchEntries(query)
     return data, msg
 end
 
+function scene.downloadFeaturedEntries()
+    local url = "https://api.gamebanana.com/Rss/Featured?gameid=6460"
+    local entries = scene.cache[url]
+    if entries ~= nil then
+        return entries
+    end
+
+    local data, msg = threader.wrap("utils").downloadXML(url):result()
+    if not data then
+        return data, msg
+    end
+
+    local items = data.rss.items.item
+    entries = {}
+    for i = 1, #items do
+        local item = items[i]
+        local itemtype, id = item.link:match("https://.*/(.*)/(.*)")
+        id = tonumber(id)
+        if itemtype and id then
+            entries[#entries + 1] = { itemtype:sub(1, 1):upper() .. itemtype:sub(2, #itemtype - 1), id }
+        end
+    end
+
+    scene.cache[url] = entries
+    return entries, msg
+end
+
 
 function scene.downloadInfo(entries, id)
     if not entries then
@@ -330,7 +376,7 @@ function scene.downloadInfo(entries, id)
         multicall = multicall ..
             mcitem(i, "itemtype", entry[1] or entry.itemtype) ..
             mcitem(i, "itemid", tostring(entry[2] or entry.itemid)) ..
-            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetDownloadUrl()")
+            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetProfileUrl()")
     end
 
     local url = "https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2)
@@ -349,7 +395,7 @@ end
 
 
 function scene.item(info)
-    if not info then
+    if not info or info.error then
         return nil
     end
 
@@ -358,8 +404,6 @@ function scene.item(info)
     if withheld then
         return nil
     end
-
-    website = website:gsub("/download/", "/")
 
     local file
     for k, v in pairs(files) do
@@ -732,11 +776,11 @@ function scene.item(info)
                     love.graphics.setColor(1, 1, 1, 1)
 
                     -- FIXME: blur is very taxing!
-                    -- if not ui.debug.draw and config.quality.bgBlur then
-                    --     effect(self.drawBG, self)
-                    -- else
+                    if false and (not ui.debug.draw and config.quality.bgBlur) then
+                        effect(self.drawBG, self)
+                    else
                         self:drawBG()
-                    -- end
+                    end
 
                     love.graphics.pop()
 
