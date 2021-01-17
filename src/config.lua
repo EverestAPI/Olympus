@@ -113,6 +113,7 @@ function config.load()
     default(data, "ahorn", {})
 
     default(data.ahorn, "rootPath", "")
+    default(data.ahorn, "forceLocal", false)
 end
 
 function config.save()

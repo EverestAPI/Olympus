@@ -28,6 +28,8 @@ redirect_stdout(stdoutPrev)
 
         private static string OrigJuliaDepotPath = Environment.GetEnvironmentVariable("JULIA_DEPOT_PATH") ?? "";
 
+        public static bool ForceLocal = false;
+
         private static string _RootPath;
 
         public static string RootPath {
@@ -152,6 +154,9 @@ redirect_stdout(stdoutPrev)
                 return JuliaPath = path;
             }
 
+            if (ForceLocal)
+                return null;
+
             path = GetProcessOutput(
                 PlatformHelper.Is(Platform.Windows) ? "where.exe" : "which",
                 name,
@@ -201,13 +206,16 @@ redirect_stdout(stdoutPrev)
 
             string script = PrefixPkgActivate + @"print(something(Base.find_package(""Ahorn""), """"))";
 
-            string path = GetJuliaOutput(script, false);
+            string path = GetJuliaOutput(script, true);
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
                 AhornIsLocal = false;
                 return AhornPath = path;
             }
 
-            path = GetJuliaOutput(script, true);
+            if (ForceLocal)
+                return null;
+
+            path = GetJuliaOutput(script, false);
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
                 AhornIsLocal = true;
                 return AhornPath = path;

@@ -17,10 +17,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornPrepare : Cmd<string, CmdAhornGetInfo.Info> {
+    public unsafe class CmdAhornPrepare : Cmd<string, bool, CmdAhornGetInfo.Info> {
 
-        public override CmdAhornGetInfo.Info Run(string rootPath) {
+        public override CmdAhornGetInfo.Info Run(string rootPath, bool forceLocal) {
             AhornHelper.RootPath = rootPath;
+            AhornHelper.ForceLocal = forceLocal;
             AhornHelper.FindJulia(true);
             AhornHelper.FindAhorn(true);
             return new CmdAhornGetInfo.Info();

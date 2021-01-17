@@ -106,12 +106,61 @@ function scene.reload()
         }):with(uiu.fillWidth)
         mainlist:addChild(status)
 
-        local info = sharp.ahornPrepare(config.ahorn.rootPath):result()
+        local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.forceLocal):result()
         status:removeSelf()
 
-        local function btnInstallJulia()
+        mainlist:addChild(uie.column({
+            uie.label("General info", ui.fontBig),
+            uie.row({
+                uie.column({
+                    uie.label([[
+Olympus can install and launch Ahorn for you.
+
+This function isn't officially supported by the Ahorn developers.
+Feel free to visit the Ahorn GitHub page for more info.]]),
+                    uie.button("Open website", function()
+                        utils.openURL("https://github.com/CelestialCartographers/Ahorn")
+                    end):with(uiu.fillWidth)
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0
+                    },
+                    clip = false
+                }):with(uiu.fillWidth(4.5)):with(uiu.at(0, 0)),
+
+                uie.column({
+                    uie.label([[
+Olympus can install Julia and Ahorn into an isolated environment.
+It can also use your existing system-wide Julia and Ahorn installs.
+
+Current mode: ]] .. (config.ahorn.forceLocal and "Isolated mode." or "Olympus tries to use existing installations.")
+                    ),
+                    uie.button(config.ahorn.forceLocal and "Enable using existing system-wide installations" or "Only use the isolated environment", function()
+                        config.ahorn.forceLocal = not config.ahorn.forceLocal
+                        config.save()
+                        scene.reload()
+                    end):with(uiu.fillWidth)
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0
+                    },
+                    clip = false
+                }):with(uiu.fillWidth(4.5)):with(uiu.at(4.5, 0))
+
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0
+                },
+                clip = false
+            }):with(uiu.fillWidth)
+        }):with(uiu.fillWidth))
+
+        local function btnInstall(text, cb)
             return uie.button(
-                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install Julia " .. tostring(info.JuliaVersionRecommended)) }):with({
+                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label(text) }):with({
                     style = {
                         bg = {},
                         padding = 0
@@ -119,7 +168,7 @@ function scene.reload()
                     clip = false,
                     cacheable = false
                 }):with(uiu.styleDeep), function()
-                    scene.installJulia()
+                    cb()
                 end
             ):with({
                 style = {
@@ -132,30 +181,6 @@ function scene.reload()
             }):with(uiu.fillWidth):with(utils.important(24))
         end
 
-        local function btnInstallAhorn()
-            return uie.button(
-                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install Ahorn") }):with({
-                    style = {
-                        bg = {},
-                        padding = 0
-                    },
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.styleDeep), function()
-                    scene.installAhorn()
-                end
-            ):with({
-                style = {
-                    normalBG = { 0.2, 0.4, 0.2, 0.8 },
-                    hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
-                    pressedBG = { 0.2, 0.6, 0.2, 0.9 }
-                },
-                clip = false,
-                cacheable = false,
-                enabled = info.JuliaVersion and true or false
-            }):with(uiu.fillWidth):with(utils.important(24, function() return info.JuliaVersion end))
-        end
-
         if not info.JuliaPath then
             mainlist:addChild(uie.column({
                 uie.label("Julia not found", ui.fontBig),
@@ -166,7 +191,7 @@ No supported installation of Julia was found on your computer.
 You can either install Julia yourself, or Olympus can install it into an isolated environment.
 As of the time of writing this, version 1.3+ is the minimum requirement.]]
                 ),
-                btnInstallJulia()
+                btnInstall("Install Julia " .. tostring(info.JuliaVersionRecommended), scene.installJulia)
             }):with(uiu.fillWidth))
 
         elseif not info.JuliaVersion then
@@ -181,7 +206,7 @@ Olympus can download and set up an isolated Julia environment for you.
 As of the time of writing this, version 1.3+ is the minimum requirement.]],
                     tostring(info.JuliaPath)
                 )),
-                btnInstallJulia()
+                btnInstall("Install Julia " .. tostring(info.JuliaVersionRecommended), scene.installJulia)
             }):with(uiu.fillWidth))
 
         else
@@ -202,9 +227,10 @@ Found version: %s]],
                 uie.label("Ahorn not found", ui.fontBig),
                 uie.label([[
 No supported installation of Ahorn was found.
-Olympus can download Ahorn and start the installation process for you.]]
+Olympus can download Ahorn and start the installation process for you.
+Please note that this installs Ahorn into the isolated environment.]]
                 ),
-                btnInstallAhorn()
+                btnInstall("Install Ahorn", scene.installAhorn)
             }):with(uiu.fillWidth))
 
         else
