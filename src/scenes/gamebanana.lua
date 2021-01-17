@@ -395,7 +395,7 @@ end
 
 
 function scene.item(info)
-    if not info then
+    if not info or info.error then
         return nil
     end
 
