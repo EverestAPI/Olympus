@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 namespace Olympus {
     public static class AhornHelper {
 
+        private const string PrefixGlobal = @"
+@eval(Base, ttyhascolor(term_type = nothing) = false)
+@eval(Base, get_have_color() = false)
+
+";
+
         private const string PrefixPkgActivate = @"
 using Pkg
 
@@ -162,8 +168,8 @@ redirect_stdout(stdoutPrev)
                 Directory.CreateDirectory(env);
 
             tmpFilename = Path.GetTempFileName();
-            File.WriteAllText(tmpFilename, script);
-            return NewProcess(julia, "--color=no \"" + tmpFilename + "\"");
+            File.WriteAllText(tmpFilename, PrefixGlobal + script);
+            return NewProcess(julia, "\"" + tmpFilename + "\"");
         }
 
         public static string GetJuliaOutput(string script, out string err, bool? localDepot = null) {

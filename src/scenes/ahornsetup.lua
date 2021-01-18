@@ -83,8 +83,8 @@ function scene.installJulia(beta)
         alert({
             body = [[
 You are about to install a beta version of Julia.
-It hasn't been tested a lot. Use at your own risk.
-You can still go back and install a non-beta version.
+It hasn't been tested a lot and can be slower and buggier.
+Use it at your own risk, or go back and install a non-beta version.
 Do you want to continue?]],
             buttons = {
                 {
@@ -231,6 +231,7 @@ function scene.reload()
 
         mainlist:addChild(uie.column({
             uie.label("General info", ui.fontBig),
+            uie.label("THIS IS STILL IN ACTIVE DEVELOPMENT. Please ping 0x0ade in the Celestecord if things go wrong."),
             uie.row({
                 uie.column({
                     uie.label([[
