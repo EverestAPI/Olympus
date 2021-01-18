@@ -163,10 +163,16 @@ local function sharpthread()
         local lastSend = socket.gettime()
         print("[sharp init]", "startime", lastSend)
 
-        local function read()
-            local rv, err, part = client:receive("*l")
-            if rv or part ~= "" then
-                return rv or part
+        local partLast
+        local function read(pattern)
+            local rv, err, part = client:receive(pattern or "*l")
+            if rv and rv ~= partLast then
+                return rv, false
+            end
+
+            if part ~= "" and part ~= partLast then
+                partLast = part
+                return part, true
             end
 
             if err ~= "timeout" then
@@ -175,6 +181,8 @@ local function sharpthread()
                 client:close()
                 client = connect()
             end
+
+            return nil
         end
 
         while true do
@@ -182,19 +190,39 @@ local function sharpthread()
 
             client:settimeout(0)
             while true do
-                local data = utils.fromJSON(read())
+                local raw, rawPart = read()
+                local data = utils.fromJSON(raw)
                 if not data then
                     break
                 end
 
                 if data.UID ~= "_timeoutping" then
                     channelSet(channelStatusRx, data.UID)
-                    local value = tostring(data.Value)
-                    if #value > 128 then
-                        value = "<insert long string here - " .. tostring(#value) .. " bytes>"
+
+                    local dbgvalue
+
+                    if data.RawSize then
+                        client:settimeout(nil)
+                        if rawPart then
+                            read(1) -- Skip the newline byte that luasocket (in)conveniently ignores...
+                        end
+                        data.Value = read(data.RawSize)
+                        client:settimeout(0)
+
+                        if debugging then
+                            dbgvalue = "<insert raw data here - " .. tostring(data.RawSize) .. " bytes expected, " .. tostring(#data.Value) .. " bytes gotten>"
+                        end
+
+                    elseif debugging then
+                        dbgvalue = tostring(data.Value)
+                        if #dbgvalue > 512 then
+                            dbgvalue = "<insert long string here - " .. tostring(#dbgvalue) .. " bytes>"
+                        end
                     end
+
                     if debugging then
-                        print("[sharp rx]", data.UID, value, data.Error)
+                        data.DebugValue = dbgvalue
+                        print("[sharp rx]", data.UID, dbgvalue, data.Error)
                     end
                     love.thread.getChannel("sharpReturn" .. data.UID):push(data)
                 end
@@ -336,7 +364,7 @@ function sharp._run(cid, ...)
         error(string.format("Failed running %s %s: sharp thread returned value on wrong channel", uid, cid))
     end
 
-    dprint("got", rv.Value, rv.Error)
+    dprint("got", rv.DebugValue, rv.Error)
 
     if rv.Error then
         error(string.format("Failed running %s %s: %s", uid, cid, tostring(rv.Error)))

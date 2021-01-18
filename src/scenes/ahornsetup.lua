@@ -15,20 +15,6 @@ local scene = {
 }
 
 
-local nobg = {
-    style = {
-        bg = {},
-        padding = 0,
-        radius = 0
-    },
-    clip = false,
-    cacheable = false
-}
-
-
-scene.loadingID = 0
-
-
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -50,13 +36,85 @@ local root = uie.column({
         },
         clip = false,
         cacheable = false
-    }):with(uiu.fill),
+    }):with(uiu.fill):with(uiu.at(0, 0)):as("mainholder"),
+
+    uie.group({
+        uie.column({
+            uie.label("Ahorn Log", ui.fontBig),
+            uie.scrollbox(
+                uie.column({
+
+                    uie.label("ahornsetup.lua machine broke, please fix."),
+
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0
+                    },
+                    locked = true
+                }):hook({
+                    layoutLateLazy = function(orig, self)
+                        self:layoutLate()
+                    end,
+
+                    layoutLate = function(orig, self)
+                        orig(self)
+                        if self.locked then
+                            self.y = -self.height
+                        end
+                    end
+                }):with(uiu.fillWidth):as("loglist")
+            ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+
+            uie.row({
+                uie.button("Unlock scroll", function(self)
+                    local loglist = scene.loglist
+                    loglist.locked = not loglist.locked
+                    self.label.text = loglist.locked and "Unlock scroll" or "Lock scroll"
+                    self.parent:reflowDown()
+                end),
+
+                uie.button("Clear", function()
+                    local loglist = scene.loglist
+                    loglist.children = {}
+                    loglist:reflow()
+                end):with(uiu.fillWidth(true)),
+
+                uie.button("Close", function()
+                    scene.running = nil
+                    scene.reload()
+                end):with({
+                    style = {
+                        normalBG = { 0.4, 0.2, 0.2, 0.8 },
+                        hoveredBG = { 0.6, 0.3, 0.3, 0.9 },
+                        pressedBG = { 0.6, 0.2, 0.2, 0.9 }
+                    }
+                }):with(uiu.rightbound):as("logclose")
+            }):with({
+                style = {
+                    bg = {},
+                    padding = 0
+                },
+                clip = false
+            }):with(uiu.fillWidth):with(uiu.bottombound)
+        }):with(uiu.fill)
+    }):with({
+        style = {
+            padding = 16
+        }
+    }):with(uiu.fill):with(uiu.at(0, 0)):as("logholder"),
 
 }):with({
     cacheable = false,
     _fullroot = true
 })
 scene.root = root
+
+
+scene.mainholder = scene.root:findChild("mainholder")
+scene.logholder = scene.root:findChild("logholder")
+scene.loglist = scene.root:findChild("loglist")
+scene.logclose = scene.root:findChild("logclose")
 
 
 function scene.installJulia(beta)
@@ -152,48 +210,65 @@ end
 
 
 function scene.launchAhorn()
-    return threader.routine(function()
-        local launching = sharp.ahornLaunch()
-        local container = alert([[
+    if scene.running then
+        return scene.running
+    end
+
+    scene.running = threader.routine(function()
+        scene.reload():result()
+
+        scene.logclose.enabled = false
+
+        local loglist = scene.loglist
+        loglist.children = {}
+
+        loglist:addChild(uie.label([[
 Ahorn is now starting in the background.
 It might take a few minutes until it appears.
 A popup window will appear here if it crashes.
-You can close this window.]])
+You can close this window.]]))
 
-        local rv = launching:result()
-        if not rv then
-            container:close()
-            alert({
-                body = [[
+        loglist:addChild(uie.label("----------------------------------------------"))
+
+        local task = sharp.ahornLaunch():result()
+
+        local result
+        repeat
+            result = sharp.pollWait(task):result()
+            local line = result[3]
+            if line ~= nil then
+                loglist:addChild(uie.label(line):with({ wrap = true }))
+            else
+                print("ahornsetup.launchAhorn encountered nil on poll", task)
+            end
+        until result[1] ~= "running" and result[2] == 0
+
+        if not sharp.poll(task):result() then
+            loglist:addChild(uie.label("----------------------------------------------"))
+            loglist:addChild(uie.label([[
 Ahorn has crashed unexpectedly.
 
 You can ask for help in the Celeste Discord server.
 An invite can be found on the Everest website.
 
 Please drag and drop your files into the #modding_help channel.
-Before uploading, check your logs for sensitive info (f.e. your username).]],
-                buttons = {
-                    scene.info.AhornIsLocal and
-                    { "Open Olympus-Ahorn folder", function(container)
-                        utils.openFile(scene.info.RootPath)
-                    end } or
-                    { "Open Ahorn folder", function(container)
-                        utils.openFile(fs.dirname(scene.info.AhornGlobalEnvPath))
-                    end },
+Before uploading, check your logs for sensitive info (f.e. your username).
+            ]]))
 
-                    { "Open Olympus log folder", function(container)
-                        utils.openFile(fs.getStorageDir())
-                    end },
-
-                    { "Open Everest Website", function(container)
-                        utils.openURL("https://everestapi.github.io/")
-                        container:close("website")
-                    end },
-
-                    { "Close" },
-                }
-            })
+            loglist:addChild(
+                uie.row({
+                    uie.button("Open Ahorn folder", function() utils.openFile(fs.dirname(scene.info.AhornGlobalEnvPath)) end),
+                    uie.button("Open Everest Website", function() utils.openURL("https://everestapi.github.io/") end),
+                }):with({
+                    style = {
+                        bg = {}
+                    },
+                    clip = false
+                })
+            )
         end
+
+        scene.logclose.enabled = true
     end)
 end
 
@@ -204,6 +279,16 @@ function scene.reload()
     end
 
     scene.reloading = threader.routine(function()
+        if scene.running then
+            scene.mainholder:removeSelf()
+            scene.root:addChild(scene.logholder)
+            scene.reloading = nil
+            return
+        end
+
+        scene.logholder:removeSelf()
+        scene.root:addChild(scene.mainholder)
+
         local mainlist = root:findChild("mainlist")
         mainlist.children = {}
         mainlist:reflow()

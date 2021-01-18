@@ -18,23 +18,39 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornLaunch : Cmd<bool> {
+    public unsafe class CmdAhornLaunch : Cmd<IEnumerator> {
         
-        public override bool Taskable => true;
+        public override IEnumerator Run() {
+            yield return "Initializing...";
 
-        public override bool Run() {
             string tmpFilename = null;
             try {
                 using (Process process = AhornHelper.NewJulia(out tmpFilename, @"
 env = ENV[""AHORN_ENV""]
+globalenv = ENV[""AHORN_GLOBALENV""]
 
-logout = open(joinpath(dirname(env), ""output.log""), ""w"")
-redirect_stdout(logout)
-println(logout, ""Running Ahorn via Olympus. See error.log for STDERR."")
+logerrPath = joinpath(dirname(globalenv), ""error.log"")
 
-logerr = open(joinpath(dirname(env), ""error.log""), ""w"")
-redirect_stderr(logerr)
-println(logerr, ""Running Ahorn via Olympus. See output.log for STDOUT."")
+println(""Logging to "" * logerrPath)
+
+open(logerrPath, ""w"") do logerr
+    println(logerr, ""Running Ahorn via Olympus."")
+end
+
+flush(stdout)
+flush(stderr)
+
+stdoutReal = stdout
+redirect_stderr(stdoutReal)
+(rd, wr) = redirect_stdout()
+
+@async while true
+    data = String(readavailable(rd))
+    write(stdoutReal, data)
+    open(logerrPath, ""a"", false) do logerr
+        write(logerr, data)
+    end
+end
 
 try
     using Pkg
@@ -46,19 +62,23 @@ catch e
     println(logerr, sprint(showerror, e, catch_backtrace()))
     exit(1)
 end
+
+exit(0)
 "
                 )) {
 
-                    /*
+                    /*/
                     process.StartInfo.UseShellExecute = true;
                     process.StartInfo.CreateNoWindow = false;
                     process.StartInfo.RedirectStandardOutput = false;
                     process.StartInfo.RedirectStandardError = false;
-                    */
+                    /**/
 
                     process.Start();
+                    for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                        yield return line;
                     process.WaitForExit();
-                    return process.ExitCode == 0;
+                    yield return process.ExitCode == 0;
                 }
             } finally {
                 if (!string.IsNullOrEmpty(tmpFilename) && File.Exists(tmpFilename))

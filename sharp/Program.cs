@@ -120,7 +120,7 @@ namespace Olympus {
 
                         Thread threadW = new Thread(() => {
                             try {
-                                using (StreamWriter writer = new StreamWriter(stream))
+                                using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
                                     WriteLoop(parentProc, ctx, writer, verbose);
                             } catch (Exception e) {
                                 if (e is ObjectDisposedException)
@@ -138,7 +138,7 @@ namespace Olympus {
 
                         Thread threadR = new Thread(() => {
                             try {
-                                using (StreamReader reader = new StreamReader(stream))
+                                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
                                     ReadLoop(parentProc, ctx, reader, verbose);
                             } catch (Exception e) {
                                 if (e is ObjectDisposedException)
@@ -177,31 +177,38 @@ namespace Olympus {
 
         }
 
-        public static void WriteLoop(Process parentProc, MessageContext ctx, TextWriter writer, bool verbose) {
+        public static void WriteLoop(Process parentProc, MessageContext ctx, StreamWriter writer, bool verbose) {
             JsonSerializer jsonSerializer = new JsonSerializer();
 
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
                 for (Message msg = null; !(parentProc?.HasExited ?? false) && (msg = ctx.WaitForNext()) != null;) {
-                    object value = msg.Value;
-                    
-                    if (value is IEnumerator enumerator) {
+                    if (msg.Value is IEnumerator enumerator) {
                         Console.Error.WriteLine($"[sharp] New CmdTask: {msg.UID}");
                         CmdTasks.Add(new CmdTask(msg.UID, enumerator));
-                        value = msg.UID;
+                        msg.Value = msg.UID;
                     }
 
-                    msg.Value = value;
+                    byte[] data = msg.Value as byte[];
+                    if (data != null) {
+                        msg.RawSize = data.Length;
+                        msg.Value = null;
+                    }
 
                     jsonSerializer.Serialize(jsonWriter, msg);
                     jsonWriter.Flush();
-                    writer.WriteLine();
+                    writer.Write('\n');
                     writer.Flush();
+
+                    if (data != null) {
+                        writer.BaseStream.Write(data, 0, data.Length);
+                        writer.BaseStream.Flush();
+                    }
                 }
             }
         }
 
 
-        public static void ReadLoop(Process parentProc, MessageContext ctx, TextReader reader, bool verbose, char delimiter = '\0') {
+        public static void ReadLoop(Process parentProc, MessageContext ctx, StreamReader reader, bool verbose, char delimiter = '\0') {
             // JsonTextReader would be neat here but Newtonsoft.Json is unaware of NetworkStreams and tries to READ PAST STRINGS
             while (!(parentProc?.HasExited ?? false)) {
                 // Commands from Olympus come in pairs of two objects:
@@ -348,6 +355,7 @@ namespace Olympus {
             public string UID;
             public object Value;
             public string Error;
+            public long? RawSize;
         }
 
     }

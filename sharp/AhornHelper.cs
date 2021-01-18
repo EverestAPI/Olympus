@@ -164,6 +164,7 @@ redirect_stdout(stdoutPrev)
 
             string env = local ? AhornEnvPath : AhornGlobalEnvPath;
             Environment.SetEnvironmentVariable("AHORN_ENV", env);
+            Environment.SetEnvironmentVariable("AHORN_GLOBALENV", AhornGlobalEnvPath);
             if (!Directory.Exists(env))
                 Directory.CreateDirectory(env);
 
