@@ -261,27 +261,7 @@ local root = uie.row({
             uie.column({
                 buttonBig("mainmenu/gamebanana", "Download Mods", "gamebanana", true):with(uiu.fillWidth),
                 buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
-                (config.experimentAhorn or os.getenv("OLYMPUS_EXPERIMENT_AHORN") == "1") and buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", function()
-                    if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-                        scener.push("ahornsetup")
-                        return
-                    end
-
-                    alert({
-                        body = [[
-    Olympus is currently unable to manage Ahorn.
-    Please go to the Ahorn GitHub page for installation instructions.
-    This will probably be implemented in a future update.]],
-                        buttons = {
-                            { "Open website", function(container)
-                                utils.openURL("https://github.com/CelestialCartographers/Ahorn")
-                                container:close("website")
-                            end },
-
-                            { "OK" }
-                        }
-                    })
-                end):with(uiu.fillWidth),
+                buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", "ahornsetup"):with(uiu.fillWidth),
                 buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
                 -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
             }):with({
