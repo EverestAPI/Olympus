@@ -79,6 +79,101 @@ function scene.installJulia()
 end
 
 
+function scene.installAhorn()
+    local installer = scener.push("installer")
+    installer.sharpTask("ahornInstallAhorn"):calls(function(task, last)
+        if not last then
+            return
+        end
+
+        installer.update("Ahorn successfully installed", 1, "done")
+        installer.done({
+            {
+                "OK",
+                function()
+                    scener.pop()
+                end
+            }
+        })
+    end)
+end
+
+
+function scene.installAhornAlert()
+    alert({
+        body = [[
+Please note that installing Ahorn WILL TAKE A LONG TIME.
+At some points it will look as if the installation is hanging.
+It's working hard in the background, no matter how slow it is.
+DON'T CLOSE OLYMPUS OR IT WILL CONTINUE INSTALLING IN THE BACKGROUND.
+
+If you really need to cancel the installation process:
+]] .. (
+(love.system.getOS() == "Windows" and "Open Task Manager and force-close julia.exe") or
+(love.system.getOS() == "macOS" and "Open the Activity Monitor and force-close the Julia process.") or
+(love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
+("... Good luck killing the Julia process.")),
+        buttons = {
+            {
+                "Install!",
+                function(container)
+                    scene.installAhorn()
+                    container:close("OK")
+                end
+            },
+            { "Back" }
+        }
+    })
+end
+
+
+function scene.launchAhorn()
+    return threader.routine(function()
+        local launching = sharp.ahornLaunch()
+        local container = alert([[
+Ahorn is now starting in the background.
+It might take a few minutes until it appears.
+A popup window will appear here if it crashes.
+You can close this window.]])
+
+        local rv = launching:result()
+        if not rv then
+            container:close()
+            alert({
+                body = [[
+Ahorn has crashed unexpectedly.
+
+You can ask for help in the Celeste Discord server.
+An invite can be found on the Everest website.
+
+Please drag and drop your files into the #modding_help channel.
+Before uploading, check your logs for sensitive info (f.e. your username).]],
+                buttons = {
+                    scene.info.AhornIsLocal and
+                    { "Open Olympus-Ahorn folder", function(container)
+                        utils.openFile(scene.info.RootPath)
+                    end } or
+                    { "Open Ahorn folder", function(container)
+                        utils.openFile(fs.dirname(scene.info.AhornGlobalEnvPath))
+                    end },
+
+                    { "Open Olympus log folder", function(container)
+                        utils.openFile(fs.getStorageDir())
+                    end },
+
+                    { "Open Everest Website", function(container)
+                        utils.openURL("https://everestapi.github.io/")
+                        container:close("website")
+                    end },
+
+                    { "Close" },
+                }
+            })
+        end
+    end)
+end
+
+
 function scene.reload()
     if scene.reloading then
         return scene.reloading
@@ -107,6 +202,7 @@ function scene.reload()
         mainlist:addChild(status)
 
         local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.forceLocal):result()
+        scene.info = info
         status:removeSelf()
 
         mainlist:addChild(uie.column({
@@ -115,10 +211,9 @@ function scene.reload()
                 uie.column({
                     uie.label([[
 Olympus can install and launch Ahorn for you.
-
 This function isn't officially supported by the Ahorn developers.
 Feel free to visit the Ahorn GitHub page for more info.]]),
-                    uie.button("Open website", function()
+                    uie.button("Open https://github.com/CelestialCartographers/Ahorn", function()
                         utils.openURL("https://github.com/CelestialCartographers/Ahorn")
                     end):with(uiu.fillWidth)
                 }):with({
@@ -133,10 +228,9 @@ Feel free to visit the Ahorn GitHub page for more info.]]),
                     uie.label([[
 Olympus can install Julia and Ahorn into an isolated environment.
 It can also use your existing system-wide Julia and Ahorn installs.
-
-Current mode: ]] .. (config.ahorn.forceLocal and "Isolated mode." or "Olympus tries to use existing installations.")
+Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isolated + existing installations.")
                     ),
-                    uie.button(config.ahorn.forceLocal and "Enable using existing system-wide installations" or "Only use the isolated environment", function()
+                    uie.button(config.ahorn.forceLocal and "Enable finding system-wide Julia and Ahorn" or "Only use isolated Julia and Ahorn", function()
                         config.ahorn.forceLocal = not config.ahorn.forceLocal
                         config.save()
                         scene.reload()
@@ -155,7 +249,11 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated mode." or "Olympus tr
                     padding = 0
                 },
                 clip = false
-            }):with(uiu.fillWidth)
+            }):with(uiu.fillWidth),
+
+            uie.button("Open the Olympus isolated Ahorn folder", function()
+                utils.openFile(info.RootPath)
+            end):with(uiu.fillWidth)
         }):with(uiu.fillWidth))
 
         local function btnInstall(text, cb)
@@ -206,7 +304,7 @@ Olympus can download and set up an isolated Julia environment for you.
 As of the time of writing this, version 1.3+ is the minimum requirement.]],
                     tostring(info.JuliaPath)
                 )),
-                btnInstall("Install Julia " .. tostring(info.JuliaVersionRecommended), scene.installJulia)
+                not info.JuliaIsLocal and btnInstall("Install Julia " .. tostring(info.JuliaVersionRecommended), scene.installJulia)
             }):with(uiu.fillWidth))
 
         else
@@ -228,9 +326,9 @@ Found version: %s]],
                 uie.label([[
 No supported installation of Ahorn was found.
 Olympus can download Ahorn and start the installation process for you.
-Please note that this installs Ahorn into the isolated environment.]]
+]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be installed into the isolated environment." or "Ahorn will be installed for your system-wide installation of Julia.")
                 ),
-                btnInstall("Install Ahorn", scene.installAhorn)
+                info.JuliaPath and btnInstall("Install Ahorn", scene.installAhornAlert)
             }):with(uiu.fillWidth))
 
         else
@@ -241,6 +339,9 @@ Found installation path: %s
 Found version: %s]],
                     tostring(info.AhornPath), tostring(info.AhornVersion))
                 ),
+                uie.button("Launch Ahorn", function()
+                    scene.launchAhorn()
+                end):with(uiu.fillWidth)
             }):with(uiu.fillWidth))
         end
 

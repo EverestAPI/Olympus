@@ -20,7 +20,7 @@ namespace Olympus {
     public unsafe class CmdAhornRunJulia : Cmd<string, bool?, string> {
         public override bool LogRun => false;
         public override string Run(string script, bool? localDepot) {
-            return AhornHelper.GetJuliaOutput(script, localDepot);
+            return AhornHelper.GetJuliaOutput(script, out _, localDepot);
         }
     }
 }

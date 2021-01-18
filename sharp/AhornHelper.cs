@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 namespace Olympus {
     public static class AhornHelper {
 
+        private const string PrefixGlobal = @"
+@eval(Base, ttyhascolor(term_type = nothing) = false)
+@eval(Base, get_have_color() = false)
+
+";
+
         private const string PrefixPkgActivate = @"
 using Pkg
 
@@ -55,13 +61,44 @@ redirect_stdout(stdoutPrev)
             set {
                 _RootPath = value;
                 JuliaPath = null;
+                AhornEnvPath = null;
+                AhornPath = null;
+            }
+        }
+
+        private static string _GlobalAhornEnv;
+
+        public static string AhornGlobalEnvPath {
+            get {
+                if (!string.IsNullOrEmpty(_GlobalAhornEnv))
+                    return _GlobalAhornEnv;
+
+                string path = Environment.GetEnvironmentVariable("OLYMPUS_AHORN_GLOBALENV");
+                if (!string.IsNullOrEmpty(path))
+                    return _GlobalAhornEnv = path;
+
+                // The following is based off of how Ahorn's install_ahorn.jl determines the env path.
+
+                if (PlatformHelper.Is(Platform.Windows)) {
+                    return _GlobalAhornEnv = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ahorn", "env");
+
+                } else {
+                    // This must be done like this as it behaves exactly like this on ALL non-Windows platforms.
+                    string config = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+                    if (string.IsNullOrEmpty(config))
+                        config = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
+                    return _GlobalAhornEnv = Path.Combine(config, "Ahorn", "env");
+                }
+            }
+            set {
+                _GlobalAhornEnv = value;
                 AhornPath = null;
             }
         }
 
         private static string _AhornEnv;
 
-        public static string AhornEnv {
+        public static string AhornEnvPath {
             get {
                 if (!string.IsNullOrEmpty(_AhornEnv))
                     return _AhornEnv;
@@ -70,18 +107,7 @@ redirect_stdout(stdoutPrev)
                 if (!string.IsNullOrEmpty(path))
                     return _AhornEnv = path;
 
-                // The following is based off of how Ahorn's install_ahorn.jl determines the env path.
-
-                if (PlatformHelper.Is(Platform.Windows)) {
-                    return _AhornEnv = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ahorn", "env");
-
-                } else {
-                    // This must be done like this as it behaves exactly like this on ALL non-Windows platforms.
-                    string config = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
-                    if (string.IsNullOrEmpty(config))
-                        config = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
-                    return _AhornEnv = Path.Combine(config, "Ahorn", "env");
-                }
+                return _AhornEnv = Path.Combine(RootPath, "ahorn-env");
             }
             set {
                 _AhornEnv = value;
@@ -95,7 +121,7 @@ redirect_stdout(stdoutPrev)
         public static string AhornPath { get; private set; }
         public static bool AhornIsLocal { get; private set; }
 
-        public static Process RunProcess(string name, string args) {
+        public static Process NewProcess(string name, string args) {
             Process process = new Process();
 
             process.StartInfo.FileName = name;
@@ -106,24 +132,28 @@ redirect_stdout(stdoutPrev)
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
 
-            process.Start();
             return process;
         }
 
         public static string GetProcessOutput(string name, string args, out string err) {
-            using (Process process = RunProcess(name, args)) {
+            using (Process process = NewProcess(name, args)) {
+                process.Start();
                 process.WaitForExit();
                 err = process.StandardError.ReadToEnd().Trim();
                 return process.StandardOutput.ReadToEnd().Trim();
             }
         }
 
-        public static string GetJuliaOutput(string script, bool? localDepot = null) {
+        public static Process NewJulia(out string tmpFilename, string script, bool? localDepot = null) {
             string julia = FindJulia(false);
-            if (string.IsNullOrEmpty(julia) || !File.Exists(julia))
+            if (string.IsNullOrEmpty(julia) || !File.Exists(julia)) {
+                tmpFilename = null;
                 return null;
+            }
 
-            if (localDepot ?? JuliaIsLocal) {
+            bool local = localDepot ?? (JuliaIsLocal || ForceLocal);
+
+            if (local) {
                 string depot = Path.Combine(RootPath, "julia-depot");
                 if (!Directory.Exists(depot))
                     Directory.CreateDirectory(depot);
@@ -132,14 +162,35 @@ redirect_stdout(stdoutPrev)
                 Environment.SetEnvironmentVariable("JULIA_DEPOT_PATH", string.IsNullOrEmpty(OrigJuliaDepotPath) ? Path.PathSeparator.ToString() : OrigJuliaDepotPath);
             }
 
-            Environment.SetEnvironmentVariable("AHORN_ENV", AhornEnv);
+            string env = local ? AhornEnvPath : AhornGlobalEnvPath;
+            Environment.SetEnvironmentVariable("AHORN_ENV", env);
+            if (!Directory.Exists(env))
+                Directory.CreateDirectory(env);
 
-            string tmp = Path.GetTempFileName();
-            File.WriteAllText(tmp, script);
-            string rv = GetProcessOutput(julia, tmp, out string err);
-            Console.Error.WriteLine(err);
-            File.Delete(tmp);
-            return rv;
+            tmpFilename = Path.GetTempFileName();
+            File.WriteAllText(tmpFilename, PrefixGlobal + script);
+            return NewProcess(julia, "\"" + tmpFilename + "\"");
+        }
+
+        public static string GetJuliaOutput(string script, out string err, bool? localDepot = null) {
+            string tmpFilename = null;
+            try {
+                using (Process process = NewJulia(out tmpFilename, script, localDepot)) {
+                    if (process == null) {
+                        err = null;
+                        return null;
+                    }
+                    process.Start();
+                    process.WaitForExit();
+                    err = process.StandardError.ReadToEnd().Trim();
+                    if (!string.IsNullOrEmpty(err))
+                        Console.Error.WriteLine(err);
+                    return process.StandardOutput.ReadToEnd().Trim();
+                }
+            } finally {
+                if (!string.IsNullOrEmpty(tmpFilename) && File.Exists(tmpFilename))
+                    File.Delete(tmpFilename);
+            }
         }
 
         public static string FindJulia(bool force) {
@@ -204,20 +255,20 @@ redirect_stdout(stdoutPrev)
             if (string.IsNullOrEmpty(JuliaPath) || !File.Exists(JuliaPath))
                 return null;
 
-            string script = PrefixPkgActivate + @"print(something(Base.find_package(""Ahorn""), """"))";
+            string script = PrefixPkgActivate + @"println(something(Base.find_package(""Ahorn""), """"))";
 
-            string path = GetJuliaOutput(script, true);
+            string path = GetJuliaOutput(script, out _, true);
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                AhornIsLocal = false;
+                AhornIsLocal = true;
                 return AhornPath = path;
             }
 
             if (ForceLocal)
                 return null;
 
-            path = GetJuliaOutput(script, false);
+            path = GetJuliaOutput(script, out _, false);
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                AhornIsLocal = true;
+                AhornIsLocal = false;
                 return AhornPath = path;
             }
 
@@ -225,7 +276,7 @@ redirect_stdout(stdoutPrev)
         }
 
         public static string GetJuliaVersion() {
-            return GetJuliaOutput(@"print(VERSION)");
+            return GetJuliaOutput(@"println(VERSION)", out _);
         }
 
         public static string GetAhornVersion() {
@@ -236,11 +287,11 @@ end
 
 try
     local ctx = Pkg.Types.Context()
-    print(string(ctx.env.manifest[ctx.env.project.deps[""Ahorn""]].tree_hash)[1:7])
+    println(string(ctx.env.manifest[ctx.env.project.deps[""Ahorn""]].tree_hash)[1:7])
 catch e
-    print(""unknown"")
+    println(""unknown"")
 end
-");
+", out _);
         }
 
     }

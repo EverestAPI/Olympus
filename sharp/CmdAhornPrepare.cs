@@ -24,6 +24,8 @@ namespace Olympus {
             AhornHelper.ForceLocal = forceLocal;
             AhornHelper.FindJulia(true);
             AhornHelper.FindAhorn(true);
+            if (!Directory.Exists(AhornHelper.RootPath))
+                Directory.CreateDirectory(AhornHelper.RootPath);
             return new CmdAhornGetInfo.Info();
         }
 

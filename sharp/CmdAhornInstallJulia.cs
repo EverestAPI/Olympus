@@ -61,6 +61,11 @@ namespace Olympus {
                         File.Delete(zipPath);
                 }
 
+                string launcher = Path.Combine(root, "launch-local-julia.bat");
+                if (File.Exists(launcher))
+                    File.Delete(launcher);
+                File.WriteAllText(launcher, $"@echo off\r\nset \"JULIA_DEPOT_PATH={Path.Combine(root, "julia-depot")}\"\r\nset \"AHORN_GLOBALENV={AhornHelper.AhornGlobalEnvPath}\"\r\nset \"AHORN_ENV={AhornHelper.AhornEnvPath}\"\r\n.\\julia\\bin\\julia.exe");
+
 
             } else if (PlatformHelper.Is(Platform.Linux)) {
                 throw new NotImplementedException();
