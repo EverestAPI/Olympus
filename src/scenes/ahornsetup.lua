@@ -64,15 +64,28 @@ local root = uie.column({
                         end
                     end
                 }):with(uiu.fillWidth):as("loglist")
-            ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+            ):hook({
+                onScroll = function(orig, self, ...)
+                    scene.loglist.locked = false
+                    orig(self, ...)
+                end
+            }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
             uie.row({
-                uie.button("Unlock scroll", function(self)
-                    local loglist = scene.loglist
-                    loglist.locked = not loglist.locked
-                    self.label.text = loglist.locked and "Unlock scroll" or "Lock scroll"
-                    self.parent:reflowDown()
-                end),
+                uie.button("Unlock button broke", function(self)
+                    scene.loglist.locked = not scene.loglist.locked
+                end):hook({
+                    update = function(orig, self, ...)
+                        local textPrev = self.label.text
+                        local text = scene.loglist.locked and "Unlock scroll" or "Lock scroll"
+                        if textPrev ~= text then
+                            self.label.text = text
+                            self.parent:reflowDown()
+                        end
+
+                        orig(self, ...)
+                    end
+                }),
 
                 uie.button("Clear", function()
                     local loglist = scene.loglist
@@ -225,19 +238,23 @@ function scene.launchAhorn()
         loglist:addChild(uie.label([[
 Ahorn is now starting in the background.
 It might take a few minutes until it appears.
-A popup window will appear here if it crashes.
-You can close this window.]]))
+Information will appear here if it crashes.
+You can close Olympus. Ahorn will continue running.]]))
 
         loglist:addChild(uie.label("----------------------------------------------"))
 
         local task = sharp.ahornLaunch():result()
 
         local result
+        local lineLast
         repeat
             result = sharp.pollWait(task):result()
             local line = result[3]
             if line ~= nil then
-                loglist:addChild(uie.label(line):with({ wrap = true }))
+                if type(line) == "string" and lineLast ~= line then
+                    lineLast = line
+                    loglist:addChild(uie.label(line):with({ wrap = true }))
+                end
             else
                 print("ahornsetup.launchAhorn encountered nil on poll", task)
             end
@@ -252,8 +269,7 @@ You can ask for help in the Celeste Discord server.
 An invite can be found on the Everest website.
 
 Please drag and drop your files into the #modding_help channel.
-Before uploading, check your logs for sensitive info (f.e. your username).
-            ]]))
+Before uploading, check your logs for sensitive info (f.e. your username).]]))
 
             loglist:addChild(
                 uie.row({
@@ -266,6 +282,12 @@ Before uploading, check your logs for sensitive info (f.e. your username).
                     clip = false
                 })
             )
+
+        else
+            loglist:addChild(uie.label("----------------------------------------------"))
+            loglist:addChild(uie.label([[
+Ahorn has finished without an error code.
+Press the close button in the bottom right corner to close this log.]]))
         end
 
         scene.logclose.enabled = true

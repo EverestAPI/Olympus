@@ -33,23 +33,21 @@ logerrPath = joinpath(dirname(globalenv), ""error.log"")
 
 println(""Logging to "" * logerrPath)
 
-open(logerrPath, ""w"") do logerr
-    println(logerr, ""Running Ahorn via Olympus."")
-end
+logerr = open(logerrPath, ""w"")
 
 flush(stdout)
 flush(stderr)
 
 stdoutReal = stdout
-redirect_stderr(stdoutReal)
 (rd, wr) = redirect_stdout()
+redirect_stderr(stdout)
 
-@async while true
+@async while !eof(rd)
     data = String(readavailable(rd))
-    write(stdoutReal, data)
-    open(logerrPath, ""a"", false) do logerr
-        write(logerr, data)
-    end
+    print(stdoutReal, data)
+    flush(stdoutReal)
+    print(logerr, data)
+    flush(logerr)
 end
 
 try
