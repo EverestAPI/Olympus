@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdAhornPrepare : Cmd<string, bool, CmdAhornGetInfo.Info> {
 
+        public override bool Taskable => true;
+
         public override CmdAhornGetInfo.Info Run(string rootPath, bool forceLocal) {
             AhornHelper.RootPath = rootPath;
             AhornHelper.ForceLocal = forceLocal;

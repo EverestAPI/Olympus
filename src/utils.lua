@@ -182,7 +182,7 @@ function utils.downloadJSON(url, headers)
 end
 
 function utils.fromJSON(body)
-    return dkjson.decode(body)
+    return body and dkjson.decode(body)
 end
 
 function utils.toJSON(table, state)
@@ -206,7 +206,7 @@ function utils.downloadYAML(url, headers)
 end
 
 function utils.fromYAML(body)
-    return yaml.eval(body)
+    return body and yaml.eval(body)
 end
 
 function utils.toYAML(table)
@@ -230,6 +230,9 @@ function utils.downloadXML(url, headers)
 end
 
 function utils.fromXML(body)
+    if not body then
+        return false
+    end
     local handler = xml2luaTree:new()
     xml2lua.parser(handler):parse(body)
     return handler.root

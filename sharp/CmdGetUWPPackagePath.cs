@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 namespace Olympus {
     public unsafe class CmdGetUWPPackagePath : Cmd<string, string> {
+        public override bool Taskable => true;
         public override string Run(string package) {
             IntPtr buffer = IntPtr.Zero;
             try {

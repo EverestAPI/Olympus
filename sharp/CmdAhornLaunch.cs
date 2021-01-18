@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 
 namespace Olympus {
     public unsafe class CmdAhornLaunch : Cmd<bool> {
+        
+        public override bool Taskable => true;
 
         public override bool Run() {
             string tmpFilename = null;

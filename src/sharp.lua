@@ -4,14 +4,24 @@ local threader = require("threader")
 local channelQueue = love.thread.getChannel("sharpQueue")
 local channelDebug = love.thread.getChannel("sharpDebug")
 local channelStatus = love.thread.getChannel("sharpStatus")
+local channelStatusTx = love.thread.getChannel("sharpStatusTx")
+local channelStatusRx = love.thread.getChannel("sharpStatusRx")
 
 -- Thread-local ID.
 local tuid = 0
 
 -- The command queue thread.
 local function sharpthread()
-    channelStatus:clear()
-    channelStatus:push("start")
+    local function channelSetCb(channel, value)
+        channel:clear()
+        channel:push(value)
+    end
+
+    local function channelSet(channel, value)
+        channel:performAtomic(channelSetCb, value)
+    end
+
+    channelSet(channelStatus, "start")
 
     local status, err = pcall(function()
         local debuggingFlags = channelDebug:peek()
@@ -101,72 +111,6 @@ local function sharpthread()
 
         local process = assert(subprocess.popen(pargs))
         local stdout = process.stdout
-        local stdin = process.stdin
-
-        local read, write, flush
-
-        read = function()
-            return assert(stdout:read("*l"))
-        end
-
-        write = function(data)
-            return assert(stdin:write(data))
-        end
-
-        flush = function()
-            return assert(stdin:flush())
-        end
-
-        local function readBlob()
-            return {
-                uid = utils.fromJSON(read()),
-                value = utils.fromJSON(read()),
-                status = utils.fromJSON(read())
-            }
-        end
-
-        local function checkTimeoutFilter(err)
-            if type(err) == "string" and (err:match("timeout") or err:match("closed")) then
-                return "timeout"
-            end
-            if type(err) == "userdata" or type(err) == "table" then
-                return err
-            end
-            return debug.traceback(tostring(err), 1)
-        end
-
-        local function checkTimeout(fun, ...)
-            local status, rv = xpcall(fun, checkTimeoutFilter, ...)
-            if rv == "timeout" then
-                return "timeout"
-            end
-            if not status then
-                error(rv, 2)
-            end
-            return rv
-        end
-
-        local function run(uid, cid, argsLua)
-            channelStatus:clear()
-            channelStatus:push("txcmd " .. tostring(uid) .. " " .. cid)
-            write(utils.toJSON(uid, { indent = false }) .. "\n\0")
-            write(utils.toJSON(cid, { indent = false }) .. "\n\0")
-
-            local argsSharp = {}
-            -- Olympus.Sharp expects C# Tuples, which aren't lists.
-            for i = 1, #argsLua do
-                argsSharp["Item" .. i] = argsLua[i]
-            end
-            write(utils.toJSON(argsSharp, { indent = false }) .. "\n\0")
-
-            flush()
-
-            channelStatus:clear()
-            channelStatus:push("rxcmd " .. tostring(uid) .. " " .. cid)
-            local data = readBlob()
-            assert(uid == data.uid)
-            return data
-        end
 
         local uid = "?"
 
@@ -180,45 +124,35 @@ local function sharpthread()
 
         -- The child process immediately sends a status message.
         print("[sharp init]", "reading init")
-        local initStatus = readBlob()
+        local initStatus = {
+            UID = utils.fromJSON(assert(stdout:read("*l"))),
+            Value = utils.fromJSON(assert(stdout:read("*l"))),
+            Error = utils.fromJSON(assert(stdout:read("*l")))
+        }
         print("[sharp init]", "read init", initStatus)
 
         -- The status message contains the TCP port we're actually supposed to listen to.
         -- Switch from STDIN / STDOUT to sockets.
-        local port = initStatus.uid -- initStatus gets modified later
+        local port = initStatus.UID -- initStatus gets modified later
         local function connect()
             local try = 1
             ::retry::
-            channelStatus:clear()
-            channelStatus:push("connect attempt " .. tostring(try))
+            channelSet(channelStatus, "connect attempt " .. tostring(try))
             local clientOrStatus, clientError = socket.connect("127.0.0.1", port)
             if not clientOrStatus then
                 try = try + 1
                 if try >= 3 then
-                    channelStatus:clear()
-                    channelStatus:push("connect error " .. tostring(clientError))
+                    channelSet(channelStatus, "connect error " .. tostring(clientError))
                     error(clientError, 2)
                 end
                 print("[sharp init]", "failed to connect, retrying in 2s", clientError)
                 threader.sleep(2)
                 goto retry
             end
-            -- clientOrStatus:settimeout(1) -- Lua-side timeout seems to cause issues, C#-side only timeout works perfectly fine:tm:
             return clientOrStatus
         end
 
         local client = connect()
-
-        read = function()
-            return assert(client:receive("*l"))
-        end
-
-        write = function(data)
-            return assert(client:send(data))
-        end
-
-        flush = function()
-        end
 
         local timeoutping = {
             uid = "_timeoutping",
@@ -226,71 +160,111 @@ local function sharpthread()
             args = { "timeout ping" }
         }
 
+        local lastSend = socket.gettime()
+        print("[sharp init]", "startime", lastSend)
+
+        local function read()
+            local rv, err, part = client:receive("*l")
+            if rv or part ~= "" then
+                return rv or part
+            end
+
+            if err ~= "timeout" then
+                print("[sharp read]", "hard error reconnecting", err, channelStatus:peek())
+                channelSet(channelStatus, "reread")
+                client:close()
+                client = connect()
+            end
+        end
+
         while true do
-            if debugging then
-                print("[sharp queue]", "awaiting next cmd")
-            end
-            local cmd = channelQueue:demand(0.4)
-            if not cmd then
-                if debugging then
-                    print("[sharp queue]", "timeoutping")
+            channelSet(channelStatus, "idle")
+
+            client:settimeout(0)
+            while true do
+                local data = utils.fromJSON(read())
+                if not data then
+                    break
                 end
-                cmd = timeoutping
-            end
-            uid = cmd.uid
-            local cid = cmd.cid
-            local args = cmd.args
 
-            channelStatus:clear()
-            channelStatus:push("gotcmd " .. tostring(uid) .. " " .. cid)
-            local channelReturn = love.thread.getChannel("sharpReturn" .. tostring(uid))
-
-            if cid == "_init" then
-                dprint("returning init", initStatus)
-                initStatus.uid = uid
-                channelReturn:push(initStatus)
-
-            elseif cid == "_die" then
-                print("[sharp queue]", "time to _die")
-                channelReturn:push({ value = "ok" })
-                break
-
-            else
-                ::rerun::
-                dprint("running", cid, unpack(args))
-                local rv = checkTimeout(run, uid, cid, args)
-                if rv == "timeout" then
-                    print("[sharp queue]", "timeout reconnecting", channelStatus:peek(), rv.value, rv.status, rv.status and rv.status.error)
-                    channelStatus:clear()
-                    channelStatus:push("reruncmd " .. tostring(uid) .. " " .. cid)
-                    client:close()
-                    client = connect()
-                    goto rerun
-                end
-                if uid == "_timeoutping" then
-                    dprint("timeoutping returning", rv.value, rv.status, rv.status and rv.status.error)
-                else
-                    local value = tostring(rv.value)
+                if data.UID ~= "_timeoutping" then
+                    channelSet(channelStatusRx, data.UID)
+                    local value = tostring(data.Value)
                     if #value > 128 then
                         value = "<insert long string here - " .. tostring(#value) .. " bytes>"
                     end
-                    dprint("returning", value, rv.status, rv.status and rv.status.error)
-                    channelReturn:push(rv)
+                    if debugging then
+                        print("[sharp rx]", data.UID, value, data.Error)
+                    end
+                    love.thread.getChannel("sharpReturn" .. data.UID):push(data)
                 end
             end
+            client:settimeout(nil)
 
-            channelStatus:clear()
-            channelStatus:push("donecmd " .. tostring(uid) .. " " .. cid)
+            local cmd = channelQueue:pop()
+            if not cmd and (socket.gettime() - lastSend) >= 0.4 then
+                cmd = timeoutping
+            end
+
+            if cmd then
+                lastSend = socket.gettime()
+                uid = cmd.uid
+                local cid = cmd.cid
+                local args = cmd.args
+
+                if uid ~= "_timeoutping" then
+                    channelSet(channelStatus, "runcmd " .. uid .. " " .. cid)
+                end
+
+                if cid == "_init" then
+                    dprint("returning init", initStatus)
+                    initStatus.UID = uid
+                    love.thread.getChannel("sharpReturn" .. uid):push(initStatus)
+
+                elseif cid == "_die" then
+                    print("[sharp queue]", "time to _die")
+                    love.thread.getChannel("sharpReturn" .. uid):push({ uid = uid, cid = cid, value = "ok" })
+                    break
+
+                elseif cid then
+                    ::rerun::
+                    if uid ~= "_timeoutping" then
+                        dprint("running", cid, unpack(args))
+
+                        channelSet(channelStatusTx, uid .. " " .. cid)
+                    end
+
+                    local argsSharp = {}
+                    -- Olympus.Sharp expects C# Tuples, which aren't lists.
+                    for i = 1, #args do
+                        argsSharp["Item" .. i] = args[i]
+                    end
+                    local rv, err = client:send(
+                        utils.toJSON(uid, { indent = false }) .. "\n\0" ..
+                        utils.toJSON(cid, { indent = false }) .. "\n\0" ..
+                        utils.toJSON(argsSharp, { indent = false }) .. "\n\0")
+
+                    if not rv then
+                        print("[sharp queue]", "hard error reconnecting", err, channelStatus:peek(), rv.value, rv.status, rv.status and rv.status.error)
+                        channelSet(channelStatus, "reruncmd " .. uid .. " " .. cid)
+                        client:close()
+                        client = connect()
+                        goto rerun
+                    end
+                end
+
+                if uid ~= "_timeoutping" then
+                    channelSet(channelStatus, "donecmd " .. uid .. " " .. cid)
+                end
+            end
         end
 
-        channelStatus:clear()
-        channelStatus:push("rip")
+        channelSet(channelStatus, "rip")
 
         client:close()
     end)
 
-    channelStatus:clear()
-    channelStatus:push("rip")
+    channelSet(channelStatus, "rip")
 
     if not status then
         print("[sharpthread error]", err)
@@ -358,18 +332,17 @@ function sharp._run(cid, ...)
         goto reget
     end
     channelReturn:release()
-    if rv.uid ~= uid then
+    if rv.UID ~= uid then
         error(string.format("Failed running %s %s: sharp thread returned value on wrong channel", uid, cid))
     end
 
-    dprint("got", rv.value, rv.status, rv.status and rv.status.error)
+    dprint("got", rv.Value, rv.Error)
 
-    if type(rv.status) == "table" and rv.status.error then
-        error(string.format("Failed running %s %s: %s", uid, cid, tostring(rv.status.error)))
+    if rv.Error then
+        error(string.format("Failed running %s %s: %s", uid, cid, tostring(rv.Error)))
     end
 
-    assert(uid == rv.uid)
-    return rv.value
+    return rv.Value
 end
 function sharp.run(id, ...)
     return threader.run(sharp._run, id, ...)
@@ -392,13 +365,21 @@ function sharp.init(debug, debugSharp)
     thread:start()
 
     -- The child process immediately sends a status message.
-    sharp.initStatus = sharp.run("_init"):result()
+    sharp.initStatus = sharp._run("_init")
 
     return sharp.initStatus
 end
 
 function sharp.getStatus()
     return channelStatus:peek() or "unknown"
+end
+
+function sharp.getStatusTx()
+    return channelStatusTx:peek() or "unknown"
+end
+
+function sharp.getStatusRx()
+    return channelStatusRx:peek() or "unknown"
 end
 
 return sharp

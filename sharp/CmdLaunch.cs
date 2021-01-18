@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdLaunch : Cmd<string, string, string> {
 
+        public override bool Taskable => true;
+
         public override string Run(string root, string args) {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
 

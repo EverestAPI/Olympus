@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public class CmdGetVersionString : Cmd<string, string> {
 
+        public override bool Taskable => true;
+
         public override string Run(string root) {
             Tuple<string, Version, Version> data = GetVersion(root);
             return data.Item1;

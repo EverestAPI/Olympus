@@ -15,6 +15,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdWebGet : Cmd<string, string> {
         public override bool LogRun => false;
+        public override bool Taskable => true;
+
         public override string Run(string url) {
             try {
                 using (WebClient wc = new WebClient()) {

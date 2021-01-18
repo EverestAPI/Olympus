@@ -614,6 +614,8 @@ function love.update(dt)
                 "\n" ..
                 -- "storageDir: " .. fs.getStorageDir() .. "\n" .. -- Can contain invalid UTF-8!
                 "sharp: " .. sharp.getStatus() .. "\n" ..
+                "sharpTx: " .. sharp.getStatusTx() .. "\n" ..
+                "sharpRx: " .. sharp.getStatusRx() .. "\n" ..
                 "threader: " .. tostring(threader.unsafe) .. "\n" ..
                 ""
             debugLabel.parent:reflow()

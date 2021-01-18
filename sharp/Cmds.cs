@@ -41,6 +41,7 @@ namespace Olympus {
         public abstract Type InputType { get; }
         public abstract Type OutputType { get; }
         public virtual bool LogRun => true;
+        public virtual bool Taskable => false;
         public abstract object Run(object input);
 
         public static object[] Status(string text, float progress, string shape) {
