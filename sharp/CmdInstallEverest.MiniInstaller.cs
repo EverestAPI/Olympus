@@ -81,10 +81,14 @@ namespace Olympus {
 
                 thread.Start();
 
+                string lastSent = null;
                 while (!bridge.IsDone && thread.IsAlive) {
                     WaitHandle.WaitAny(waitHandle, 1000);
                     bridge.LogEvent.Reset();
-                    yield return StatusSilent(bridge.LastLogLine, false, "monomod");
+                    if (lastSent != bridge.LastLogLine) {
+                        lastSent = bridge.LastLogLine;
+                        yield return StatusSilent(lastSent, false, "monomod");
+                    }
                 }
 
                 thread.Join();

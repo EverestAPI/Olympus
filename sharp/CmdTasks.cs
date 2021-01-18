@@ -130,21 +130,32 @@ namespace Olympus {
         }
 
         public object[] Wait(bool skip) {
-            lock (Queue)
-                if (Queue.Count > 0)
-                    return new object[] { Status, Queue.Count, Queue.Dequeue() };
+            lock (Queue) {
+                if (Queue.Count > 0) {
+                    if (skip) {
+                        int count = Alive || Queue.Count > 0 ? 1 : 0;
+                        Queue.Clear();
+                        return new object[] { Status, count, Current };
+                    } else {
+                        return new object[] { Status, Queue.Count, Queue.Dequeue() };
+                    }
+                }
+            }
 
-            if (Alive && !skip && Queue.Count == 0)
+
+            if (Alive && Queue.Count == 0)
                 WaitHandle.WaitAny(EventWaitHandles);
 
             lock (Queue) {
                 if (skip) {
                     int count = Alive || Queue.Count > 0 ? 1 : 0;
                     Queue.Clear();
+                    if (Alive)
+                        Event.Reset();
                     return new object[] { Status, count, Current };
 
                 } else {
-                    if (Queue.Count <= 1)
+                    if (Alive && Queue.Count <= 1)
                         Event.Reset();
                     return new object[] { Status, Queue.Count, Queue.Count > 0 ? Queue.Dequeue() : Current };
                 }

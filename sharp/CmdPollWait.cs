@@ -12,8 +12,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdWait : Cmd<string, bool?, object[]> {
+    public unsafe class CmdPollWait : Cmd<string, bool?, object[]> {
         public override bool LogRun => false;
+        public override bool Taskable => true;
         public override object[] Run(string id, bool? skip) {
             return CmdTasks.Get(id)?.Wait(skip ?? false);
         }

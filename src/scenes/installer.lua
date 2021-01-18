@@ -310,14 +310,16 @@ function scene.sharpTask(id, ...)
     local args = {...}
     return threader.routine(function()
         local task = sharp[id](table.unpack(args)):result()
-        while sharp.status(task):result()[1] == "running" do
-            local result = sharp.poll(task):result()
-            if result ~= nil then
-                scene.update(result[1], result[2], result[3])
+        local result
+        repeat
+            result = sharp.pollWait(task, true):result()
+            local update = result[3]
+            if update ~= nil then
+                scene.update(update[1], update[2], update[3])
             else
                 print("installer.sharpTask encountered nil on poll", task)
             end
-        end
+        until result[1] ~= "running" and result[2] == 0
 
         local last = sharp.poll(task):result()
         last = tostring(last)
