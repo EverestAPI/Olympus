@@ -281,9 +281,9 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
             end):with(uiu.fillWidth)
         }):with(uiu.fillWidth))
 
-        local function btnInstall(text, cb)
+        local function btnInstall(icon, text, cb)
             return uie.button(
-                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
+                uie.row({ uie.icon(icon):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
                     style = {
                         bg = {},
                         padding = 0
@@ -313,6 +313,7 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
             local text = "Install Julia " .. tostring(info.JuliaVersionRecommended)
             local textBeta = "Install Julia " .. tostring(info.JuliaVersionBetaRecommended)
             return btnInstall(
+                "download",
                 function()
                     return (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and textBeta or text
                 end,
@@ -371,7 +372,7 @@ No supported installation of Ahorn was found.
 Olympus can download Ahorn and start the installation process for you.
 ]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be installed into the isolated environment." or "Ahorn will be installed for your system-wide installation of Julia.")
                 ),
-                info.JuliaPath and btnInstall("Install Ahorn", scene.installAhornAlert)
+                info.JuliaPath and btnInstall("download", "Install Ahorn", scene.installAhornAlert)
             }):with(uiu.fillWidth))
 
         else
@@ -382,9 +383,9 @@ Found installation path: %s
 Found version: %s]],
                     tostring(info.AhornPath), tostring(info.AhornVersion))
                 ),
-                uie.button("Launch Ahorn", function()
+                btnInstall("mainmenu/ahorn", "Launch Ahorn", function()
                     scene.launchAhorn()
-                end):with(uiu.fillWidth)
+                end)
             }):with(uiu.fillWidth))
         end
 
