@@ -17,11 +17,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornInstallJulia : Cmd<IEnumerator> {
+    public unsafe class CmdAhornInstallJulia : Cmd<bool, IEnumerator> {
 
         public static readonly string Version = "1.5.3";
+        public static readonly string VersionBeta = "1.6.0-beta1";
 
-        public override IEnumerator Run() {
+        public override IEnumerator Run(bool beta) {
             yield return Status("Preparing installation of Julia", false, "");
 
             string root = AhornHelper.RootPath;
@@ -38,10 +39,18 @@ namespace Olympus {
                 if (File.Exists(zipPath))
                     File.Delete(zipPath);
 
-                string url =
-                    PlatformHelper.Is(Platform.Bits64) ?
+                string url;
+
+                if (beta) {
+                    url = PlatformHelper.Is(Platform.Bits64) ?
+                    "https://julialang-s3.julialang.org/bin/winnt/x64/1.6/julia-1.6.0-beta1-win64.zip" :
+                    "https://julialang-s3.julialang.org/bin/winnt/x86/1.6/julia-1.6.0-beta1-win32.zip";
+
+                } else {
+                    url = PlatformHelper.Is(Platform.Bits64) ?
                     "https://julialang-s3.julialang.org/bin/winnt/x64/1.5/julia-1.5.3-win64.zip" :
                     "https://julialang-s3.julialang.org/bin/winnt/x86/1.5/julia-1.5.3-win32.zip";
+                }
 
                 try {
                     yield return Status($"Downloading {url}", false, "download");
@@ -52,7 +61,7 @@ namespace Olympus {
 
                         yield return Status("Unzipping Julia", false, "download");
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                            yield return Unpack(zip, julia, "julia-1.5.3/");
+                            yield return Unpack(zip, julia, beta ? "julia-b84990e1ac/" : "julia-1.5.3/");
                         }
                     }
 

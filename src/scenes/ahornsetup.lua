@@ -59,23 +59,47 @@ local root = uie.column({
 scene.root = root
 
 
-function scene.installJulia()
-    local installer = scener.push("installer")
-    installer.sharpTask("ahornInstallJulia"):calls(function(task, last)
-        if not last then
-            return
-        end
+function scene.installJulia(beta)
+    local function install()
+        local installer = scener.push("installer")
+        installer.sharpTask("ahornInstallJulia", beta):calls(function(task, last)
+            if not last then
+                return
+            end
 
-        installer.update("Julia successfully installed", 1, "done")
-        installer.done({
-            {
-                "OK",
-                function()
-                    scener.pop()
-                end
+            installer.update("Julia successfully installed", 1, "done")
+            installer.done({
+                {
+                    "OK",
+                    function()
+                        scener.pop()
+                    end
+                }
+            })
+        end)
+    end
+
+    if beta then
+        alert({
+            body = [[
+You are about to install a beta version of Julia.
+It hasn't been tested a lot. Use at your own risk.
+You can still go back and install a non-beta version.
+Do you want to continue?]],
+            buttons = {
+                {
+                    "Yes",
+                    function(container)
+                        install()
+                        container:close("OK")
+                    end
+                },
+                { "No" }
             }
         })
-    end)
+    else
+        return install()
+    end
 end
 
 
@@ -258,13 +282,18 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
 
         local function btnInstall(text, cb)
             return uie.button(
-                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label(text) }):with({
+                uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
                     style = {
                         bg = {},
                         padding = 0
                     },
                     clip = false,
                     cacheable = false
+                }):hook(type(text) ~= "function" and {} or {
+                    update = function(orig, self, ...)
+                        self.children[2].text = text()
+                        orig(self, ...)
+                    end
                 }):with(uiu.styleDeep), function()
                     cb()
                 end
@@ -279,6 +308,19 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
             }):with(uiu.fillWidth):with(utils.important(24))
         end
 
+        local function btnInstallJulia()
+            local text = "Install Julia " .. tostring(info.JuliaVersionRecommended)
+            local textBeta = "Install Julia " .. tostring(info.JuliaVersionBetaRecommended)
+            return btnInstall(
+                function()
+                    return (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and textBeta or text
+                end,
+                function()
+                    scene.installJulia((love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and text ~= textBeta)
+                end
+            )
+        end
+
         if not info.JuliaPath then
             mainlist:addChild(uie.column({
                 uie.label("Julia not found", ui.fontBig),
@@ -289,7 +331,7 @@ No supported installation of Julia was found on your computer.
 You can either install Julia yourself, or Olympus can install it into an isolated environment.
 As of the time of writing this, version 1.3+ is the minimum requirement.]]
                 ),
-                btnInstall("Install Julia " .. tostring(info.JuliaVersionRecommended), scene.installJulia)
+                btnInstallJulia()
             }):with(uiu.fillWidth))
 
         elseif not info.JuliaVersion then
@@ -304,7 +346,7 @@ Olympus can download and set up an isolated Julia environment for you.
 As of the time of writing this, version 1.3+ is the minimum requirement.]],
                     tostring(info.JuliaPath)
                 )),
-                not info.JuliaIsLocal and btnInstall("Install Julia " .. tostring(info.JuliaVersionRecommended), scene.installJulia)
+                not info.JuliaIsLocal and btnInstallJulia()
             }):with(uiu.fillWidth))
 
         else

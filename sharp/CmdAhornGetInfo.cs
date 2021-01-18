@@ -31,6 +31,7 @@ namespace Olympus {
             public bool JuliaIsLocal = AhornHelper.JuliaIsLocal;
             public string JuliaVersion = AhornHelper.GetJuliaVersion();
             public string JuliaVersionRecommended = CmdAhornInstallJulia.Version;
+            public string JuliaVersionBetaRecommended = CmdAhornInstallJulia.VersionBeta;
 
             public string AhornGlobalEnvPath = AhornHelper.AhornGlobalEnvPath;
             public string AhornEnvPath = AhornHelper.AhornEnvPath;
