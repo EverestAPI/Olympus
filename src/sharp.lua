@@ -2,7 +2,6 @@ local threader = require("threader")
 
 -- These must be named channels so that new threads requiring sharp can use them.
 local channelQueue = love.thread.getChannel("sharpQueue")
-local channelReturn = love.thread.getChannel("sharpReturn")
 local channelDebug = love.thread.getChannel("sharpDebug")
 local channelStatus = love.thread.getChannel("sharpStatus")
 
@@ -244,6 +243,7 @@ local function sharpthread()
 
             channelStatus:clear()
             channelStatus:push("gotcmd " .. tostring(uid) .. " " .. cid)
+            local channelReturn = love.thread.getChannel("sharpReturn" .. tostring(uid))
 
             if cid == "_init" then
                 dprint("returning init", initStatus)
@@ -341,22 +341,25 @@ function sharp._run(cid, ...)
     channelQueue:push({ uid = uid, cid = cid, args = {...} })
 
     dprint("awaiting return value")
+    local channelReturn = love.thread.getChannel("sharpReturn" .. uid)
     ::reget::
     local rv = channelReturn:demand(100)
     if not rv then
         status = channelStatus:peek(100)
         if status == "rip" then
             if cid == "_init" then
+                channelReturn:release()
                 return false
             else
+                channelReturn:release()
                 error(string.format("Failed running %s %s: sharp thread died", uid, cid))
             end
         end
         goto reget
     end
+    channelReturn:release()
     if rv.uid ~= uid then
-        channelReturn:push(rv)
-        goto reget
+        error(string.format("Failed running %s %s: sharp thread returned value on wrong channel", uid, cid))
     end
 
     dprint("got", rv.value, rv.status, rv.status and rv.status.error)
