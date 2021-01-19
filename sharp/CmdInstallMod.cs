@@ -42,13 +42,13 @@ namespace Olympus {
                     if (File.Exists(from))
                         File.Delete(from);
 
-                    yield return Status($"Downloading {url}", false, "download");
+                    yield return Status($"Downloading {url}", false, "download", false);
                     using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
                         yield return Download(url, 0, zipStream);
                 }
 
                 using (FileStream zipStream = File.Open(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
-                    yield return Status("Parsing everest.yaml", false, "download");
+                    yield return Status("Parsing everest.yaml", false, "download", false);
                     using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                         ZipArchiveEntry entry = zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml");
                         if (entry == null)
@@ -66,9 +66,9 @@ namespace Olympus {
                     throw new Exception("everest.yaml malformed - is this a Celeste mod?");
 
                 if (fromIsTmp)
-                    yield return Status($"Moving mod to {name}.zip", false, "download");
+                    yield return Status($"Moving mod to {name}.zip", false, "download", false);
                 else
-                    yield return Status($"Copying mod to {name}.zip", false, "download");
+                    yield return Status($"Copying mod to {name}.zip", false, "download", false);
 
                 string path = Path.Combine(mods, $"{name}.zip");
                 if (File.Exists(path))
@@ -79,7 +79,7 @@ namespace Olympus {
                 else
                     File.Copy(from, path);
 
-                yield return Status($"Successfully installed {name}", 1f, "done");
+                yield return Status($"Successfully installed {name}", 1f, "done", false);
 
             } finally {
                 if (fromIsTmp && !string.IsNullOrEmpty(from) && File.Exists(from))

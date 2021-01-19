@@ -34,11 +34,14 @@ namespace Olympus {
 
     public class CmdTask : IDisposable {
 
+        [ThreadStatic]
+        public static int Update;
+
         public readonly string ID;
 
         public IEnumerator Enumerator;
         public readonly Stack<IEnumerator> Stack = new Stack<IEnumerator>();
-        public readonly Queue<object> Queue = new Queue<object>();
+        public readonly List<object> Queue = new List<object>();
         public readonly Task Task;
 
         public readonly ManualResetEvent Event = new ManualResetEvent(false);
@@ -70,7 +73,15 @@ namespace Olympus {
                     }
                     if (Current != current) {
                         lock (Queue) {
-                            Queue.Enqueue(current);
+                            if (Update > 0) {
+                                Update--;
+                                if (Queue.Count > 0)
+                                    Queue[Queue.Count - 1] = current;
+                                else
+                                    Queue.Add(current);
+                            } else {
+                                Queue.Add(current);
+                            }
                             Event.Set();
                         }
                         Current = current;
@@ -99,13 +110,18 @@ namespace Olympus {
         }
 
         public object Dequeue() {
-            lock (Queue)
-                return Queue.Count > 0 ? Queue.Dequeue() : Current;
+            lock (Queue) {
+                if (Queue.Count == 0)
+                    return Current;
+                object rv = Queue[0];
+                Queue.RemoveAt(0);
+                return rv;
+            }
         }
 
         public object[] TryDequeue() {
             lock (Queue)
-                return new object[] { Queue.Count > 0, Queue.Count > 0 ? Queue.Dequeue() : Current };
+                return new object[] { Queue.Count > 0, Dequeue() };
         }
 
         public object[] DequeueBatch(int max) {
@@ -118,7 +134,7 @@ namespace Olympus {
                 if (Queue.Count >= max) {
                     batch = new object[max];
                     for (int i = 0; i < batch.Length; i++) {
-                        batch[i] = Queue.Dequeue();
+                        batch[i] = Dequeue();
                     }
                     return batch;
                 }
@@ -137,7 +153,7 @@ namespace Olympus {
                         Queue.Clear();
                         return new object[] { Status, count, Current };
                     } else {
-                        return new object[] { Status, Queue.Count, Queue.Dequeue() };
+                        return new object[] { Status, Queue.Count, Dequeue() };
                     }
                 }
             }
@@ -157,7 +173,7 @@ namespace Olympus {
                 } else {
                     if (Alive && Queue.Count <= 1)
                         Event.Reset();
-                    return new object[] { Status, Queue.Count, Queue.Count > 0 ? Queue.Dequeue() : Current };
+                    return new object[] { Status, Queue.Count, Dequeue() };
                 }
             }
         }

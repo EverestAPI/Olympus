@@ -21,7 +21,7 @@ namespace Olympus {
 
         public override IEnumerator Run(int count, int sleep) {
             for (int i = 0; i <= count; i++) {
-                yield return Status("Test #" + i, i / (float) count, "");
+                yield return Status("Test #" + i, i / (float) count, "", false);
                 Thread.Sleep(sleep);
             }
         }

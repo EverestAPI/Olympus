@@ -26,7 +26,7 @@ namespace Olympus {
                 using (Process process = AhornHelper.NewJulia(out tmpFilename, script, localDepot)) {
                     process.Start();
                     for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                        yield return Status(line, false, "");
+                        yield return Status(line, false, "", false);
                     process.WaitForExit();
                     if (process.ExitCode != 0)
                         throw new Exception("Julia encountered a fatal error.");

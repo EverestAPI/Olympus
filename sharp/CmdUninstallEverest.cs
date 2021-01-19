@@ -20,19 +20,22 @@ namespace Olympus {
     public unsafe class CmdUninstallEverest : Cmd<string, string, IEnumerator> {
 
         public override IEnumerator Run(string root, string artifactBase) {
-            yield return Status("Uninstalling Everest", false, "backup");
+            yield return Status("Uninstalling Everest", false, "backup", false);
 
             string origdir = Path.Combine(root, "orig");
             if (!Directory.Exists(origdir)) {
-                yield return Status("Backup (orig) folder not found", 1f, "error");
+                yield return Status("Backup (orig) folder not found", 1f, "error", false);
                 throw new Exception($"Backup folder not found: {origdir}");
             }
 
             int i = 0;
             string[] origs = Directory.GetFiles(origdir);
+
+            yield return Status($"Reverting {origs.Length} files", 0f, "backup", false);
+
             foreach (string orig in origs) {
                 string name = Path.GetFileName(orig);
-                yield return Status($"Reverting #{i} / {origs.Length}: {name}", i / (float) origs.Length, "backup");
+                yield return Status($"Reverting #{i} / {origs.Length}: {name}", i / (float) origs.Length, "backup", true);
                 i++;
 
                 string to = Path.Combine(root, name);
@@ -48,7 +51,7 @@ namespace Olympus {
                 File.Copy(orig, to);
             }
 
-            yield return Status($"Reverted {origs.Length} files", 1f, "done");
+            yield return Status($"Reverted {origs.Length} files", 1f, "done", true);
         }
 
     }

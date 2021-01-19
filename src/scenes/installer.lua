@@ -16,11 +16,239 @@ local scene = {
 
 local root = uie.group({
 
+    uie.new({
+        cacheable = false,
+
+        update = function(self, dt)
+            dt = math.min(0.1, dt)
+
+            local tf = 0.5
+
+            if scene.shapeNext ~= nil then
+                -- Catch up to next shape.
+                if scene.progress then
+                    scene.time = scene.progress * 0.5
+                    scene.progress = false
+                end
+                tf = 2
+            end
+
+            scene.timeReal = scene.timeReal + dt
+
+            if scene.shapeNext == nil and scene.progressNext ~= nil then
+                if scene.progress and scene.progressNext then
+                    -- progress -> progress on same shape
+                    scene.progress = scene.progressNext
+                    scene.progressNext = nil
+                    scene.time = scene.time + dt * tf
+
+                elseif scene.progressNext then
+                    -- ??? -> progress on possibly new shape
+                    if scene.progress then
+                        scene.time = scene.progress * 0.5
+                    end
+                    local canSwap = scene.time <= 0.5
+                    scene.time = scene.time + dt * tf * 2
+                    if canSwap and scene.time * 2 >= scene.progressNext then
+                        scene.progress = scene.progressNext
+                        scene.progressNext = nil
+                    end
+
+                else
+                    -- ??? -> indeterminate progress
+                    if scene.progress then
+                        scene.time = scene.progress * 0.5
+                    end
+                    scene.progress = scene.progressNext
+                    scene.progressNext = nil
+                    scene.time = scene.time + dt * tf
+                end
+
+            else
+                -- General indeterminate progress time update.
+                scene.time = scene.time + dt * tf
+            end
+
+            if scene.time >= 1 then
+                scene.time = scene.time - 1
+                if scene.shapeNext ~= nil then
+                    scene.shape = scene.shapeNext
+                    scene.shapeNext = nil
+                end
+            end
+
+            self:repaint()
+        end,
+
+        draw = function(self)
+            uiu.setColor(1, 1, 1, 1)
+
+            local sx = self.screenX
+            local sy = self.screenY
+            local w = self.width
+            local h = self.height
+            local fw = love.graphics.getWidth()
+            local fh = love.graphics.getHeight()
+
+            local cx = sx + w * 0.5
+            local cy = sy + h * 0.5
+            local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
+            local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
+
+            local shape = scene.shape
+            if shape then
+                local progA = 0
+                local progB = scene.progress
+
+                if progB then
+                    progB = progB
+
+                else
+                    local t = scene.time
+                    if t < 0.5 then
+                        progA = 0
+                        progB = t * 4
+                    else
+                        progA = t * 4 - 2
+                        progB = 1
+                    end
+                end
+
+                shape:draw(cmx - shape.width * 0.5, cmy - shape.height * 0.5, progA, progB)
+
+            else
+                local radius = 32
+
+                local thickness = radius * 0.25
+                love.graphics.setLineWidth(thickness)
+
+                radius = radius - thickness
+
+                local polygon = {}
+
+                local edges = 128
+
+                local progA = 0
+                local progB = scene.progress
+
+                if progB then
+                    progB = progB * edges
+
+                else
+                    local t = scene.time
+                    local offs = edges * t * 2
+                    if t < 0.5 then
+                        progA = offs + 0
+                        progB = offs + edges * t * 2
+                    else
+                        progA = offs + edges * (t - 0.5) * 2
+                        progB = offs + edges
+                    end
+                end
+
+                local progAE = math.floor(progA)
+                local progBE = math.ceil(progB - 1)
+
+                if progBE - progAE >= 1 then
+                    local i = 1
+                    for edge = progAE, progBE do
+                        local f = edge
+
+                        if edge == progAE then
+                            f = progA
+                        elseif edge == progBE then
+                            f = progB
+                        end
+
+                        f = (1 - f / (edges) + 0.5) * math.pi * 2
+                        local x = cmx + math.sin(f) * radius
+                        local y = cmy + math.cos(f) * radius
+
+                        polygon[i + 0] = x
+                        polygon[i + 1] = y
+                        i = i + 2
+                    end
+
+                    love.graphics.line(polygon)
+                end
+            end
+
+
+            uiu.resetColor()
+        end,
+
+        drawDebug = function(self)
+            local sx = self.screenX
+            local sy = self.screenY
+            local w = self.width
+            local h = self.height
+            local fw = love.graphics.getWidth()
+            local fh = love.graphics.getHeight()
+
+            local cx = sx + w * 0.5
+            local cy = sy + h * 0.5
+            local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
+            local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
+
+            local shape = scene.shape
+            if shape then
+                shape:drawDebug(cmx - shape.width * 0.5, cmy - shape.height * 0.5)
+            end
+        end
+
+    }):with(uiu.fill):as("canvas"),
+
+    uie.group({
+        uie.column({
+
+            uie.scrollbox(
+                uie.column({
+
+                    uie.label("installer.lua machine broke, please fix."),
+
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0
+                    },
+                    locked = true
+                }):hook({
+                    layoutLateLazy = function(orig, self)
+                        self:layoutLate()
+                    end,
+
+                    layoutLate = function(orig, self)
+                        orig(self)
+                        if self.locked then
+                            self.y = -self.height
+                        end
+                    end
+                }):with(uiu.fillWidth):as("loglist")
+            ):hook({
+                onScroll = function(orig, self, ...)
+                    scene.loglist.locked = false
+                    orig(self, ...)
+                end
+            }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+
+            uie.group({}):with(uiu.fillWidth):with(uiu.bottombound):as("actionsholder")
+
+        }):with(uiu.fill)
+    }):with({
+        style = {
+            padding = 8
+        }
+    }):with(uiu.bottombound):with(uiu.fillWidth):with(uiu.fillHeight(0.5 + 120))
+
+}):with({
+    cacheable = false,
+    _fullroot = true
 })
 scene.root = root
 
-scene.textFont = ui.font or uie.label.__default.style.font or love.graphics.getFont()
-scene.text = love.graphics.newText(scene.textFont, "")
+scene.canvas = root:findChild("canvas")
+scene.loglist = root:findChild("loglist")
+scene.actionsholder = root:findChild("actionsholder")
 
 
 scene.shapes = {}
@@ -42,14 +270,20 @@ scene.progressNext = 0
 scene.progressDraw = 0
 
 
-function scene.update(status, progress, shape)
+function scene.update(status, progress, shape, replace)
     if status ~= nil then
-        local text = scene.text
-        text:set(status or "")
-        scene.textWidth = math.ceil(text:getWidth())
-        scene.textHeight = math.ceil(text:getHeight())
-        if scene.textHeight == 0 then
-            scene.textHeight = math.ceil(scene.textFont:getHeight(" "))
+        status = status or ""
+        local loglist = scene.loglist
+        local last = scene.loglast
+        if not replace or not last then
+            if loglist.children[300] then
+                table.remove(loglist.children, 1)
+            end
+            last = uie.label(status):with({ wrap = true }):with(uiu.fillWidth)
+            loglist:addChild(last)
+            scene.loglast = last
+        else
+            last.text = status
         end
     end
 
@@ -79,231 +313,21 @@ function scene.done(buttons)
             radius = 0
         },
         clip = false
-    }):hook({
-        layoutLateLazy = function(orig, self)
-            -- Always reflow this child whenever its parent gets reflowed.
-            self:layoutLate()
-        end,
-
-        layoutLate = function(orig, self)
-            orig(self)
-            self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
-            self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
-            self.y = self.parent.innerHeight - 84
-            self.realY = self.parent.height - 84 - self.parent.style:getIndex("padding", 4)
-        end
-    })
+    }):with(uiu.fillWidth)
+    local listcount = #buttons
     for i = 1, #buttons do
         local btn = buttons[i]
         btn = uie.button(table.unpack(btn))
+        if listcount == 1 then
+            btn = btn:with(uiu.fillWidth)
+        else
+            btn = btn:with(uiu.fillWidth(1 / listcount + 4)):with(uiu.at((i == 1 and 0 or 4) + (i - 1) / listcount, 0))
+        end
         row:addChild(btn)
     end
-    root:addChild(row)
+    scene.actionsholder:addChild(row:with(utils.important(24)))
+    scene.actionsrow = row
 end
-
-
-uiu.hook(root, {
-    update = function(orig, self, dt)
-        dt = math.min(0.1, dt)
-
-        local tf = 0.5
-
-        if scene.shapeNext ~= nil then
-            -- Catch up to next shape.
-            if scene.progress then
-                scene.time = scene.progress * 0.5
-                scene.progress = false
-            end
-            tf = 2
-        end
-
-        scene.timeReal = scene.timeReal + dt
-
-        if scene.shapeNext == nil and scene.progressNext ~= nil then
-            if scene.progress and scene.progressNext then
-                -- progress -> progress on same shape
-                scene.progress = scene.progressNext
-                scene.progressNext = nil
-                scene.time = scene.time + dt * tf
-
-            elseif scene.progressNext then
-                -- ??? -> progress on possibly new shape
-                if scene.progress then
-                    scene.time = scene.progress * 0.5
-                end
-                local canSwap = scene.time <= 0.5
-                scene.time = scene.time + dt * tf * 2
-                if canSwap and scene.time * 2 >= scene.progressNext then
-                    scene.progress = scene.progressNext
-                    scene.progressNext = nil
-                end
-
-            else
-                -- ??? -> indeterminate progress
-                if scene.progress then
-                    scene.time = scene.progress * 0.5
-                end
-                scene.progress = scene.progressNext
-                scene.progressNext = nil
-                scene.time = scene.time + dt * tf
-            end
-
-        else
-            -- General indeterminate progress time update.
-            scene.time = scene.time + dt * tf
-        end
-
-        if scene.time >= 1 then
-            scene.time = scene.time - 1
-            if scene.shapeNext ~= nil then
-                scene.shape = scene.shapeNext
-                scene.shapeNext = nil
-            end
-        end
-
-        self:repaint()
-
-        orig(self, dt)
-    end,
-
-    draw = function(orig, self)
-        uiu.setColor(1, 1, 1, 1)
-
-        local sx = self.screenX
-        local sy = self.screenY
-        local w = self.width
-        local h = self.height
-        local fw = love.graphics.getWidth()
-        local fh = love.graphics.getHeight()
-
-        local cx = sx + w * 0.5
-        local cy = sy + h * 0.5
-        local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
-        local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
-
-        local shape = scene.shape
-        if shape then
-            local progA = 0
-            local progB = scene.progress
-
-            if progB then
-                progB = progB
-
-            else
-                local t = scene.time
-                if t < 0.5 then
-                    progA = 0
-                    progB = t * 4
-                else
-                    progA = t * 4 - 2
-                    progB = 1
-                end
-            end
-
-            shape:draw(cmx - shape.width * 0.5, cmy - shape.height * 0.5, progA, progB)
-
-        else
-            local radius = 32
-
-            local thickness = radius * 0.25
-            love.graphics.setLineWidth(thickness)
-
-            radius = radius - thickness
-
-            local polygon = {}
-
-            local edges = 128
-
-            local progA = 0
-            local progB = scene.progress
-
-            if progB then
-                progB = progB * edges
-
-            else
-                local t = scene.time
-                local offs = edges * t * 2
-                if t < 0.5 then
-                    progA = offs + 0
-                    progB = offs + edges * t * 2
-                else
-                    progA = offs + edges * (t - 0.5) * 2
-                    progB = offs + edges
-                end
-            end
-
-            local progAE = math.floor(progA)
-            local progBE = math.ceil(progB - 1)
-
-            if progBE - progAE >= 1 then
-                local i = 1
-                for edge = progAE, progBE do
-                    local f = edge
-
-                    if edge == progAE then
-                        f = progA
-                    elseif edge == progBE then
-                        f = progB
-                    end
-
-                    f = (1 - f / (edges) + 0.5) * math.pi * 2
-                    local x = cmx + math.sin(f) * radius
-                    local y = cmy + math.cos(f) * radius
-
-                    polygon[i + 0] = x
-                    polygon[i + 1] = y
-                    i = i + 2
-                end
-
-                love.graphics.line(polygon)
-            end
-        end
-
-
-        uiu.resetColor()
-
-        if uiu.setColor(uie.panel.__default.style.bg) then
-            love.graphics.rectangle(
-                "fill",
-                sx, sy + h - 128 - 16,
-                w, 128 + 16
-            )
-        end
-
-        if uiu.setColor(uie.label.__default.style.color) then
-            love.graphics.draw(
-                scene.text,
-                math.floor(cx - scene.textWidth * 0.5),
-                math.floor(sy + h - 128)
-            )
-        end
-
-        uiu.resetColor()
-
-        orig(self)
-    end,
-
-    drawDebug = function(orig, self)
-        local sx = self.screenX
-        local sy = self.screenY
-        local w = self.width
-        local h = self.height
-        local fw = love.graphics.getWidth()
-        local fh = love.graphics.getHeight()
-
-        local cx = sx + w * 0.5
-        local cy = sy + h * 0.5
-        local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
-        local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
-
-        local shape = scene.shape
-        if shape then
-            shape:drawDebug(cmx - shape.width * 0.5, cmy - shape.height * 0.5)
-        end
-
-        orig(self)
-    end
-})
 
 
 function scene.sharpTask(id, ...)
@@ -311,21 +335,23 @@ function scene.sharpTask(id, ...)
     return threader.routine(function()
         local task = sharp[id](table.unpack(args)):result()
         local result
+        local last
         repeat
-            result = sharp.pollWait(task, true):result()
+            result = sharp.pollWait(task):result()
             local update = result[3]
             if update ~= nil then
-                scene.update(update[1], update[2], update[3])
+                if not last or last[1] ~= update[1] or last[2] ~= update[2] or last[3] ~= update[3] or last[4] ~= update[4] then
+                    scene.update(update[1], update[2], update[3], update[4])
+                    last = update
+                end
             else
                 print("installer.sharpTask encountered nil on poll", task)
             end
         until result[1] ~= "running" and result[2] == 0
 
-        local last = sharp.poll(task):result()
-        last = tostring(last)
         local status = sharp.free(task):result()
         if status == "error" then
-            scene.update(last[1], 1, "error")
+            scene.update(last and last[1], 1, "error")
             scene.done({
                 {
                     "Open log",
@@ -376,8 +402,13 @@ function scene.enter()
     scene.progress = 0
     scene.progressNext = 0
     scene.progressDraw = 0
-    scene.update("", false, "")
-    root.children = {}
+    scene.loglist.children = {}
+    scene.loglast = nil
+    if scene.actionsrow then
+        scene.actionsrow:removeSelf()
+        scene.actionsrow = nil
+    end
+    scene.update(nil, false, "")
     scener.lock()
 end
 

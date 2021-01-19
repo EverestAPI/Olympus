@@ -253,7 +253,7 @@ You can close Olympus. Ahorn will continue running.]]))
             if line ~= nil then
                 if type(line) == "string" and lineLast ~= line then
                     lineLast = line
-                    loglist:addChild(uie.label(line):with({ wrap = true }))
+                    loglist:addChild(uie.label(line):with({ wrap = true }):with(uiu.fillWidth))
                 end
             else
                 print("ahornsetup.launchAhorn encountered nil on poll", task)

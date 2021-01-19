@@ -26,14 +26,14 @@ namespace Olympus {
             if (installedVersion.StartsWith("Celeste ") && !installedVersion.Contains("Everest")) {
                 string orig = Path.Combine(root, "orig");
                 if (Directory.Exists(orig)) {
-                    yield return Status("Deleting previous backup", false, "");
+                    yield return Status("Deleting previous backup", false, "", false);
                     Directory.Delete(orig, true);
                 }
             }
 
             if (artifactBase.StartsWith("file://")) {
                 artifactBase = artifactBase.Substring("file://".Length);
-                yield return Status($"Unzipping {Path.GetFileName(artifactBase)}", false, "download");
+                yield return Status($"Unzipping {Path.GetFileName(artifactBase)}", false, "download", false);
 
                 using (FileStream wrapStream = File.Open(artifactBase, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
@@ -49,7 +49,7 @@ namespace Olympus {
 
             } else {
                 // Only new builds offer olympus-meta and olympus-build artifacts.
-                yield return Status("Downloading metadata", false, "");
+                yield return Status("Downloading metadata", false, "", false);
 
                 int size;
 
@@ -69,12 +69,12 @@ namespace Olympus {
                 }
 
                 if (size > 0) {
-                    yield return Status("Downloading olympus-build.zip", false, "download");
+                    yield return Status("Downloading olympus-build.zip", false, "download", false);
 
                     using (MemoryStream wrapStream = new MemoryStream()) {
                         yield return Download(artifactBase + "olympus-build", size, wrapStream);
 
-                        yield return Status("Unzipping olympus-build.zip", false, "download");
+                        yield return Status("Unzipping olympus-build.zip", false, "download", false);
                         wrapStream.Seek(0, SeekOrigin.Begin);
                         using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                             using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
@@ -85,12 +85,12 @@ namespace Olympus {
                     }
 
                 } else {
-                    yield return Status("Downloading main.zip", false, "download");
+                    yield return Status("Downloading main.zip", false, "download", false);
 
                     using (MemoryStream zipStream = new MemoryStream()) {
                         yield return Download(artifactBase + "main", size, zipStream);
 
-                        yield return Status("Unzipping main.zip", false, "download");
+                        yield return Status("Unzipping main.zip", false, "download", false);
                         zipStream.Seek(0, SeekOrigin.Begin);
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                             yield return Unpack(zip, root, "main/");
@@ -99,11 +99,11 @@ namespace Olympus {
                 }
             }
 
-            yield return Status("Starting MiniInstaller", false, "monomod");
+            yield return Status("Starting MiniInstaller", false, "monomod", false);
 
             yield return Install(root);
 
-            yield return Status("Done", 1f, "done");
+            yield return Status("Done", 1f, "done", false);
 
         }
 

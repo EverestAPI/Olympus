@@ -23,7 +23,7 @@ namespace Olympus {
         public static readonly string VersionBeta = "1.6.0-beta1";
 
         public override IEnumerator Run(bool beta) {
-            yield return Status("Preparing installation of Julia", false, "");
+            yield return Status("Preparing installation of Julia", false, "", false);
 
             string root = AhornHelper.RootPath;
             string tmp = Path.Combine(root, "tmp");
@@ -53,13 +53,13 @@ namespace Olympus {
                 }
 
                 try {
-                    yield return Status($"Downloading {url}", false, "download");
+                    yield return Status($"Downloading {url}", false, "download", false);
                     using (FileStream zipStream = File.Open(zipPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
                         yield return Download(url, 0, zipStream);
 
                         zipStream.Seek(0, SeekOrigin.Begin);
 
-                        yield return Status("Unzipping Julia", false, "download");
+                        yield return Status("Unzipping Julia", false, "download", false);
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                             yield return Unpack(zip, julia, beta ? "julia-b84990e1ac/" : "julia-1.5.3/");
                         }

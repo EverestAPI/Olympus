@@ -22,7 +22,7 @@ namespace Olympus {
     public unsafe class CmdInstallOlympus : Cmd<string, IEnumerator> {
 
         public override IEnumerator Run(string id) {
-            yield return Status("Updating Olympus", false, "");
+            yield return Status("Updating Olympus", false, "", false);
 
             JObject artifacts;
             using (MemoryStream stream = new MemoryStream()) {
@@ -45,7 +45,7 @@ namespace Olympus {
                 wanted = new List<string>() { "update" };
             }
 
-            yield return Status("Filtering artifacts", false, "download");
+            yield return Status("Filtering artifacts", false, "download", false);
             string[] names = artifacts.Value<JArray>("value").Cast<JObject>()
                 .Select(a => a.Value<string>("name"))
                 .Where(name => wanted.Contains(name))
@@ -57,14 +57,14 @@ namespace Olympus {
                     yield return Download($"https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds/{id}/artifacts?$format=zip&artifactName={name}", 0, wrapStream);
                     wrapStream.Seek(0, SeekOrigin.Begin);
 
-                    yield return Status($"Unwrapping {name}.zip", false, "download");
+                    yield return Status($"Unwrapping {name}.zip", false, "download", false);
                     using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                         yield return Unwrap(wrap, name);
                     }
                 }
             }
 
-            yield return Status("Olympus successfully updated", 1f, "done");
+            yield return Status("Olympus successfully updated", 1f, "done", false);
         }
 
         public static IEnumerator Unwrap(ZipArchive wrap, string wrapName) {
@@ -82,7 +82,7 @@ namespace Olympus {
 
                 switch (name) {
                     case "olympus.love":
-                        yield return Status("Unpacking olympus.love", false, "download");
+                        yield return Status("Unpacking olympus.love", false, "download", false);
                         string to = Path.Combine(Program.RootDirectory, "olympus.new.love");
                         string toParent = Path.GetDirectoryName(to);
                         Console.Error.WriteLine($"{name} -> {to}");
@@ -99,7 +99,7 @@ namespace Olympus {
                         break;
 
                     case "sharp.zip":
-                        yield return Status("Unpacking sharp.zip", false, "download");
+                        yield return Status("Unpacking sharp.zip", false, "download", false);
                         using (Stream zipStream = entry.Open())
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                             yield return Unpack(zip, Path.Combine(Program.RootDirectory, "sharp.new"));
@@ -108,7 +108,7 @@ namespace Olympus {
                 }
             }
 
-            yield return Status($"Unwrapped {wrapName}.zip", 1f, "download");
+            yield return Status($"Unwrapped {wrapName}.zip", 1f, "download", false);
         }
 
     }

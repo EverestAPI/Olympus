@@ -91,19 +91,22 @@ function sharedWrap:wait(...)
         error(self.id .. " not running!", 2)
     end
 
-    local routine = threader._routines[coroutine.running()]
-    if routine then
-        routine.waiting = true
-        self:calls(function(...)
-            routine.waiting = false
-        end)
-        threader.unsafe = threader.unsafe + 1
-        local rv = coroutine.yield(self)
-        threader.unsafe = threader.unsafe - 1
-        return rv
+    if self:__waitNeeded() then
+        local routine = threader._routines[coroutine.running()]
+        if routine then
+            routine.waiting = true
+            self:calls(function(...)
+                routine.waiting = false
+            end)
+            threader.unsafe = threader.unsafe + 1
+            coroutine.yield(self)
+            threader.unsafe = threader.unsafe - 1
+            return
+        end
+
+        self:__wait()
     end
 
-    self:__wait()
     return self:update(...)
 end
 
@@ -183,6 +186,10 @@ function threadWrap:__update()
     end
 
     return nil
+end
+
+function threadWrap:__waitNeeded()
+    return self.thread:isRunning()
 end
 
 function threadWrap:__wait(...)
@@ -275,6 +282,10 @@ function routineWrap:__update(...)
     self.error = errorMsg
 
     return rv
+end
+
+function routineWrap:__waitNeeded()
+    return coroutine.status(self.routine) ~= "dead"
 end
 
 function routineWrap:__wait(...)

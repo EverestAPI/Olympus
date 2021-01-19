@@ -350,7 +350,7 @@ scene.launchrow = uie.row({
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
 
-scene.installbtn = buttonBig("mainmenu/everest", "Install Everest (Mod Loader)", "everest"):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
+scene.installbtn = buttonBig("mainmenu/everest", "Install Everest", "everest"):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
 
 
 scene.installs:hook({

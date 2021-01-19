@@ -23,7 +23,7 @@ namespace Olympus {
         public static IEnumerator Install(string root) {
             Environment.CurrentDirectory = root;
 
-            yield return StatusSilent("Starting MiniInstaller", false, "monomod");
+            yield return StatusSilent("Starting MiniInstaller", false, "monomod", false);
 
             using (MiniInstallerBridge bridge = new MiniInstallerBridge {
                 Encoding = Console.Error.Encoding,
@@ -87,7 +87,7 @@ namespace Olympus {
                     bridge.LogEvent.Reset();
                     if (lastSent != bridge.LastLogLine) {
                         lastSent = bridge.LastLogLine;
-                        yield return StatusSilent(lastSent, false, "monomod");
+                        yield return StatusSilent(lastSent, false, "monomod", false);
                     }
                 }
 

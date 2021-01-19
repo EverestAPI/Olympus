@@ -44,28 +44,34 @@ namespace Olympus {
         public virtual bool Taskable => false;
         public abstract object Run(object input);
 
-        public static object[] Status(string text, float progress, string shape) {
+        public static object[] Status(string text, float progress, string shape, bool update) {
             Console.Error.WriteLine(text);
-            return StatusSilent(text, progress, shape);
+            return StatusSilent(text, progress, shape, update);
         }
 
-        public static object[] Status(string text, bool progress, string shape) {
+        public static object[] Status(string text, bool progress, string shape, bool update) {
             Console.Error.WriteLine(text);
-            return StatusSilent(text, progress, shape);
+            return StatusSilent(text, progress, shape, update);
         }
 
-        public static object[] StatusSilent(string text, float progress, string shape) {
-            return new object[] { text, progress, shape };
+        public static object[] StatusSilent(string text, float progress, string shape, bool update) {
+            if (update)
+                CmdTask.Update++;
+            return new object[] { text, progress, shape, update };
         }
 
-        public static object[] StatusSilent(string text, bool progress, string shape) {
-            return new object[] { text, progress, shape };
+        public static object[] StatusSilent(string text, bool progress, string shape, bool update) {
+            if (update)
+                CmdTask.Update++;
+            return new object[] { text, progress, shape, update };
         }
 
         public static IEnumerator Download(string url, long length, Stream copy) {
             // The following blob of code mostly comes from the old Everest.Installer, which inherited it from the old ETGMod.Installer.
 
-            yield return Status($"Downloading {Path.GetFileName(url)}", false, "download");
+            yield return Status($"Downloading {Path.GetFileName(url)}", false, "download", false);
+
+            yield return Status("", false, "download", false);
 
             DateTime timeStart = DateTime.Now;
             int pos = 0;
@@ -117,9 +123,9 @@ namespace Olympus {
                         }
 
                         if (length > 0) {
-                            yield return StatusSilent($"Downloading: {((int) Math.Floor(100D * Math.Min(1D, pos / (double) length)))}% @ {speed} KiB/s", (float) ((pos / progressScale) / (double) progressSize), "download");
+                            yield return StatusSilent($"Downloading: {((int) Math.Floor(100D * Math.Min(1D, pos / (double) length)))}% @ {speed} KiB/s", (float) ((pos / progressScale) / (double) progressSize), "download", true);
                         } else {
-                            yield return StatusSilent($"Downloading: {((int) Math.Floor(pos / 1000D))}KiB @ {speed} KiB/s", false, "download");
+                            yield return StatusSilent($"Downloading: {((int) Math.Floor(pos / 1000D))}KiB @ {speed} KiB/s", false, "download", true);
                         }
                     } while (read > 0);
 
@@ -128,13 +134,15 @@ namespace Olympus {
 
             string logTime = (DateTime.Now - timeStart).TotalSeconds.ToString(CultureInfo.InvariantCulture);
             logTime = logTime.Substring(0, Math.Min(logTime.IndexOf('.') + 3, logTime.Length));
-            yield return Status($"Downloaded {pos} bytes in {logTime} seconds.", 1f, "download");
+            yield return Status($"Downloaded {pos} bytes in {logTime} seconds.", 1f, "download", true);
         }
 
 
         public static IEnumerator Unpack(ZipArchive zip, string root, string prefix = "") {
             int count = string.IsNullOrEmpty(prefix) ? zip.Entries.Count : zip.Entries.Count(entry => entry.FullName.StartsWith(prefix));
             int i = 0;
+
+            yield return Status($"Unzipping {count} files", 0f, "download", false);
 
             foreach (ZipArchiveEntry entry in zip.Entries) {
                 string name = entry.FullName;
@@ -147,7 +155,7 @@ namespace Olympus {
                     name = name.Substring(prefix.Length);
                 }
 
-                yield return Status($"Unzipping #{i} / {count}: {name}", i / (float) count, "download");
+                yield return Status($"Unzipping #{i} / {count}: {name}", i / (float) count, "download", true);
                 i++;
 
                 string to = Path.Combine(root, name);
@@ -165,7 +173,7 @@ namespace Olympus {
                     compressed.CopyTo(fs);
             }
 
-            yield return Status($"Unzipped {count} files", 1f, "download");
+            yield return Status($"Unzipped {count} files", 1f, "download", true);
         }
 
     }
