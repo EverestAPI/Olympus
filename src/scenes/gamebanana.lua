@@ -641,8 +641,11 @@ function scene.item(info)
                                             local children = el.children
                                             for i = 1, #children do
                                                 children[i]:with(uiu.fillWidth)
+                                                children[i].label.wrap = true
                                             end
-                                            container:findChild("box"):with(uiu.fillHeight(64))
+                                            container:findChild("box"):with({
+                                                width = 800
+                                            }):with(uiu.fillHeight(64))
                                         end
                                     end
                                 })
