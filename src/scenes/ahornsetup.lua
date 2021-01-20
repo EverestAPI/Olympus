@@ -245,20 +245,23 @@ You can close Olympus. Ahorn will continue running.]]))
 
         local task = sharp.ahornLaunch():result()
 
-        local result
-        local lineLast
+        local batch
+        local last
         repeat
-            result = sharp.pollWait(task):result()
-            local line = result[3]
-            if line ~= nil then
-                if type(line) == "string" and lineLast ~= line then
-                    lineLast = line
-                    loglist:addChild(uie.label(line):with({ wrap = true }):with(uiu.fillWidth))
+            batch = sharp.pollWaitBatch(task):result()
+            local all = batch[3]
+            for i = 1, #all do
+                local line = all[i]
+                if line ~= nil then
+                    if type(line) == "string" and last ~= line then
+                        last = line
+                        loglist:addChild(uie.label(line):with({ wrap = true }):with(uiu.fillWidth))
+                    end
+                else
+                    print("ahornsetup.launchAhorn encountered nil on poll", task)
                 end
-            else
-                print("ahornsetup.launchAhorn encountered nil on poll", task)
             end
-        until result[1] ~= "running" and result[2] == 0
+        until batch[1] ~= "running" and batch[2] == 0
 
         if not sharp.poll(task):result() then
             loglist:addChild(uie.label("----------------------------------------------"))

@@ -344,8 +344,8 @@ function scene.sharpTask(id, ...)
                 local update = all[i]
                 if update ~= nil then
                     if not last or last[1] ~= update[1] or last[2] ~= update[2] or last[3] ~= update[3] or last[4] ~= update[4] then
-                        scene.update(update[1], update[2], update[3], update[4])
                         last = update
+                        scene.update(update[1], update[2], update[3], update[4])
                     end
                 else
                     print("installer.sharpTask encountered nil on poll", task)
