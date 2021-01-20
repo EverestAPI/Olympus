@@ -12,10 +12,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdPollNextBatch : Cmd<string, int?, object[]> {
+    public unsafe class CmdPollWaitBatch : Cmd<string, int?, object[]> {
         public override bool LogRun => false;
         public override object[] Run(string id, int? max) {
-            return CmdTasks.Get(id)?.DequeueBatch(max ?? 4);
+            return CmdTasks.Get(id)?.WaitBatch(max ?? 0);
         }
     }
 }

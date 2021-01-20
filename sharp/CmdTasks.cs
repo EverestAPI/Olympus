@@ -119,29 +119,24 @@ namespace Olympus {
             }
         }
 
-        public object[] TryDequeue() {
-            lock (Queue)
-                return new object[] { Queue.Count > 0, Dequeue() };
-        }
-
-        public object[] DequeueBatch(int max) {
+        public object[] DequeueAll(int max) {
             lock (Queue) {
                 if (Queue.Count == 0)
-                    return new object[0];
+                    return new object[] { Current };
 
-                object[] batch;
+                object[] rv;
 
-                if (Queue.Count >= max) {
-                    batch = new object[max];
-                    for (int i = 0; i < batch.Length; i++) {
-                        batch[i] = Dequeue();
-                    }
-                    return batch;
+                if (max <= 0 || max <= Queue.Count) {
+                    rv = Queue.ToArray();
+                    Queue.Clear();
+                    return rv;
                 }
 
-                batch = Queue.ToArray();
-                Queue.Clear();
-                return batch;
+                rv = new object[max];
+                for (int i = 0; i < max; i++)
+                    rv[i] = Queue[i];
+                Queue.RemoveRange(0, max);
+                return rv;
             }
         }
 
@@ -157,7 +152,6 @@ namespace Olympus {
                     }
                 }
             }
-
 
             if (Alive && Queue.Count == 0)
                 WaitHandle.WaitAny(EventWaitHandles);
@@ -175,6 +169,25 @@ namespace Olympus {
                         Event.Reset();
                     return new object[] { Status, Queue.Count, Dequeue() };
                 }
+            }
+        }
+
+        public object[] WaitBatch(int max) {
+            lock (Queue) {
+                if (Queue.Count > 0) {
+                    object[] rv = DequeueAll(max);
+                    return new object[] { Status, Queue.Count, rv };
+                }
+            }
+
+            if (Alive && Queue.Count == 0)
+                WaitHandle.WaitAny(EventWaitHandles);
+
+            lock (Queue) {
+                object[] rv = DequeueAll(max);
+                if (Alive && Queue.Count <= 0)
+                    Event.Reset();
+                return new object[] { Status, Queue.Count, rv };
             }
         }
 

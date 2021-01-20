@@ -211,6 +211,7 @@ local root = uie.group({
                         bg = {},
                         padding = 0
                     },
+                    clip = false,
                     locked = true
                 }):hook({
                     layoutLateLazy = function(orig, self)
@@ -334,20 +335,23 @@ function scene.sharpTask(id, ...)
     local args = {...}
     return threader.routine(function()
         local task = sharp[id](table.unpack(args)):result()
-        local result
+        local batch
         local last
         repeat
-            result = sharp.pollWait(task):result()
-            local update = result[3]
-            if update ~= nil then
-                if not last or last[1] ~= update[1] or last[2] ~= update[2] or last[3] ~= update[3] or last[4] ~= update[4] then
-                    scene.update(update[1], update[2], update[3], update[4])
-                    last = update
+            batch = sharp.pollWaitBatch(task):result()
+            local all = batch[3]
+            for i = 1, #all do
+                local update = all[i]
+                if update ~= nil then
+                    if not last or last[1] ~= update[1] or last[2] ~= update[2] or last[3] ~= update[3] or last[4] ~= update[4] then
+                        scene.update(update[1], update[2], update[3], update[4])
+                        last = update
+                    end
+                else
+                    print("installer.sharpTask encountered nil on poll", task)
                 end
-            else
-                print("installer.sharpTask encountered nil on poll", task)
             end
-        until result[1] ~= "running" and result[2] == 0
+        until batch[1] ~= "running" and batch[2] == 0
 
         local status = sharp.free(task):result()
         if status == "error" then
