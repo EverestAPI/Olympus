@@ -199,6 +199,8 @@ local function sharpthread()
         while true do
             channelSet(channelStatus, "idle")
 
+            local nop = true
+
             client:settimeout(0)
             while true do
                 local raw, rawPart = read()
@@ -215,6 +217,8 @@ local function sharpthread()
                         buffer = raw:sub(prev)
                         break
                     end
+
+                    nop = false
 
                     local part = raw:sub(prev, index - 1)
                     prev = index + 1
@@ -267,6 +271,8 @@ local function sharpthread()
             end
 
             if cmd then
+                nop = false
+
                 lastSend = socket.gettime()
                 uid = cmd.uid
                 local cid = cmd.cid
@@ -316,6 +322,10 @@ local function sharpthread()
                 if uid ~= "_timeoutping" then
                     channelSet(channelStatus, "donecmd " .. uid .. " " .. cid)
                 end
+            end
+
+            if nop then
+                threader.sleep(0.1)
             end
         end
 

@@ -22,7 +22,27 @@ namespace Olympus {
         public override bool LogRun => false;
         public override IEnumerator Run() {
             return Cmds.Get<CmdAhornRunJuliaTask>().Run(@"
+env = ENV[""AHORN_ENV""]
+
+logfilePath = joinpath(dirname(env), ""log-install-ahorn.txt"")
+println(""Logging to "" * logfilePath)
+logfile = open(logfilePath, ""w"")
+
+flush(stdout)
+flush(stderr)
+
+stdoutReal = stdout
+(rd, wr) = redirect_stdout()
 redirect_stderr(stdout)
+
+@async while !eof(rd)
+    data = String(readavailable(rd))
+    print(stdoutReal, data)
+    flush(stdoutReal)
+    print(logfile, data)
+    flush(logfile)
+end
+
 
 if VERSION < v""1.3""
     println(""Outdated version of Julia - $VERSION installed, 1.3+ needed."")
@@ -33,17 +53,15 @@ using Pkg
 
 Pkg.activate(ENV[""AHORN_ENV""])
 
-isinstalled(pkg::String) = any(x -> x.name == pkg && x.is_direct_dep, values(Pkg.dependencies()))
-
-install_or_update(url::String, pkg::String) = try 
-    if Pkg.installed()[pkg] !== nothing
-        println(""Updating $pkg..."")
-        Pkg.update(pkg)
-    end
-catch err
-    println(""Installing $pkg..."")
+install_or_update(url::String, pkg::String) = if ""Ahorn"" ∈ keys(Pkg.Types.Context().env.project.deps)
+    println(""Updating $pkg..."")
+    Pkg.update(pkg)
+else
+    println(""Adding $pkg..."")
     Pkg.add(PackageSpec(url = url))
 end
+
+Pkg.instantiate()
 
 install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
 install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")

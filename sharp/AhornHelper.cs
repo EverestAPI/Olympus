@@ -130,7 +130,9 @@ redirect_stdout(stdoutPrev)
             process.StartInfo.UseShellExecute = false;
             process.StartInfo.CreateNoWindow = true;
             process.StartInfo.RedirectStandardOutput = true;
+            process.StartInfo.StandardOutputEncoding = Program.UTF8NoBOM;
             process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.StandardErrorEncoding = Program.UTF8NoBOM;
 
             return process;
         }

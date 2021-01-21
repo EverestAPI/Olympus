@@ -29,11 +29,12 @@ namespace Olympus {
 env = ENV[""AHORN_ENV""]
 globalenv = ENV[""AHORN_GLOBALENV""]
 
-logerrPath = joinpath(dirname(globalenv), ""error.log"")
+logfilePath = joinpath(mkpath(dirname(globalenv)), ""error.log"")
 
-println(""Logging to "" * logerrPath)
+println(""Logging to "" * logfilePath)
 
-logerr = open(logerrPath, ""w"")
+logfile = open(logfilePath, ""w"")
+println(logfile, ""Running Ahorn via Olympus."")
 
 flush(stdout)
 flush(stderr)
@@ -46,22 +47,33 @@ redirect_stderr(stdout)
     data = String(readavailable(rd))
     print(stdoutReal, data)
     flush(stdoutReal)
-    print(logerr, data)
-    flush(logerr)
+    print(logfile, data)
+    flush(logfile)
 end
 
-try
-    using Pkg
-    Pkg.activate(env)
-    using Ahorn
-    Ahorn.displayMainWindow()
-catch e
-    println(logerr, ""FATAL ERROR"")
-    println(logerr, sprint(showerror, e, catch_backtrace()))
-    exit(1)
+using Pkg
+Pkg.activate(env)
+
+install_or_update(url::String, pkg::String) = if ""Ahorn"" ∈ keys(Pkg.Types.Context().env.project.deps)
+    println(""Updating $pkg..."")
+    Pkg.update(pkg)
+else
+    println(""Adding $pkg..."")
+    Pkg.add(PackageSpec(url = url))
 end
 
-exit(0)
+if Base.find_package(""Ahorn"") === nothing
+    Pkg.instantiate()
+
+    install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
+    install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
+
+    Pkg.instantiate()
+    Pkg.API.precompile()
+end
+
+using Ahorn
+Ahorn.displayMainWindow()
 "
                 )) {
 
@@ -74,7 +86,7 @@ exit(0)
 
                     process.Start();
                     for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                        yield return line;
+                        yield return CmdAhornRunJuliaTask.Escape(line);
                     process.WaitForExit();
                     yield return process.ExitCode == 0;
                 }

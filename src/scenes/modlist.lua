@@ -138,7 +138,6 @@ If you want to blacklist or update mods easily, you can do so in Everest.]])
 
         local batch
         repeat
-            -- dkjson or luasockets hate huge payloads.
             batch = sharp.pollWaitBatch(task):result()
             if scene.loadingID ~= loadingID then
                 break

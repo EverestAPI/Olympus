@@ -14,19 +14,25 @@ using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
     public unsafe class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
+
+        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....");
+        public static readonly Regex EscapeDashRegex = new Regex("─+");
+
         public override bool LogRun => false;
+
         public override IEnumerator Run(string script, bool? localDepot) {
             string tmpFilename = null;
             try {
                 using (Process process = AhornHelper.NewJulia(out tmpFilename, script, localDepot)) {
                     process.Start();
                     for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                        yield return Status(line, false, "", false);
+                        yield return Status(Escape(line), false, "", false);
                     process.WaitForExit();
                     if (process.ExitCode != 0)
                         throw new Exception("Julia encountered a fatal error.");
@@ -36,5 +42,12 @@ namespace Olympus {
                     File.Delete(tmpFilename);
             }
         }
+
+        public static string Escape(string line) {
+            line = EscapeCmdRegex.Replace(line, "");
+            line = EscapeDashRegex.Replace(line, "-");
+            return line;
+        }
+
     }
 }
