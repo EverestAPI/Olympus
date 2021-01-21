@@ -23,7 +23,7 @@ local function sharpthread()
 
     channelSet(channelStatus, "start")
 
-    local status, err = pcall(function()
+    local status, err = xpcall(function()
         local debuggingFlags = channelDebug:peek()
         local debugging, debuggingSharp = debuggingFlags[1], debuggingFlags[2]
 
@@ -131,10 +131,13 @@ local function sharpthread()
         }
         print("[sharp init]", "read init", initStatus)
 
+        local buffer = ""
+
         -- The status message contains the TCP port we're actually supposed to listen to.
         -- Switch from STDIN / STDOUT to sockets.
         local port = initStatus.UID -- initStatus gets modified later
         local function connect()
+            buffer = ""
             local try = 1
             ::retry::
             channelSet(channelStatus, "connect attempt " .. tostring(try))
@@ -170,7 +173,7 @@ local function sharpthread()
                 return rv, false
             end
 
-            if part ~= "" and part ~= partLast then
+            if part ~= "" then
                 partLast = part
                 return part, true
             end
@@ -185,47 +188,76 @@ local function sharpthread()
             return nil
         end
 
+        local function getReturn(uid)
+            return love.thread.getChannel("sharpReturn" .. uid)
+        end
+
+        local function sendReturn(uid, data)
+            getReturn(uid):push(data)
+        end
+
         while true do
             channelSet(channelStatus, "idle")
 
             client:settimeout(0)
             while true do
                 local raw, rawPart = read()
-                local data = utils.fromJSON(raw)
-                if not data then
+                if not raw or raw == "" then
                     break
                 end
 
-                if data.UID ~= "_timeoutping" then
-                    channelSet(channelStatusRx, data.UID)
+                raw = buffer .. raw
+                local index = 0
+                local prev = 1
+                while true do
+                    index = raw:find("\0", prev, true)
+                    if not index then
+                        buffer = raw:sub(prev)
+                        break
+                    end
 
-                    local dbgvalue
+                    local part = raw:sub(prev, index - 1)
+                    prev = index + 1
+                    local data = utils.fromJSON(part)
+                    if not data then
+                        print("[sharp rx]", "erroreous part", part)
+                        goto next
+                    end
 
-                    if data.RawSize then
-                        client:settimeout(nil)
-                        if rawPart then
-                            read(1) -- Skip the newline byte that luasocket (in)conveniently ignores...
+                    if data.UID ~= "_timeoutping" then
+                        channelSet(channelStatusRx, data.UID)
+
+                        local dbgvalue
+
+                        if data.RawSize then
+                            client:settimeout(nil)
+                            if rawPart then
+                                read(1) -- Skip the newline byte that luasocket (in)conveniently ignores...
+                            end
+                            data.Value = read(data.RawSize)
+                            client:settimeout(0)
+
+                            if debugging then
+                                dbgvalue = "<insert raw data here - " .. tostring(data.RawSize) .. " bytes expected, " .. tostring(#data.Value) .. " bytes gotten>"
+                            end
+
+                        elseif debugging then
+                            dbgvalue = tostring(data.Value)
+                            if #dbgvalue > 512 then
+                                dbgvalue = "<insert long string here - " .. tostring(#dbgvalue) .. " bytes>"
+                            end
                         end
-                        data.Value = read(data.RawSize)
-                        client:settimeout(0)
 
                         if debugging then
-                            dbgvalue = "<insert raw data here - " .. tostring(data.RawSize) .. " bytes expected, " .. tostring(#data.Value) .. " bytes gotten>"
+                            data.DebugValue = dbgvalue
+                            print("[sharp rx]", data.UID, dbgvalue, data.Error)
                         end
-
-                    elseif debugging then
-                        dbgvalue = tostring(data.Value)
-                        if #dbgvalue > 512 then
-                            dbgvalue = "<insert long string here - " .. tostring(#dbgvalue) .. " bytes>"
-                        end
+                        sendReturn(data.UID, data)
                     end
 
-                    if debugging then
-                        data.DebugValue = dbgvalue
-                        print("[sharp rx]", data.UID, dbgvalue, data.Error)
-                    end
-                    love.thread.getChannel("sharpReturn" .. data.UID):push(data)
+                    ::next::
                 end
+                break
             end
             client:settimeout(nil)
 
@@ -247,11 +279,11 @@ local function sharpthread()
                 if cid == "_init" then
                     dprint("returning init", initStatus)
                     initStatus.UID = uid
-                    love.thread.getChannel("sharpReturn" .. uid):push(initStatus)
+                    sendReturn(uid, initStatus)
 
                 elseif cid == "_die" then
                     print("[sharp queue]", "time to _die")
-                    love.thread.getChannel("sharpReturn" .. uid):push({ uid = uid, cid = cid, value = "ok" })
+                    sendReturn(uid, { UID = uid, Value = "ok" })
                     break
 
                 elseif cid then
@@ -268,12 +300,12 @@ local function sharpthread()
                         argsSharp["Item" .. i] = args[i]
                     end
                     local rv, err = client:send(
-                        utils.toJSON(uid, { indent = false }) .. "\n\0" ..
-                        utils.toJSON(cid, { indent = false }) .. "\n\0" ..
-                        utils.toJSON(argsSharp, { indent = false }) .. "\n\0")
+                        utils.toJSON(uid, { indent = false }) .. "\0\n" ..
+                        utils.toJSON(cid, { indent = false }) .. "\0\n" ..
+                        utils.toJSON(argsSharp, { indent = false }) .. "\0\n")
 
                     if not rv then
-                        print("[sharp queue]", "hard error reconnecting", err, channelStatus:peek(), rv.value, rv.status, rv.status and rv.status.error)
+                        print("[sharp queue]", "hard error reconnecting", err, channelStatus:peek())
                         channelSet(channelStatus, "reruncmd " .. uid .. " " .. cid)
                         client:close()
                         client = connect()
@@ -290,6 +322,12 @@ local function sharpthread()
         channelSet(channelStatus, "rip")
 
         client:close()
+    end,
+    function(err)
+        if type(err) == "userdata" or type(err) == "table" then
+            return err
+        end
+        return debug.traceback(tostring(err), 1)
     end)
 
     channelSet(channelStatus, "rip")
@@ -321,7 +359,7 @@ local sharp = setmetatable({}, mtSharp)
 
 function sharp._run(cid, ...)
     local debugging = channelDebug:peek()[1]
-    local uid = string.format("(%s)#%d", require("threader").id, tuid)
+    local uid = string.format("(%s)(%s)#%d", cid, require("threader").id, tuid)
     tuid = tuid + 1
 
     local status = channelStatus:peek(100)
@@ -343,10 +381,10 @@ function sharp._run(cid, ...)
     channelQueue:push({ uid = uid, cid = cid, args = {...} })
 
     dprint("awaiting return value")
-    local channelReturn = love.thread.getChannel("sharpReturn" .. uid)
     ::reget::
+    local channelReturn = love.thread.getChannel("sharpReturn" .. uid)
     local rv = channelReturn:demand(100)
-    if not rv then
+    if not rv or rv == uid then
         status = channelStatus:peek(100)
         if status == "rip" then
             if cid == "_init" then

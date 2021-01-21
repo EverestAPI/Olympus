@@ -23,6 +23,8 @@ namespace Olympus {
         public static string RootDirectory;
         public static string SelfPath;
 
+        public static readonly Encoding UTF8NoBOM = new UTF8Encoding(false);
+
         public static void Main(string[] args) {
             bool debug = false;
             bool verbose = false;
@@ -120,7 +122,7 @@ namespace Olympus {
 
                         Thread threadW = new Thread(() => {
                             try {
-                                using (StreamWriter writer = new StreamWriter(stream, Encoding.UTF8))
+                                using (StreamWriter writer = new StreamWriter(stream, UTF8NoBOM))
                                     WriteLoop(parentProc, ctx, writer, verbose);
                             } catch (Exception e) {
                                 if (e is ObjectDisposedException)
@@ -138,7 +140,7 @@ namespace Olympus {
 
                         Thread threadR = new Thread(() => {
                             try {
-                                using (StreamReader reader = new StreamReader(stream, Encoding.UTF8))
+                                using (StreamReader reader = new StreamReader(stream, UTF8NoBOM))
                                     ReadLoop(parentProc, ctx, reader, verbose);
                             } catch (Exception e) {
                                 if (e is ObjectDisposedException)
@@ -177,8 +179,11 @@ namespace Olympus {
 
         }
 
-        public static void WriteLoop(Process parentProc, MessageContext ctx, StreamWriter writer, bool verbose) {
-            JsonSerializer jsonSerializer = new JsonSerializer();
+        public static void WriteLoop(Process parentProc, MessageContext ctx, StreamWriter writer, bool verbose, char delimiter = '\0') {
+            JsonSerializer jsonSerializer = new JsonSerializer() {
+                Formatting = Formatting.None,
+                NullValueHandling = NullValueHandling.Ignore
+            };
 
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
                 for (Message msg = null; !(parentProc?.HasExited ?? false) && (msg = ctx.WaitForNext()) != null;) {
@@ -196,6 +201,7 @@ namespace Olympus {
 
                     jsonSerializer.Serialize(jsonWriter, msg);
                     jsonWriter.Flush();
+                    writer.Write(delimiter);
                     writer.Write('\n');
                     writer.Flush();
 
@@ -224,25 +230,25 @@ namespace Olympus {
                     Console.Error.WriteLine($"[sharp] Receiving command {msg.UID}");
 
                 // Command ID
-                string cid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter)).ToLowerInvariant();
-                Cmd cmd = Cmds.Get(cid);
+                msg.CID = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter)).ToLowerInvariant();
+                Cmd cmd = Cmds.Get(msg.CID);
                 if (cmd == null) {
                     reader.ReadTerminatedString(delimiter);
-                    Console.Error.WriteLine($"[sharp] Unknown command {cid}");
-                    msg.Error = "cmd failed running: not found: " + cid;
+                    Console.Error.WriteLine($"[sharp] Unknown command {msg.CID}");
+                    msg.Error = "cmd failed running: not found: " + msg.CID;
                     ctx.Reply(msg);
                     continue;
                 }
 
                 if (verbose)
-                    Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
+                    Console.Error.WriteLine($"[sharp] Parsing args for {msg.CID}");
 
                 // Payload
                 object input = JsonConvert.DeserializeObject(reader.ReadTerminatedString(delimiter), cmd.InputType);
                 object output;
                 try {
                     if (verbose || cmd.LogRun)
-                        Console.Error.WriteLine($"[sharp] Executing {cid}");
+                        Console.Error.WriteLine($"[sharp] Executing {msg.CID}");
                     if (cmd.Taskable) {
                         output = Task.Run(() => cmd.Run(input));
                     } else {
@@ -250,7 +256,7 @@ namespace Olympus {
                     }
 
                 } catch (Exception e) {
-                    Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
+                    Console.Error.WriteLine($"[sharp] Failed running {msg.CID}: {e}");
                     msg.Error = "cmd failed running: " + e;
                     ctx.Reply(msg);
                     continue;
@@ -260,7 +266,7 @@ namespace Olympus {
                     task.ContinueWith(t => {
                         if (task.Exception != null) {
                             Exception e = task.Exception;
-                            Console.Error.WriteLine($"[sharp] Failed running task {cid}: {e}");
+                            Console.Error.WriteLine($"[sharp] Failed running task {msg.CID}: {e}");
                             msg.Error = "cmd task failed running: " + e;
                             ctx.Reply(msg);
                             return;
@@ -352,6 +358,8 @@ namespace Olympus {
         }
 
         public class Message {
+            [NonSerialized]
+            public string CID;
             public string UID;
             public object Value;
             public string Error;

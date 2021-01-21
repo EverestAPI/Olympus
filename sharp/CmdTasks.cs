@@ -122,7 +122,7 @@ namespace Olympus {
         public object[] DequeueAll(int max) {
             lock (Queue) {
                 if (Queue.Count == 0)
-                    return new object[] { Current };
+                    return new object[0];
 
                 object[] rv;
 

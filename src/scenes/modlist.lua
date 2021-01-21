@@ -96,6 +96,11 @@ function scene.reload()
     scene.loadingID = loadingID
 
     return threader.routine(function()
+        local loading = scene.root:findChild("loadingMods")
+        if loading then
+            loading:removeSelf()
+        end
+
         local loading = uie.row({
             uie.label("Loading"),
             uie.spinner():with({
@@ -130,27 +135,29 @@ If you want to blacklist or update mods easily, you can do so in Everest.]])
         end):with(uiu.fillWidth))
 
         local task = sharp.modlist(root):result()
-        local batches = 0
-        while loadingID == scene.loadingID do
-            local status = sharp.status(task):result()
-            if status[1] ~= "running" and status[2] == 0 then
+
+        local batch
+        repeat
+            -- dkjson or luasockets hate huge payloads.
+            batch = sharp.pollWaitBatch(task):result()
+            if scene.loadingID ~= loadingID then
                 break
             end
-            if status[2] ~= 0 then
-                local batch = {}
-                for i = 1, status[2] do
-                    batch[i] = sharp.pollNext(task):result()
-                end
-                batches = batches + #batch
-                if loadingID ~= scene.loadingID then
-                    break
-                end
-                for i = 1, status[2] do
-                    list:addChild(scene.item(batch[i]))
+            local all = batch[3]
+            for i = 1, #all do
+                local info = all[i]
+                if info ~= nil then
+                    if scene.loadingID ~= loadingID then
+                        break
+                    end
+                    list:addChild(scene.item(info))
+                else
+                    print("modlist.reload encountered nil on poll", task)
                 end
             end
-        end
-        -- notify(tostring(batches) .. " mods found.")
+        until (batch[1] ~= "running" and batch[2] == 0) or scene.loadingID ~= loadingID
+
+        -- notify(uiu.countformat(#list.children, "%d list child.", "%d list children."))
         local status = sharp.free(task)
         if status == "error" then
             notify("An error occurred while loading the mod list.")
