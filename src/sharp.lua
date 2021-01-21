@@ -325,7 +325,7 @@ local function sharpthread()
             end
 
             if nop then
-                threader.sleep(0.1)
+                threader.sleep(0.07)
             end
         end
 

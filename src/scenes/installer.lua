@@ -307,6 +307,8 @@ end
 
 
 function scene.done(buttons)
+    native.flashWindow()
+
     local row = uie.row({}):with({
         style = {
             bg = {},
@@ -315,6 +317,7 @@ function scene.done(buttons)
         },
         clip = false
     }):with(uiu.fillWidth)
+
     local listcount = #buttons
     for i = 1, #buttons do
         local btn = buttons[i]
@@ -326,6 +329,7 @@ function scene.done(buttons)
         end
         row:addChild(btn)
     end
+
     scene.actionsholder:addChild(row:with(utils.important(24)))
     scene.actionsrow = row
 end

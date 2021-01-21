@@ -214,6 +214,15 @@ if ffi.os == "Windows" then
             bool transitionOnMaximized;
         } DWM_BLURBEHIND;
         int DwmEnableBlurBehindWindow(void* hwnd, DWM_BLURBEHIND* margins);
+
+        typedef struct {
+            unsigned int cbSize;
+            void* hwnd;
+            int dwFlags;
+            unsigned int uCount;
+            int dwTimeout;
+        } FLASHWINFO;
+        bool FlashWindowEx(FLASHWINFO* pfwi);
     ]]
 end
 
@@ -317,6 +326,22 @@ function native.setProgress(state, progress)
 
     if ffi.os == "Windows" then
         sharp.win32SetProgress(tostring(sdlWMinfo[0].info.win.window):sub(#"cdata<void *>: 0x" + 1), state, progress)
+    end
+end
+
+function native.flashWindow()
+    local sdlWindow = native.getCurrentWindow()
+    local sdlWMinfo = ffi.new("SDL_SysWMinfo[1]")
+    sdl.SDL_GetWindowWMInfo(sdlWindow, sdlWMinfo)
+
+    if ffi.os == "Windows" then
+        local flashWInfo = ffi.new("FLASHWINFO[1]")
+        flashWInfo[0].cbSize = ffi.sizeof("FLASHWINFO")
+        flashWInfo[0].hwnd = sdlWMinfo[0].info.win.window
+        flashWInfo[0].dwFlags = 0x00000003
+        flashWInfo[0].uCount = 5
+        flashWInfo[0].dwTimeout = 0
+        sys.FlashWindowEx(flashWInfo)
     end
 end
 
