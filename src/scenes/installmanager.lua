@@ -303,12 +303,35 @@ function scene.reloadManual()
             end
 
         else
-            listManual:addChild(uie.label([[
+            local info = uie.label([[
 Olympus needs to know which Celeste installations you want to manage.
-Add your installations from the list below if Olympus has found them, or press the browse button.]]))
+Automatically found installations will be listed below and can be added to this list.
+Manually select Celeste.exe if no installations have been found automatically.]])
+            listManual:addChild(info)
+
+            local function handleFound(task, all)
+                if #all > 0 then
+                    info.text = [[
+Olympus needs to know which Celeste installations you want to manage.
+You can add automatically found installations from the list below to this one.
+]]
+                else
+                    info.text = [[
+Olympus needs to know which Celeste installations you want to manage.
+No installations were found automatically. Manually select Celeste.exe to add it to Olympus.
+]]
+                end
+            end
+
+            local foundCached = require("finder").getCached()
+            if foundCached then
+                handleFound(nil, foundCached)
+            else
+                threader.wrap("finder").findAll():calls(handleFound)
+            end
         end
 
-        listManual:addChild(uie.button("Browse", scene.browse):with(utils.important(24, function() return #config.installs == 0 end)))
+        listManual:addChild(uie.button("Manually select Celeste.exe", scene.browse):with(utils.important(24, function() return #config.installs == 0 end)))
     end)
 end
 

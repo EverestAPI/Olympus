@@ -7,7 +7,6 @@ local notify = require("notify")
 local config = require("config")
 local sharp = require("sharp")
 local updater = require("updater")
-local finder = require("finder")
 
 local scene = {
     name = "Main Menu"
@@ -238,7 +237,7 @@ function scene.reloadInstalls(scene, cb)
         end
     end
 
-    local foundCached = finder.getCached()
+    local foundCached = require("finder").getCached()
     if foundCached then
         handleFound(nil, foundCached)
     else
