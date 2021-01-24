@@ -21,8 +21,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
 
-        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....");
-        public static readonly Regex EscapeDashRegex = new Regex("─+");
+        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....|\\^\\[\\[.25.|\\^\\[\\[2K|\\^M");
+        public static readonly Regex EscapeDashRegex = new Regex(@"─+");
 
         public override bool LogRun => false;
 
@@ -32,7 +32,7 @@ namespace Olympus {
                 using (Process process = AhornHelper.NewJulia(out tmpFilename, script, localDepot)) {
                     process.Start();
                     for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                        yield return Status(Escape(line), false, "", false);
+                        yield return Status(Escape(line, out bool update), false, "", update);
                     process.WaitForExit();
                     if (process.ExitCode != 0)
                         throw new Exception("Julia encountered a fatal error.");
@@ -43,9 +43,10 @@ namespace Olympus {
             }
         }
 
-        public static string Escape(string line) {
+        public static string Escape(string line, out bool update) {
             line = EscapeCmdRegex.Replace(line, "");
             line = EscapeDashRegex.Replace(line, "-");
+            update = line.StartsWith("#") && line.EndsWith("%");
             return line;
         }
 

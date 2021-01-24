@@ -86,7 +86,7 @@ Ahorn.displayMainWindow()
 
                     process.Start();
                     for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                        yield return CmdAhornRunJuliaTask.Escape(line);
+                        yield return CmdAhornRunJuliaTask.Escape(line, out _);
                     process.WaitForExit();
                     yield return process.ExitCode == 0;
                 }
