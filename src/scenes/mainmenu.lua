@@ -178,9 +178,11 @@ function scene.createInstalls()
 
             uie.row({
 
-                uie.label({ { 1, 1, 1, 0.5 }, "mainmenu.lua broke, please fix." }):with({
-                    y = 8
-                }):with(uiu.fillWidth(true)):as("installcount"),
+                uie.group({
+                    uie.label({ { 1, 1, 1, 0.5 }, "mainmenu.lua broke, please fix." }):with({
+                        y = 8
+                    }):with(uiu.rightbound):as("installcount")
+                }):with(uiu.fillWidth(true)),
 
                 uie.button("Manage", function()
                     scener.push("installmanager")
