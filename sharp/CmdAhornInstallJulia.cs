@@ -145,7 +145,7 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
                 if (File.Exists(launcher))
                     File.Delete(launcher);
                 File.WriteAllText(launcher, @"
-#!/usr/bin
+#!/bin/sh
 ROOTDIR=$(dirname ""$0"")
 export JULIA_DEPOT_PATH=""${ROOTDIR}/julia-depot""
 if [ ! -z ""${XDG_CONFIG_HOME}"" ]; then
@@ -158,6 +158,8 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
 "
                     .TrimStart().Replace("\r\n", "\n")
                 );
+
+                AhornHelper.GetProcessOutput("chmod", $"a+x \"{launcher}\"", out _);
 
 
             } else if (PlatformHelper.Is(Platform.MacOS)) {
