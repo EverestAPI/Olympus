@@ -36,7 +36,7 @@ namespace Olympus {
                 Directory.Delete(julia, true);
 
             if (PlatformHelper.Is(Platform.Windows)) {
-                string zipPath = Path.Combine(tmp, $"juliadownload.zip");
+                string zipPath = Path.Combine(tmp, "juliadownload.zip");
                 if (File.Exists(zipPath))
                     File.Delete(zipPath);
 
@@ -86,7 +86,7 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
 
 
             } else if (PlatformHelper.Is(Platform.Linux)) {
-                string tarPath = Path.Combine(tmp, $"juliadownload.tar.gz");
+                string tarPath = Path.Combine(tmp, "juliadownload.tar.gz");
                 if (File.Exists(tarPath))
                     File.Delete(tarPath);
 
@@ -160,11 +160,11 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
 
 
             } else if (PlatformHelper.Is(Platform.MacOS)) {
-                string dmgPath = Path.Combine(tmp, $"juliadownload.dmg");
+                string dmgPath = Path.Combine(tmp, "juliadownload.dmg");
                 if (File.Exists(dmgPath))
                     File.Delete(dmgPath);
 
-                string mount = Path.Combine("tmp", "juliamount");
+                string mount = Path.Combine(tmp, "juliamount");
                 if (Directory.Exists(mount))
                     Directory.Delete(mount);
 
@@ -211,6 +211,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                         if (process.ExitCode != 0)
                             throw new Exception("hdiutil detach encountered a fatal error.");
                     }
+                    mounted = false;
 
                 } finally {
                     if (mounted) {
@@ -229,6 +230,9 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
 
                     if (File.Exists(dmgPath))
                         File.Delete(dmgPath);
+
+                    if (Directory.Exists(mount))
+                        Directory.Delete(mount);
                 }
 
                 string launcher = Path.Combine(root, "launch-local-julia.sh");
