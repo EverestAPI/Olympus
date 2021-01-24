@@ -215,7 +215,7 @@ redirect_stdout(stdoutPrev)
                 PlatformHelper.Is(Platform.Windows) ? "where.exe" : "which",
                 name,
                 out _
-            ).Split('\n').FirstOrDefault()?.Trim();
+            ).Trim().Split('\n').FirstOrDefault()?.Trim();
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
                 JuliaIsLocal = false;
                 return JuliaPath = path;

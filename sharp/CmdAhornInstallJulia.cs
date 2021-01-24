@@ -4,6 +4,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -35,21 +36,20 @@ namespace Olympus {
                 Directory.Delete(julia, true);
 
             if (PlatformHelper.Is(Platform.Windows)) {
-                string zipPath = Path.Combine(tmp, $"juliadownload.zip.part");
+                string zipPath = Path.Combine(tmp, $"juliadownload.zip");
                 if (File.Exists(zipPath))
                     File.Delete(zipPath);
 
                 string url;
 
-                if (beta) {
-                    url = PlatformHelper.Is(Platform.Bits64) ?
-                    "https://julialang-s3.julialang.org/bin/winnt/x64/1.6/julia-1.6.0-beta1-win64.zip" :
-                    "https://julialang-s3.julialang.org/bin/winnt/x86/1.6/julia-1.6.0-beta1-win32.zip";
-
+                if (PlatformHelper.Is(Platform.Bits64)) {
+                    url = beta ?
+                        "https://julialang-s3.julialang.org/bin/winnt/x64/1.6/julia-1.6.0-beta1-win64.zip" :
+                        "https://julialang-s3.julialang.org/bin/winnt/x64/1.5/julia-1.5.3-win64.zip";
                 } else {
-                    url = PlatformHelper.Is(Platform.Bits64) ?
-                    "https://julialang-s3.julialang.org/bin/winnt/x64/1.5/julia-1.5.3-win64.zip" :
-                    "https://julialang-s3.julialang.org/bin/winnt/x86/1.5/julia-1.5.3-win32.zip";
+                    url = beta ?
+                        "https://julialang-s3.julialang.org/bin/winnt/x86/1.6/julia-1.6.0-beta1-win32.zip" :
+                        "https://julialang-s3.julialang.org/bin/winnt/x86/1.5/julia-1.5.3-win32.zip";
                 }
 
                 try {
@@ -73,11 +73,91 @@ namespace Olympus {
                 string launcher = Path.Combine(root, "launch-local-julia.bat");
                 if (File.Exists(launcher))
                     File.Delete(launcher);
-                File.WriteAllText(launcher, $"@echo off\r\nset \"JULIA_DEPOT_PATH={Path.Combine(root, "julia-depot")}\"\r\nset \"AHORN_GLOBALENV={AhornHelper.AhornGlobalEnvPath}\"\r\nset \"AHORN_ENV={AhornHelper.AhornEnvPath}\"\r\n.\\julia\\bin\\julia.exe");
+                File.WriteAllText(launcher, @"
+@echo off
+setlocal EnableDelayedExpansion
+set ""JULIA_DEPOT_PATH=%~dp0\julia-depot""
+set ""AHORN_GLOBALENV=%LocalAppData%\Ahorn\env""
+set ""AHORN_ENV=%~dp0\ahorn-env""
+""%~dp0\julia\bin\julia.exe"" %*
+"
+                    .TrimStart().Replace("\r\n", "\n").Replace("\n", "\r\n")
+                );
 
 
             } else if (PlatformHelper.Is(Platform.Linux)) {
-                throw new NotImplementedException();
+                string tarPath = Path.Combine(tmp, $"juliadownload.tar.gz");
+                if (File.Exists(tarPath))
+                    File.Delete(tarPath);
+
+                string url;
+
+                string lsPath = AhornHelper.GetProcessOutput("which", "ls", out _).Trim().Split('\n').FirstOrDefault()?.Trim();
+                bool musl = !string.IsNullOrEmpty(lsPath) && AhornHelper.GetProcessOutput("ldd", lsPath, out _).Contains("musl");
+
+                if (PlatformHelper.Is(Platform.ARM)) {
+                    url = beta ?
+                        "https://julialang-s3.julialang.org/bin/linux/aarch64/1.6/julia-1.6.0-beta1-linux-aarch64.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/linux/aarch64/1.5/julia-1.5.3-linux-aarch64.tar.gz";
+                } else if (musl) {
+                    url = beta ?
+                        "https://julialang-s3.julialang.org/bin/musl/x64/1.6/julia-1.6.0-beta1-musl-x86_64.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/musl/x64/1.5/julia-1.5.3-musl-x86_64.tar.gz";
+                } else if (PlatformHelper.Is(Platform.Bits64)) {
+                    url = beta ?
+                        "https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.0-beta1-linux-x86_64.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.3-linux-x86_64.tar.gz";
+                } else {
+                    url = beta ?
+                        "https://julialang-s3.julialang.org/bin/linux/x86/1.6/julia-1.6.0-beta1-linux-i686.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/linux/x86/1.5/julia-1.5.3-linux-i686.tar.gz";
+                }
+
+                try {
+                    yield return Status($"Downloading {url}", false, "download", false);
+                    using (FileStream tarStream = File.Open(tarPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
+                        yield return Download(url, 0, tarStream);
+
+                        tarStream.Seek(0, SeekOrigin.Begin);
+                    }
+
+                    yield return Status("Extracting Julia", false, "download", false);
+                    yield return Status("", false, "download", false);
+                    using (Process process = AhornHelper.NewProcess("tar", $"-xvf \"{tarPath}\" -C \"{root}\"")) {
+                        process.Start();
+                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                            yield return Status(line, false, "", true);
+                        process.WaitForExit();
+                        if (process.ExitCode != 0)
+                            throw new Exception("tar encountered a fatal error.");
+                        yield return Status("Julia archive extracted", false, "", true);
+                    }
+
+                    yield return Status("Moving Julia", false, "", false);
+                    Directory.Move(Path.Combine(root, beta ? "julia-1.6.0-beta1" : "julia-1.5.3"), julia);
+
+                } finally {
+                    if (File.Exists(tarPath))
+                        File.Delete(tarPath);
+                }
+
+                string launcher = Path.Combine(root, "launch-local-julia.sh");
+                if (File.Exists(launcher))
+                    File.Delete(launcher);
+                File.WriteAllText(launcher, @"
+#!/usr/bin
+ROOTDIR=$(dirname ""$0"")
+export JULIA_DEPOT_PATH=""${ROOTDIR}/julia-depot""
+if [ ! -z ""${XDG_CONFIG_HOME}"" ]; then
+    export AHORN_GLOBALENV=""${XDG_CONFIG_HOME}/Ahorn/env""
+else
+    export AHORN_GLOBALENV=""${HOME}/.config/Ahorn/env""
+fi
+export AHORN_ENV=""${ROOTDIR}/ahorn-env""
+""${ROOTDIR}/julia/bin/julia"" $@
+"
+                    .TrimStart().Replace("\r\n", "\n")
+                );
 
 
             } else if (PlatformHelper.Is(Platform.MacOS)) {
