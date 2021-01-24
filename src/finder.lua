@@ -552,6 +552,15 @@ function finder.fixRoot(root, appname)
 end
 
 
+local function channelSetCb(channel, value)
+    channel:clear()
+    channel:push(value)
+end
+
+local function channelSet(channel, value)
+    channel:performAtomic(channelSetCb, value)
+end
+
 function finder.findAll(uncached)
     local all = uncached and channelCache:peek()
     if all then
@@ -587,8 +596,12 @@ function finder.findAll(uncached)
         end
     end
 
-    channelCache:push(all)
+    channelSet(channelCache, all)
     return all
+end
+
+function finder.getCached()
+    return channelCache:peek()
 end
 
 return finder

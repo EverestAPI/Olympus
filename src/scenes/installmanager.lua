@@ -12,7 +12,29 @@ local scene = {
 }
 
 
-local root
+local root = uie.column({
+
+    uie.scrollbox(
+        uie.column({
+        }):with({
+            style = {
+                bg = {},
+                padding = 16,
+            }
+        }):with(uiu.fillWidth):as("installs")
+    ):with({
+        style = {
+            barPadding = 16,
+        },
+        clip = false,
+        cacheable = false
+    }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+
+}):with({
+    cacheable = false,
+    _fullroot = true
+})
+scene.root = root
 
 
 function scene.browse()
@@ -332,32 +354,12 @@ function scene.reloadFound()
     end)
 end
 
+local reloading = 0
 
 function scene.reloadAll()
-    root = uie.column({
-
-        uie.scrollbox(
-            uie.column({
-            }):with({
-                style = {
-                    bg = {},
-                    padding = 16,
-                }
-            }):with(uiu.fillWidth):as("installs")
-        ):with({
-            style = {
-                barPadding = 16,
-            },
-            clip = false,
-            cacheable = false
-        }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
-
-    }):with({
-        cacheable = false,
-        _fullroot = true
-    })
-    scene.root = root
-    scener.onChange(scener.current, scener.current)
+    if reloading > 0 then
+        return
+    end
 
     local loading = root:findChild("loading")
     if loading then
@@ -376,13 +378,16 @@ function scene.reloadAll()
     }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingInstalls")
     root:addChild(loading)
 
-    local left = 2
+    reloading = 2
     local function done()
-        left = left - 1
-        if left <= 0 then
+        reloading = reloading - 1
+        if reloading <= 0 then
             loading:removeSelf()
         end
     end
+
+    local installs = root:findChild("installs")
+    installs.children = {}
 
     scene.reloadManual():calls(done)
     scene.reloadFound():calls(done)

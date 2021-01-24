@@ -7,6 +7,7 @@ local notify = require("notify")
 local config = require("config")
 local sharp = require("sharp")
 local updater = require("updater")
+local finder = require("finder")
 
 local scene = {
     name = "Main Menu"
@@ -20,7 +21,7 @@ local function checkInstall(forceInstall)
 
     alert({
         body = [[
-Your Celeste installation list is still empty.
+Your Celeste installation list is empty.
 Do you want to go to the Celeste installation manager?]],
         buttons = {
             {
@@ -174,14 +175,28 @@ function scene.createInstalls()
                 end):with({
                     grow = false
                 }):with(uiu.fillWidth):as("installs")
-            ):with(uiu.fill),
+            ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
-            uie.button("Manage", function()
-                scener.push("installmanager")
-            end):with({
-                clip = false,
-                cacheable = false
-            }):with(utils.important(24, function() return #config.installs == 0 end)):with(uiu.bottombound):with(uiu.rightbound):as("manageInstalls")
+            uie.row({
+
+                uie.label({ { 1, 1, 1, 0.5 }, "mainmenu.lua broke, please fix." }):with({
+                    y = 8
+                }):with(uiu.fillWidth(true)):as("installcount"),
+
+                uie.button("Manage", function()
+                    scener.push("installmanager")
+                end):with({
+                    clip = false,
+                    cacheable = false
+                }):with(utils.important(24, function() return #config.installs == 0 end)):with(uiu.rightbound)
+
+            }):with({
+                style = {
+                    padding = 0,
+                    bg = {}
+                },
+                clip = false
+            }):with(uiu.bottombound):with(uiu.fillWidth)
 
         }):with({
             style = {
@@ -197,10 +212,39 @@ end
 
 
 function scene.reloadInstalls(scene, cb)
-    local list = scene.root:findChild("installs")
+    local list, counter = scene.root:findChild("installs", "installcount")
     list.children = {}
+    counter.text = { { 1, 1, 1, 0.5 }, "Scanning..." }
 
     local installs = config.installs
+
+    local function handleFound(task, all)
+        local new = #all
+        for i = 1, #all do
+            local found = all[i]
+            for j = 1, #installs do
+                local existing = installs[j]
+                if found.path == existing.path then
+                    new = new - 1
+                    break
+                end
+            end
+        end
+
+        if new == 0 then
+            counter.text = ""
+        else
+            counter.text = { { 1, 1, 1, 0.5 }, uiu.countformat(new, "%d new install found.", "%d new installs found.")}
+        end
+    end
+
+    local foundCached = finder.getCached()
+    if foundCached then
+        handleFound(nil, foundCached)
+    else
+        threader.wrap("finder").findAll():calls(handleFound)
+    end
+
     for i = 1, #installs do
         local entry = installs[i]
         local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { index = i, entry = entry, version = "???" })
@@ -232,8 +276,8 @@ function scene.reloadInstalls(scene, cb)
     if #installs == 0 then
         list:addChild(uie.group({
             uie.label([[
-No installations found.
-Press the manage button.]])
+Your Celeste installs list is empty.
+Press the manage button below.]])
         }):with({
             style = {
                 padding = 8
@@ -448,12 +492,12 @@ function scene.load()
 
                 local status
                 status, data = pcall(utils.fromYAML, data)
-                if not status or not data or not data.title then
+                if not status or not data then
                     print("news entry contains malformed yaml", entryName)
                     print(data)
                     all[i] = {
                         error = true,
-                        preview = "A news entry was contained invalid metadata."
+                        preview = "A news entry contained invalid metadata."
                     }
                     goto next
                 end
