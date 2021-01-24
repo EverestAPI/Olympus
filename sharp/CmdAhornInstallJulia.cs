@@ -115,11 +115,8 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
 
                 try {
                     yield return Status($"Downloading {url}", false, "download", false);
-                    using (FileStream tarStream = File.Open(tarPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete)) {
+                    using (FileStream tarStream = File.Open(tarPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
                         yield return Download(url, 0, tarStream);
-
-                        tarStream.Seek(0, SeekOrigin.Begin);
-                    }
 
                     yield return Status("Extracting Julia", false, "download", false);
                     yield return Status("", false, "download", false);
@@ -163,7 +160,96 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
 
 
             } else if (PlatformHelper.Is(Platform.MacOS)) {
-                throw new NotImplementedException();
+                string dmgPath = Path.Combine(tmp, $"juliadownload.dmg");
+                if (File.Exists(dmgPath))
+                    File.Delete(dmgPath);
+
+                string mount = Path.Combine("tmp", "juliamount");
+                if (Directory.Exists(mount))
+                    Directory.Delete(mount);
+
+                string url = beta ?
+                    "https://julialang-s3.julialang.org/bin/mac/x64/1.6/julia-1.6.0-beta1-mac64.dmg" :
+                    "https://julialang-s3.julialang.org/bin/mac/x64/1.5/julia-1.5.3-mac64.dmg";
+
+                bool mounted = false;
+
+                try {
+                    yield return Status($"Downloading {url}", false, "download", false);
+                    using (FileStream dmgStream = File.Open(dmgPath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
+                        yield return Download(url, 0, dmgStream);
+
+                    yield return Status("Mounting Julia", false, "download", false);
+                    using (Process process = AhornHelper.NewProcess("hdiutil", $"attach -mountpount \"{mount}\" \"{dmgPath}\"")) {
+                        process.Start();
+                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                            yield return Status(line, false, "", false);
+                        process.WaitForExit();
+                        if (process.ExitCode != 0)
+                            throw new Exception("hdiutil attach encountered a fatal error.");
+                    }
+                    mounted = true;
+
+                    yield return Status("Copying Julia", false, "", false);
+                    yield return Status("", false, "download", false);
+                    using (Process process = AhornHelper.NewProcess("cp", $"-rvf \"{Path.Combine(mount, beta ? "Julia-1.6.app" : "Julia-1.5.app", "Contents", "Resources", "julia")}\" \"{julia}\"")) {
+                        process.Start();
+                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                            yield return Status(line, false, "", true);
+                        process.WaitForExit();
+                        if (process.ExitCode != 0)
+                            throw new Exception("cp encountered a fatal error.");
+                        yield return Status("Julia copied", false, "", true);
+                    }
+
+                    yield return Status("Unmounting Julia", false, "download", false);
+                    using (Process process = AhornHelper.NewProcess("hdiutil", $"detach \"{mount}\"")) {
+                        process.Start();
+                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                            yield return Status(line, false, "", false);
+                        process.WaitForExit();
+                        if (process.ExitCode != 0)
+                            throw new Exception("hdiutil detach encountered a fatal error.");
+                    }
+
+                } finally {
+                    if (mounted) {
+                        try {
+                            using (Process process = AhornHelper.NewProcess("hdiutil", $"detach \"{mount}\"")) {
+                                process.Start();
+                                process.WaitForExit();
+                                if (process.ExitCode != 0)
+                                    throw new Exception("hdiutil detach encountered a fatal error.");
+                            }
+                        } catch (Exception e) {
+                            Console.Error.WriteLine("Error unmounting Julia dmg in installer finally clause");
+                            Console.Error.WriteLine(e);
+                        }
+                    }
+
+                    if (File.Exists(dmgPath))
+                        File.Delete(dmgPath);
+                }
+
+                string launcher = Path.Combine(root, "launch-local-julia.sh");
+                if (File.Exists(launcher))
+                    File.Delete(launcher);
+                File.WriteAllText(launcher, @"
+#!/bin/sh
+ROOTDIR=$(dirname ""$0"")
+export JULIA_DEPOT_PATH=""${ROOTDIR}/julia-depot""
+if [ ! -z ""${XDG_CONFIG_HOME}"" ]; then
+    export AHORN_GLOBALENV=""${XDG_CONFIG_HOME}/Ahorn/env""
+else
+    export AHORN_GLOBALENV=""${HOME}/.config/Ahorn/env""
+fi
+export AHORN_ENV=""${ROOTDIR}/ahorn-env""
+""${ROOTDIR}/julia/bin/julia"" $@
+"
+                    .TrimStart().Replace("\r\n", "\n")
+                );
+
+                AhornHelper.GetProcessOutput("chmod", $"a+x \"{launcher}\"", out _);
 
 
             } else {
