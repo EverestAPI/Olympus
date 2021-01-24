@@ -306,6 +306,9 @@ function scene.load()
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
         end
 
+        local firstStable, firstBeta
+        local pinSpacer
+
         local offset = 700
         for bi = 1, #builds do
             local build = builds[bi]
@@ -364,20 +367,84 @@ function scene.load()
                 build.version = version
                 build.artifactBase = "https://dev.azure.com/EverestAPI/Everest/_apis/build/builds/" .. build.id .. "/artifacts?$format=zip&artifactName="
 
+                local pin = false
+
+                ::readd::
+
                 local item = uie.listItem(text, build):with(uiu.fillWidth)
                 item.label.wrap = true
+
+                local index = nil
+
                 if branch == "stable" then
                     item.style.normalBG = { 0.2, 0.4, 0.2, 0.8 }
                     item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.9 }
                     item.style.pressedBG = { 0.1, 0.5, 0.2, 0.9 }
                     item.style.selectedBG = { 0.5, 0.8, 0.5, 0.9 }
+                    if not firstStable then
+                        firstStable = item
+                        if firstBeta then
+                            index = 2
+                        else
+                            index = 1
+                        end
+                    end
+
                 elseif branch == "beta" then
                     item.style.normalBG = { 0.5, 0.4, 0.1, 0.8 }
                     item.style.hoveredBG = { 0.8, 0.7, 0.3, 0.9 }
                     item.style.pressedBG = { 0.5, 0.4, 0.2, 0.9 }
                     item.style.selectedBG = { 0.8, 0.7, 0.3, 0.9 }
+                    if not firstBeta then
+                        firstBeta = item
+                        if firstStable then
+                            index = 2
+                        else
+                            index = 1
+                        end
+                    end
                 end
-                list:addChild(item)
+
+                if index then
+                    if not pinSpacer then
+                        pinSpacer = true
+                        list:addChild(uie.row({
+                            uie.label("Newest")
+                        }):with({
+                            style = {
+                                bg = {},
+                                padding = 4
+                            }
+                        }), 1)
+                        list:addChild(uie.row({
+                            uie.image("pin"):with({
+                                scale = 16 / 256,
+                                y = 2
+                            }),
+                            uie.label("Pinned")
+                        }):with({
+                            style = {
+                                bg = {},
+                                padding = 4
+                            }
+                        }), 1)
+                    end
+
+                    index = index + 1
+                    pin = true
+                end
+
+                if pin then
+                    item:addChild(uie.image("pin"):with({
+                        scale = 16 / 256,
+                        y = 2
+                    }), 1)
+                end
+
+                list:addChild(item, index)
+                if index then
+                    goto readd
+                end
             end
         end
 

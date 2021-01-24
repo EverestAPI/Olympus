@@ -20,74 +20,79 @@ for k, v in pairs(uiu) do
     utils[k] = v
 end
 
-function utils.important(size, check)
-    return function(el)
-        local uie = require("ui.elements")
-        local config = require("config")
+function utils._important(name)
+    return function(size, check)
+        return function(el)
+            local uie = require("ui.elements")
 
-        if el.style:get("spacing") ~= nil then
-            el.style.spacing = 0
-        end
+            el.clip = false
+            if el.style:get("spacing") ~= nil then
+                el.style.spacing = 0
+            end
 
-        el:addChild(uie.image("important"):with({
-            check = check,
-            time = love.math.random() * 0.3,
-            scale = size / 256
-        }):hook({
-            update = function(orig, self, dt)
-                orig(self, dt)
+            el:addChild(uie.image(name):with({
+                check = check,
+                time = love.math.random() * 0.3,
+                scale = size / 256
+            }):hook({
+                update = function(orig, self, dt)
+                    orig(self, dt)
 
-                local check = self.check
-                if uiu.isCallback(check) then
-                    local visible = check(self) and true or false
-                    if visible ~= self.visible then
-                        self.visible = visible
-                        self:reflow()
-                        if not self.visible then
-                            self.time = love.math.random() * 0.3
+                    local check = self.check
+                    if uiu.isCallback(check) then
+                        local visible = check(self) and true or false
+                        if visible ~= self.visible then
+                            self.visible = visible
+                            self:reflow()
+                            if not self.visible then
+                                self.time = love.math.random() * 0.3
+                            end
                         end
                     end
-                end
 
-                if self.visible then
-                    local time = self.time + dt
-                    if time >= 1 then
-                        time = time - 1
+                    if self.visible then
+                        local time = self.time + dt
+                        if time >= 1 then
+                            time = time - 1
+                        end
+                        self.time = time
+                        self:repaint()
                     end
-                    self.time = time
-                    self:repaint()
-                end
-            end,
+                end,
 
-            updateHidden = function(orig, self, dt)
-                -- The parent might be too stupid to have onscreen set to true.
-                self:update(dt)
-                orig(dt)
-            end,
+                updateHidden = function(orig, self, dt)
+                    -- The parent might be too stupid to have onscreen set to true.
+                    self:update(dt)
+                    orig(dt)
+                end,
 
-            calcSize = function(orig, self)
-                self.width = 0
-                self.height = 0
-            end,
-            layoutLateLazy = function(orig, self)
-                self:layoutLate()
-            end,
-            layoutLate = function(orig, self)
-                orig(self)
-                self.realX = -8
-                self.realY = -8
-            end,
-
-            draw = function(orig, self)
-                if self.visible then
-                    local time = self.time
-                    self.realY = -4 + -8 * math.abs(math.sin(time * time * math.pi * 4)) * (1 - time)
+                calcSize = function(orig, self)
+                    self.width = 0
+                    self.height = 0
+                end,
+                layoutLateLazy = function(orig, self)
+                    self:layoutLate()
+                end,
+                layoutLate = function(orig, self)
                     orig(self)
+                    self.realX = -8
+                    self.realY = -8
+                end,
+
+                draw = function(orig, self)
+                    if self.visible then
+                        local time = self.time
+                        self.realY = -4 + -8 * math.abs(math.sin(time * time * math.pi * 4)) * (1 - time)
+                        orig(self)
+                    end
                 end
-            end
-        }):as("important"))
+            }):as(name))
+        end
     end
 end
+
+utils.important = utils._important("important")
+utils.importantPin = utils._important("importantPin")
 
 function utils.concat(...)
     local all = {}
