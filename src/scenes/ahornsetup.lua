@@ -221,6 +221,35 @@ If you really need to cancel the installation process:
     })
 end
 
+function scene.updateAhornAlert()
+    alert({
+        body = [[
+Checking for updates will also install updates.
+
+Just like installing Ahorn, IT WILL TAKE A LONG TIME.
+At some points it will look as if it is hanging.
+It's working hard in the background, no matter how slow it is.
+DON'T CLOSE OLYMPUS OR IT WILL CONTINUE UPDATING IN THE BACKGROUND.
+
+If you really need to cancel the installation process:
+]] .. (
+(love.system.getOS() == "Windows" and "Open Task Manager and force-close julia.exe") or
+(love.system.getOS() == "macOS" and "Open the Activity Monitor and force-close the Julia process.") or
+(love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
+("... Good luck killing the Julia process.")),
+        buttons = {
+            {
+                "Check and install updates",
+                function(container)
+                    scene.installAhorn()
+                    container:close("OK")
+                end
+            },
+            { "Back" }
+        }
+    })
+end
+
 
 function scene.launchAhorn()
     if scene.running then
@@ -391,28 +420,53 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
             end):with(uiu.fillWidth)
         }):with(uiu.fillWidth))
 
-        local function btnInstall(icon, text, cb)
-            return uie.button(
-                uie.row({ uie.icon(icon):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
+        local function btnRow(items)
+            local itemcount = #items
+            return uie.row(uiu.map(items, function(item, i)
+                local icon = item[1]
+                local text = item[2]
+                local cb = item[3]
+                local btn = uie.button(
+                    uie.row({ uie.icon(icon):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
+                        style = {
+                            bg = {},
+                            padding = 0
+                        },
+                        clip = false,
+                        cacheable = false
+                    }):hook(type(text) ~= "function" and {} or {
+                        update = function(orig, self, ...)
+                            self.children[2].text = text()
+                            orig(self, ...)
+                        end
+                    }):with(uiu.styleDeep), function()
+                        cb()
+                    end
+                ):with(i > 1 and {} or {
                     style = {
-                        bg = {},
-                        padding = 0
+                        normalBG = { 0.2, 0.4, 0.2, 0.8 },
+                        hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
+                        pressedBG = { 0.2, 0.6, 0.2, 0.9 }
                     },
                     clip = false,
                     cacheable = false
-                }):hook(type(text) ~= "function" and {} or {
-                    update = function(orig, self, ...)
-                        self.children[2].text = text()
-                        orig(self, ...)
-                    end
-                }):with(uiu.styleDeep), function()
-                    cb()
+                })
+
+                if itemcount == 1 then
+                    btn = btn:with(uiu.fillWidth)
+                else
+                    btn = btn:with(uiu.fillWidth(1 / itemcount + 4)):with(uiu.at((i == 1 and 0 or 4) + (i - 1) / itemcount, 0))
                 end
-            ):with({
+
+                if i == 1 then
+                    btn = btn:with(utils.important(24))
+                end
+
+                return btn
+            end)):with({
                 style = {
-                    normalBG = { 0.2, 0.4, 0.2, 0.8 },
-                    hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
-                    pressedBG = { 0.2, 0.6, 0.2, 0.9 }
+                    bg = {},
+                    padding = 0
                 },
                 clip = false,
                 cacheable = false
@@ -422,15 +476,17 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
         local function btnInstallJulia()
             local text = "Install Julia " .. tostring(info.JuliaVersionRecommended)
             local textBeta = "Install Julia " .. tostring(info.JuliaVersionBetaRecommended)
-            return btnInstall(
-                "download",
-                function()
-                    return (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and textBeta or text
-                end,
-                function()
-                    scene.installJulia((love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and text ~= textBeta)
-                end
-            )
+            return btnRow({
+                {
+                    "download",
+                    function()
+                        return (love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and textBeta or text
+                    end,
+                    function()
+                        scene.installJulia((love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")) and text ~= textBeta)
+                    end
+                }
+            })
         end
 
         if not info.JuliaPath then
@@ -482,7 +538,9 @@ No supported installation of Ahorn was found.
 Olympus can download Ahorn and start the installation process for you.
 ]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be installed into the isolated environment." or "Ahorn will be installed for your system-wide installation of Julia.")
                 ),
-                info.JuliaPath and btnInstall("download", "Install Ahorn", scene.installAhornAlert)
+                info.JuliaPath and btnRow({
+                    { "download", "Install Ahorn", scene.installAhornAlert }
+                })
             }):with(uiu.fillWidth))
 
         else
@@ -493,9 +551,10 @@ Found installation path: %s
 Found version: %s]],
                     tostring(info.AhornPath), tostring(info.AhornVersion))
                 ),
-                btnInstall("mainmenu/ahorn", "Launch Ahorn", function()
-                    scene.launchAhorn()
-                end)
+                btnRow({
+                    { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
+                    { "download", "Check for updates", scene.updateAhornAlert }
+                })
             }):with(uiu.fillWidth))
         end
 
