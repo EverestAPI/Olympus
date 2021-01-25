@@ -126,7 +126,7 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
                             yield return Status(line, false, "", true);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
-                            throw new Exception("tar encountered a fatal error.");
+                            throw new Exception("tar encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                         yield return Status("Julia archive extracted", false, "", true);
                     }
 
@@ -186,7 +186,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                             yield return Status(line, false, "", false);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
-                            throw new Exception("hdiutil attach encountered a fatal error.");
+                            throw new Exception("hdiutil attach encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                     }
                     mounted = true;
 
@@ -198,7 +198,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                             yield return Status(line, false, "", true);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
-                            throw new Exception("cp encountered a fatal error.");
+                            throw new Exception("cp encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                         yield return Status("Julia copied", false, "", true);
                     }
 
@@ -209,7 +209,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                             yield return Status(line, false, "", false);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
-                            throw new Exception("hdiutil detach encountered a fatal error.");
+                            throw new Exception("hdiutil detach encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                     }
                     mounted = false;
 
@@ -220,7 +220,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                                 process.Start();
                                 process.WaitForExit();
                                 if (process.ExitCode != 0)
-                                    throw new Exception("hdiutil detach encountered a fatal error.");
+                                    throw new Exception("hdiutil detach encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                             }
                         } catch (Exception e) {
                             Console.Error.WriteLine("Error unmounting Julia dmg in installer finally clause");
