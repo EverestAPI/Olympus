@@ -73,6 +73,7 @@ steps:
   displayName: 'Setup: macOS: brew: install lua lua@5.1 luarocks'
   inputs:
     script: |
+      export HOMEBREW_NO_INSTALL_CLEANUP=1
       brew install lua lua@5.1 luarocks
 
 # Use apt on Ubuntu.
