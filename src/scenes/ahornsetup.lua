@@ -458,10 +458,6 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
                     btn = btn:with(uiu.fillWidth(1 / itemcount + 4)):with(uiu.at((i == 1 and 0 or 4) + (i - 1) / itemcount, 0))
                 end
 
-                if i == 1 then
-                    btn = btn:with(utils.important(24))
-                end
-
                 return btn
             end)):with({
                 style = {

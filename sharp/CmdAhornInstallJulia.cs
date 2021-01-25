@@ -123,14 +123,14 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
                     using (Process process = AhornHelper.NewProcess("tar", $"-xvf \"{tarPath}\" -C \"{root}\"")) {
                         process.Start();
                         for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                            yield return Status(line, false, "", true);
+                            yield return Status(line, false, "download", true);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
                             throw new Exception("tar encountered a fatal error:\n" + process.StandardError.ReadToEnd());
-                        yield return Status("Julia archive extracted", false, "", true);
+                        yield return Status("Julia archive extracted", false, "download", true);
                     }
 
-                    yield return Status("Moving Julia", false, "", false);
+                    yield return Status("Moving Julia", false, "download", false);
                     Directory.Move(Path.Combine(root, beta ? "julia-1.6.0-beta1" : "julia-1.5.3"), julia);
 
                 } finally {
@@ -183,30 +183,30 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                     using (Process process = AhornHelper.NewProcess("hdiutil", $"attach -mountpoint \"{mount}\" \"{dmgPath}\"")) {
                         process.Start();
                         for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                            yield return Status(line, false, "", false);
+                            yield return Status(line, false, "download", false);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
                             throw new Exception("hdiutil attach encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                     }
                     mounted = true;
 
-                    yield return Status("Copying Julia", false, "", false);
+                    yield return Status("Copying Julia", false, "download", false);
                     yield return Status("", false, "download", false);
                     using (Process process = AhornHelper.NewProcess("cp", $"-rvf \"{Path.Combine(mount, beta ? "Julia-1.6.app" : "Julia-1.5.app", "Contents", "Resources", "julia")}\" \"{julia}\"")) {
                         process.Start();
                         for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                            yield return Status(line, false, "", true);
+                            yield return Status(line, false, "download", true);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
                             throw new Exception("cp encountered a fatal error:\n" + process.StandardError.ReadToEnd());
-                        yield return Status("Julia copied", false, "", true);
+                        yield return Status("Julia copied", false, "download", true);
                     }
 
                     yield return Status("Unmounting Julia", false, "download", false);
                     using (Process process = AhornHelper.NewProcess("hdiutil", $"detach \"{mount}\"")) {
                         process.Start();
                         for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
-                            yield return Status(line, false, "", false);
+                            yield return Status(line, false, "download", false);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
                             throw new Exception("hdiutil detach encountered a fatal error:\n" + process.StandardError.ReadToEnd());

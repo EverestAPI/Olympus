@@ -359,7 +359,7 @@ function scene.sharpTask(id, ...)
 
         local status = sharp.free(task):result()
         if status == "error" then
-            scene.update(last and last[1], 1, "error")
+            scene.update(last and last[1], 1, "error", true)
             scene.done({
                 {
                     "Open log",
@@ -396,7 +396,7 @@ Before uploading, check your logs for sensitive info (f.e. your username).]],
             return false
         end
 
-        return last
+        return last[1]
     end)
 end
 
