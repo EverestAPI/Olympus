@@ -180,7 +180,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                         yield return Download(url, 0, dmgStream);
 
                     yield return Status("Mounting Julia", false, "download", false);
-                    using (Process process = AhornHelper.NewProcess("hdiutil", $"attach -mountpount \"{mount}\" \"{dmgPath}\"")) {
+                    using (Process process = AhornHelper.NewProcess("hdiutil", $"attach -mountpoint \"{mount}\" \"{dmgPath}\"")) {
                         process.Start();
                         for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
                             yield return Status(line, false, "", false);
