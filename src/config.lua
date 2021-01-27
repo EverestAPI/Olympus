@@ -114,7 +114,8 @@ function config.load()
 
     default(data.ahorn, "rootPath", "")
     default(data.ahorn, "vhdPath", "")
-    default(data.ahorn, "forceLocal", false)
+    default(data.ahorn, "vhdMountPath", "")
+    default(data.ahorn, "mode", love.system.getOS() == "Windows" and "vhd" or "local")
 end
 
 function config.save()

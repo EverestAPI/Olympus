@@ -34,11 +34,14 @@ redirect_stdout(stdoutPrev)
 
         private static string OrigJuliaDepotPath = Environment.GetEnvironmentVariable("JULIA_DEPOT_PATH") ?? "";
 
-        public static bool ForceLocal = false;
+        public static AhornHelperMode Mode = AhornHelperMode.System;
 
         private static string _RootPath;
         public static string RootPath {
             get {
+                if (Mode == AhornHelperMode.VHD)
+                    return VHDMountPath;
+
                 if (!string.IsNullOrEmpty(_RootPath))
                     return _RootPath;
 
@@ -79,10 +82,31 @@ redirect_stdout(stdoutPrev)
                 if (!PlatformHelper.Is(Platform.Windows))
                     return null;
 
-                return _VHDPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus", "ahorn.vhd");
+                return _VHDPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus", "ahorn.vhdx");
             }
             set {
                 _VHDPath = value;
+            }
+        }
+
+        private static string _VHDMountPath;
+        public static string VHDMountPath {
+            get {
+                if (!string.IsNullOrEmpty(_VHDMountPath))
+                    return _VHDMountPath;
+
+                string path = Environment.GetEnvironmentVariable("OLYMPUS_AHORN_VHDMOUNT");
+                if (!string.IsNullOrEmpty(path))
+                    return _VHDMountPath = path;
+
+                // VHDs are only supported on Windows by default.
+                if (!PlatformHelper.Is(Platform.Windows))
+                    return null;
+
+                return _VHDMountPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus", "ahorn.vhdx.mount");
+            }
+            set {
+                _VHDMountPath = value;
             }
         }
 
@@ -171,7 +195,7 @@ redirect_stdout(stdoutPrev)
                 return null;
             }
 
-            bool local = localDepot ?? (JuliaIsLocal || ForceLocal);
+            bool local = localDepot ?? (JuliaIsLocal || Mode != AhornHelperMode.System);
 
             if (local) {
                 string depot = Path.Combine(RootPath, "julia-depot");
@@ -226,7 +250,7 @@ redirect_stdout(stdoutPrev)
                 return JuliaPath = path;
             }
 
-            if (ForceLocal)
+            if (Mode != AhornHelperMode.System)
                 return null;
 
             path = GetProcessOutput(
@@ -284,7 +308,7 @@ redirect_stdout(stdoutPrev)
                 return AhornPath = path;
             }
 
-            if (ForceLocal)
+            if (Mode != AhornHelperMode.System)
                 return null;
 
             path = GetJuliaOutput(script, out _, false);
@@ -315,5 +339,11 @@ end
 ", out _);
         }
 
+    }
+
+    public enum AhornHelperMode {
+        System,
+        Local,
+        VHD
     }
 }

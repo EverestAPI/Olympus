@@ -25,8 +25,11 @@ namespace Olympus {
 
         public class Info {
 
+            public string Mode = AhornHelper.Mode.ToString();
+
             public string RootPath = AhornHelper.RootPath;
             public string VHDPath = AhornHelper.VHDPath;
+            public string VHDMountPath = AhornHelper.VHDMountPath;
 
             public string JuliaPath = AhornHelper.JuliaPath;
             public bool JuliaIsLocal = AhornHelper.JuliaIsLocal;

@@ -14,73 +14,87 @@ local scene = {
     name = "Ahorn Setup"
 }
 
+local modes = {
+    { text = "Let Olympus manage Julia and Ahorn", data = "local" },
+    { text = "Use system-wide Julia and Ahorn if existing", data = "system" },
+}
+
+if love.system.getOS() == "Windows" then
+    table.insert(modes, 1, { text = "Use pre-bundled Ahorn-VHD (experimental)", data = "vhd" })
+end
+
 
 local root = uie.column({
     uie.row({
 
-        uie.column({
-            uie.label("Information", ui.fontBig),
+        uie.scrollbox(
+            uie.column({
 
-            uie.label([[
+                uie.column({
+                    uie.label("About", ui.fontBig),
+
+                    uie.label([[
 Olympus can install and launch Ahorn for you.
 Ahorn is the community map editor for Celeste.
 This function isn't officially supported by the Ahorn developers.
 Feel free to visit the Ahorn GitHub page for more info.]]),
-            uie.button("Open https://github.com/CelestialCartographers/Ahorn", function()
-                utils.openURL("https://github.com/CelestialCartographers/Ahorn")
-            end):with(uiu.fillWidth),
-            uie.group(),
+                    uie.button("Open https://github.com/CelestialCartographers/Ahorn", function()
+                        utils.openURL("https://github.com/CelestialCartographers/Ahorn")
+                    end):with(uiu.fillWidth),
+                }):with(uiu.fillWidth),
 
-            uie.label(""):hook({
-                update = function(orig, self, ...)
-                    self.text = [[
-Olympus can install Julia and Ahorn into an isolated environment.
-It can also use your existing system-wide Julia and Ahorn installs.
-Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isolated + existing installations.")
-                    orig(self, ...)
-                end
-            }),
-            uie.button(
-                uie.row({
-                    uie.label(""):hook({
+                uie.column({
+                    uie.label("Options", ui.fontBig),
+
+                    uie.label([[
+Olympus can manage Julia and Ahorn in an isolated folder.
+It can also use your existing system-wide Julia and Ahorn installs.]]),
+                    uie.dropdown(
+                        modes,
+                        function(self, value)
+                            config.ahorn.mode = value
+                            config.save()
+                            scene.reload()
+                        end
+                    ):hook({
                         update = function(orig, self, ...)
-                            self.text = config.ahorn.forceLocal and "Use system-wide Julia and Ahorn" or "Use isolated Julia and Ahorn"
+                            self.enabled = not scene.reloading
                             orig(self, ...)
                         end
-                    }),
-                    uie.spinner():with({
-                        width = 16,
-                        height = 16
-                    }):with(uiu.rightbound):hook({
-                        update = function(orig, self, ...)
-                            self.visible = not self.parent.parent.enabled
-                            orig(self, ...)
+                    }):with(function(self)
+                        for i = 1, #modes do
+                            if config.ahorn.mode == modes[i].data then
+                                self.selected = self:getItem(i)
+                                self.text = self.selected.text
+                                return
+                            end
                         end
-                    })
-                }):with({
-                    style = {
-                        bg = {},
-                        padding = 0
-                    },
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.styleDeep):with(uiu.fillWidth),
-                function()
-                    config.ahorn.forceLocal = not config.ahorn.forceLocal
-                    config.save()
-                    scene.reload()
-                end
-            ):with(uiu.fillWidth):as("modeswitch"),
-            uie.button("Open the Olympus isolated Ahorn folder", function()
-                utils.openFile(scene.info.RootPath)
-            end):with(uiu.fillWidth),
-            uie.group(),
+                        self.selected = self:getItem(1)
+                        self.text = "???"
+                    end):with(uiu.fillWidth),
 
-            uie.label({ { 1, 0.1, 0.25, 1 }, [[
-THIS IS STILL IN ACTIVE DEVELOPMENT.
-Please ping 0x0ade in the Celestecord if things go wrong.]]}),
+                    uie.button("Open the Olympus Ahorn folder", function()
+                        utils.openFile(scene.info.RootPath)
+                    end):with(uiu.fillWidth),
 
+                    uie.group(),
+                    uie.label("Check the Olympus config.json for more advanced settings.")
+                }):with(uiu.fillWidth),
+
+            }):with({
+                style = {
+                    padding = 0,
+                    bg = {},
+                },
+                clip = false,
+                cacheable = false
+            }):with(uiu.fillWidth):as("infolist")
+        ):with({
+            width = 500,
+            clip = false,
+            cacheable = false
         }):with(uiu.fillHeight),
+
 
         uie.scrollbox(
             uie.column({
@@ -145,7 +159,7 @@ Please ping 0x0ade in the Celestecord if things go wrong.]]}),
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
             uie.row({
-                uie.button("Unlock button broke", function(self)
+                uie.button("", function(self)
                     scene.loglist.locked = not scene.loglist.locked
                 end):hook({
                     update = function(orig, self, ...)
@@ -197,10 +211,10 @@ Please ping 0x0ade in the Celestecord if things go wrong.]]}),
 scene.root = root
 
 
-scene.mainholder = scene.root:findChild("mainholder", "modeswitch")
-scene.logholder = scene.root:findChild("logholder", "modeswitch")
-scene.loglist = scene.root:findChild("loglist", "modeswitch")
-scene.logclose = scene.root:findChild("logclose", "modeswitch")
+scene.mainholder = scene.root:findChild("mainholder")
+scene.logholder = scene.root:findChild("logholder")
+scene.loglist = scene.root:findChild("loglist")
+scene.logclose = scene.root:findChild("logclose")
 
 
 function scene.installJulia(beta)
@@ -400,8 +414,10 @@ Press the close button in the bottom right corner to close this log.]]))
 end
 
 
+local reloadRequested
 function scene.reload()
     if scene.reloading then
+        reloadRequested = true
         return scene.reloading
     end
 
@@ -416,10 +432,9 @@ function scene.reload()
         scene.logholder:removeSelf()
         scene.root:addChild(scene.mainholder)
 
-        local mainlist, modeswitch = root:findChild("mainlist", "modeswitch")
+        local mainlist = root:findChild("mainlist")
         mainlist.children = {}
         mainlist:reflow()
-        modeswitch.enabled = false
 
         local loading = uie.row({
             uie.label("Loading"),
@@ -438,13 +453,17 @@ function scene.reload()
         }):with(uiu.fillWidth)
         mainlist:addChild(status)
 
-        local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.vhdPath, config.ahorn.forceLocal):result()
+        local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.vhdPath, config.ahorn.vhdMountPath, config.ahorn.mode):result()
         scene.info = info
         status:removeSelf()
 
-        local function btnRow(items)
+        local function btnRow(important, items)
+            if not items then
+                important, items = true, important
+            end
+
             local itemcount = #items
-            return uie.row(uiu.map(items, function(item, i)
+            local row = uie.row(uiu.map(items, function(item, i)
                 local icon = item[1]
                 local text = item[2]
                 local cb = item[3]
@@ -464,7 +483,7 @@ function scene.reload()
                     }):with(uiu.styleDeep), function()
                         cb()
                     end
-                ):with(i > 1 and {} or {
+                ):with(important and i > 1 and {} or {
                     style = {
                         normalBG = { 0.2, 0.4, 0.2, 0.8 },
                         hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
@@ -488,12 +507,27 @@ function scene.reload()
                 },
                 clip = false,
                 cacheable = false
-            }):with(uiu.fillWidth):with(utils.important(24))
+            }):with(uiu.fillWidth)
+
+            if important then
+                row = row:with(utils.important(24))
+            end
+
+            return row
         end
 
         local function btnInstallJulia()
-            local text = "Install Julia " .. tostring(info.JuliaVersionRecommended)
-            local textBeta = "Install Julia " .. tostring(info.JuliaVersionBetaRecommended)
+            local text, textBeta
+
+            if love.system.getOS() == "Windows" then
+                text = string.format("Install Julia %s from scratch", tostring(info.JuliaVersionRecommended))
+                textBeta = string.format("Install Julia %s from scratch", tostring(info.JuliaVersionBetaRecommended))
+
+            else
+                text = string.format("Install Julia %s", tostring(info.JuliaVersionRecommended))
+                textBeta = string.format("Install Julia %s", tostring(info.JuliaVersionBetaRecommended))
+            end
+
             return btnRow({
                 {
                     "download",
@@ -507,26 +541,102 @@ function scene.reload()
             })
         end
 
-        if not info.JuliaPath then
+        local function filecount(path)
+            local count = 0
+            for sub in fs.dir(info.VHDMountPath) do
+                if sub ~= "." and sub ~= ".." then
+                    count = count + 1
+                end
+            end
+            return count
+        end
+
+        if config.ahorn.mode == "vhd" and not fs.isFile(info.VHDPath) then
             mainlist:addChild(uie.column({
-                uie.label("Julia not found", ui.fontBig),
-                uie.label([[
+                uie.label("Ahorn-VHD not found", ui.fontBig),
+                uie.label(string.format([[
+Olympus couldn't find Ahorn-VHD.
+
+Ahorn-VHD is a virtual hard disk with everything needed to run Ahorn.
+It comes with its own version of Julia and other files prebundled.
+
+Please note that the VHD doesn't come with Ahorn itself.
+Olympus can download the latest version of Ahorn into the VHD.
+
+This might not work on too old computers.
+If that's the case, or if you want to use your existing Ahorn install,
+please change how Olympus manages Julia and Ahorn in the options panel.
+
+Loading ("attaching" / "mounting") the virtual hard disk
+might open a window asking for administrator permissions.
+
+Ahorn-VHD will be downloaded to:
+%s]],
+                    tostring(info.VHDPath)
+                )),
+                btnRow({
+                    { "download", "Download Ahorn-VHD", function() alert("FIXME") end }
+                })
+            }):with(uiu.fillWidth))
+
+        elseif config.ahorn.mode == "vhd" and filecount(info.VHDMountPath) < 1 then
+            mainlist:addChild(uie.column({
+                uie.label("Ahorn-VHD not loaded", ui.fontBig),
+                uie.label(string.format([[
+Olympus was able to find Ahorn-VHD at:
+%s
+
+Ahorn-VHD isn't loaded right now.
+Loading ("attaching" / "mounting") the virtual hard disk
+might open a window asking for administrator permissions.
+
+Ahorn-VHD will be loaded to:
+%s]],
+                    tostring(info.VHDPath), tostring(info.VHDMountPath)
+                )),
+                btnRow({
+                    { "download", "Load Ahorn-VHD", function() alert("FIXME") end }
+                })
+            }):with(uiu.fillWidth))
+
+        else
+            if config.ahorn.mode == "vhd" then
+                mainlist:addChild(uie.column({
+                    uie.label("Ahorn-VHD", ui.fontBig),
+                    uie.label(string.format([[
+Olympus was able to find Ahorn-VHD at:
+%s
+
+Ahorn-VHD is loaded into:
+%s]],
+                        tostring(info.VHDPath), tostring(info.VHDMountPath)
+                    )),
+                    btnRow(false, {
+                        { "download", "Unload Ahorn-VHD", function() alert("FIXME") end }
+                    })
+                }):with(uiu.fillWidth))
+            end
+
+            if not info.JuliaPath then
+                mainlist:addChild(uie.column({
+                    uie.label("Julia not found", ui.fontBig),
+                    uie.label([[
 Ahorn uses the Julia programming language,
 similar to how Minecraft uses the Java programming language.
 
 No supported installation of Julia was found on your computer.
-
 You can install Julia system-wide yourself.
-Olympus can install it into an isolated environment.
-Version 1.3+ is the minimum requirement.]]
-                ),
-                btnInstallJulia()
-            }):with(uiu.fillWidth))
+Version 1.3+ is the minimum requirement.
 
-        elseif not info.JuliaVersion then
-            mainlist:addChild(uie.column({
-                uie.label("Julia not recognized", ui.fontBig),
-                uie.label(string.format([[
+Olympus can manage a separate Julia installation for you.]]
+                    ),
+                    config.ahorn.mode ~= "vhd" and btnInstallJulia()
+                }):with(uiu.fillWidth))
+
+            elseif not info.JuliaVersion then
+                mainlist:addChild(uie.column({
+                    uie.label("Julia not recognized", ui.fontBig),
+                    uie.label(string.format([[
 Ahorn uses the Julia programming language,
 similar to how Minecraft uses the Java programming language.
 
@@ -534,62 +644,64 @@ The currently installed version of Julia isn't working as expected.
 Found installation path:
 %s
 
-Olympus can create an isolated Julia environment for you.
+Olympus can manage a separate Julia installation for you.
 Version 1.3+ is the minimum requirement.]],
-                    tostring(info.JuliaPath)
-                )),
-                not info.JuliaIsLocal and btnInstallJulia()
-            }):with(uiu.fillWidth))
+                        tostring(info.JuliaPath)
+                    )),
+                    not info.JuliaIsLocal and config.ahorn.mode ~= "vhd" and btnInstallJulia()
+                }):with(uiu.fillWidth))
 
-        else
-            mainlist:addChild(uie.column({
-                uie.label("Julia", ui.fontBig),
-                uie.label(string.format([[
+            else
+                mainlist:addChild(uie.column({
+                    uie.label("Julia", ui.fontBig),
+                    uie.label(string.format([[
 Ahorn uses the Julia programming language,
 similar to how Minecraft uses the Java programming language.
 
 Found installation path:
 %s
 Found version: %s]],
-                    tostring(info.JuliaPath), tostring(info.JuliaVersion))
-                ),
-            }):with(uiu.fillWidth))
-        end
+                        tostring(info.JuliaPath), tostring(info.JuliaVersion))
+                    ),
+                }):with(uiu.fillWidth))
+            end
 
-
-        if not info.AhornPath then
-            mainlist:addChild(uie.column({
-                uie.label("Ahorn not found", ui.fontBig),
-                uie.label([[
+            if not info.AhornPath then
+                mainlist:addChild(uie.column({
+                    uie.label("Ahorn not found", ui.fontBig),
+                    uie.label([[
 No supported installation of Ahorn was found.
 Olympus can download Ahorn and start the installation process for you.
-]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be installed into the isolated environment." or "Ahorn will be installed system-wide.")
-                ),
-                info.JuliaPath and btnRow({
-                    { "download", "Install Ahorn", scene.installAhornAlert }
-                })
-            }):with(uiu.fillWidth))
+]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be managed by Olympus." or "Ahorn will be installed system-wide.")
+                    ),
+                    info.JuliaPath and btnRow({
+                        { "download", "Install Ahorn", scene.installAhornAlert }
+                    })
+                }):with(uiu.fillWidth))
 
-        else
-            mainlist:addChild(uie.column({
-                uie.label("Ahorn", ui.fontBig),
-                uie.label(string.format([[
+            else
+                mainlist:addChild(uie.column({
+                    uie.label("Ahorn", ui.fontBig),
+                    uie.label(string.format([[
 Found installation path:
 %s
 Found version: %s]],
-                    tostring(info.AhornPath), tostring(info.AhornVersion))
-                ),
-                btnRow({
-                    { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
-                    { "download", "Check for updates", scene.updateAhornAlert }
-                })
-            }):with(uiu.fillWidth))
+                        tostring(info.AhornPath), tostring(info.AhornVersion))
+                    ),
+                    btnRow({
+                        { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
+                        { "download", "Check for updates", scene.updateAhornAlert }
+                    })
+                }):with(uiu.fillWidth))
+            end
         end
 
-
         loading:removeSelf()
-        modeswitch.enabled = true
         scene.reloading = nil
+        if reloadRequested then
+            reloadRequested = false
+            return scene.reload():result()
+        end
     end)
     return scene.reloading
 end

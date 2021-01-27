@@ -17,18 +17,28 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornPrepare : Cmd<string, string, bool, CmdAhornGetInfo.Info> {
+    public unsafe class CmdAhornPrepare : Cmd<string, string, string, string, CmdAhornGetInfo.Info> {
 
         public override bool Taskable => true;
 
-        public override CmdAhornGetInfo.Info Run(string rootPath, string vhdPath, bool forceLocal) {
+        public override CmdAhornGetInfo.Info Run(string rootPath, string vhdPath, string vhdMountPath, string mode) {
+            // Make sure that the default Olympus Ahorn root folder exists.
+            AhornHelper.Mode = AhornHelperMode.System;
+            AhornHelper.RootPath = null;
+            if (!Directory.Exists(AhornHelper.RootPath))
+                Directory.CreateDirectory(AhornHelper.RootPath);
+
             AhornHelper.RootPath = rootPath;
             AhornHelper.VHDPath = vhdPath;
-            AhornHelper.ForceLocal = forceLocal;
+            AhornHelper.VHDMountPath = vhdMountPath;
+            if (!Enum.TryParse(mode, true, out AhornHelper.Mode))
+                AhornHelper.Mode = AhornHelperMode.System;
+
             AhornHelper.FindJulia(true);
             AhornHelper.FindAhorn(true);
             if (!Directory.Exists(AhornHelper.RootPath))
                 Directory.CreateDirectory(AhornHelper.RootPath);
+
             return new CmdAhornGetInfo.Info();
         }
 
