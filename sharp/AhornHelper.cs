@@ -37,7 +37,6 @@ redirect_stdout(stdoutPrev)
         public static bool ForceLocal = false;
 
         private static string _RootPath;
-
         public static string RootPath {
             get {
                 if (!string.IsNullOrEmpty(_RootPath))
@@ -56,7 +55,7 @@ redirect_stdout(stdoutPrev)
                 if (!string.IsNullOrEmpty(appdata))
                     return _RootPath = Path.Combine(appdata, "Olympus-Ahorn");
 
-                return _RootPath = Path.Combine(Path.GetDirectoryName(Program.RootDirectory), "ahorn");
+                return _RootPath = Path.Combine(Program.RootDirectory, "ahorn");
             }
             set {
                 _RootPath = value;
@@ -66,38 +65,57 @@ redirect_stdout(stdoutPrev)
             }
         }
 
-        private static string _GlobalAhornEnv;
+        private static string _VHDPath;
+        public static string VHDPath {
+            get {
+                if (!string.IsNullOrEmpty(_VHDPath))
+                    return _VHDPath;
 
+                string path = Environment.GetEnvironmentVariable("OLYMPUS_AHORN_VHD");
+                if (!string.IsNullOrEmpty(path))
+                    return _VHDPath = path;
+
+                // VHDs are only supported on Windows by default.
+                if (!PlatformHelper.Is(Platform.Windows))
+                    return null;
+
+                return _VHDPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus", "ahorn.vhd");
+            }
+            set {
+                _VHDPath = value;
+            }
+        }
+
+        private static string _AhornGlobalEnvPath;
         public static string AhornGlobalEnvPath {
             get {
-                if (!string.IsNullOrEmpty(_GlobalAhornEnv))
-                    return _GlobalAhornEnv;
+                if (!string.IsNullOrEmpty(_AhornGlobalEnvPath))
+                    return _AhornGlobalEnvPath;
 
                 string path = Environment.GetEnvironmentVariable("OLYMPUS_AHORN_GLOBALENV");
                 if (!string.IsNullOrEmpty(path))
-                    return _GlobalAhornEnv = path;
+                    return _AhornGlobalEnvPath = path;
 
                 // The following is based off of how Ahorn's install_ahorn.jl determines the env path.
 
                 if (PlatformHelper.Is(Platform.Windows)) {
-                    return _GlobalAhornEnv = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ahorn", "env");
+                    return _AhornGlobalEnvPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ahorn", "env");
 
                 } else {
                     // This must be done like this as it behaves exactly like this on ALL non-Windows platforms.
                     string config = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
                     if (string.IsNullOrEmpty(config))
                         config = Path.Combine(Environment.GetEnvironmentVariable("HOME"), ".config");
-                    return _GlobalAhornEnv = Path.Combine(config, "Ahorn", "env");
+                    return _AhornGlobalEnvPath = Path.Combine(config, "Ahorn", "env");
                 }
             }
             set {
-                _GlobalAhornEnv = value;
+                _AhornGlobalEnvPath = value;
                 AhornPath = null;
             }
         }
 
         private static string _AhornEnv;
-
         public static string AhornEnvPath {
             get {
                 if (!string.IsNullOrEmpty(_AhornEnv))

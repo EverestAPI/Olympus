@@ -16,23 +16,96 @@ local scene = {
 
 
 local root = uie.column({
-    uie.scrollbox(
+    uie.row({
+
         uie.column({
+            uie.label("Information", ui.fontBig),
 
+            uie.label([[
+Olympus can install and launch Ahorn for you.
+Ahorn is the community map editor for Celeste.
+This function isn't officially supported by the Ahorn developers.
+Feel free to visit the Ahorn GitHub page for more info.]]),
+            uie.button("Open https://github.com/CelestialCartographers/Ahorn", function()
+                utils.openURL("https://github.com/CelestialCartographers/Ahorn")
+            end):with(uiu.fillWidth),
+            uie.group(),
+
+            uie.label(""):hook({
+                update = function(orig, self, ...)
+                    self.text = [[
+Olympus can install Julia and Ahorn into an isolated environment.
+It can also use your existing system-wide Julia and Ahorn installs.
+Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isolated + existing installations.")
+                    orig(self, ...)
+                end
+            }),
+            uie.button(
+                uie.row({
+                    uie.label(""):hook({
+                        update = function(orig, self, ...)
+                            self.text = config.ahorn.forceLocal and "Use system-wide Julia and Ahorn" or "Use isolated Julia and Ahorn"
+                            orig(self, ...)
+                        end
+                    }),
+                    uie.spinner():with({
+                        width = 16,
+                        height = 16
+                    }):with(uiu.rightbound):hook({
+                        update = function(orig, self, ...)
+                            self.visible = not self.parent.parent.enabled
+                            orig(self, ...)
+                        end
+                    })
+                }):with({
+                    style = {
+                        bg = {},
+                        padding = 0
+                    },
+                    clip = false,
+                    cacheable = false
+                }):with(uiu.styleDeep):with(uiu.fillWidth),
+                function()
+                    config.ahorn.forceLocal = not config.ahorn.forceLocal
+                    config.save()
+                    scene.reload()
+                end
+            ):with(uiu.fillWidth):as("modeswitch"),
+            uie.button("Open the Olympus isolated Ahorn folder", function()
+                utils.openFile(scene.info.RootPath)
+            end):with(uiu.fillWidth),
+            uie.group(),
+
+            uie.label({ { 1, 0.1, 0.25, 1 }, [[
+THIS IS STILL IN ACTIVE DEVELOPMENT.
+Please ping 0x0ade in the Celestecord if things go wrong.]]}),
+
+        }):with(uiu.fillHeight),
+
+        uie.scrollbox(
             uie.column({
-                uie.label("ahornsetup.lua machine broke, please fix."),
-            }):with(uiu.fillWidth),
 
-        }):with({
-            style = {
-                bg = {},
-                padding = 16
-            },
+                uie.column({
+                    uie.label("ahornsetup.lua machine broke, please fix."),
+                }):with(uiu.fillWidth),
+
+            }):with({
+                style = {
+                    padding = 0,
+                    bg = {},
+                },
+                clip = false,
+                cacheable = false
+            }):with(uiu.fillWidth):as("mainlist")
+        ):with({
+            clip = false,
             cacheable = false
-        }):with(uiu.fillWidth):as("mainlist")
-    ):with({
+        }):with(uiu.fillWidth(true)):with(uiu.fillHeight)
+
+    }):with({
         style = {
-            barPadding = 16,
+            bg = {},
+            padding = 16
         },
         clip = false,
         cacheable = false
@@ -124,10 +197,10 @@ local root = uie.column({
 scene.root = root
 
 
-scene.mainholder = scene.root:findChild("mainholder")
-scene.logholder = scene.root:findChild("logholder")
-scene.loglist = scene.root:findChild("loglist")
-scene.logclose = scene.root:findChild("logclose")
+scene.mainholder = scene.root:findChild("mainholder", "modeswitch")
+scene.logholder = scene.root:findChild("logholder", "modeswitch")
+scene.loglist = scene.root:findChild("loglist", "modeswitch")
+scene.logclose = scene.root:findChild("logclose", "modeswitch")
 
 
 function scene.installJulia(beta)
@@ -343,9 +416,10 @@ function scene.reload()
         scene.logholder:removeSelf()
         scene.root:addChild(scene.mainholder)
 
-        local mainlist = root:findChild("mainlist")
+        local mainlist, modeswitch = root:findChild("mainlist", "modeswitch")
         mainlist.children = {}
         mainlist:reflow()
+        modeswitch.enabled = false
 
         local loading = uie.row({
             uie.label("Loading"),
@@ -364,61 +438,9 @@ function scene.reload()
         }):with(uiu.fillWidth)
         mainlist:addChild(status)
 
-        local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.forceLocal):result()
+        local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.vhdPath, config.ahorn.forceLocal):result()
         scene.info = info
         status:removeSelf()
-
-        mainlist:addChild(uie.column({
-            uie.label("General info", ui.fontBig),
-            uie.label("THIS IS STILL IN ACTIVE DEVELOPMENT. Please ping 0x0ade in the Celestecord if things go wrong."),
-            uie.row({
-                uie.column({
-                    uie.label([[
-Olympus can install and launch Ahorn for you.
-This function isn't officially supported by the Ahorn developers.
-Feel free to visit the Ahorn GitHub page for more info.]]),
-                    uie.button("Open https://github.com/CelestialCartographers/Ahorn", function()
-                        utils.openURL("https://github.com/CelestialCartographers/Ahorn")
-                    end):with(uiu.fillWidth)
-                }):with({
-                    style = {
-                        bg = {},
-                        padding = 0
-                    },
-                    clip = false
-                }):with(uiu.fillWidth(4.5)):with(uiu.at(0, 0)),
-
-                uie.column({
-                    uie.label([[
-Olympus can install Julia and Ahorn into an isolated environment.
-It can also use your existing system-wide Julia and Ahorn installs.
-Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isolated + existing installations.")
-                    ),
-                    uie.button(config.ahorn.forceLocal and "Enable finding system-wide Julia and Ahorn" or "Only use isolated Julia and Ahorn", function()
-                        config.ahorn.forceLocal = not config.ahorn.forceLocal
-                        config.save()
-                        scene.reload()
-                    end):with(uiu.fillWidth)
-                }):with({
-                    style = {
-                        bg = {},
-                        padding = 0
-                    },
-                    clip = false
-                }):with(uiu.fillWidth(4.5)):with(uiu.at(4.5, 0))
-
-            }):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
-                clip = false
-            }):with(uiu.fillWidth),
-
-            uie.button("Open the Olympus isolated Ahorn folder", function()
-                utils.openFile(info.RootPath)
-            end):with(uiu.fillWidth)
-        }):with(uiu.fillWidth))
 
         local function btnRow(items)
             local itemcount = #items
@@ -489,11 +511,14 @@ Current mode: ]] .. (config.ahorn.forceLocal and "Isolated-only mode." or "Isola
             mainlist:addChild(uie.column({
                 uie.label("Julia not found", ui.fontBig),
                 uie.label([[
-Ahorn uses the Julia programming language, similar to how Minecraft uses the Java programming language.
+Ahorn uses the Julia programming language,
+similar to how Minecraft uses the Java programming language.
+
 No supported installation of Julia was found on your computer.
 
-You can either install Julia yourself, or Olympus can install it into an isolated environment.
-As of the time of writing this, version 1.3+ is the minimum requirement.]]
+You can install Julia system-wide yourself.
+Olympus can install it into an isolated environment.
+Version 1.3+ is the minimum requirement.]]
                 ),
                 btnInstallJulia()
             }):with(uiu.fillWidth))
@@ -502,12 +527,15 @@ As of the time of writing this, version 1.3+ is the minimum requirement.]]
             mainlist:addChild(uie.column({
                 uie.label("Julia not recognized", ui.fontBig),
                 uie.label(string.format([[
-Ahorn uses the Julia programming language, similar to how Minecraft uses the Java programming language.
-The currently installed version of Julia isn't working as expected.
-Found installation path: %s
+Ahorn uses the Julia programming language,
+similar to how Minecraft uses the Java programming language.
 
-Olympus can download and set up an isolated Julia environment for you.
-As of the time of writing this, version 1.3+ is the minimum requirement.]],
+The currently installed version of Julia isn't working as expected.
+Found installation path:
+%s
+
+Olympus can create an isolated Julia environment for you.
+Version 1.3+ is the minimum requirement.]],
                     tostring(info.JuliaPath)
                 )),
                 not info.JuliaIsLocal and btnInstallJulia()
@@ -517,8 +545,11 @@ As of the time of writing this, version 1.3+ is the minimum requirement.]],
             mainlist:addChild(uie.column({
                 uie.label("Julia", ui.fontBig),
                 uie.label(string.format([[
-Ahorn uses the Julia programming language, similar to how Minecraft uses the Java programming language.
-Found installation path: %s
+Ahorn uses the Julia programming language,
+similar to how Minecraft uses the Java programming language.
+
+Found installation path:
+%s
 Found version: %s]],
                     tostring(info.JuliaPath), tostring(info.JuliaVersion))
                 ),
@@ -532,7 +563,7 @@ Found version: %s]],
                 uie.label([[
 No supported installation of Ahorn was found.
 Olympus can download Ahorn and start the installation process for you.
-]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be installed into the isolated environment." or "Ahorn will be installed for your system-wide installation of Julia.")
+]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be installed into the isolated environment." or "Ahorn will be installed system-wide.")
                 ),
                 info.JuliaPath and btnRow({
                     { "download", "Install Ahorn", scene.installAhornAlert }
@@ -543,7 +574,8 @@ Olympus can download Ahorn and start the installation process for you.
             mainlist:addChild(uie.column({
                 uie.label("Ahorn", ui.fontBig),
                 uie.label(string.format([[
-Found installation path: %s
+Found installation path:
+%s
 Found version: %s]],
                     tostring(info.AhornPath), tostring(info.AhornVersion))
                 ),
@@ -556,6 +588,7 @@ Found version: %s]],
 
 
         loading:removeSelf()
+        modeswitch.enabled = true
         scene.reloading = nil
     end)
     return scene.reloading
