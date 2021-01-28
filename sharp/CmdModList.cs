@@ -80,14 +80,14 @@ namespace Olympus {
                         yamlPath = Path.Combine(file, "everest.yml");
 
                     if (File.Exists(yamlPath)) {
-                        using (FileStream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                        using (FileStream stream = File.Open(yamlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                         using (StreamReader reader = new StreamReader(stream))
                             info.Parse(reader);
 
                         if (!string.IsNullOrEmpty(info.DLL)) {
                             string dllPath = Path.Combine(file, info.DLL);
                             if (File.Exists(dllPath)) {
-                                using (FileStream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                                using (FileStream stream = File.Open(dllPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                                     info.Hash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "");
                             }
                         }
