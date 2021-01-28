@@ -451,7 +451,7 @@ Before uploading, check your logs for sensitive info (f.e. your username).]]))
         else
             loglist:addChild(uie.label("----------------------------------------------"))
             loglist:addChild(uie.label([[
-Ahorn has finished without an error code.
+Ahorn has finished. No fatal errors were detected.
 Press the close button in the bottom right corner to close this log.]]))
         end
 

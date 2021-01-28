@@ -37,7 +37,7 @@ namespace Olympus {
                 File.Delete(tmp);
             File.WriteAllText(tmp, $@"
 select vdisk file=""{vhd}""
-detach
+detach vdisk
 "
                 .TrimStart().Replace("\r\n", "\n").Replace("\n", "\r\n")
             );
