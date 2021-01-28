@@ -318,7 +318,7 @@ local root = uie.column({
             }):with(uiu.fillWidth),
 
             uie.column({
-                uie.label("Update Olympus", ui.fontBig),
+                uie.label("Updates", ui.fontBig),
 
                 uie.label("Update machine broke, please fix."):as("changelog"),
 

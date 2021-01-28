@@ -528,7 +528,7 @@ function love.load(args)
     notify.init(root:findChild("notifyroot"))
 
     scener.set("mainmenu")
-    require("updater").check()
+    require("updater").check(true)
     require("modinstaller").register()
 
     require("dragndrop")

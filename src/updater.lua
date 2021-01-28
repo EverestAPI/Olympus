@@ -10,7 +10,7 @@ local ffi = require("ffix")
 local updater = {}
 
 
-function updater.check()
+function updater.check(auto)
     if updater.checking then
         return updater.checking
     end
@@ -23,6 +23,11 @@ function updater.check()
         idOld = tonumber(idOld)
         if not idOld then
             notify("Cannot determine currently running version of Olympus!")
+        end
+
+        if auto and srcOld == "dev" then
+            updater.checking = nil
+            return
         end
 
         local options = scener.preload("options")
@@ -58,34 +63,7 @@ function updater.check()
                     }
                     updater.latest = latest
 
-                    notify(string.format([[
-There's a newer version of Olympus available.
-Go to the options menu to update to %s]], build.buildNumber))
-
-                    local changelogTask = utilsAsync.download(string.format("https://raw.githubusercontent.com/EverestAPI/Olympus/%s/changelog.txt", build.sourceVersion))
-
-                    local function setChangelog(changelogText)
-                        changelog.text = {{ 1, 1, 1, 1 },
-                            "Currently installed:\n" .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
-                            "Newest available:\n" .. build.buildNumber, { 1, 1, 1, 0.5 }, string.format("-azure-%s-%s", build.id, build.sourceVersion and build.sourceVersion:sub(1, 5) or "?????") .. "\n\n", { 1, 1, 1, 1 },
-                            "Changelog:\n" .. changelogText
-                        }
-                    end
-
-                    setChangelog("Downloading...")
-                    changelogTask:calls(function(task, data, error)
-                        data = data and data:match("#changelog#\n(.*)")
-                        if not data then
-                            setChangelog("Failed to download:\n" .. tostring(error))
-                            return
-                        end
-
-                        latest.changelog = data
-                        setChangelog(data)
-                    end)
-
-                    updatebtn.enabled = true
-                    updatebtn.cb = function()
+                    local cb = function()
                         if srcOld ~= "dev" then
                             updater.update(tostring(build.id))
                             return
@@ -115,6 +93,46 @@ Go to the options menu to update to %s]], build.buildNumber))
                             end
                         })
                     end
+
+                    if auto then
+                        alert({
+                            body = string.format([[
+There's a new version of Olympus available.
+Do you want to update to %s now?]], build.buildNumber),
+                            buttons = {
+                                { "Yes", cb },
+                                { "No" }
+                            }
+                        })
+                    else
+                        notify(string.format([[
+There's a new version of Olympus available: %s]], build.buildNumber))
+                    end
+
+                    local changelogTask = utilsAsync.download(string.format("https://raw.githubusercontent.com/EverestAPI/Olympus/%s/changelog.txt", build.sourceVersion))
+
+                    local function setChangelog(changelogText)
+                        changelog.text = {{ 1, 1, 1, 1 },
+                            "Currently installed:\n" .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
+                            "Newest available:\n" .. build.buildNumber, { 1, 1, 1, 0.5 }, string.format("-azure-%s-%s", build.id, build.sourceVersion and build.sourceVersion:sub(1, 5) or "?????") .. "\n\n", { 1, 1, 1, 1 },
+                            "Changelog:\n" .. changelogText
+                        }
+                    end
+
+                    setChangelog("Downloading...")
+                    changelogTask:calls(function(task, data, error)
+                        data = data and data:match("#changelog#\n(.*)")
+                        if not data then
+                            setChangelog("Failed to download:\n" .. tostring(error))
+                            return
+                        end
+
+                        latest.changelog = data
+                        setChangelog(data)
+                    end)
+
+                    updatebtn.enabled = true
+                    updatebtn.cb = cb
                     updatebtn:reflow()
 
                     updater.checking = nil
