@@ -20,7 +20,7 @@ local modes = {
 }
 
 if love.system.getOS() == "Windows" then
-    table.insert(modes, 1, { text = "Use pre-bundled Ahorn-VHD (experimental)", data = "vhd" })
+    table.insert(modes, 1, { text = "Use pre-bundled Ahorn-VHD (fast, experimental)", data = "vhd" })
 end
 
 
@@ -261,6 +261,32 @@ Do you want to continue?]],
 end
 
 
+function scene.sharpTaskScreen(cmd, message)
+    local installer = scener.push("installer")
+    installer.sharpTask(cmd):calls(function(task, last)
+        if not last then
+            return
+        end
+
+        installer.update(message, 1, "done")
+        installer.done({
+            {
+                "OK",
+                function()
+                    scener.pop()
+                end
+            }
+        })
+    end)
+end
+
+function scene.sharpTaskScreenGen(cmd, message)
+    return function()
+        return scene.sharpTaskScreen(cmd, message)
+    end
+end
+
+
 function scene.installAhorn()
     local installer = scener.push("installer")
     installer.sharpTask("ahornInstallAhorn"):calls(function(task, last)
@@ -269,6 +295,26 @@ function scene.installAhorn()
         end
 
         installer.update("Ahorn successfully installed", 1, "done")
+        installer.done({
+            {
+                "OK",
+                function()
+                    scener.pop()
+                end
+            }
+        })
+    end)
+end
+
+
+function scene.installAhornVHD()
+    local installer = scener.push("installer")
+    installer.sharpTask("ahornInstallAhornVHD"):calls(function(task, last)
+        if not last then
+            return
+        end
+
+        installer.update("Ahorn-VHD successfully installed", 1, "done")
         installer.done({
             {
                 "OK",
@@ -299,7 +345,7 @@ If you really need to cancel the installation process:
             {
                 "Install!",
                 function(container)
-                    scene.installAhorn()
+                    scene.sharpTaskScreen("ahornInstallAhorn")
                     container:close("OK")
                 end
             },
@@ -328,7 +374,7 @@ If you really need to cancel the installation process:
             {
                 "Check and install updates",
                 function(container)
-                    scene.installAhorn()
+                    scene.sharpTaskScreen("ahornInstallAhorn")
                     container:close("OK")
                 end
             },
@@ -483,7 +529,7 @@ function scene.reload()
                     }):with(uiu.styleDeep), function()
                         cb()
                     end
-                ):with(important and i > 1 and {} or {
+                ):with((not important or i > 1) and {} or {
                     style = {
                         normalBG = { 0.2, 0.4, 0.2, 0.8 },
                         hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
@@ -560,8 +606,9 @@ Olympus couldn't find Ahorn-VHD.
 Ahorn-VHD is a virtual hard disk with everything needed to run Ahorn.
 It comes with its own version of Julia and other files prebundled.
 
-Please note that the VHD doesn't come with Ahorn itself.
-Olympus can download the latest version of Ahorn into the VHD.
+This will also download the latest version of Ahorn into the VHD.
+Installing / updating Ahorn is a slow process and it will look as if it's hanging.
+Don't close Olympus! Julia.exe might continue running in the background.
 
 This might not work on too old computers.
 If that's the case, or if you want to use your existing Ahorn install,
@@ -575,7 +622,7 @@ Ahorn-VHD will be downloaded to:
                     tostring(info.VHDPath)
                 )),
                 btnRow({
-                    { "download", "Download Ahorn-VHD", function() alert("FIXME") end }
+                    { "download", "Download Ahorn-VHD", scene.sharpTaskScreenGen("ahornInstallAhornVHD") }
                 })
             }):with(uiu.fillWidth))
 
@@ -595,7 +642,7 @@ Ahorn-VHD will be loaded to:
                     tostring(info.VHDPath), tostring(info.VHDMountPath)
                 )),
                 btnRow({
-                    { "download", "Load Ahorn-VHD", function() alert("FIXME") end }
+                    { "download", "Load Ahorn-VHD", scene.sharpTaskScreenGen("ahornMountAhornVHD") }
                 })
             }):with(uiu.fillWidth))
 
@@ -606,13 +653,12 @@ Ahorn-VHD will be loaded to:
                     uie.label(string.format([[
 Olympus was able to find Ahorn-VHD at:
 %s
-
 Ahorn-VHD is loaded into:
 %s]],
                         tostring(info.VHDPath), tostring(info.VHDMountPath)
                     )),
                     btnRow(false, {
-                        { "download", "Unload Ahorn-VHD", function() alert("FIXME") end }
+                        { "download", "Unload Ahorn-VHD", scene.sharpTaskScreenGen("ahornUnmountAhornVHD") }
                     })
                 }):with(uiu.fillWidth))
             end

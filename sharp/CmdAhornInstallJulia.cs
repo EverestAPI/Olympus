@@ -92,8 +92,8 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
 
                 string url;
 
-                string lsPath = AhornHelper.GetProcessOutput("which", "ls", out _).Trim().Split('\n').FirstOrDefault()?.Trim();
-                bool musl = !string.IsNullOrEmpty(lsPath) && AhornHelper.GetProcessOutput("ldd", lsPath, out _).Contains("musl");
+                string lsPath = ProcessHelper.Read("which", "ls", out _).Trim().Split('\n').FirstOrDefault()?.Trim();
+                bool musl = !string.IsNullOrEmpty(lsPath) && ProcessHelper.Read("ldd", lsPath, out _).Contains("musl");
 
                 if (PlatformHelper.Is(Platform.ARM)) {
                     url = beta ?
@@ -120,9 +120,9 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
 
                     yield return Status("Extracting Julia", false, "download", false);
                     yield return Status("", false, "download", false);
-                    using (Process process = AhornHelper.NewProcess("tar", $"-xvf \"{tarPath}\" -C \"{root}\"")) {
+                    using (Process process = ProcessHelper.Wrap("tar", $"-xvf \"{tarPath}\" -C \"{root}\"")) {
                         process.Start();
-                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                        for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                             yield return Status(line, false, "download", true);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
@@ -156,7 +156,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                     .TrimStart().Replace("\r\n", "\n")
                 );
 
-                AhornHelper.GetProcessOutput("chmod", $"a+x \"{launcher}\"", out _);
+                ProcessHelper.Read("chmod", $"a+x \"{launcher}\"", out _);
 
 
             } else if (PlatformHelper.Is(Platform.MacOS)) {
@@ -180,9 +180,9 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                         yield return Download(url, 0, dmgStream);
 
                     yield return Status("Mounting Julia", false, "download", false);
-                    using (Process process = AhornHelper.NewProcess("hdiutil", $"attach -mountpoint \"{mount}\" \"{dmgPath}\"")) {
+                    using (Process process = ProcessHelper.Wrap("hdiutil", $"attach -mountpoint \"{mount}\" \"{dmgPath}\"")) {
                         process.Start();
-                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                        for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                             yield return Status(line, false, "download", false);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
@@ -192,9 +192,9 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
 
                     yield return Status("Copying Julia", false, "download", false);
                     yield return Status("", false, "download", false);
-                    using (Process process = AhornHelper.NewProcess("cp", $"-rvf \"{Path.Combine(mount, beta ? "Julia-1.6.app" : "Julia-1.5.app", "Contents", "Resources", "julia")}\" \"{julia}\"")) {
+                    using (Process process = ProcessHelper.Wrap("cp", $"-rvf \"{Path.Combine(mount, beta ? "Julia-1.6.app" : "Julia-1.5.app", "Contents", "Resources", "julia")}\" \"{julia}\"")) {
                         process.Start();
-                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                        for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                             yield return Status(line, false, "download", true);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
@@ -203,9 +203,9 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                     }
 
                     yield return Status("Unmounting Julia", false, "download", false);
-                    using (Process process = AhornHelper.NewProcess("hdiutil", $"detach \"{mount}\"")) {
+                    using (Process process = ProcessHelper.Wrap("hdiutil", $"detach \"{mount}\"")) {
                         process.Start();
-                        for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                        for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                             yield return Status(line, false, "download", false);
                         process.WaitForExit();
                         if (process.ExitCode != 0)
@@ -216,7 +216,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                 } finally {
                     if (mounted) {
                         try {
-                            using (Process process = AhornHelper.NewProcess("hdiutil", $"detach \"{mount}\"")) {
+                            using (Process process = ProcessHelper.Wrap("hdiutil", $"detach \"{mount}\"")) {
                                 process.Start();
                                 process.WaitForExit();
                                 if (process.ExitCode != 0)
@@ -253,7 +253,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                     .TrimStart().Replace("\r\n", "\n")
                 );
 
-                AhornHelper.GetProcessOutput("chmod", $"a+x \"{launcher}\"", out _);
+                ProcessHelper.Read("chmod", $"a+x \"{launcher}\"", out _);
 
 
             } else {

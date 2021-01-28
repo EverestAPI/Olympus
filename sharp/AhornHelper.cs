@@ -163,31 +163,6 @@ redirect_stdout(stdoutPrev)
         public static string AhornPath { get; private set; }
         public static bool AhornIsLocal { get; private set; }
 
-        public static Process NewProcess(string name, string args) {
-            Process process = new Process();
-
-            process.StartInfo.FileName = name;
-            process.StartInfo.Arguments = args;
-
-            process.StartInfo.UseShellExecute = false;
-            process.StartInfo.CreateNoWindow = true;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.StandardOutputEncoding = Program.UTF8NoBOM;
-            process.StartInfo.RedirectStandardError = true;
-            process.StartInfo.StandardErrorEncoding = Program.UTF8NoBOM;
-
-            return process;
-        }
-
-        public static string GetProcessOutput(string name, string args, out string err) {
-            using (Process process = NewProcess(name, args)) {
-                process.Start();
-                process.WaitForExit();
-                err = process.StandardError.ReadToEnd().Trim();
-                return process.StandardOutput.ReadToEnd().Trim();
-            }
-        }
-
         public static Process NewJulia(out string tmpFilename, string script, bool? localDepot = null) {
             string julia = FindJulia(false);
             if (string.IsNullOrEmpty(julia) || !File.Exists(julia)) {
@@ -214,7 +189,7 @@ redirect_stdout(stdoutPrev)
 
             tmpFilename = Path.GetTempFileName();
             File.WriteAllText(tmpFilename, PrefixGlobal + script);
-            return NewProcess(julia, "\"" + tmpFilename + "\"");
+            return ProcessHelper.Wrap(julia, "\"" + tmpFilename + "\"");
         }
 
         public static string GetJuliaOutput(string script, out string err, bool? localDepot = null) {
@@ -253,7 +228,7 @@ redirect_stdout(stdoutPrev)
             if (Mode != AhornHelperMode.System)
                 return null;
 
-            path = GetProcessOutput(
+            path = ProcessHelper.Read(
                 PlatformHelper.Is(Platform.Windows) ? "where.exe" : "which",
                 name,
                 out _

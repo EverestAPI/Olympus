@@ -31,7 +31,7 @@ namespace Olympus {
             try {
                 using (Process process = AhornHelper.NewJulia(out tmpFilename, script, localDepot)) {
                     process.Start();
-                    for (string line = null; (line = process.StandardOutput.ReadLine()) != null;)
+                    for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                         yield return Status(Escape(line, out bool update), false, "", update);
                     process.WaitForExit();
                     if (process.ExitCode != 0)
