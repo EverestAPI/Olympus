@@ -47,8 +47,17 @@ namespace Olympus {
                         yield return Download(url, 0, stream);
                 }
 
+                string sevenzip = Path.Combine(Program.RootDirectory, "7zr.exe");
+
+                if (!File.Exists(sevenzip)) {
+                    const string url = "https://raw.githubusercontent.com/EverestAPI/Olympus/main/lib-windows/7zr.exe";
+                    yield return Status($"Couldn't find 7zr.exe, downloading from {url}", false, "download", false);
+                    using (FileStream stream = File.Open(sevenzip, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+                        yield return Download(url, 0, stream);
+                }
+
                 yield return Status("Extracting ahornvhd.7z", false, "download", false);
-                using (Process process = ProcessHelper.Wrap(Path.Combine(Program.RootDirectory, "7zr.exe"), $"x \"{tmp}\" \"-o{Path.GetDirectoryName(vhd)}\" {Path.GetFileName(vhd)} -bb3")) {
+                using (Process process = ProcessHelper.Wrap(sevenzip, $"x \"{tmp}\" \"-o{Path.GetDirectoryName(vhd)}\" {Path.GetFileName(vhd)} -bb3")) {
                     process.Start();
                     for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                         yield return Status(line, false, "download", false);
