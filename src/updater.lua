@@ -100,7 +100,10 @@ function updater.check(auto)
 There's a new version of Olympus available.
 Do you want to update to %s now?]], build.buildNumber),
                             buttons = {
-                                { "Yes", cb },
+                                { "Yes", function(container)
+                                    cb()
+                                    container:close("OK")
+                                end},
                                 { "No" }
                             }
                         })
