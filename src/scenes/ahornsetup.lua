@@ -642,7 +642,7 @@ Ahorn-VHD will be loaded to:
                     tostring(info.VHDPath), tostring(info.VHDMountPath)
                 )),
                 btnRow({
-                    { "download", "Load Ahorn-VHD", scene.sharpTaskScreenGen("ahornMountAhornVHD") }
+                    { "disk_mount", "Load Ahorn-VHD", scene.sharpTaskScreenGen("ahornMountAhornVHD") }
                 })
             }):with(uiu.fillWidth))
 
@@ -652,13 +652,16 @@ Ahorn-VHD will be loaded to:
                     uie.label("Ahorn-VHD", ui.fontBig),
                     uie.label(string.format([[
 Olympus was able to find Ahorn-VHD at:
-%s
+%s]],
+                        tostring(info.VHDPath)
+                    )),
+                    uie.label(string.format([[
 Ahorn-VHD is loaded into:
 %s]],
-                        tostring(info.VHDPath), tostring(info.VHDMountPath)
+                        tostring(info.VHDMountPath)
                     )),
                     btnRow(false, {
-                        { "download", "Unload Ahorn-VHD", scene.sharpTaskScreenGen("ahornUnmountAhornVHD") }
+                        { "disk_unmount", "Unload Ahorn-VHD", scene.sharpTaskScreenGen("ahornUnmountAhornVHD") }
                     })
                 }):with(uiu.fillWidth))
             end
