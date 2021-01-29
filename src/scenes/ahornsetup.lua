@@ -18,9 +18,21 @@ local modes = {
     { text = "Let Olympus manage Julia and Ahorn", data = "local" },
     { text = "Use system-wide Julia and Ahorn if existing", data = "system" },
 }
-
 if love.system.getOS() == "Windows" then
     table.insert(modes, 1, { text = "Use pre-bundled Ahorn-VHD (fast, experimental)", data = "vhd" })
+end
+
+local themes = {
+    { text = "System (default)", data = "" }
+}
+if love.system.getOS() == "Linux" then
+    table.insert(themes, { text = "Adwaita", data = "Adwaita" })
+    table.insert(themes, { text = "Adwaita:dark", data = "Adwaita:dark" })
+else
+    table.insert(themes, { text = "GTK light", data = "Adwaita|CSD" })
+    table.insert(themes, { text = "GTK dark", data = "Adwaita:dark|CSD" })
+    table.insert(themes, { text = "GTK light mixed with system", data = "Adwaita" })
+    table.insert(themes, { text = "GTK dark mixed with system", data = "Adwaita:dark" })
 end
 
 
@@ -77,7 +89,29 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                         utils.openFile(scene.info.RootPath)
                     end):with(uiu.fillWidth),
 
-                    uie.group(),
+                    uie.group({}),
+
+                    uie.label([[
+Ahorn will be started with the following theme:]]),
+                    uie.dropdown(
+                        themes,
+                        function(self, value)
+                            config.ahorn.theme = value
+                            config.save()
+                        end
+                    ):with(function(self)
+                        for i = 1, #themes do
+                            if config.ahorn.theme == themes[i].data then
+                                self.selected = self:getItem(i)
+                                self.text = self.selected.text
+                                return
+                            end
+                        end
+                        self.selected = self:getItem(1)
+                        self.text = tostring(config.ahorn.theme or "???")
+                    end):with(uiu.fillWidth),
+
+                    uie.group({}),
                     uie.label("Check the Olympus config.json for more advanced settings.")
                 }):with(uiu.fillWidth),
 
@@ -148,6 +182,7 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                         orig(self)
                         if self.locked then
                             self.y = self.parent.height - self.height
+                            self.realY = self.parent.height - self.height
                         end
                     end
                 }):with(uiu.fillWidth):as("loglist")
@@ -417,7 +452,7 @@ You can close Olympus. Ahorn will continue running.]]))
 
         loglist:addChild(uie.label("----------------------------------------------"))
 
-        local task = sharp.ahornLaunch():result()
+        local task = sharp.ahornLaunch(config.ahorn.theme):result()
 
         local batch
         local last

@@ -18,10 +18,21 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornLaunch : Cmd<IEnumerator> {
+    public unsafe class CmdAhornLaunch : Cmd<string, IEnumerator> {
         
-        public override IEnumerator Run() {
+        public override IEnumerator Run(string theme) {
             yield return "Initializing...";
+
+            Environment.SetEnvironmentVariable("AHORN_GTK_CSD", null);
+            Environment.SetEnvironmentVariable("AHORN_GTK_THEME", null);
+
+            if (!string.IsNullOrEmpty(theme)) {
+                if (theme.EndsWith("|CSD")) {
+                    theme = theme.Substring(0, theme.Length - 4);
+                    Environment.SetEnvironmentVariable("AHORN_GTK_CSD", "1");
+                }
+                Environment.SetEnvironmentVariable("AHORN_GTK_THEME", theme);
+            }
 
             string tmpFilename = null;
             try {
@@ -49,6 +60,19 @@ redirect_stderr(stdout)
     flush(stdoutReal)
     print(logfile, data)
     flush(logfile)
+end
+
+# Required because Gtk.jl likes to ENV[""GTK_CSD""] = 0 on Windows.
+@eval(Base, setindex!(env::EnvDict, v::Int64, k::AbstractString) = k === ""GTK_CSD"" ? false : env[k] = string(v))
+
+csd = get(ENV, ""AHORN_GTK_CSD"", nothing)
+if csd !== nothing
+    ENV[""GTK_CSD""] = csd
+end
+
+theme = get(ENV, ""AHORN_GTK_THEME"", nothing)
+if theme !== nothing
+    ENV[""GTK_THEME""] = theme
 end
 
 using Pkg
