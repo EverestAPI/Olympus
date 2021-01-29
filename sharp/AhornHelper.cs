@@ -241,13 +241,13 @@ redirect_stdout(stdoutPrev)
             if (PlatformHelper.Is(Platform.Windows)) {
                 // Julia on Windows is a hot mess.
                 string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                IEnumerable<string> all = Directory.EnumerateDirectories(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData));
+                IEnumerable<string> all = Directory.EnumerateDirectories(localAppData);
 
                 string localPrograms = Path.Combine(localAppData, "Programs");
                 if (Directory.Exists(localPrograms))
                     all = all.Concat(Directory.EnumerateDirectories(localPrograms));
 
-                string localJulias = Path.Combine(localAppData, "Julia");
+                string localJulias = Path.Combine(localPrograms, "Julia");
                 if (Directory.Exists(localJulias))
                     all = all.Concat(Directory.EnumerateDirectories(localJulias));
 
