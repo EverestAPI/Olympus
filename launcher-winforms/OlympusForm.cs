@@ -52,7 +52,7 @@ Sadly, some important files went missing or are corrupted.
 
 The Olympus downloader will now try to redownload them.
 If Olympus is still crashing or if this happens often:
-please ping the Everest team on the Celeste Discord server.
+Please ping the Everest team on the Celeste Discord server.
                         ".Trim().Replace("\r\n", "\n"),
                         "Olympus Downloader",
                         MessageBoxButtons.OK
