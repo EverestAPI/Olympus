@@ -673,7 +673,6 @@ Ahorn-VHD is loaded into:
 Ahorn uses the Julia programming language,
 similar to how Minecraft uses the Java programming language.
 
-No supported installation of Julia was found on your computer.
 You can install Julia system-wide yourself.
 Version 1.3+ is the minimum requirement.
 
@@ -710,19 +709,19 @@ similar to how Minecraft uses the Java programming language.
 Found installation path:
 %s
 Found version: %s]],
-                        tostring(info.JuliaPath), tostring(info.JuliaVersion))
-                    ),
+                        tostring(info.JuliaPath), tostring(info.JuliaVersion)
+                    )),
                 }):with(uiu.fillWidth))
             end
 
             if not info.AhornPath then
                 mainlist:addChild(uie.column({
                     uie.label("Ahorn not found", ui.fontBig),
-                    uie.label([[
-No supported installation of Ahorn was found.
+                    uie.label(string.format([[
 Olympus can download Ahorn and start the installation process for you.
-]] .. ((info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be managed by Olympus." or "Ahorn will be installed system-wide.")
-                    ),
+%s]],
+                        (info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be managed by Olympus." or "Ahorn will be installed system-wide."
+                    )),
                     info.JuliaPath and btnRow({
                         { "download", "Install Ahorn", scene.installAhornAlert }
                     })
@@ -735,8 +734,8 @@ Olympus can download Ahorn and start the installation process for you.
 Found installation path:
 %s
 Found version: %s]],
-                        tostring(info.AhornPath), tostring(info.AhornVersion))
-                    ),
+                        tostring(info.AhornPath), tostring(info.AhornVersion)
+                    )),
                     btnRow({
                         { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
                         { "download", "Check for updates", scene.updateAhornAlert }
