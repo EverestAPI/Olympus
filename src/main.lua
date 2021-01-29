@@ -307,7 +307,7 @@ function love.load(args)
                             layoutLate = function(orig, self)
                                 orig(self)
                                 if self.locked then
-                                    self.y = -self.height
+                                    self.y = self.parent.height - self.height
                                 end
                             end
                         }):as("log")

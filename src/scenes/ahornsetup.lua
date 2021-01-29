@@ -147,14 +147,19 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                     layoutLate = function(orig, self)
                         orig(self)
                         if self.locked then
-                            self.y = -self.height
+                            self.y = self.parent.height - self.height
                         end
                     end
                 }):with(uiu.fillWidth):as("loglist")
             ):hook({
-                onScroll = function(orig, self, ...)
-                    scene.loglist.locked = false
-                    orig(self, ...)
+                onScroll = function(orig, self, mx, my, dx, dy, raw, ...)
+                    local child = self.children[1]
+                    local y1 = child.y
+                    orig(self, mx, my, dx, dy, raw, ...)
+                    local y2 = child.y
+                    if not raw then
+                        self.children[1].locked = dy > 0 and y1 == y2
+                    end
                 end
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
