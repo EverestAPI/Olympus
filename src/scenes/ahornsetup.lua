@@ -92,7 +92,7 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                     uie.group({}),
 
                     uie.label([[
-Ahorn will be started with the following theme:]]),
+Ahorn will use the following theme:]]),
                     uie.dropdown(
                         themes,
                         function(self, value)
