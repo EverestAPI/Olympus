@@ -30,7 +30,7 @@ namespace Olympus {
                 stream.Seek(0, SeekOrigin.Begin);
                 using (StreamReader reader = new StreamReader(stream))
                 using (JsonTextReader json = new JsonTextReader(reader)) {
-                    artifacts = (JObject) JToken.ReadFrom(json); 
+                    artifacts = (JObject) JToken.ReadFrom(json);
                 }
             }
 
@@ -63,8 +63,6 @@ namespace Olympus {
                     }
                 }
             }
-
-            yield return Status("Olympus successfully updated", 1f, "done", false);
         }
 
         public static IEnumerator Unwrap(ZipArchive wrap, string wrapName) {

@@ -120,7 +120,7 @@ function modinstaller.install(modurl, cb)
             return
         end
 
-        installer.update(last[1], 1, "done")
+        installer.update(last[1], 1, "done", true)
         installer.done({
             {
                 "Launch",

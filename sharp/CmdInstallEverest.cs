@@ -100,11 +100,7 @@ namespace Olympus {
             }
 
             yield return Status("Starting MiniInstaller", false, "monomod", false);
-
             yield return Install(root);
-
-            yield return Status("Done", 1f, "done", false);
-
         }
 
     }
