@@ -57,7 +57,7 @@ function scene.reloadSharp()
 
     list:addChild(uie.button("Dummy Task", function()
         local installer = scener.push("installer")
-        installer.sharpTask("dummyTask", 1000, 10):calls(function(task, last)
+        installer.sharpTask("dummyTask", 30, 500):calls(function(task, last)
             if not last then
                 return
             end

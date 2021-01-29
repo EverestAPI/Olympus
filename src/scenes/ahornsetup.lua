@@ -157,8 +157,8 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                     local y1 = child.y
                     orig(self, mx, my, dx, dy, raw, ...)
                     local y2 = child.y
-                    if not raw then
-                        self.children[1].locked = dy > 0 and y1 == y2
+                    if my then
+                        self.children[1].locked = (raw and dy > 0 or dy < 0) and y1 == y2
                     end
                 end
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
@@ -182,6 +182,9 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                 uie.button("Clear", function()
                     local loglist = scene.loglist
                     loglist.children = {}
+                    loglist.y = 0
+                    loglist.realY = 0
+                    loglist.locked = true
                     loglist:reflow()
                 end):with(uiu.fillWidth(true)),
 
@@ -401,6 +404,10 @@ function scene.launchAhorn()
 
         local loglist = scene.loglist
         loglist.children = {}
+        loglist.y = 0
+        loglist.realY = 0
+        loglist.locked = true
+        loglist:reflow()
 
         loglist:addChild(uie.label([[
 Ahorn is now starting in the background.

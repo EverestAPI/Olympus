@@ -222,6 +222,7 @@ local root = uie.group({
                         orig(self)
                         if self.locked then
                             self.y = self.parent.height - self.height
+                            self.realY = self.parent.height - self.height
                         end
                     end
                 }):with(uiu.fillWidth):as("loglist")
@@ -231,8 +232,8 @@ local root = uie.group({
                     local y1 = child.y
                     orig(self, mx, my, dx, dy, raw, ...)
                     local y2 = child.y
-                    if not raw then
-                        self.children[1].locked = dy > 0 and y1 == y2
+                    if my then
+                        self.children[1].locked = (raw and dy > 0 or dy < 0) and y1 == y2
                     end
                 end
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
@@ -416,6 +417,10 @@ function scene.enter()
     scene.progressNext = 0
     scene.progressDraw = 0
     scene.loglist.children = {}
+    scene.loglist.y = 0
+    scene.loglist.realY = 0
+    scene.loglist.locked = true
+    scene.loglist:reflow()
     scene.loglast = nil
     if scene.actionsrow then
         scene.actionsrow:removeSelf()
