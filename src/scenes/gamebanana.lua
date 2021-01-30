@@ -6,9 +6,22 @@ local alert = require("alert")
 local modinstaller = require("modinstaller")
 
 local scene = {
-    name = "GameBanana"
+    name = "GameBanana",
+    sort = "",
+    itemtypeFilter = ""
 }
 
+local sortOptions = {
+    { text = "Most Recent", data = "" },
+    { text = "Most Downloaded", data = "downloads" },
+    { text = "Most Viewed", data = "views" },
+    { text = "Most Liked", data = "likes" }
+}
+
+-- this will be the type filter dropdown content until the type list is loaded through the API.
+local itemtypeOptionsTemp = {
+    { text = "All", data = "" }
+}
 
 local function generateModColumns(self)
     local listcount = math.max(1, math.min(6, math.floor(love.graphics.getWidth() / 350)))
@@ -73,10 +86,9 @@ local root = uie.column({
                 function()
                     utils.openURL("https://gamebanana.com/games/6460")
                 end
-            ),
+            ):as("openGameBananaButton"),
 
             uie.row({
-
                 uie.button(uie.icon("back"):with({ scale = 24 / 256 }), function()
                     scene.loadPage(scene.page - 1)
                 end):as("pagePrev"),
@@ -103,12 +115,41 @@ local root = uie.column({
 
                 layoutLate = function(orig, self)
                     orig(self)
-                    self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
-                    self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
+                    if scene.searchLast ~= "" then
+                        -- there is a search: center the title relative to the window.
+                        self.x = math.floor(self.parent.innerWidth * 0.5 - self.width * 0.5)
+                        self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
+                    else
+                        -- there is no search so the dropdowns are shown: center the title between the "open GB" button and the dropdowns.
+                        openGameBananaButton = scene.root:findChild("openGameBananaButton")
+                        rightRow = scene.root:findChild("rightRow")
+                        width = self.parent.innerWidth - openGameBananaButton.width - rightRow.width
+                        self.x = math.floor(width * 0.5 - self.width * 0.5 + openGameBananaButton.width)
+                        self.realX = math.floor(width * 0.5 - self.width * 0.5 + openGameBananaButton.width)
+                    end
                 end
             }),
 
             uie.row({
+                uie.dropdown(
+                    sortOptions,
+                    function(self, value)
+                        if value ~= scene.sort then
+                            scene.sort = value
+                            scene.loadPage(1)
+                        end
+                    end
+                ):as("sort"),
+                
+                uie.dropdown(
+                    itemtypeOptionsTemp,
+                    function(self, value)
+                        if value ~= scene.itemtypeFilter then
+                            scene.itemtypeFilter = value
+                            scene.loadPage(1)
+                        end
+                    end
+                ):as("itemtypeFilter"),
 
                 uie.field(
                     "",
@@ -134,7 +175,7 @@ local root = uie.column({
                 },
                 cacheable = false,
                 clip = false
-            }):with(uiu.rightbound)
+            }):with(uiu.rightbound):as("rightRow")
 
         }):with({
             style = {
@@ -182,7 +223,7 @@ function scene.loadPage(page)
     end
 
     scene.loadingPage = threader.routine(function()
-        local lists, pagePrev, pageLabel, pageNext = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext")
+        local lists, pagePrev, pageLabel, pageNext, sortDropdown, itemtypeFilterDropdown = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext", "sort", "itemtypeFilter")
 
         local isQuery = type(page) == "string"
 
@@ -197,8 +238,14 @@ function scene.loadPage(page)
 
         pagePrev.enabled = false
         pageNext.enabled = false
+        sortDropdown.enabled = false
+        sortDropdown.visible = not isQuery
+        itemtypeFilterDropdown.enabled = false
+        itemtypeFilterDropdown.visible = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
+        sortDropdown:reflow()
+        itemtypeFilterDropdown:reflow()
 
         if not isQuery then
             if page == 0 then
@@ -226,7 +273,11 @@ function scene.loadPage(page)
 
         local entries, entriesError
         if not isQuery then
-            entries, entriesError = scene.downloadEntries(page)
+            if scene.sort ~= "" then
+                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter)
+            else
+                entries, entriesError = scene.downloadEntries(page)
+            end
         else
             entries, entriesError = scene.downloadSearchEntries(page)
         end
@@ -240,10 +291,15 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 0
+            -- "Featured" should be inaccessible if there is a sort or a filter
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
             pageNext.enabled = not isQuery
+            sortDropdown.enabled = not isQuery
+            itemtypeFilterDropdown.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
+            sortDropdown:reflow()
+            itemtypeFilterDropdown:reflow()
             return
         end
 
@@ -257,10 +313,15 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 0
+            -- "Featured" should be inaccessible if there is a sort or a filter
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
             pageNext.enabled = not isQuery
+            sortDropdown.enabled = not isQuery
+            itemtypeFilterDropdown.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
+            sortDropdown:reflow()
+            itemtypeFilterDropdown:reflow()
             return
         end
 
@@ -270,10 +331,15 @@ function scene.loadPage(page)
 
         loading:removeSelf()
         scene.loadingPage = nil
-        pagePrev.enabled = not isQuery and page > 0
+        -- "Featured" should be inaccessible if there is a sort or a filter
+        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
         pageNext.enabled = not isQuery
+        sortDropdown.enabled = not isQuery
+        itemtypeFilterDropdown.enabled = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
+        sortDropdown:reflow()
+        itemtypeFilterDropdown:reflow()
     end)
     return scene.loadingPage
 end
@@ -281,6 +347,34 @@ end
 
 function scene.load()
     scene.loadPage(0)
+    
+    -- Load the categories / item types list upon entering the GameBanana screen
+    threader.routine(function()
+        data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories"):result()
+        
+        if not data then
+            -- Error while calling the API
+            root:addChild(uie.row({
+                uie.label("Error downloading categories list: " .. tostring(msg)),
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+        else
+            -- Convert the list retrieved from the API to a dropdown option list
+            allTypes = {}
+            for _, category in ipairs(data) do
+                table.insert(allTypes, { text = category.formatted .. " (" .. category.count .. ")", data = category.itemtype })
+            end
+            
+            -- Refresh the dropdown
+            itemtypeFilterDropdown = scene.root:findChild("itemtypeFilter")
+            itemtypeFilterDropdown.data = allTypes
+            itemtypeFilterDropdown:setText(allTypes[1].text)
+            itemtypeFilterDropdown:reflow()
+        end
+    end)
+
 
 end
 
@@ -295,7 +389,7 @@ function scene.downloadEntries(page)
         return scene.downloadFeaturedEntries()
     end
 
-    local url = "https://api.gamebanana.com/Core/List/New?gameid=6460&page=" .. tostring(page)
+    local url = "https://api.gamebanana.com/Core/List/New?gameid=6460&page=" .. tostring(page) .. (scene.itemtypeFilter ~= "" and "&itemtype=" .. scene.itemtypeFilter or "")
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -311,6 +405,21 @@ end
 
 function scene.downloadSearchEntries(query)
     local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadYAML(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
+end
+
+function scene.downloadSortedEntries(page, sort, itemtype)
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" .. (sort ~= "" and "sort=" .. sort .. "&" or "") .. (itemtype ~= "" and "type=" .. itemtype .. "&" or "") .. "page=" .. page
     local data = scene.cache[url]
     if data ~= nil then
         return data
