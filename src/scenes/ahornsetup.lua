@@ -87,7 +87,12 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
 
                     uie.button("Open the Olympus Ahorn folder", function()
                         utils.openFile(scene.info.RootPath)
-                    end):with(uiu.fillWidth),
+                    end):hook({
+                        update = function(orig, self, ...)
+                            self.enabled = not scene.reloading
+                            orig(self, ...)
+                        end
+                    }):with(uiu.fillWidth),
 
                     uie.group({}),
 
