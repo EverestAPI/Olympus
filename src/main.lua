@@ -98,8 +98,6 @@ function love.load(args)
 
     local protocol
 
-    table.insert(args, "everest:https://gamebanana.com/mmdl/512735,Skin,186530")
-
     for i = 1, #args do
         local arg = args[i]
 
