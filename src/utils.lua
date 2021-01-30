@@ -335,7 +335,10 @@ You can close this window.]])
 Olympus couldn't find the Celeste launch binary.
 Please check if the installed version of Celeste matches your OS.
 If you are using Lutris or similar, you are on your own.]])
+            return false
         end
+
+        return true
     end)
 end
 

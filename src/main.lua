@@ -98,6 +98,8 @@ function love.load(args)
 
     local protocol
 
+    table.insert(args, "everest:https://gamebanana.com/mmdl/512735,Skin,186530")
+
     for i = 1, #args do
         local arg = args[i]
 
@@ -534,13 +536,18 @@ function love.load(args)
     require("dragndrop")
 
     if protocol then
-        require("modinstaller").install(protocol, function(task)
-            if task then
+        require("modinstaller").install(protocol, function(launch)
+            if launch then
                 scener.set("installer")
-                task:calls(function()
+                launch:calls(function(task, launched)
                     threader.routine(function()
-                        threader.sleep(1)
-                        love.event.quit()
+                        if launched then
+                            threader.sleep(1)
+                            love.event.quit()
+                            return
+                        end
+
+                        scener.pop()
                     end)
                 end)
             else
