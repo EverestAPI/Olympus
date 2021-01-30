@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
 
-        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....|\\^\\[\\[.25.|\\^\\[\\[2K|\\^M");
+        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....|\\^\\[?\\[.25.|\\^\\[\\[2K|\\^M");
         public static readonly Regex EscapeDashRegex = new Regex(@"─+");
 
         public override bool LogRun => false;
@@ -34,6 +34,7 @@ namespace Olympus {
                     process.Start();
 
                     bool dead = false;
+                    bool deadByTimeout = false;
                     int timeoutThreadID = 0;
                     int lineID = 0;
                     WaitHandle[] timeoutHandle = new WaitHandle[] { timeout };
@@ -55,6 +56,7 @@ namespace Olympus {
                                                 timeout.Reset();
                                                 if (waited == WaitHandle.WaitTimeout && !dead && timeoutThreadID == timeoutThreadIDCurrent && lineID == lineIDCurrent) {
                                                     dead = true;
+                                                    deadByTimeout = true;
                                                     process.Kill();
                                                     return;
                                                 }
@@ -81,7 +83,7 @@ namespace Olympus {
                         } else {
                             lineID++;
                             timeout.Set();
-                            yield return Status(Escape(line, out bool update), false, "", update);
+                            yield return Status(DateTime.Now.ToString("[HH:mm:ss] ") + Escape(line, out bool update), false, "", update);
                         }
                     }
 
@@ -89,8 +91,10 @@ namespace Olympus {
                     dead = true;
                     timeout.Set();
                     killer?.Join();
-                    if (process.ExitCode != 0 || dead)
-                        throw new Exception("Julia encountered a fatal error:" + process.StandardError.ReadToEnd());
+                    if (deadByTimeout)
+                        throw new Exception("Julia timed out:\n" + process.StandardError.ReadToEnd());
+                    if (process.ExitCode != 0)
+                        throw new Exception("Julia encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                 }
             } finally {
                 if (!string.IsNullOrEmpty(tmpFilename) && File.Exists(tmpFilename))
