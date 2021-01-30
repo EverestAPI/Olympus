@@ -51,7 +51,7 @@ namespace Olympus {
                                         int lineIDCurrent = lineID;
                                         try {
                                             while (!dead && timeoutThreadID == timeoutThreadIDCurrent) {
-                                                int waited = WaitHandle.WaitAny(timeoutHandle, 10 * 60 * 1000);
+                                                int waited = WaitHandle.WaitAny(timeoutHandle, 15 * 60 * 1000);
                                                 timeout.Reset();
                                                 if (waited == WaitHandle.WaitTimeout && !dead && timeoutThreadID == timeoutThreadIDCurrent && lineID == lineIDCurrent) {
                                                     dead = true;
