@@ -60,11 +60,7 @@ function utils._important(name)
                     end
                 end,
 
-                updateHidden = function(orig, self, dt)
-                    -- The parent might be too stupid to have onscreen set to true.
-                    self:update(dt)
-                    orig(dt)
-                end,
+                updateHidden = true,
 
                 calcSize = function(orig, self)
                     self.width = 0
