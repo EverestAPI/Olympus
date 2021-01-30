@@ -389,7 +389,7 @@ function scene.downloadEntries(page)
         return scene.downloadFeaturedEntries()
     end
 
-    local url = "https://api.gamebanana.com/Core/List/New?gameid=6460&page=" .. tostring(page) .. (scene.itemtypeFilter ~= "" and "&itemtype=" .. scene.itemtypeFilter or "")
+    local url = "https://api.gamebanana.com/Core/List/New?format=json_min&gameid=6460&page=" .. tostring(page) .. (scene.itemtypeFilter ~= "" and "&itemtype=" .. scene.itemtypeFilter or "")
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -488,7 +488,7 @@ function scene.downloadInfo(entries, id)
             mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetProfileUrl()")
     end
 
-    local url = "https://api.gamebanana.com/Core/Item/Data?" .. multicall:sub(2)
+    local url = "https://api.gamebanana.com/Core/Item/Data?format=json_min&" .. multicall:sub(2)
     local data = scene.cache[url]
     if data ~= nil then
         return data
