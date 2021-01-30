@@ -87,13 +87,23 @@ else
 end
 
 if Base.find_package(""Ahorn"") === nothing
-    Pkg.instantiate()
+    try
+        println(""#OLYMPUS# TIMEOUT START"")
 
-    install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
-    install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
+        Pkg.instantiate()
 
-    Pkg.instantiate()
-    Pkg.API.precompile()
+        install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
+        install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
+
+        Pkg.instantiate()
+        Pkg.API.precompile()
+
+        println(""#OLYMPUS# TIMEOUT END"")
+    catch e
+        println(""FATAL ERROR"")
+        println(sprint(showerror, e, catch_backtrace()))
+        exit(1)
+    end
 end
 
 using Ahorn

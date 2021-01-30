@@ -50,7 +50,6 @@ if VERSION < v""1.3""
 end
 
 using Pkg
-
 Pkg.activate(ENV[""AHORN_ENV""])
 
 install_or_update(url::String, pkg::String) = if ""Ahorn"" ∈ keys(Pkg.Types.Context().env.project.deps)
@@ -61,16 +60,27 @@ else
     Pkg.add(PackageSpec(url = url))
 end
 
-Pkg.instantiate()
+try
+    println(""#OLYMPUS# TIMEOUT START"")
 
-install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
-install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
+    Pkg.instantiate()
 
-Pkg.instantiate()
-Pkg.API.precompile()
+    install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
+    install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
 
-import Ahorn
+    Pkg.instantiate()
+    Pkg.API.precompile()
 
+    import Ahorn
+
+    println(""#OLYMPUS# TIMEOUT END"")
+catch e
+    println(""FATAL ERROR"")
+    println(sprint(showerror, e, catch_backtrace()))
+    exit(1)
+end
+
+exit(0)
 ", null);
         }
     }
