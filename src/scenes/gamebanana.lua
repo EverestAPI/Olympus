@@ -121,9 +121,9 @@ local root = uie.column({
                         self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
                     else
                         -- there is no search so the dropdowns are shown: center the title between the "open GB" button and the dropdowns.
-                        openGameBananaButton = scene.root:findChild("openGameBananaButton")
-                        rightRow = scene.root:findChild("rightRow")
-                        width = self.parent.innerWidth - openGameBananaButton.width - rightRow.width
+                        local openGameBananaButton = scene.root:findChild("openGameBananaButton")
+                        local rightRow = scene.root:findChild("rightRow")
+                        local width = self.parent.innerWidth - openGameBananaButton.width - rightRow.width
                         self.x = math.floor(width * 0.5 - self.width * 0.5 + openGameBananaButton.width)
                         self.realX = math.floor(width * 0.5 - self.width * 0.5 + openGameBananaButton.width)
                     end
@@ -350,7 +350,7 @@ function scene.load()
     
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
-        data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories"):result()
+        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories"):result()
         
         if not data then
             -- Error while calling the API
@@ -362,13 +362,13 @@ function scene.load()
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
         else
             -- Convert the list retrieved from the API to a dropdown option list
-            allTypes = {}
+            local allTypes = {}
             for _, category in ipairs(data) do
                 table.insert(allTypes, { text = category.formatted .. " (" .. category.count .. ")", data = category.itemtype })
             end
             
             -- Refresh the dropdown
-            itemtypeFilterDropdown = scene.root:findChild("itemtypeFilter")
+            local itemtypeFilterDropdown = scene.root:findChild("itemtypeFilter")
             itemtypeFilterDropdown.data = allTypes
             itemtypeFilterDropdown:setText(allTypes[1].text)
             itemtypeFilterDropdown:reflow()
