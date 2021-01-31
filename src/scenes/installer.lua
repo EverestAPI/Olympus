@@ -196,7 +196,7 @@ local root = uie.group({
             end
         end
 
-    }):with(uiu.fill):as("canvas"),
+    }):with(uiu.fillWidth):with(uiu.fillHeight(0.5 - 120)):as("canvas"),
 
     uie.group({
         uie.column({
