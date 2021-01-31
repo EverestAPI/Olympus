@@ -25,6 +25,10 @@ local debugLabel
 local logWindow
 local logList
 
+local focusStatus = 0
+local canvasWidth = 0
+local canvasHeight = 0
+local canvas
 
 local function logDump()
     while true do
@@ -609,7 +613,7 @@ function love.update(dt)
 
         else
             debugLabel.text =
-                "FPS: " .. love.timer.getFPS() .. "\n" ..
+                "FPS: " .. love.timer.getFPS() .. (canvas and " throttled" or "") .. "\n" ..
                 "hovering: " .. tostring(ui.hovering) .. "\n" ..
                 "dragging: " .. tostring(ui.dragging) .. "\n" ..
                 "focusing: " .. tostring(ui.focusing) .. "\n" ..
@@ -638,11 +642,24 @@ function love.update(dt)
     local bg = uie.panel.__default.style.bg
     love.graphics.setBackgroundColor(bg[1] * 0.5, bg[2] * 0.5, bg[3] * 0.5, 1)
 
-    if dt < (1 / 300) then
-        if not love.window.isVisible() then
-            love.timer.sleep(1 / 10)
-        elseif not love.window.hasFocus() and not love.window.hasMouseFocus() then
-            love.timer.sleep(1 / 50)
+    if not love.window.isVisible() then
+        love.timer.sleep(1 / 10)
+        if focusStatus ~= 2 then
+            focusStatus = 2
+            sharp.setSleep(0.3, 0.5)
+        end
+
+    elseif not love.window.hasFocus() and not love.window.hasMouseFocus() then
+        love.timer.sleep(1 / 30)
+        if focusStatus ~= 1 then
+            focusStatus = 1
+            sharp.setSleep(0.2, 0.4)
+        end
+
+    else
+        if focusStatus ~= 0 then
+            focusStatus = 0
+            sharp.setSleep(0.07, 0.07)
         end
     end
 end
@@ -652,18 +669,60 @@ function love.draw()
         return
     end
 
-    if profile then
-        profile.start()
+    local width = love.graphics.getWidth()
+    local height = love.graphics.getHeight()
+
+    local redraw = focusStatus == 0 or (love.frame % 3) == 0
+
+    if not canvas or width > canvasWidth or height > canvasHeight or focusStatus == 0 then
+        redraw = true
+
+        if canvas then
+            canvas:release()
+            canvas = nil
+        end
+
+        if focusStatus == 0 then
+            canvasWidth = 0
+            canvasHeight = 0
+        else
+            canvasWidth = width
+            canvasHeight = height
+
+            if width < 4096 and height < 4096 then
+                canvas = love.graphics.newCanvas(width, height)
+            end
+        end
     end
 
-    -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+    if redraw then
+        local canvasPrev
+        if canvas then
+            canvasPrev = love.graphics.getCanvas()
+            love.graphics.setCanvas(canvas)
+        end
 
-    pcall(ui.draw)
+        if profile then
+            profile.start()
+        end
 
-    -- love.graphics.setScissor()
+        -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-    if profile then
-        profile.stop()
+        pcall(ui.draw)
+
+        -- love.graphics.setScissor()
+
+        if profile then
+            profile.stop()
+        end
+
+        if canvas then
+            love.graphics.setCanvas(canvasPrev)
+        end
+    end
+
+    if canvas then
+        love.graphics.draw(canvas)
     end
 
     if love.version[1] ~= 0 then

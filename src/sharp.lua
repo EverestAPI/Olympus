@@ -6,6 +6,7 @@ local channelDebug = love.thread.getChannel("sharpDebug")
 local channelStatus = love.thread.getChannel("sharpStatus")
 local channelStatusTx = love.thread.getChannel("sharpStatusTx")
 local channelStatusRx = love.thread.getChannel("sharpStatusRx")
+local channelSleep = love.thread.getChannel("sharpSleep")
 
 -- Thread-local ID.
 local tuid = 0
@@ -196,6 +197,12 @@ local function sharpthread()
             getReturn(uid):push(data)
         end
 
+        local nops = 0
+        local sleepPoll = 0
+        local sleeps = channelSleep:peek()
+        local sleepShort = sleeps[1]
+        local sleepLong = sleeps[2]
+
         while true do
             channelSet(channelStatus, "idle")
 
@@ -324,8 +331,22 @@ local function sharpthread()
                 end
             end
 
+            sleepPoll = sleepPoll + 1
+            if sleepPoll >= 200 then
+                sleepPoll = 0
+                sleeps = channelSleep:peek()
+                sleepShort = sleeps[1]
+                sleepLong = sleeps[2]
+            end
+
             if nop then
-                threader.sleep(0.07)
+                nops = nops + 1
+                if nops > 10 then
+                    nops = 10
+                    threader.sleep(sleepLong)
+                else
+                    threader.sleep(sleepShort)
+                end
             end
         end
 
@@ -434,6 +455,7 @@ function sharp.init(debug, debugSharp)
     channelDebug:push({ debug and true or os.getenv("OLYMPUS_SHARP_DEBUGLOG") == "1", debugSharp and true or false })
     channelStatus:clear()
     channelStatus:push("init")
+    channelSleep:push({ 0.07, 0.07 })
 
     -- Run the command queue on a separate thread.
     local thread = threader.new(sharpthread)
@@ -446,6 +468,15 @@ function sharp.init(debug, debugSharp)
     return sharp.initStatus
 end
 
+local function channelSetCb(channel, value)
+    channel:clear()
+    channel:push(value)
+end
+
+local function channelSet(channel, value)
+    channel:performAtomic(channelSetCb, value)
+end
+
 function sharp.getStatus()
     return channelStatus:peek() or "unknown"
 end
@@ -456,6 +487,10 @@ end
 
 function sharp.getStatusRx()
     return channelStatusRx:peek() or "unknown"
+end
+
+function sharp.setSleep(short, long)
+    channelSet(channelSleep, { short, long })
 end
 
 return sharp
