@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
 
-        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....|\\^\\[?\\[.25.|\\^\\[\\[2K|\\^M");
+        public static readonly Regex EscapeCmdRegex = new Regex("\u001B....|\\^\\[\\[.25.||?\\[.25.|\\^\\[\\[2K|?\\[2K|\\^M|┌");
         public static readonly Regex EscapeDashRegex = new Regex(@"─+");
 
         public override bool LogRun => false;
@@ -83,7 +83,9 @@ namespace Olympus {
                         } else {
                             lineID++;
                             timeout.Set();
-                            yield return Status(DateTime.Now.ToString("[HH:mm:ss] ") + Escape(line, out bool update), false, "", update);
+                            line = Escape(line, out bool update);
+                            if (line != null)
+                                yield return Status(DateTime.Now.ToString("[HH:mm:ss] ") + line, false, "", update);
                         }
                     }
 
@@ -106,6 +108,10 @@ namespace Olympus {
             line = EscapeCmdRegex.Replace(line, "");
             line = EscapeDashRegex.Replace(line, "-");
             update = line.StartsWith("#") && line.EndsWith("%");
+
+            if (line.StartsWith("└ @ "))
+                return null;
+
             return line;
         }
 
