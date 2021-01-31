@@ -197,7 +197,7 @@ Ahorn will use the following theme:]]),
                     local y1 = child.y
                     orig(self, mx, my, dx, dy, raw, ...)
                     local y2 = child.y
-                    if my then
+                    if my and (not raw or dy > 0 or self.children[1].locked) then
                         self.children[1].locked = (raw and dy > 0 or dy < 0) and y1 == y2
                     end
                 end
