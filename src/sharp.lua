@@ -6,6 +6,7 @@ local channelDebug = love.thread.getChannel("sharpDebug")
 local channelStatus = love.thread.getChannel("sharpStatus")
 local channelStatusTx = love.thread.getChannel("sharpStatusTx")
 local channelStatusRx = love.thread.getChannel("sharpStatusRx")
+local channelStatusWaiting = love.thread.getChannel("sharpStatusWaiting")
 local channelSleep = love.thread.getChannel("sharpSleep")
 
 -- Thread-local ID.
@@ -203,6 +204,9 @@ local function sharpthread()
         local sleepShort = sleeps[1]
         local sleepLong = sleeps[2]
 
+        local waiting = {}
+        channelSet(channelStatusWaiting, waiting)
+
         while true do
             channelSet(channelStatus, "idle")
 
@@ -264,6 +268,14 @@ local function sharpthread()
                             print("[sharp rx]", data.UID, dbgvalue, data.Error)
                         end
                         sendReturn(data.UID, data)
+
+                        for i = 1, #waiting do
+                            if waiting[i] == data.UID then
+                                table.remove(waiting, i)
+                                channelSet(channelStatusWaiting, waiting)
+                                break
+                            end
+                        end
                     end
 
                     ::next::
@@ -323,6 +335,11 @@ local function sharpthread()
                         client:close()
                         client = connect()
                         goto rerun
+                    end
+
+                    if uid ~= "_timeoutping" then
+                        waiting[#waiting + 1] = uid
+                        channelSet(channelStatusWaiting, waiting)
                     end
                 end
 
@@ -487,6 +504,10 @@ end
 
 function sharp.getStatusRx()
     return channelStatusRx:peek() or "unknown"
+end
+
+function sharp.getStatusWaiting()
+    return channelStatusWaiting:peek() or {}
 end
 
 function sharp.setSleep(short, long)

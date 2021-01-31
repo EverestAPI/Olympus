@@ -611,7 +611,7 @@ function love.update(dt)
 
             profile.start()
 
-        else
+        elseif debugLabel.parent.visible then
             debugLabel.text =
                 "FPS: " .. love.timer.getFPS() .. (canvas and " throttled" or "") .. "\n" ..
                 "hovering: " .. tostring(ui.hovering) .. "\n" ..
@@ -622,10 +622,11 @@ function love.update(dt)
                 -- "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState) ..
                 "\n" ..
                 -- "storageDir: " .. fs.getStorageDir() .. "\n" .. -- Can contain invalid UTF-8!
+                "threader: " .. tostring(threader.unsafe) .. "\n" ..
                 "sharp: " .. sharp.getStatus() .. "\n" ..
                 "sharpTx: " .. sharp.getStatusTx() .. "\n" ..
                 "sharpRx: " .. sharp.getStatusRx() .. "\n" ..
-                "threader: " .. tostring(threader.unsafe) .. "\n" ..
+                "sharpWaiting: " .. "\n  " .. table.concat(sharp.getStatusWaiting(), "\n  ") .. "\n" ..
                 ""
             debugLabel.parent:reflow()
         end
