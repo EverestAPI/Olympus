@@ -39,12 +39,12 @@ function background.new()
 
         time = 8,
 
-        effect = moonshine(moonshine.effects.gaussianblur),
+        effect = moonshine(moonshine.effects.fastgaussianblur),
 
         dots = {},
 
         init = function(self)
-            self.effect.gaussianblur.sigma = 5
+            self.effect.fastgaussianblur.sigma = 5
 
             local dots = self.dots
             for i = 1, 128 do
