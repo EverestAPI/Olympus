@@ -772,7 +772,7 @@ Found version: %s]],
                     uie.label(string.format([[
 Olympus can download Ahorn and start the installation process for you.
 %s]],
-                        (info.JuliaIsLocal or config.ahorn.forceLocal) and "Ahorn will be managed by Olympus." or "Ahorn will be installed system-wide."
+                        (info.JuliaIsLocal or config.ahorn.mode ~= "system") and "Ahorn will be managed by Olympus." or "Ahorn will be installed system-wide."
                     )),
                     info.JuliaPath and btnRow({
                         { "download", "Install Ahorn", scene.installAhornAlert }

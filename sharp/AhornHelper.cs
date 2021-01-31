@@ -218,51 +218,51 @@ redirect_stdout(stdoutPrev)
                 return JuliaPath;
             
             string name = PlatformHelper.Is(Platform.Windows) ? "julia.exe" : "julia";
+            string path;
 
-            string path = Path.Combine(RootPath, "julia", "bin", name);
+            if (Mode == AhornHelperMode.System) {
+                path = ProcessHelper.Read(
+                    PlatformHelper.Is(Platform.Windows) ? "where.exe" : "which",
+                    name,
+                    out _
+                ).Trim().Split('\n').FirstOrDefault()?.Trim();
+                if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
+                    JuliaIsLocal = false;
+                    return JuliaPath = path;
+                }
+
+                if (PlatformHelper.Is(Platform.Windows)) {
+                    // Julia on Windows is a hot mess.
+                    string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+                    IEnumerable<string> all = Directory.EnumerateDirectories(localAppData);
+
+                    string localPrograms = Path.Combine(localAppData, "Programs");
+                    if (Directory.Exists(localPrograms))
+                        all = all.Concat(Directory.EnumerateDirectories(localPrograms));
+
+                    string localJulias = Path.Combine(localPrograms, "Julia");
+                    if (Directory.Exists(localJulias))
+                        all = all.Concat(Directory.EnumerateDirectories(localJulias));
+
+                    path = all
+                        .Where(p => Path.GetFileName(p).StartsWith("Julia-") || Path.GetFileName(p).StartsWith("Julia "))
+                        .OrderByDescending(p => Path.GetFileName(p.Substring(6)))
+                        .FirstOrDefault();
+
+                    if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) {
+                        path = Path.Combine(path, "bin", name);
+                        if (File.Exists(path)) {
+                            JuliaIsLocal = false;
+                            return JuliaPath = path;
+                        }
+                    }
+                }
+            }
+
+            path = Path.Combine(RootPath, "julia", "bin", name);
             if (File.Exists(path)) {
                 JuliaIsLocal = true;
                 return JuliaPath = path;
-            }
-
-            if (Mode != AhornHelperMode.System)
-                return null;
-
-            path = ProcessHelper.Read(
-                PlatformHelper.Is(Platform.Windows) ? "where.exe" : "which",
-                name,
-                out _
-            ).Trim().Split('\n').FirstOrDefault()?.Trim();
-            if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                JuliaIsLocal = false;
-                return JuliaPath = path;
-            }
-
-            if (PlatformHelper.Is(Platform.Windows)) {
-                // Julia on Windows is a hot mess.
-                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                IEnumerable<string> all = Directory.EnumerateDirectories(localAppData);
-
-                string localPrograms = Path.Combine(localAppData, "Programs");
-                if (Directory.Exists(localPrograms))
-                    all = all.Concat(Directory.EnumerateDirectories(localPrograms));
-
-                string localJulias = Path.Combine(localPrograms, "Julia");
-                if (Directory.Exists(localJulias))
-                    all = all.Concat(Directory.EnumerateDirectories(localJulias));
-
-                path = all
-                    .Where(p => Path.GetFileName(p).StartsWith("Julia-") || Path.GetFileName(p).StartsWith("Julia "))
-                    .OrderByDescending(p => Path.GetFileName(p.Substring(6)))
-                    .FirstOrDefault();
-
-                if (!string.IsNullOrEmpty(path) && Directory.Exists(path)) {
-                    path = Path.Combine(path, "bin", name);
-                    if (File.Exists(path)) {
-                        JuliaIsLocal = false;
-                        return JuliaPath = path;
-                    }
-                }
             }
 
             return null;
@@ -275,7 +275,17 @@ redirect_stdout(stdoutPrev)
             if (string.IsNullOrEmpty(JuliaPath) || !File.Exists(JuliaPath))
                 return null;
 
-            string path = Path.Combine(RootPath, "julia-depot", "packages", "Ahorn");
+            string path;
+
+            if (Mode == AhornHelperMode.System) {
+                path = GetJuliaOutput(PrefixPkgActivate + @"println(something(Base.find_package(""Ahorn""), """"))", out _, false);
+                if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
+                    AhornIsLocal = false;
+                    return AhornPath = path;
+                }
+            }
+
+            path = Path.Combine(RootPath, "julia-depot", "packages", "Ahorn");
             if (Directory.Exists(path)) {
                 foreach (string sub in Directory.EnumerateDirectories(path)) {
                     path = Path.Combine(sub, "src", "Ahorn.jl");
@@ -284,15 +294,6 @@ redirect_stdout(stdoutPrev)
                         return AhornPath = path;
                     }
                 }
-            }
-
-            if (Mode != AhornHelperMode.System)
-                return null;
-
-            path = GetJuliaOutput(PrefixPkgActivate + @"println(something(Base.find_package(""Ahorn""), """"))", out _, false);
-            if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                AhornIsLocal = false;
-                return AhornPath = path;
             }
 
             return null;
@@ -344,12 +345,16 @@ end
                         continue;
                 }
 
-                string head = Path.Combine(clone, "refs", "heads", "master");
+                string head = Path.Combine(clone, "FETCH_HEAD");
                 if (!File.Exists(head))
                     continue;
                 using (FileStream stream = File.Open(head, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (StreamReader reader = new StreamReader(stream)) {
-                    return reader.ReadLine().Trim() + " (git)";
+                    head = reader.ReadLine().Trim();
+                    int split = head.IndexOf("\t");
+                    if (split >= 0)
+                        head = head.Substring(0, split);
+                    return head + " (git)";
                 }
             }
 
