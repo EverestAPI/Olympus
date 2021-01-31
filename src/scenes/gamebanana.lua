@@ -799,6 +799,8 @@ function scene.item(info)
         }):with(uiu.fillWidth)
 
     }):with({
+        cacheForce = true,
+        cachePadding = 0,
         clip = false,
         cacheable = false
     }):with(uiu.fillWidth)
