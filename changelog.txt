@@ -4,5 +4,4 @@ Its purpose is to be shown in Olympus when updating.
 In case of emergency, copy this: ∙
 
 #changelog#
-∙ Initial release.
-∙ Congratulations, you're one of the first few people to use Olympus!
+∙ I currently don't have the time to maintain a changelog, oops. -jade

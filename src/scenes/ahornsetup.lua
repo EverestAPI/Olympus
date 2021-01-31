@@ -823,7 +823,7 @@ Found version: %s]],
                     )),
                     btnRow({
                         { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
-                        { "download", "Check for updates", scene.forceUpdateAhornAlert }
+                        { "update", "Check for updates", scene.forceUpdateAhornAlert }
                     }):with(function(row)
                         local btn = row.children[2]
                         scene.latestGet:calls(function(thread, latest)
@@ -844,6 +844,7 @@ Found version: %s]],
                             end
 
                             if installedHash ~= latest then
+                                btn.children[1].children[1].image = uiu.image("download")
                                 btn.children[1].children[2].text = "Install updates"
                                 btn.cb = function()
                                     scene.updateAhornAlert(installedHash, latest)
