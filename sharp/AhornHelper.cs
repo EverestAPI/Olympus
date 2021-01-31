@@ -275,18 +275,21 @@ redirect_stdout(stdoutPrev)
             if (string.IsNullOrEmpty(JuliaPath) || !File.Exists(JuliaPath))
                 return null;
 
-            string script = PrefixPkgActivate + @"println(something(Base.find_package(""Ahorn""), """"))";
-
-            string path = GetJuliaOutput(script, out _, true);
-            if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
-                AhornIsLocal = true;
-                return AhornPath = path;
+            string path = Path.Combine(RootPath, "julia-depot", "packages", "Ahorn");
+            if (Directory.Exists(path)) {
+                foreach (string sub in Directory.EnumerateDirectories(path)) {
+                    path = Path.Combine(sub, "src", "Ahorn.jl");
+                    if (File.Exists(path)) {
+                        AhornIsLocal = true;
+                        return AhornPath = path;
+                    }
+                }
             }
 
             if (Mode != AhornHelperMode.System)
                 return null;
 
-            path = GetJuliaOutput(script, out _, false);
+            path = GetJuliaOutput(PrefixPkgActivate + @"println(something(Base.find_package(""Ahorn""), """"))", out _, false);
             if (!string.IsNullOrEmpty(path) && File.Exists(path)) {
                 AhornIsLocal = false;
                 return AhornPath = path;
@@ -299,7 +302,7 @@ redirect_stdout(stdoutPrev)
             return GetJuliaOutput(@"println(VERSION)", out _);
         }
 
-        public static string GetAhornVersion() {
+        public static string GetAhornPkgVersion() {
             return GetJuliaOutput(PrefixPkgActivate + @"
 if !(""Ahorn"" ∈ keys(Pkg.installed()))
     return
@@ -307,11 +310,50 @@ end
 
 try
     local ctx = Pkg.Types.Context()
-    println(string(ctx.env.manifest[ctx.env.project.deps[""Ahorn""]].tree_hash)[1:7])
+    println(string(ctx.env.manifest[ctx.env.project.deps[""Ahorn""]].tree_hash))
 catch e
-    println(""unknown"")
+    println(""?"")
 end
 ", out _);
+        }
+
+        public static string GetAhornVersion() {
+            string path = AhornPath;
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return GetAhornPkgVersion() + " (pkg)";
+
+            // julia-depot/packages/Ahorn/*/src/Ahorn.jl
+            path = Path.GetDirectoryName(path); // julia-depot/packages/Ahorn/*/src
+            path = Path.GetDirectoryName(path); // julia-depot/packages/Ahorn/*
+            path = Path.GetDirectoryName(path); // julia-depot/packages/Ahorn
+            path = Path.GetDirectoryName(path); // julia-depot/packages
+            path = Path.GetDirectoryName(path); // julia-depot
+            path = Path.Combine(path, "clones");
+            if (!Directory.Exists(path))
+                return GetAhornPkgVersion() + " (pkg)";
+
+            foreach (string clone in Directory.EnumerateDirectories(path)) {
+                string config = Path.Combine(clone, "config");
+                if (!File.Exists(config))
+                    continue;
+                using (FileStream stream = File.Open(config, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                using (StreamReader reader = new StreamReader(stream)) {
+                    if (!reader.ReadLineUntil("[remote \"origin\"]"))
+                        continue;
+                    if (reader.ReadLine().Trim() != "url = https://github.com/CelestialCartographers/Ahorn.git")
+                        continue;
+                }
+
+                string head = Path.Combine(clone, "refs", "heads", "master");
+                if (!File.Exists(head))
+                    continue;
+                using (FileStream stream = File.Open(head, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                using (StreamReader reader = new StreamReader(stream)) {
+                    return reader.ReadLine().Trim() + " (git)";
+                }
+            }
+
+            return GetAhornPkgVersion() + " (pkg)";
         }
 
     }
