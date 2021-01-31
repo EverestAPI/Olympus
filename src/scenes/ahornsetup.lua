@@ -379,8 +379,7 @@ function scene.installAhornAlert()
     alert({
         body = [[
 Please note that installing Ahorn WILL TAKE A LONG TIME.
-At some points it will look as if the installation is hanging.
-It's working hard in the background, no matter how slow it is.
+At
 DON'T CLOSE OLYMPUS OR IT WILL CONTINUE INSTALLING IN THE BACKGROUND.
 
 If you really need to cancel the installation process:
@@ -402,14 +401,13 @@ If you really need to cancel the installation process:
     })
 end
 
-function scene.updateAhornAlert()
+function scene.forceUpdateAhornAlert()
     alert({
         body = [[
 Checking for updates will also install updates.
 
 Just like installing Ahorn, IT WILL TAKE A LONG TIME.
-At some points it will look as if it is hanging.
-It's working hard in the background, no matter how slow it is.
+Olympus will detect hangs and abort too slow installation processes.
 DON'T CLOSE OLYMPUS OR IT WILL CONTINUE UPDATING IN THE BACKGROUND.
 
 If you really need to cancel the installation process:
@@ -421,6 +419,41 @@ If you really need to cancel the installation process:
         buttons = {
             {
                 "Check and install updates",
+                function(container)
+                    scene.sharpTaskScreen("ahornInstallAhorn")
+                    container:close("OK")
+                end
+            },
+            { "Back" }
+        }
+    })
+end
+
+function scene.updateAhornAlert(installed, found)
+    alert({
+        body = string.format([[
+Olympus has found a possibly newer version of Ahorn.
+
+Detected installed version:
+%s
+
+Latest available version:
+%s
+
+Just like installing Ahorn, IT WILL TAKE A LONG TIME.
+Olympus will detect hangs and abort too slow installation processes.
+DON'T CLOSE OLYMPUS OR IT WILL CONTINUE UPDATING IN THE BACKGROUND.
+
+If you really need to cancel the installation process:
+]] .. (
+(love.system.getOS() == "Windows" and "Open Task Manager and force-close julia.exe") or
+(love.system.getOS() == "macOS" and "Open the Activity Monitor and force-close the Julia process.") or
+(love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
+("... Good luck killing the Julia process.")),
+            installed, found),
+        buttons = {
+            {
+                "Install updates",
                 function(container)
                     scene.sharpTaskScreen("ahornInstallAhorn")
                     container:close("OK")
@@ -790,8 +823,35 @@ Found version: %s]],
                     )),
                     btnRow({
                         { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
-                        { "download", "Check for updates", scene.updateAhornAlert }
-                    })
+                        { "download", "Check for updates", scene.forceUpdateAhornAlert }
+                    }):with(function(row)
+                        local btn = row.children[2]
+                        scene.latestGet:calls(function(thread, latest)
+                            local installedHash, installedHashType = tostring(info.AhornVersion or ""):match("(.*) %((.*)%)")
+
+                            if installedHashType == "git" then
+                                latest = latest and latest.sha
+                            elseif installedHashType == "pkg" then
+                                latest = latest and latest.commit
+                                latest = latest and latest.tree
+                                latest = latest and latest.sha
+                            else
+                                latest = nil
+                            end
+
+                            if not installedHash or not latest then
+                                return
+                            end
+
+                            if installedHash ~= latest then
+                                btn.children[1].children[2].text = "Install updates"
+                                btn.cb = function()
+                                    scene.updateAhornAlert(installedHash, latest)
+                                end
+                                btn:with(utils.important(24))
+                            end
+                        end)
+                    end)
                 }):with(uiu.fillWidth))
             end
         end
@@ -808,6 +868,10 @@ end
 
 
 function scene.load()
+    scene.latestGet = threader.routine(function()
+        scene.latest = threader.wrap("utils").downloadJSON("https://api.github.com/repos/CelestialCartographers/Ahorn/commits/master"):result()
+        return scene.latest
+    end)
 end
 
 
