@@ -379,7 +379,7 @@ function scene.installAhornAlert()
     alert({
         body = [[
 Please note that installing Ahorn WILL TAKE A LONG TIME.
-At
+Olympus will detect hangs and abort too slow installation processes.
 DON'T CLOSE OLYMPUS OR IT WILL CONTINUE INSTALLING IN THE BACKGROUND.
 
 If you really need to cancel the installation process:
@@ -823,7 +823,7 @@ Found version: %s]],
                     )),
                     btnRow({
                         { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
-                        { "update", "Check for updates", scene.forceUpdateAhornAlert }
+                        { "update", "Force update", scene.forceUpdateAhornAlert }
                     }):with(function(row)
                         local btn = row.children[2]
                         scene.latestGet:calls(function(thread, latest)
