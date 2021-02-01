@@ -185,7 +185,7 @@ Ahorn will use the following theme:]]),
 
                     layoutLate = function(orig, self)
                         orig(self)
-                        if self.locked then
+                        if self.locked and self.height > self.parent.height then
                             self.y = self.parent.height - self.height
                             self.realY = self.parent.height - self.height
                         end
