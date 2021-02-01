@@ -33,7 +33,8 @@ function utils._important(name)
             el:addChild(uie.image(name):with({
                 check = check,
                 time = love.math.random() * 0.3,
-                scale = size / 256
+                scale = size / 256,
+                updateHidden = true
             }):hook({
                 update = function(orig, self, dt)
                     orig(self, dt)
@@ -59,8 +60,6 @@ function utils._important(name)
                         self:repaint()
                     end
                 end,
-
-                updateHidden = true,
 
                 calcSize = function(orig, self)
                     self.width = 0
