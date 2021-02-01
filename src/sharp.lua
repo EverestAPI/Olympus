@@ -349,7 +349,7 @@ local function sharpthread()
             end
 
             sleepPoll = sleepPoll + 1
-            if sleepPoll >= 200 then
+            if sleepPoll >= 100 then
                 sleepPoll = 0
                 sleeps = channelSleep:peek()
                 sleepShort = sleeps[1]
@@ -358,12 +358,14 @@ local function sharpthread()
 
             if nop then
                 nops = nops + 1
-                if nops > 10 then
-                    nops = 10
+                if nops > 40 then
+                    nops = 40
                     threader.sleep(sleepLong)
                 else
                     threader.sleep(sleepShort)
                 end
+            else
+                nops = 0
             end
         end
 
