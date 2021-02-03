@@ -39,7 +39,7 @@ namespace Olympus {
 
             try {
                 if (tmpPerm) {
-                    yield return Status($"{Path.GetFileName(vhd)} already exists - reusing and preserving", false, "", false);
+                    yield return Status($"{Path.GetFileName(tmp)} already exists - reusing and preserving", false, "", false);
                 } else {
                     const string url = "https://0x0ade.ga/ahornvhd/files/ahornvhd.7z";
                     yield return Status($"Downloading {url} to {vhd}", false, "download", false);

@@ -139,6 +139,19 @@ function love.load(args)
 
     fs = require("fs")
 
+    config = require("config")
+    config.load()
+
+    local extradata = {
+        "olympus-extra-cjk.zip"
+    }
+    for i = 1, #extradata do
+        love.filesystem.mountUnsandboxed(extradata[i], "/", 0)
+    end
+    for i = 1, #config.extradata do
+        love.filesystem.mountUnsandboxed(config.extradata[i], "/", 0)
+    end
+
     logChannel = love.thread.getChannel("olympusLog")
     logFile = io.open(fs.joinpath(fs.getStorageDir(), "log.txt"), "w+")
 
@@ -162,7 +175,17 @@ function love.load(args)
     uie = require("ui.elements")
     uiu = require("ui.utils")
 
-    love.graphics.setFont(love.graphics.newFont("data/fonts/Poppins-Regular.ttf", 14))
+    local fonts = {table.unpack(config.fonts)}
+    for i = #fonts, 1, -1 do
+        if love.filesystem.getInfo(fonts[i], "file") then
+            fonts[i] = love.graphics.newFont(fonts[i], 14)
+        else
+            table.remove(fonts, i)
+        end
+    end
+    local font = fonts[1]
+    font:setFallbacks(table.unpack(fonts, 2))
+    love.graphics.setFont(font)
     ui.fontDebug = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 8)
     ui.fontMono = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 16)
     ui.fontBig = love.graphics.newFont("data/fonts/Renogare-Regular.otf", 28)
@@ -172,9 +195,6 @@ function love.load(args)
     alert = require("alert")
     notify = require("notify")
     themer = require("themer")
-
-    config = require("config")
-    config.load()
 
     themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
 

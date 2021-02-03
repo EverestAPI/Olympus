@@ -65,6 +65,7 @@ local OS = ffi.os
 -- sys/syslimits.h
 local MAXPATH
 local wchar_t
+local wchar_t_8
 if OS == 'Windows' then
     MAXPATH = 260
     ffi.cdef([[
@@ -100,6 +101,30 @@ if OS == 'Windows' then
             len = len - processed
         end
         return wcs
+    end
+
+    ffi.cdef[[
+        int MultiByteToWideChar(
+            unsigned int CodePage,
+            int dwFlags,
+            char* lpMultiByteStr,
+            int cbMultiByte,
+            wchar_t* lpWideCharStr,
+            int cchWideChar
+        );
+    ]]
+
+    function wchar_t_8(s)
+        local length = #s + 1
+        local sC = ffi.new("char[?]", length)
+        ffi.copy(sC, s)
+        sC[#s] = 0
+        local size = lib.MultiByteToWideChar(65001, 0, sC, length, nil, 0)
+        assert(size ~= 0)
+        local sW = ffi.new("wchar_t[?]", size)
+        length = lib.MultiByteToWideChar(65001, 0, sC, length, sW, size)
+        assert(size == length)
+        return sW
     end
 
 elseif OS == 'Linux' then
@@ -912,10 +937,12 @@ elseif OS == 'Windows' then
             long long           st_mtime;
             long long           st_ctime;
         } stat;
-        int _stat64(const char *path, stat *buffer);
+        int _wstat64(const short *path, stat *buffer);
     ]])
 
-    stat_func = lib._stat64
+    stat_func = function(path, buffer)
+        return lib._wstat64(wchar_t_8(path), buffer)
+    end
     lstat_func = stat_func
 elseif OS == 'OSX' then
     ffi.cdef([[

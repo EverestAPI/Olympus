@@ -118,7 +118,6 @@ if love.system.getOS() == "Windows" and cwd ~= src then
             wchar_t* lpWideCharStr,
             int cchWideChar
         );
-        int GetLastError();
     ]]
 
     -- CP_UTF8 = 65001
