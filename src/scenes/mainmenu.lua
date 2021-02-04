@@ -361,7 +361,8 @@ local root = uie.row({
                 padding = 0,
                 bg = {}
             },
-            clip = false,
+            clip = true,
+            clipPadding = { 8, 4, 8, 8 },
             cachePadding = { 8, 4, 8, 8 }
         }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
     }):with({
