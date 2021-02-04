@@ -34,17 +34,21 @@ namespace Olympus {
                 throw new Exception("Ahorn-VHD already exists.");
             }
 
-            string tmp = vhd + ".7z";
-            bool tmpPerm = File.Exists(tmp);
+            string archive = vhd + ".7z";
+            bool tmpPerm = File.Exists(archive);
 
             try {
                 if (tmpPerm) {
-                    yield return Status($"{Path.GetFileName(tmp)} already exists - reusing and preserving", false, "", false);
+                    yield return Status($"{Path.GetFileName(archive)} already exists - reusing and preserving", false, "", false);
                 } else {
                     const string url = "https://0x0ade.ga/ahornvhd/files/ahornvhd.7z";
-                    yield return Status($"Downloading {url} to {vhd}", false, "download", false);
+                    yield return Status($"Downloading {url} to {archive}", false, "download", false);
+                    string tmp = archive + ".part";
+                    if (File.Exists(tmp))
+                        File.Delete(tmp);
                     using (FileStream stream = File.Open(tmp, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
                         yield return Download(url, 0, stream);
+                    File.Move(tmp, archive);
                 }
 
                 string sevenzip = Path.Combine(Program.RootDirectory, "7zr.exe");
@@ -57,7 +61,7 @@ namespace Olympus {
                 }
 
                 yield return Status("Extracting ahornvhd.7z", false, "download", false);
-                using (Process process = ProcessHelper.Wrap(sevenzip, $"x \"{tmp}\" \"-o{Path.GetDirectoryName(vhd)}\" {Path.GetFileName(vhd)} -bb3")) {
+                using (Process process = ProcessHelper.Wrap(sevenzip, $"x \"{archive}\" \"-o{Path.GetDirectoryName(vhd)}\" {Path.GetFileName(vhd)} -bb3")) {
                     process.Start();
                     for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                         yield return Status(line, false, "download", false);
@@ -70,8 +74,8 @@ namespace Olympus {
                 }
 
             } finally {
-                if (!tmpPerm && File.Exists(tmp))
-                    File.Delete(tmp);
+                if (!tmpPerm && File.Exists(archive))
+                    File.Delete(archive);
             }
 
             yield return Cmds.Get<CmdAhornMountAhornVHD>().Run();

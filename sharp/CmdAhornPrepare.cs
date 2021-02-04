@@ -34,8 +34,8 @@ namespace Olympus {
             if (!Enum.TryParse(mode, true, out AhornHelper.Mode))
                 AhornHelper.Mode = AhornHelperMode.System;
 
-            AhornHelper.FindJulia(true);
-            AhornHelper.FindAhorn(true);
+            AhornHelper.FindJulia(false);
+            AhornHelper.FindAhorn(false);
             if (!Directory.Exists(AhornHelper.RootPath))
                 Directory.CreateDirectory(AhornHelper.RootPath);
 

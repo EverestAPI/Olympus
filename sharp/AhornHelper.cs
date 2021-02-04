@@ -61,6 +61,9 @@ redirect_stdout(stdoutPrev)
                 return _RootPath = Path.Combine(Program.RootDirectory, "ahorn");
             }
             set {
+                if (_RootPath == value)
+                    return;
+
                 _RootPath = value;
                 JuliaPath = null;
                 AhornEnvPath = null;
@@ -134,6 +137,9 @@ redirect_stdout(stdoutPrev)
                 }
             }
             set {
+                if (_AhornGlobalEnvPath == value)
+                    return;
+
                 _AhornGlobalEnvPath = value;
                 AhornPath = null;
             }
@@ -152,6 +158,9 @@ redirect_stdout(stdoutPrev)
                 return _AhornEnv = Path.Combine(RootPath, "ahorn-env");
             }
             set {
+                if (_AhornEnv == value)
+                    return;
+
                 _AhornEnv = value;
                 AhornPath = null;
             }

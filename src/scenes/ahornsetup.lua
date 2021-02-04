@@ -584,6 +584,10 @@ function scene.reload()
         }):with(uiu.fillWidth)
         mainlist:addChild(status)
 
+        if fs.isDirectory(config.ahorn.vhdPath) then
+            config.ahorn.vhdPath = fs.joinpath(config.ahorn.vhdPath, "ahorn.vhdx")
+        end
+
         local info = sharp.ahornPrepare(config.ahorn.rootPath, config.ahorn.vhdPath, config.ahorn.vhdMountPath, config.ahorn.mode):result()
         scene.info = info
         status:removeSelf()
