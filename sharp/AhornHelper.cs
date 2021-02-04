@@ -231,6 +231,15 @@ redirect_stdout(stdoutPrev)
                     return JuliaPath = path;
                 }
 
+                if (PlatformHelper.Is(Platform.MacOS)) {
+                    // Sandboxing is hell and the Julia installation instructions make this path guaranteed on macOS.
+                    path = "/usr/local/bin/julia";
+                    if (File.Exists(path)) {
+                        JuliaIsLocal = false;
+                        return JuliaPath = path;
+                    }
+                }
+
                 if (PlatformHelper.Is(Platform.Windows)) {
                     // Julia on Windows is a hot mess.
                     string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
