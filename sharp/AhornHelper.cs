@@ -348,6 +348,9 @@ end
             path = Path.GetDirectoryName(path); // julia-depot/packages/Ahorn
             path = Path.GetDirectoryName(path); // julia-depot/packages
             path = Path.GetDirectoryName(path); // julia-depot
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
+                return GetAhornPkgVersion() + " (pkg)";
+
             path = Path.Combine(path, "clones");
             if (!Directory.Exists(path))
                 return GetAhornPkgVersion() + " (pkg)";
@@ -360,7 +363,7 @@ end
                 using (StreamReader reader = new StreamReader(stream)) {
                     if (!reader.ReadLineUntil("[remote \"origin\"]"))
                         continue;
-                    if (reader.ReadLine().Trim() != "url = https://github.com/CelestialCartographers/Ahorn.git")
+                    if (reader.ReadLine()?.Trim() != "url = https://github.com/CelestialCartographers/Ahorn.git")
                         continue;
                 }
 
@@ -369,7 +372,7 @@ end
                     continue;
                 using (FileStream stream = File.Open(head, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (StreamReader reader = new StreamReader(stream)) {
-                    head = reader.ReadLine().Trim();
+                    head = reader.ReadLine()?.Trim() ?? "";
                     int split = head.IndexOf("\t");
                     if (split >= 0)
                         head = head.Substring(0, split);
