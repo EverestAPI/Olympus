@@ -28,9 +28,9 @@ namespace Olympus {
             if (!Directory.Exists(AhornHelper.RootPath))
                 Directory.CreateDirectory(AhornHelper.RootPath);
 
-            AhornHelper.RootPath = rootPath;
-            AhornHelper.VHDPath = vhdPath;
-            AhornHelper.VHDMountPath = vhdMountPath;
+            AhornHelper.RootPath = string.IsNullOrEmpty(rootPath) ? rootPath : Path.GetFullPath(rootPath);
+            AhornHelper.VHDPath = string.IsNullOrEmpty(vhdPath) ? vhdPath : Path.GetFullPath(vhdPath);
+            AhornHelper.VHDMountPath = string.IsNullOrEmpty(vhdMountPath) ? vhdMountPath : Path.GetFullPath(vhdMountPath);
             if (!Enum.TryParse(mode, true, out AhornHelper.Mode))
                 AhornHelper.Mode = AhornHelperMode.System;
 

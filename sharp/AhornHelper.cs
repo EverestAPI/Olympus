@@ -89,6 +89,7 @@ redirect_stdout(stdoutPrev)
             }
             set {
                 _VHDPath = value;
+                VHDMountPath = null;
             }
         }
 
@@ -106,7 +107,7 @@ redirect_stdout(stdoutPrev)
                 if (!PlatformHelper.Is(Platform.Windows))
                     return null;
 
-                return _VHDMountPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus", "ahorn.vhdx.mount");
+                return _VHDMountPath = VHDPath + ".mount";
             }
             set {
                 _VHDMountPath = value;
