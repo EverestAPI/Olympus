@@ -376,6 +376,8 @@ end
                     int split = head.IndexOf("\t");
                     if (split >= 0)
                         head = head.Substring(0, split);
+                    if (string.IsNullOrEmpty(head))
+                        continue;
                     return head + " (git)";
                 }
             }
