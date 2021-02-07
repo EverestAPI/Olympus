@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Olympus
+Comment=Celeste Mod Manager
+Exec=olympus
+Icon=olympus
+Terminal=false
+Categories=Game;Application;
