@@ -414,6 +414,9 @@ steps:
       convert icon.ico love/$LOVEBINARYDIRECTORY/olympus.png
       rm love/$LOVEBINARYDIRECTORY/lib/x86_64-linux-gnu/libz.so.1
       rm love/$LOVEBINARYDIRECTORY/usr/lib/x86_64-linux-gnu/libfreetype.so.6
+      rm love/$LOVEBINARYDIRECTORY/love.svg
+      rm love/$LOVEBINARYDIRECTORY/love.desktop.in
+      rm love/$LOVEBINARYDIRECTORY/license.txt
       pushd love
       mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/main
       zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip *
