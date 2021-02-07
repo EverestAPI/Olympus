@@ -7,3 +7,4 @@ Exec=olympus
 Icon=olympus
 Terminal=false
 Categories=Game;Application;
+MimeType=x-scheme-handler/everest
