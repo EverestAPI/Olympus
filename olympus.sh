@@ -20,7 +20,7 @@ if [ "$(uname)" = "Darwin" ]; then
     DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:$(pwd)"
     export DYLD_LIBRARY_PATH
 else
-    LD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:$(pwd)"
+    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:$(pwd)"
     export LD_LIBRARY_PATH
 fi
 
