@@ -82,7 +82,7 @@ steps:
   displayName: 'Setup: Linux: apt: install luarocks and deps'
   inputs:
     script: |
-      sudo apt -y install luarocks libgtk-3-dev imagemagick
+      sudo apt -y install luarocks libgtk-3-dev
 
 # Cross-platform setup.
 - task: CmdLine@2
@@ -411,7 +411,7 @@ steps:
     script: |
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus
-      convert icon.ico love/$LOVEBINARYDIRECTORY/olympus.png
+      cp src/data/icon.png love/$LOVEBINARYDIRECTORY/olympus.png
       cp olympus.desktop love/$LOVEBINARYDIRECTORY/olympus.desktop
       rm love/$LOVEBINARYDIRECTORY/lib/x86_64-linux-gnu/libz.so.1
       rm love/$LOVEBINARYDIRECTORY/usr/lib/x86_64-linux-gnu/libfreetype.so.6
