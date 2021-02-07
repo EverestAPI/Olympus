@@ -21,7 +21,7 @@ namespace Olympus {
     public unsafe class CmdAhornInstallJulia : Cmd<bool, IEnumerator> {
 
         public static readonly string Version = "1.5.3";
-        public static readonly string VersionBeta = "1.6.0-beta1";
+        public static readonly string VersionBeta = "1.6.0-rc1";
 
         public override IEnumerator Run(bool beta) {
             yield return Status("Preparing installation of Julia", false, "", false);
@@ -44,11 +44,11 @@ namespace Olympus {
 
                 if (PlatformHelper.Is(Platform.Bits64)) {
                     url = beta ?
-                        "https://julialang-s3.julialang.org/bin/winnt/x64/1.6/julia-1.6.0-beta1-win64.zip" :
+                        "https://julialang-s3.julialang.org/bin/winnt/x64/1.6/julia-1.6.0-rc1-win64.zip" :
                         "https://julialang-s3.julialang.org/bin/winnt/x64/1.5/julia-1.5.3-win64.zip";
                 } else {
                     url = beta ?
-                        "https://julialang-s3.julialang.org/bin/winnt/x86/1.6/julia-1.6.0-beta1-win32.zip" :
+                        "https://julialang-s3.julialang.org/bin/winnt/x86/1.6/julia-1.6.0-rc1-win32.zip" :
                         "https://julialang-s3.julialang.org/bin/winnt/x86/1.5/julia-1.5.3-win32.zip";
                 }
 
@@ -61,7 +61,7 @@ namespace Olympus {
 
                         yield return Status("Unzipping Julia", false, "download", false);
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                            yield return Unpack(zip, julia, beta ? "julia-b84990e1ac/" : "julia-1.5.3/");
+                            yield return Unpack(zip, julia, beta ? "julia-1.6.0-rc1/" : "julia-1.5.3/");
                         }
                     }
 
@@ -97,19 +97,19 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
 
                 if (PlatformHelper.Is(Platform.ARM)) {
                     url = beta ?
-                        "https://julialang-s3.julialang.org/bin/linux/aarch64/1.6/julia-1.6.0-beta1-linux-aarch64.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/linux/aarch64/1.6/julia-1.6.0-rc1-linux-aarch64.tar.gz" :
                         "https://julialang-s3.julialang.org/bin/linux/aarch64/1.5/julia-1.5.3-linux-aarch64.tar.gz";
                 } else if (musl) {
                     url = beta ?
-                        "https://julialang-s3.julialang.org/bin/musl/x64/1.6/julia-1.6.0-beta1-musl-x86_64.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/musl/x64/1.6/julia-1.6.0-rc1-musl-x86_64.tar.gz" :
                         "https://julialang-s3.julialang.org/bin/musl/x64/1.5/julia-1.5.3-musl-x86_64.tar.gz";
                 } else if (PlatformHelper.Is(Platform.Bits64)) {
                     url = beta ?
-                        "https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.0-beta1-linux-x86_64.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/linux/x64/1.6/julia-1.6.0-rc1-linux-x86_64.tar.gz" :
                         "https://julialang-s3.julialang.org/bin/linux/x64/1.5/julia-1.5.3-linux-x86_64.tar.gz";
                 } else {
                     url = beta ?
-                        "https://julialang-s3.julialang.org/bin/linux/x86/1.6/julia-1.6.0-beta1-linux-i686.tar.gz" :
+                        "https://julialang-s3.julialang.org/bin/linux/x86/1.6/julia-1.6.0-rc1-linux-i686.tar.gz" :
                         "https://julialang-s3.julialang.org/bin/linux/x86/1.5/julia-1.5.3-linux-i686.tar.gz";
                 }
 
@@ -131,7 +131,7 @@ set ""AHORN_ENV=%~dp0\ahorn-env""
                     }
 
                     yield return Status("Moving Julia", false, "download", false);
-                    Directory.Move(Path.Combine(root, beta ? "julia-1.6.0-beta1" : "julia-1.5.3"), julia);
+                    Directory.Move(Path.Combine(root, beta ? "julia-1.6.0-rc1" : "julia-1.5.3"), julia);
 
                 } finally {
                     if (File.Exists(tarPath))
@@ -169,7 +169,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                     Directory.Delete(mount);
 
                 string url = beta ?
-                    "https://julialang-s3.julialang.org/bin/mac/x64/1.6/julia-1.6.0-beta1-mac64.dmg" :
+                    "https://julialang-s3.julialang.org/bin/mac/x64/1.6/julia-1.6.0-rc1-mac64.dmg" :
                     "https://julialang-s3.julialang.org/bin/mac/x64/1.5/julia-1.5.3-mac64.dmg";
 
                 bool mounted = false;
