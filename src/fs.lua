@@ -256,6 +256,11 @@ function fs.unzip(zipPath, outputDir)
 end
 
 function fs.getStorageDir()
+    local path = os.getenv("OLYMPUS_CONFIG")
+    if path ~= "" and fs.isDirectory(path) then
+        return path
+    end
+
     local name = "Olympus"
 
     local userOS = love.system.getOS()

@@ -21,6 +21,7 @@ namespace Olympus {
     public static class Program {
 
         public static string RootDirectory;
+        public static string ConfigDirectory;
         public static string SelfPath;
 
         public static readonly Encoding UTF8NoBOM = new UTF8Encoding(false);
@@ -45,6 +46,9 @@ namespace Olympus {
 
             SelfPath = Assembly.GetExecutingAssembly().Location;
             RootDirectory = Path.GetDirectoryName(Environment.CurrentDirectory);
+            ConfigDirectory = Environment.GetEnvironmentVariable("OLYMPUS_CONFIG");
+            if (string.IsNullOrEmpty(ConfigDirectory) || !Directory.Exists(ConfigDirectory))
+                ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus");
             Console.Error.WriteLine(RootDirectory);
 
             if (Type.GetType("Mono.Runtime") != null) {

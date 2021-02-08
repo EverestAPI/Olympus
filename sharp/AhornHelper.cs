@@ -85,7 +85,7 @@ redirect_stdout(stdoutPrev)
                 if (!PlatformHelper.Is(Platform.Windows))
                     return null;
 
-                return _VHDPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus", "ahorn.vhdx");
+                return _VHDPath = Path.Combine(Program.ConfigDirectory, "ahorn.vhdx");
             }
             set {
                 _VHDPath = value;
