@@ -52,7 +52,7 @@ function config.load()
         content = "{}"
     end
 
-    local data = utils.fromJSON(content)
+    local data = utils.fromJSON(content) or {}
     configData = data
     mtConfig.__index = data
     mtConfig.__newindex = data
