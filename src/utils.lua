@@ -157,7 +157,7 @@ function utils.download(url, headers)
         return body
 
     elseif code >= 300 and code <= 399 then
-        local redirect = response.headers["Location"]:match("^%s*(.*)%s*$")
+        local redirect = response.headers["location"]:match("^%s*(.*)%s*$")
         headers["Referer"] = url
         return utils.download(redirect, headers)
     end
