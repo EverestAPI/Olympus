@@ -766,7 +766,7 @@ function love.keypressed(key, scancode, isrepeat)
         end
     end
 
-    if key == "f12" then
+    if key == "f11" then
         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             debug.debug()
 
@@ -822,19 +822,6 @@ function love.keypressed(key, scancode, isrepeat)
         else
 
             ui.root:recollect()
-        end
-    end
-
-    if key == "f11" then
-        ui.globalReflowID = ui.globalReflowID + 1
-        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-            ui.debug.draw = (ui.debug.draw ~= -1) and -1 or true
-
-        elseif love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
-            ui.debug.draw = -2
-
-        else
-            ui.debug.draw = not ui.debug.draw
         end
     end
 end
