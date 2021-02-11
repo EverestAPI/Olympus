@@ -28,7 +28,7 @@ return function(raw)
                     return unpack(rv)
                 end
 
-                print(debug.traceback("Skipping " .. name .. " variant " .. names[i] .. ":\n" .. rv[2], 2))
+                -- print(debug.traceback("Skipping " .. name .. " variant " .. names[i] .. ":\n" .. rv[2], 2))
             end
 
             -- Try the last variant without pcall. This can cause a misleading error message.

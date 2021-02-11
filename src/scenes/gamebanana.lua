@@ -140,7 +140,7 @@ local root = uie.column({
                         end
                     end
                 ):as("sort"),
-                
+
                 uie.dropdown(
                     itemtypeOptionsTemp,
                     function(self, value)

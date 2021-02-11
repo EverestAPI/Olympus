@@ -157,7 +157,11 @@ function utils.download(url, headers)
         return body
 
     elseif code >= 300 and code <= 399 then
-        local redirect = response.headers["Location"]:match("^%s*(.*)%s*$")
+        -- "Location" is correct but "location" is what curl sometimes spits out.
+        local redirect = (response.headers["Location"] or response.headers["location"] or ""):match("^%s*(.*)%s*$")
+        if not redirect then
+            return false, code, body
+        end
         headers["Referer"] = url
         return utils.download(redirect, headers)
     end
