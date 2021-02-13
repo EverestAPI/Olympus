@@ -400,7 +400,7 @@ local root = uie.column({
 
             }):with(uiu.fillWidth),
 
-            uie.column({
+            updater.available and uie.column({
                 uie.label("Updates", ui.fontBig),
 
                 uie.label("Update machine broke, please fix."):as("changelog"),

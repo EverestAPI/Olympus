@@ -6,11 +6,38 @@ local alert = require("alert")
 local scener = require("scener")
 local sharp = require("sharp")
 local ffi = require("ffix")
+local fs = require("fs")
 
 local updater = {}
 
+local userOS = love.system.getOS()
+
+if userOS == "Linux" then
+    -- Let's assume that the owner of olympus.love is the only one who can self-update it.
+    local sourceAttrs = fs.attributes(love.filesystem.getSource())
+
+    if sourceAttrs and sourceAttrs.permissions:match("rw.......") then
+        ffi.cdef[[
+            int getuid();
+            int geteuid();
+        ]]
+        local owner = tonumber(sourceAttrs.uid)
+        updater.available = owner == tonumber(ffi.C.getuid()) or owner == tonumber(ffi.C.geteuid())
+
+    else
+        updater.available = false
+    end
+
+else
+    updater.available = true
+end
+
 
 function updater.check(auto)
+    if not updater.available then
+        return
+    end
+
     if updater.checking then
         return updater.checking
     end
@@ -158,6 +185,10 @@ end
 
 
 function updater.update(id)
+    if not updater.available then
+        return
+    end
+
     local installer = scener.push("installer")
     installer.update("Preparing update of Olympus", false, "")
 

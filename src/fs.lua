@@ -23,6 +23,7 @@ if lfsStatus then
     fs.rmdir = lfs.rmdir
     fs.rmdir = lfs.rmdir
     fs.getcwd = lfs.currentdir
+    fs.attributes = lfs.attributes
 
     function fs.mkdir(path, mode)
         return lfs.mkdir(path, mode or 755)
@@ -51,6 +52,7 @@ else
     fs.rmdir = nop
     fs.rmdir = nop
     fs.getcwd = nop
+    fs.attributes = nop
     fs.mkdir = nop
     fs.isFile = nop
     fs.isDirectory = nop

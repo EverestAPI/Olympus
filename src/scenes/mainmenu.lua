@@ -307,7 +307,7 @@ local root = uie.row({
                 buttonBig("mainmenu/gamebanana", "Download Mods", "gamebanana", true):with(uiu.fillWidth),
                 buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
                 buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", "ahornsetup"):with(uiu.fillWidth),
-                buttonBig("cogwheel", "Options & Updates", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
+                buttonBig("cogwheel", updater.available and "Options & Updates" or "Options", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
                 -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
             }):with({
                 style = {

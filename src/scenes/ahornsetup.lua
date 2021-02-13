@@ -6,9 +6,6 @@ local scener = require("scener")
 local alert = require("alert")
 local config = require("config")
 local sharp = require("sharp")
-local themer = require("themer")
-local background = require("background")
-local updater = require("updater")
 
 local scene = {
     name = "Ahorn Setup"
