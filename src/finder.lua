@@ -365,7 +365,11 @@ function finder.findItchInstalls(name)
         return list
     end
 
-    local db = sqlite3.open(dbPath)
+    -- sqlite3 can deal with UTF-8 or UTF-16. lsqlite3 can only deal with UTF-8.
+    local db = sqlite3.open(utils.cpSYStoUTF8(dbPath))
+    if not db then
+        return list
+    end
 
     local query = db:prepare([[
         SELECT verdict FROM caves
