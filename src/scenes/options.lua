@@ -192,7 +192,7 @@ scene.bgPicker = uie.scrollbox(
     cacheable = false
 }):with(uiu.fillWidth):with(uiu.fillHeight(true))
 
-
+local optioncount = 6
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -251,7 +251,7 @@ local root = uie.column({
 
                             self:updateSelected()
                         end):as("bgDropdown")
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(1 / 5, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Quality"),
@@ -269,7 +269,22 @@ local root = uie.column({
                             self.selected = self:getItem(1)
                             self.text = "???"
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(2 / 5, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+
+                    uie.column({
+                        uie.label("Gradient"),
+                        uie.dropdown({
+                            { text = "Enabled (Default)", data = 1 },
+                            { text = "Low", data = 0.5 },
+                            { text = "Disabled", data = 0 },
+                        }, function(self, value)
+                            config.overlay = value
+                            config.save()
+                        end):with(function(self)
+                            self.selected = self:getItem(config.overlay <= 0 and 3 or config.overlay <= 0.5 and 2 or 1)
+                            self.text = self.selected.text
+                        end)
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Vertical Sync"),
@@ -284,7 +299,7 @@ local root = uie.column({
                             self.selected = self:getItem(config.vsync and 1 or 2)
                             self.text = self.selected.text
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(3 / 5, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Updates"),
@@ -303,7 +318,7 @@ local root = uie.column({
                             self.selected = self:getItem(1)
                             self.text = "???"
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / 5)):with(uiu.at(4 / 5, 0)),
+                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(5 / optioncount, 0)),
 
                 }):with(nobg):with(uiu.fillWidth),
 

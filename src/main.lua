@@ -25,6 +25,8 @@ local debugLabel
 local logWindow
 local logList
 
+local overlay
+
 local focusStatus = 0
 local canvasWidth = 0
 local canvasHeight = 0
@@ -190,6 +192,8 @@ function love.load(args)
     ui.fontMono = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 16)
     ui.fontBig = love.graphics.newFont("data/fonts/Renogare-Regular.otf", 28)
     ui.fontMedium = love.graphics.newFont("data/fonts/Renogare-Regular.otf", 21)
+
+    overlay = uiu.image("overlay")
 
     scener = require("scener")
     alert = require("alert")
@@ -610,6 +614,7 @@ Keeping Olympus outdated can cause crashes in the future.]],
 end
 
 love.frame = 0
+love.time = 0
 function love.update(dt)
     if not love.graphics then
         return
@@ -618,6 +623,7 @@ function love.update(dt)
     logDump()
 
     love.frame = love.frame + 1
+    love.time = love.time + dt
 
     if love.frame > 1 then
         if profile then
@@ -731,6 +737,20 @@ function love.draw()
         -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
         pcall(ui.draw)
+
+        if config.overlay >= 0.01 then
+            love.graphics.setBlendMode("add", "premultiplied")
+            local a = config.overlay * 0.1
+            local rgb = a * 0.5
+            uiu.setColor(rgb, rgb, rgb, a)
+            local t = (love.time / 24) % 1
+            love.graphics.draw(overlay, (t - 1) * width, (t - 1) * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
+            love.graphics.draw(overlay, t       * width, (t - 1) * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
+            love.graphics.draw(overlay, (t - 1) * width, t       * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
+            love.graphics.draw(overlay, t       * width, t       * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
+            love.graphics.setBlendMode("alpha", "alphamultiply")
+            uiu.setColor(1, 1, 1, 1)
+        end
 
         -- love.graphics.setScissor()
 

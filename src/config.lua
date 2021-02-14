@@ -110,6 +110,8 @@ function config.load()
     default(data.quality, "bgBlur", true)
     default(data.quality, "bgSnow", true)
 
+    default(data, "overlay", 1)
+
     default(data, "ahorn", {})
 
     default(data.ahorn, "rootPath", "")
