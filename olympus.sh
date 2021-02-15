@@ -1,7 +1,12 @@
 #!/bin/sh
 # Olympus launch script bundled with Linux and macOS builds.
 
-cd "$(dirname "$0")" || exit 1
+# macOS doesn't have readlink -f and Linux can symlink this launch script.
+function realpath {
+    [ "." = "${1}" ] && n=${PWD} || n=${1}; while nn=$( readlink -n "$n" ); do n=$nn; done; echo "$n"
+}
+
+cd "$(dirname "$(realpath "$0")")" || exit 1
 
 if [ -f "olympus.new.love" ]; then
     if [ -n "${OLYMPUS_RESTARTER_PID+x}" ]; then
