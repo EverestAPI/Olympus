@@ -45,7 +45,7 @@ function scene.item(info)
         return nil
     end
 
-    local item = uie.row({
+    local item = uie.paneled.row({
         uie.label({ { 1, 1, 1, 1 }, fs.filename(info.Path) .. "\n" .. (info.Name or "?"), { 1, 1, 1, 0.5 }, " ∙ " .. (info.Version or "?.?.?.?") }):as("title"),
 
         uie.row({
@@ -114,7 +114,7 @@ function scene.reload()
 
         local root = config.installs[config.install].path
 
-        list:addChild(uie.column({
+        list:addChild(uie.paneled.column({
             uie.label("Note", ui.fontBig),
             uie.label([[
 This menu isn't finished yet. It will be improved in future updates.
