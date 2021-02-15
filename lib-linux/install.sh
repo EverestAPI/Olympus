@@ -8,7 +8,7 @@ echo "Olympus exists at $SRCDIR"
 echo "For a full installation experience, this script will set up the following:"
 
 DESKTOPSRCFILE="$SRCDIR/olympus.desktop"
-BINSRCFILE="$SRCDIR/olympus.sh"
+BINSRCFILE="$SRCDIR/olympus"
 ICONSRCFILE="$SRCDIR/olympus.png"
 
 if [ "$EUID" -ne 0 ]; then
