@@ -18,7 +18,6 @@ local root = uie.column({
         uie.column({
         }):with({
             style = {
-                bg = {},
                 padding = 16,
             }
         }):with(uiu.fillWidth):as("installs")
@@ -121,11 +120,6 @@ function scene.createEntry(list, entry, manualIndex)
             uie.label(entry.path),
             labelVersion
         }):with({
-            style = {
-                bg = {},
-                padding = 0
-            },
-
             clip = false,
             cacheable = false
         }):with(uiu.fillWidth(8, true)),
@@ -216,10 +210,6 @@ anything to work in the near future, if at all.]],
                 )
 
             }):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
                 clip = false
             }):with(uiu.rightbound),
 
@@ -255,18 +245,10 @@ Do you want to continue?]],
                 end),
 
             }):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
                 clip = false
             }):with(uiu.rightbound)
 
         }):with({
-            style = {
-                bg = {},
-                padding = 0
-            },
             clip = false,
             cacheable = false
         }):with(uiu.rightbound)
@@ -285,7 +267,7 @@ function scene.reloadManual()
         if listManual then
             listManual.children = {}
         else
-            listManual = uie.column({}):with(uiu.fillWidth)
+            listManual = uie.paneled.column({}):with(uiu.fillWidth)
 
             listMain:addChild(listManual:as("listManual"))
         end
@@ -360,7 +342,7 @@ function scene.reloadFound()
             end
 
             if not listFound then
-                listFound = uie.column({
+                listFound = uie.paneled.column({
                     uie.label("Found", ui.fontBig)
                 }):with(uiu.fillWidth)
 
@@ -389,7 +371,7 @@ function scene.reloadAll()
         loading:removeSelf()
     end
 
-    loading = uie.row({
+    loading = uie.paneled.row({
         uie.label("Loading"),
         uie.spinner():with({
             width = 16,

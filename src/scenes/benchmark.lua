@@ -67,7 +67,7 @@ local root = uie.column({
 
     uie.image("header"),
 
-    uie.row({
+    uie.paneled.row({
 
         uie.scrollbox(
             uie.list(
@@ -96,16 +96,22 @@ local root = uie.column({
         uie.group({
 
             uie.window("Windowception",
-                uie.scrollbox(
-                    uie.group({
-                        uie.window("Child 1", uie.column({ uie.label("Oh no") })):with({ x = 10, y = 10}),
-                        uie.window("Child 2", uie.column({ uie.label("Oh no two") })):with({ x = 30, y = 30})
-                    }):with({ width = 200, height = 400 })
-                ):with({ width = 200, height = 200 })
+                uie.panel({
+                    uie.scrollbox(
+                        uie.group({
+                            uie.window("Child 1", uie.panel({ uie.label("Oh no") })):with({ x = 10, y = 10}),
+                            uie.window("Child 2", uie.panel({ uie.label("Oh no two") })):with({ x = 30, y = 30})
+                        }):with({ width = 200, height = 400 })
+                    ):with({ width = 200, height = 200 })
+                }):with({
+                    style = {
+                        padding = 0
+                    }
+                })
             ):with({ x = 20, y = 100 }),
 
             uie.window("Hello, World!",
-                uie.column({
+                uie.paneled.column({
                     uie.label("This is a big label.", ui.fontBig),
 
                     -- Labels use Löve2D Text objects under the hood.
@@ -142,7 +148,7 @@ local root = uie.column({
                     uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                         return { text = string.format("Item %i!", i), data = i }
                     end), function(list, item)
-                        list.parent._selected.text = "Selected " .. tostring(item)
+                        list.parent:findChild("selected").text = "Selected " .. tostring(item)
                     end)
 
                 })

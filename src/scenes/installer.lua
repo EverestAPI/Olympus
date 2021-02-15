@@ -199,7 +199,7 @@ local root = uie.group({
     }):with(uiu.fillWidth):with(uiu.fillHeight(0.5 - 180)):as("canvas"),
 
     uie.group({
-        uie.column({
+        uie.paneled.column({
 
             uie.scrollbox(
                 uie.column({
@@ -207,10 +207,6 @@ local root = uie.group({
                     uie.label("installer.lua machine broke, please fix."),
 
                 }):with({
-                    style = {
-                        bg = {},
-                        padding = 0
-                    },
                     clip = false,
                     locked = true
                 }):hook({
@@ -316,11 +312,6 @@ function scene.done(buttons)
     native.flashWindow()
 
     local row = uie.row({}):with({
-        style = {
-            bg = {},
-            padding = 0,
-            radius = 0
-        },
         clip = false
     }):with(uiu.fillWidth)
 

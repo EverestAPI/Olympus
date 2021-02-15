@@ -18,9 +18,9 @@ local root = uie.column({
 
         mainmenu.createInstalls(),
 
-        uie.column({
+        uie.paneled.column({
             uie.label("Versions", ui.fontBig),
-            uie.column({
+            uie.panel({
                 uie.label({{ 1, 1, 1, 1 },
 [[Use the newest version for more features and bugfixes.
 Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.7, 0.3, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]}),
@@ -41,7 +41,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                     end):as("versions")
                 ):with(uiu.fill),
 
-                uie.row({
+                uie.paneled.row({
                     uie.label("Loading"),
                     uie.spinner():with({
                         width = 16,
@@ -53,30 +53,16 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 }):with(uiu.bottombound):with(uiu.rightbound):as("loadingVersions")
 
             }):with({
-                style = {
-                    bg = {},
-                    padding = 0,
-                    radius = 0
-                },
                 clip = false
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)):as("versionsParent")
         }):with(uiu.fillWidth(true)):with(uiu.fillHeight),
 
     }):with({
-        style = {
-            bg = {},
-            padding = 0,
-            radius = 0
-        },
         clip = false
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
         uie.button(uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install") }):with({
-            style = {
-                bg = {},
-                padding = 0
-            },
             clip = false,
             cacheable = false
         }):with(uiu.styleDeep), function()
@@ -135,11 +121,6 @@ Steam, EGS and the itch.io app let you do that without a full reinstall.]],
             end
         }):with(uiu.rightbound):as("uninstall")
     }):with({
-        style = {
-            bg = {},
-            padding = 0,
-            radius = 0
-        },
         clip = false
     }):with(uiu.fillWidth):with(uiu.bottombound)
 
@@ -412,7 +393,6 @@ function scene.load()
                             uie.label("Newest")
                         }):with({
                             style = {
-                                bg = {},
                                 padding = 4
                             }
                         }), 1)
@@ -424,7 +404,6 @@ function scene.load()
                             uie.label("Pinned")
                         }):with({
                             style = {
-                                bg = {},
                                 padding = 4
                             }
                         }), 1)

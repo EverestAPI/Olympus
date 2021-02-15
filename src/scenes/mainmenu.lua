@@ -43,7 +43,7 @@ local function buttonBig(icon, text, scene, forceInstall)
         uie.row({
             uie.icon(icon):with({ scale = 48 / 256 }),
             uie.label(text, ui.fontBig):with({ x = -4, y = 11 })
-        }):with({ style = { bg = {}, padding = 0, spacing = 16 } }),
+        }):with({ style = { spacing = 16 } }),
         type(scene) == "function" and scene or function()
             if checkInstall(forceInstall) then
                 scener.push(scene)
@@ -57,7 +57,7 @@ local function button(icon, text, scene, forceInstall)
         uie.row({
             uie.icon(icon):with({ scale = 24 / 256 }),
             uie.label(text):with({ y = 2 })
-        }):with({ style = { bg = {}, padding = 0 } }),
+        }),
         type(scene) == "function" and scene or function()
             if checkInstall(forceInstall) then
                 scener.push(scene)
@@ -84,7 +84,10 @@ local function newsEntry(data)
         uie.row({
 
             data.link and uie.button(
-                uie.icon("browser"):with({ scale = 24 / 256 }),
+                uie.row({
+                    uie.icon("browser"):with({ scale = 24 / 256 }),
+                    uie.label(data.linktext or "Open in browser"):with({ y = 2 })
+                }),
                 function()
                     utils.openURL(data.link)
                 end
@@ -110,10 +113,6 @@ local function newsEntry(data)
             ),
 
         }):with({
-            style = {
-                padding = 0,
-                bg = {}
-            },
             clip = false
         }):with(uiu.rightbound)
     }):with(uiu.fillWidth)
@@ -162,7 +161,7 @@ end
 
 
 function scene.createInstalls()
-    return uie.column({
+    return uie.paneled.column({
         uie.label("Installations", ui.fontBig),
 
         uie.column({
@@ -192,18 +191,10 @@ function scene.createInstalls()
                 }):with(utils.important(24, function() return #config.installs == 0 end)):with(uiu.rightbound)
 
             }):with({
-                style = {
-                    padding = 0,
-                    bg = {}
-                },
                 clip = false
             }):with(uiu.bottombound):with(uiu.fillWidth)
 
         }):with({
-            style = {
-                padding = 0,
-                bg = {}
-            },
             clip = false
         }):with(uiu.fillWidth):with(uiu.fillHeight(true))
     }):with{
@@ -296,7 +287,7 @@ end
 
 
 local root = uie.row({
-    uie.column({
+    uie.paneled.column({
         uie.icon("header_olympus"),
 
         uie.row({
@@ -310,18 +301,10 @@ local root = uie.row({
                 buttonBig("cogwheel", updater.available and "Options & Updates" or "Options", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
                 -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
             }):with({
-                style = {
-                    padding = 0,
-                    bg = {}
-                },
                 clip = false
             }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist"),
 
         }):with({
-            style = {
-                padding = 0,
-                bg = {}
-            },
             clip = false
         }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
@@ -329,6 +312,7 @@ local root = uie.row({
         layoutLateLazy = function(orig, self)
             -- Always reflow this child whenever its parent gets reflowed.
             self:layoutLate()
+            self:repaint()
         end,
 
         layoutLate = function(orig, self)
@@ -340,7 +324,7 @@ local root = uie.row({
         end
     }):with(uiu.fillWidth(true)):with(uiu.fillHeight),
 
-    uie.column({
+    uie.paneled.column({
         uie.label("News", ui.fontBig),
         uie.scrollbox(
             uie.column({
@@ -351,16 +335,11 @@ local root = uie.row({
 
             }):with({
                 style = {
-                    padding = 0,
-                    bg = {}
+                    spacing = 16
                 },
                 clip = false
             }):with(uiu.fillWidth):as("newsfeed")
         ):with({
-            style = {
-                padding = 0,
-                bg = {}
-            },
             clip = true,
             clipPadding = { 8, 4, 8, 8 },
             cachePadding = { 8, 4, 8, 8 }
@@ -387,11 +366,6 @@ scene.launchrow = uie.row({
     }):with(uiu.rightbound)
 }):with({
     activated = false,
-    style = {
-        bg = {},
-        padding = 0,
-        radius = 0
-    },
     clip = false,
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
@@ -430,7 +404,7 @@ function scene.load()
         local newsfeed = scene.root:findChild("newsfeed")
 
         newsfeed.children = {}
-        newsfeed:addChild(uie.row({
+        newsfeed:addChild(uie.paneled.row({
             uie.label("Loading"),
             uie.spinner():with({
                 width = 16,

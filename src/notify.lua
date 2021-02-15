@@ -25,6 +25,7 @@ function notify.show(data)
         layoutLateLazy = function(orig, self)
             -- Always reflow this child whenever its parent gets reflowed.
             self:layoutLate()
+            self:repaint()
         end,
 
         layoutLate = function(orig, self)

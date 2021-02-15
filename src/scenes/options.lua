@@ -15,17 +15,6 @@ local scene = {
 }
 
 
-local nobg = {
-    style = {
-        bg = {},
-        padding = 0,
-        radius = 0
-    },
-    clip = false,
-    cacheable = false
-}
-
-
 local themes = {}
 for i, file in ipairs(love.filesystem.getDirectoryItems("data/themes")) do
     local name = file:match("^(.+)%.json$")
@@ -135,7 +124,7 @@ over the lazy dog.]]),
                         children[1].selected = true
                     end):with(uiu.fillWidth)
                 }):with(themer.skin(theme))
-            }):with(nobg):with(uiu.rightbound)
+            }):with(uiu.rightbound)
 
         }):with(uiu.fillWidth),
         function()
@@ -152,7 +141,7 @@ over the lazy dog.]]),
 end
 
 scene.themePicker = uie.scrollbox(
-    uie.column(themePickerEntries):with(nobg):with(uiu.fillWidth)
+    uie.column(themePickerEntries):with(uiu.fillWidth)
 ):with({
     clip = true,
     cacheable = false
@@ -186,7 +175,7 @@ for i = 1, #bgs do
 end
 
 scene.bgPicker = uie.scrollbox(
-    uie.column(bgPickerEntries):with(nobg):with(uiu.fillWidth)
+    uie.column(bgPickerEntries):with(uiu.fillWidth)
 ):with({
     clip = true,
     cacheable = false
@@ -197,7 +186,7 @@ local root = uie.column({
     uie.scrollbox(
         uie.column({
 
-            uie.column({
+            uie.paneled.column({
                 uie.label("Options", ui.fontBig),
 
                 uie.row({
@@ -228,7 +217,7 @@ local root = uie.column({
 
                             self:updateSelected()
                         end):as("themeDropdown")
-                    }):with(nobg):with(uiu.fillWidth(8.25)),
+                    }):with(uiu.fillWidth(8.25)),
 
                     uie.column({
                         uie.label("Background"),
@@ -251,7 +240,7 @@ local root = uie.column({
 
                             self:updateSelected()
                         end):as("bgDropdown")
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Quality"),
@@ -269,7 +258,7 @@ local root = uie.column({
                             self.selected = self:getItem(1)
                             self.text = "???"
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Gradient"),
@@ -284,7 +273,7 @@ local root = uie.column({
                             self.selected = self:getItem(config.overlay <= 0 and 3 or config.overlay <= 0.5 and 2 or 1)
                             self.text = self.selected.text
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Vertical Sync"),
@@ -299,7 +288,7 @@ local root = uie.column({
                             self.selected = self:getItem(config.vsync and 1 or 2)
                             self.text = self.selected.text
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Updates"),
@@ -318,9 +307,9 @@ local root = uie.column({
                             self.selected = self:getItem(1)
                             self.text = "???"
                         end)
-                    }):with(nobg):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(5 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(5 / optioncount, 0)),
 
-                }):with(nobg):with(uiu.fillWidth),
+                }):with(uiu.fillWidth),
 
                 uie.row({
 
@@ -366,12 +355,7 @@ local root = uie.column({
 
                         alert({
                             body = uie.scrollbox(
-                                uie.column(btns):with({
-                                    style = {
-                                        bg = {},
-                                        padding = 0
-                                    }
-                                })
+                                uie.column(btns)
                             ),
                             init = function(container)
                                 btns[#btns + 1] = uie.button("Close", function()
@@ -411,11 +395,11 @@ local root = uie.column({
                     end):with(uiu.fillWidth(4 + 1 / 3)):with(uiu.at(4 + 2 / 3)),
 
 
-                }):with(nobg):with(uiu.fillWidth),
+                }):with(uiu.fillWidth),
 
             }):with(uiu.fillWidth),
 
-            updater.available and uie.column({
+            updater.available and uie.paneled.column({
                 uie.label("Updates", ui.fontBig),
 
                 uie.label("Update machine broke, please fix."):as("changelog"),
@@ -428,7 +412,6 @@ local root = uie.column({
 
         }):with({
             style = {
-                bg = {},
                 padding = 16,
             }
         }):with(uiu.fillWidth):as("categories")

@@ -15,11 +15,6 @@ function alert.show(data)
     local container = uie.group({}):with({
         time = 0,
         force = data.force,
-        style = {
-            bg = {},
-            padding = 0,
-            radius = 0
-        },
         clip = false,
         cacheable = false
     }):with(uiu.fill):as("container")
@@ -65,6 +60,7 @@ function alert.show(data)
         layoutLateLazy = function(orig, self)
             -- Always reflow this child whenever its parent gets reflowed.
             self:layoutLate()
+            self:repaint()
         end,
 
         layoutLate = function(orig, self)
@@ -94,11 +90,6 @@ function alert.show(data)
 
     if data.buttons then
         local row = uie.row():with({
-            style = {
-                bg = {},
-                padding = 0,
-                radius = 0
-            },
             clip = false
         }):with(uiu.rightbound):with(uiu.bottombound):as("buttons")
         for i = 1, #data.buttons do
@@ -142,7 +133,7 @@ function alert.show(data)
                     self:removeSelf()
                     return
                 end
-                bg.style.bg[4] = math.min(0.6, 1 - time * 6)
+                bg.style.bg[4] = math.min(0.96, 1 - time * 9)
                 box.fade = math.min(1, 1 - time * 7)
 
             else
@@ -150,7 +141,7 @@ function alert.show(data)
                 if time > 1 then
                     time = 1
                 end
-                bg.style.bg[4] = math.min(0.6, time * 6)
+                bg.style.bg[4] = math.min(0.96, time * 9)
                 box.fade = math.min(1, time * 7)
             end
 

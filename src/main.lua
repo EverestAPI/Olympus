@@ -247,11 +247,6 @@ function love.load(args)
                 -- Filled dynamically.
 
             }):with({
-                style = {
-                    padding = 0,
-                    bg = {}
-                },
-
                 cacheable = false,
                 clip = false,
             }):with(uiu.fill):as("wrapper"),
@@ -306,10 +301,6 @@ function love.load(args)
 
                     uie.scrollbox(
                         uie.column({}):with({
-                            style = {
-                                bg = {},
-                                padding = 0
-                            },
                             clip = false,
                             cacheable = false,
 
@@ -358,17 +349,9 @@ function love.load(args)
                             logList:reflow()
                         end):with(uiu.fillWidth(true))
                     }):with({
-                        style = {
-                            bg = {},
-                            padding = 0
-                        },
                         clip = false
                     }):with(uiu.fillWidth):with(uiu.bottombound)
 
-                }):with({
-                    style = {
-                        bg = {}
-                    }
                 }):with(uiu.fill)
             ):with({
                 style = {
@@ -385,10 +368,7 @@ function love.load(args)
 
         }):with({
             style = {
-                bg = {},
-                padding = 0,
-                spacing = 0,
-                radius = 0
+                spacing = 0
             },
             clip = false,
             cacheable = false
@@ -397,10 +377,7 @@ function love.load(args)
         uie.topbar({}):as("pathbar"),
     }):with({
         style = {
-            bg = {},
-            padding = 0,
-            spacing = 0,
-            radius = 0
+            spacing = 0
         },
         clip = false,
         cacheable = false
@@ -632,7 +609,6 @@ function love.update(dt)
                 debugLabel.text =
                     "FPS: " .. love.timer.getFPS() ..
                     profile.report(20)
-                debugLabel.parent:reflow()
                 profile.reset()
             end
 
@@ -654,8 +630,11 @@ function love.update(dt)
                 "sharpTx: " .. sharp.getStatusTx() .. "\n" ..
                 "sharpRx: " .. sharp.getStatusRx() .. "\n" ..
                 "sharpWaiting: " .. "\n  " .. table.concat(sharp.getStatusWaiting(), "\n  ") .. "\n" ..
+                "\n" ..
+                "canvases: " .. tostring(ui.stats.canvases) .. "\n" ..
+                "draws: " .. tostring(ui.stats.draws) .. "\n" ..
+                "layouts: " .. tostring(ui.stats.layouts) .. "\n" ..
                 ""
-            debugLabel.parent:reflow()
         end
     end
 
@@ -835,6 +814,11 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == "f6" then
         scener.push("scenelist")
+    end
+
+    if key == "f9" then
+        collectgarbage("collect")
+        collectgarbage("collect")
     end
 
     if key == "f10" then

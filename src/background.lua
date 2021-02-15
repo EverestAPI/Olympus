@@ -90,18 +90,24 @@ function background.new()
                 end
             end
 
-            if width > self.innerWidth or height > self.innerHeight then
-                self.effect.resize(width, height)
-                self.innerWidth = width
-                self.innerHeight = height
-            end
+            -- self:repaint()
+        end,
 
-            --self:repaint()
+        layoutLateLazy = function(self)
+            -- Always reflow this child whenever its parent gets reflowed.
+            self:layoutLate()
+            self:repaint()
         end,
 
         layoutLate = function(self)
             self.realX = 0
             self.realY = 0
+            local width, height = love.graphics.getWidth(), love.graphics.getHeight()
+            if width > self.innerWidth or height > self.innerHeight then
+                self.effect.resize(width, height)
+                self.innerWidth = width
+                self.innerHeight = height
+            end
         end,
 
         drawBG = function(self)

@@ -35,8 +35,6 @@ local function generateModColumns(self)
         lists[i] = uie.column({
         }):with({
             style = {
-                bg = {},
-                padding = 0,
                 spacing = 2
             },
             cacheable = false
@@ -56,10 +54,6 @@ local root = uie.column({
                 generate = generateModColumns
             }):with(uiu.fillWidth):as("modColumns")
         }):with({
-            style = {
-                padding = 0,
-                bg = {}
-            },
             clip = false,
             cacheable = false
         }):with(uiu.fillWidth)
@@ -71,7 +65,7 @@ local root = uie.column({
         cacheable = false
     }):with(uiu.fillWidth):with(uiu.fillHeight(59)):with(uiu.at(0, 59)),
 
-    uie.column({
+    uie.paneled.column({
         uie.group():with({
             height = 32
         }),
@@ -82,7 +76,7 @@ local root = uie.column({
                 uie.row({
                     uie.icon("browser"):with({ scale = 24 / 256 }),
                     uie.label("Go to gamebanana.com"):with({ y = 2 })
-                }):with({ style = { bg = {}, padding = 0 } }),
+                }),
                 function()
                     utils.openURL("https://gamebanana.com/games/6460")
                 end
@@ -101,8 +95,6 @@ local root = uie.column({
 
             }):with({
                 style = {
-                    bg = {},
-                    padding = 0,
                     spacing = 24
                 },
                 cacheable = false,
@@ -111,6 +103,7 @@ local root = uie.column({
                 layoutLateLazy = function(orig, self)
                     -- Always reflow this child whenever its parent gets reflowed.
                     self:layoutLate()
+                    self:repaint()
                 end,
 
                 layoutLate = function(orig, self)
@@ -169,8 +162,6 @@ local root = uie.column({
 
             }):with({
                 style = {
-                    bg = {},
-                    padding = 0,
                     spacing = 8
                 },
                 cacheable = false,
@@ -178,10 +169,6 @@ local root = uie.column({
             }):with(uiu.rightbound):as("rightRow")
 
         }):with({
-            style = {
-                bg = {},
-                padding = 0
-            },
             cacheable = false,
             clip = false
         }):with(uiu.fillWidth)
@@ -259,7 +246,7 @@ function scene.loadPage(page)
             scene.searchLast = page
         end
 
-        local loading = uie.row({
+        local loading = uie.paneled.row({
             uie.label("Loading"),
             uie.spinner():with({
                 width = 16,
@@ -540,6 +527,7 @@ function scene.item(info)
             layoutLateLazy = function(orig, self)
                 -- Always reflow this child whenever its parent gets reflowed.
                 self:layoutLate()
+                self:repaint()
             end,
 
             layoutLate = function(orig, self)
@@ -548,7 +536,7 @@ function scene.item(info)
                 style.bg = nil
                 local boxBG = style.bg
                 -- FIXME: blur is very taxing!
-                style.bg = { boxBG[1], boxBG[2], boxBG[3], 0.7 }
+                style.bg = { boxBG[1], boxBG[2], boxBG[3], 0.95 }
             end
         }):with({
             style = {
@@ -575,28 +563,13 @@ function scene.item(info)
 
                             uie.column({
                                 uie.label({ { 1, 1, 1, 0.5 }, os.date("%Y-%m-%d %H:%M:%S", date) .. "\n" .. uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
-                            }):with({
-                                style = {
-                                    padding = 0,
-                                    bg = {}
-                                }
                             }):with(uiu.fillWidth(16, true))
 
-                        }):with({
-                            style = {
-                                padding = 0,
-                                spacing = 16,
-                                bg = {}
-                            }
-                        }):with(uiu.fillWidth),
+                        }):with({ style = { spacing = 16 } }):with(uiu.fillWidth),
 
                         description and #description ~= 0 and uie.label(description):with({ wrap = true }):as("description"),
 
                     }):with({
-                        style = {
-                            padding = 0,
-                            bg = {}
-                        },
                         clip = false,
                         cacheable = false
                     }):with(uiu.fillWidth),
@@ -676,14 +649,7 @@ function scene.item(info)
 
                                 alert({
                                     title = name,
-                                    body = uie.scrollbox(
-                                        uie.column(btns):with({
-                                            style = {
-                                                bg = {},
-                                                padding = 0
-                                            }
-                                        })
-                                    ),
+                                    body = uie.scrollbox(uie.column(btns)),
                                     init = function(container)
                                         btns[#btns + 1] = uie.button("Close", function()
                                             container:close("Close")
@@ -756,18 +722,11 @@ function scene.item(info)
                         })
 
                     }):with({
-                        style = {
-                            padding = 0,
-                            bg = {}
-                        },
                         clip = false,
                         cacheable = false
                     }):with(uiu.rightbound)
 
                 }):with({
-                    style = {
-                        bg = {}
-                    },
                     clip = false,
                     cacheable = false
                 }):with(uiu.fillWidth),

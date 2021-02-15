@@ -39,7 +39,7 @@ local root = uie.column({
         uie.scrollbox(
             uie.column({
 
-                uie.column({
+                uie.paneled.column({
                     uie.label("About", ui.fontBig),
 
                     uie.label([[
@@ -52,7 +52,7 @@ Feel free to visit the Ahorn GitHub page for more info.]]),
                     end):with(uiu.fillWidth),
                 }):with(uiu.fillWidth),
 
-                uie.column({
+                uie.paneled.column({
                     uie.label("Options", ui.fontBig),
 
                     uie.label([[
@@ -118,10 +118,6 @@ Ahorn will use the following theme:]]),
                 }):with(uiu.fillWidth),
 
             }):with({
-                style = {
-                    padding = 0,
-                    bg = {},
-                },
                 clip = false,
                 cacheable = false
             }):with(uiu.fillWidth):as("infolist")
@@ -135,15 +131,11 @@ Ahorn will use the following theme:]]),
         uie.scrollbox(
             uie.column({
 
-                uie.column({
+                uie.paneled.column({
                     uie.label("ahornsetup.lua machine broke, please fix."),
                 }):with(uiu.fillWidth),
 
             }):with({
-                style = {
-                    padding = 0,
-                    bg = {},
-                },
                 clip = false,
                 cacheable = false
             }):with(uiu.fillWidth):as("mainlist")
@@ -154,7 +146,6 @@ Ahorn will use the following theme:]]),
 
     }):with({
         style = {
-            bg = {},
             padding = 16
         },
         clip = false,
@@ -162,7 +153,7 @@ Ahorn will use the following theme:]]),
     }):with(uiu.fill):with(uiu.at(0, 0)):as("mainholder"),
 
     uie.group({
-        uie.column({
+        uie.paneled.column({
             uie.label("Ahorn Log", ui.fontBig),
             uie.scrollbox(
                 uie.column({
@@ -170,10 +161,6 @@ Ahorn will use the following theme:]]),
                     uie.label("ahornsetup.lua machine broke, please fix."),
 
                 }):with({
-                    style = {
-                        bg = {},
-                        padding = 0
-                    },
                     locked = true
                 }):hook({
                     layoutLateLazy = function(orig, self)
@@ -236,10 +223,6 @@ Ahorn will use the following theme:]]),
                     }
                 }):with(uiu.rightbound):as("logclose")
             }):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
                 clip = false
             }):with(uiu.fillWidth):with(uiu.bottombound)
         }):with(uiu.fill)
@@ -523,9 +506,6 @@ Before uploading, check your logs for sensitive info (f.e. your username).]]))
                     uie.button("Open Ahorn folder", function() utils.openFile(fs.dirname(scene.info.AhornGlobalEnvPath)) end),
                     uie.button("Open Everest Website", function() utils.openURL("https://everestapi.github.io/") end),
                 }):with({
-                    style = {
-                        bg = {}
-                    },
                     clip = false
                 })
             )
@@ -564,7 +544,7 @@ function scene.reload()
         mainlist.children = {}
         mainlist:reflow()
 
-        local loading = uie.row({
+        local loading = uie.paneled.row({
             uie.label("Loading"),
             uie.spinner():with({
                 width = 16,
@@ -576,7 +556,7 @@ function scene.reload()
         }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("loadingMods")
         scene.root:addChild(loading)
 
-        local status = uie.column({
+        local status = uie.paneled.column({
             uie.label("Checking Ahorn installation status..."),
         }):with(uiu.fillWidth)
         mainlist:addChild(status)
@@ -601,10 +581,6 @@ function scene.reload()
                 local cb = item[3]
                 local btn = uie.button(
                     uie.row({ uie.icon(icon):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
-                        style = {
-                            bg = {},
-                            padding = 0
-                        },
                         clip = false,
                         cacheable = false
                     }):hook(type(text) ~= "function" and {} or {
@@ -633,10 +609,6 @@ function scene.reload()
 
                 return btn
             end)):with({
-                style = {
-                    bg = {},
-                    padding = 0
-                },
                 clip = false,
                 cacheable = false
             }):with(uiu.fillWidth)
@@ -684,7 +656,7 @@ function scene.reload()
         end
 
         if config.ahorn.mode == "vhd" and not fs.isFile(info.VHDPath) then
-            mainlist:addChild(uie.column({
+            mainlist:addChild(uie.paneled.column({
                 uie.label("Ahorn-VHD not found", ui.fontBig),
                 uie.label(string.format([[
 Olympus couldn't find Ahorn-VHD.
@@ -713,7 +685,7 @@ Ahorn-VHD will be downloaded to:
             }):with(uiu.fillWidth))
 
         elseif config.ahorn.mode == "vhd" and filecount(info.VHDMountPath) < 1 then
-            mainlist:addChild(uie.column({
+            mainlist:addChild(uie.paneled.column({
                 uie.label("Ahorn-VHD not loaded", ui.fontBig),
                 uie.label(string.format([[
 Olympus was able to find Ahorn-VHD at:
@@ -734,7 +706,7 @@ Ahorn-VHD will be loaded to:
 
         else
             if config.ahorn.mode == "vhd" then
-                mainlist:addChild(uie.column({
+                mainlist:addChild(uie.paneled.column({
                     uie.label("Ahorn-VHD", ui.fontBig),
                     uie.label(string.format([[
 Olympus was able to find Ahorn-VHD at:
@@ -753,7 +725,7 @@ Ahorn-VHD is loaded into:
             end
 
             if not info.JuliaPath then
-                mainlist:addChild(uie.column({
+                mainlist:addChild(uie.paneled.column({
                     uie.label("Julia not found", ui.fontBig),
                     uie.label([[
 Ahorn uses the Julia programming language,
@@ -768,7 +740,7 @@ Olympus can manage a separate Julia installation for you.]]
                 }):with(uiu.fillWidth))
 
             elseif not info.JuliaVersion then
-                mainlist:addChild(uie.column({
+                mainlist:addChild(uie.paneled.column({
                     uie.label("Julia not recognized", ui.fontBig),
                     uie.label(string.format([[
 Ahorn uses the Julia programming language,
@@ -786,7 +758,7 @@ Version 1.3+ is the minimum requirement.]],
                 }):with(uiu.fillWidth))
 
             else
-                mainlist:addChild(uie.column({
+                mainlist:addChild(uie.paneled.column({
                     uie.label("Julia", ui.fontBig),
                     uie.label(string.format([[
 Ahorn uses the Julia programming language,
@@ -801,7 +773,7 @@ Found version: %s]],
             end
 
             if not info.AhornPath then
-                mainlist:addChild(uie.column({
+                mainlist:addChild(uie.paneled.column({
                     uie.label("Ahorn not found", ui.fontBig),
                     uie.label(string.format([[
 Olympus can download Ahorn and start the installation process for you.
@@ -814,7 +786,7 @@ Olympus can download Ahorn and start the installation process for you.
                 }):with(uiu.fillWidth))
 
             else
-                mainlist:addChild(uie.column({
+                mainlist:addChild(uie.paneled.column({
                     uie.label("Ahorn", ui.fontBig),
                     uie.label(string.format([[
 Found installation path:

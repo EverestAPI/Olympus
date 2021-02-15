@@ -143,7 +143,6 @@ function scene.reloadAll()
             uie.column({
             }):with({
                 style = {
-                    bg = {},
                     padding = 16,
                 }
             }):with(uiu.fillWidth):as("all")

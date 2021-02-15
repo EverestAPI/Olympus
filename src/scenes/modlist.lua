@@ -20,7 +20,6 @@ local root = uie.column({
         uie.column({
         }):with({
             style = {
-                bg = {},
                 padding = 16
             }
         }):with({
@@ -77,10 +76,6 @@ Tip: Edit the blacklist.txt to block Everest from loading it.]],
             })
 
         }):with({
-            style = {
-                padding = 0,
-                bg = {}
-            },
             clip = false,
             cacheable = false
         }):with(uiu.rightbound)
@@ -101,7 +96,7 @@ function scene.reload()
             loading:removeSelf()
         end
 
-        local loading = uie.row({
+        local loading = uie.paneled.row({
             uie.label("Loading"),
             uie.spinner():with({
                 width = 16,

@@ -12,7 +12,6 @@ local root = uie.column({
         uie.column({
         }):with({
             style = {
-                bg = {},
                 padding = 16,
             }
         }):with(uiu.fillWidth):as("mods")
@@ -24,7 +23,7 @@ local root = uie.column({
         cacheable = false
     }):with(uiu.fill),
 
-    uie.row({
+    uie.paneled.row({
         uie.label("Loading"),
         uie.spinner():with({
             width = 16,
