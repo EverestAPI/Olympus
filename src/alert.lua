@@ -1,16 +1,19 @@
 local ui, uiu, uie = require("ui").quick()
 local scener = require("scener")
+local config = require("config")
 
 local alert = {}
 
 
 function alert.init(root)
     alert.root = root
+    alert.count = 0
 end
 
 
 function alert.show(data)
     scener.lock()
+    alert.count = alert.count + 1
 
     local container = uie.group({}):with({
         time = 0,
@@ -114,6 +117,7 @@ function alert.show(data)
             return
         end
         scener.unlock()
+        alert.count = alert.count - 1
         container.closing = true
         container.time = 0
         if data.cb then
@@ -126,6 +130,8 @@ function alert.show(data)
         update = function(orig, self, dt)
             orig(self, dt)
 
+            local alphaMax = config.quality.bgBlur and 0.93 or 0.98
+
             local time = container.time
             if container.closing then
                 time = time + dt
@@ -133,7 +139,7 @@ function alert.show(data)
                     self:removeSelf()
                     return
                 end
-                bg.style.bg[4] = math.min(0.96, 1 - time * 9)
+                bg.style.bg[4] = math.min(alphaMax, 1 - time * 9)
                 box.fade = math.min(1, 1 - time * 7)
 
             else
@@ -141,7 +147,7 @@ function alert.show(data)
                 if time > 1 then
                     time = 1
                 end
-                bg.style.bg[4] = math.min(0.96, time * 9)
+                bg.style.bg[4] = math.min(alphaMax, time * 9)
                 box.fade = math.min(1, time * 7)
             end
 

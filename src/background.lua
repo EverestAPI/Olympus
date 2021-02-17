@@ -46,6 +46,7 @@ function background.new()
         init = function(self)
             self.effect.fastgaussianblur.sigma = 5
 
+            self.dotsSet = false
             local dots = self.dots
             for i = 1, 128 do
                 dots[i] = {
@@ -64,6 +65,7 @@ function background.new()
             local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
 
             if config.quality.bgSnow then
+                self.dotsSet = true
                 local dots = self.dots
                 for i = 1, #dots do
                     local dot = dots[i]
@@ -149,7 +151,7 @@ function background.new()
                 128, 128
             )
 
-            if config.quality.bgSnow then
+            if config.quality.bgSnow and self.dotsSet then
                 local dots = self.dots
                 local snow = background.snow
                 for i = 1, #dots do
@@ -190,14 +192,15 @@ function background.new()
                 end
             end
 
-            love.graphics.push()
-            love.graphics.origin()
         end,
 
         draw = function(self)
             if not config.quality.bg then
                 return
             end
+
+            love.graphics.push()
+            love.graphics.origin()
 
             love.graphics.setColor(1, 1, 1, 1)
 

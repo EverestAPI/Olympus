@@ -61,7 +61,7 @@ local qualities = {
         bgSnow = false,
     } },
     { text = "Minimal", data = {
-        id = "low",
+        id = "minimal",
         bg = false,
         bgBlur = false,
         bgSnow = false,

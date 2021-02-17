@@ -8,6 +8,7 @@ local utils
 local threader
 local native
 local scener
+local blurrer
 local alert
 local notify
 local config
@@ -196,6 +197,7 @@ function love.load(args)
     overlay = uiu.image("overlay")
 
     scener = require("scener")
+    blurrer = require("blurrer")
     alert = require("alert")
     notify = require("notify")
     themer = require("themer")
@@ -246,10 +248,9 @@ function love.load(args)
 
                 -- Filled dynamically.
 
-            }):with({
-                cacheable = false,
-                clip = false,
-            }):with(uiu.fill):as("wrapper"),
+            }):with(uiu.fill):with(blurrer(function()
+                return alert.count > 0
+            end)):as("wrapper"),
 
             uie.group({
             }):with({
