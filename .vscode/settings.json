@@ -1,7 +1,8 @@
 {
     "Lua.diagnostics.globals": [
         "love",
-        "math"
+        "math",
+        "require"
     ],
     "cmake.configureOnOpen": false,
     "Lua.runtime.version": "LuaJIT"

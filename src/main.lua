@@ -215,7 +215,7 @@ function love.load(args)
                 for j = 1, 10 do
                     sharp.echo("warmup " .. tostring(i) .. " " .. tostring(j)):result()
                 end
-                threader.sleep(0.2)
+                threader.sleep(0.01)
             end
         end)
     end
@@ -419,7 +419,9 @@ function love.load(args)
             return 1
         end)
 
-        if root._titlebar then
+        local titlebar = root:findChild("titlebar")
+        if titlebar then
+            local close = root:findChild("close")
             native.setWindowHitTest(function(win, area)
                 local border = 8
                 local corner = 12
@@ -427,7 +429,7 @@ function love.load(args)
                 local x = area.x
                 local y = area.y
 
-                if root._titlebar._close:contains(x, y) then
+                if close:contains(x, y) then
                     return 0
                 end
 
@@ -463,7 +465,7 @@ function love.load(args)
                     end
                 end
 
-                if y < root._titlebar.height then
+                if y < titlebar.height then
                     return 1
                 end
 

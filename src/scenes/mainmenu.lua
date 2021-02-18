@@ -404,7 +404,7 @@ function scene.load()
         local newsfeed = scene.root:findChild("newsfeed")
 
         newsfeed.children = {}
-        newsfeed:addChild(uie.paneled.row({
+        newsfeed:addChild(uie.row({
             uie.label("Loading"),
             uie.spinner():with({
                 width = 16,

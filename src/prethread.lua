@@ -1,6 +1,7 @@
 -- This file runs before every threader thread and in main.lua.
 return function(raw)
     require("love_filesystem_unsandboxing")
+    require("fast_unpack")
 
     local id = raw.meta.id
 
