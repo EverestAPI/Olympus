@@ -240,7 +240,7 @@ Do you want to continue?]],
                     })
                 end),
 
-                uie.button("Open", function()
+                uie.button("Browse", function()
                     utils.openFile(entry.path)
                 end),
 

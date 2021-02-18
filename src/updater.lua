@@ -200,7 +200,7 @@ function updater.update(id)
         installer.update("Olympus successfully updated", 1, "done")
         installer.done({
             {
-                "Restart",
+                "Restart Olympus",
                 function()
                     sharp.restart(love.filesystem.getSource()):result()
                     love.event.quit()

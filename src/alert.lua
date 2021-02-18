@@ -5,11 +5,58 @@ local config = require("config")
 local alert = {}
 
 
+local panelDefaultBG = uie.panel.style.bg
+
+
+uie.add("alertBG", {
+    base = "group",
+
+    interactive = 1,
+    clip = false,
+    cacheable = false,
+
+    style = {
+        patch = false,
+        padding = 0,
+        radius = 0,
+
+        visibleBG = {panelDefaultBG[1], panelDefaultBG[2], panelDefaultBG[3], 0.98},
+        visibleBlurBG = {panelDefaultBG[1], panelDefaultBG[2], panelDefaultBG[3], 0.93},
+        hiddenBG = {panelDefaultBG[1], panelDefaultBG[2], panelDefaultBG[3], 0}
+    },
+
+    init = function(self, container)
+        uie.panel.init(self, {})
+        self.container = container
+        self.style.bg = {table.unpack(self.style.hiddenBG)}
+    end,
+
+    update = function(self)
+        local container = self.container
+        local style = self.style
+        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
+
+        if container.closing then
+            bgNext = style.hiddenBG
+        elseif config.quality.bgBlur then
+            bgNext = style.visibleBlurBG
+        else
+            bgNext = style.visibleBG
+        end
+
+        _, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(false, bg, self._fadeBGPrev, bgPrev, bgNext)
+        if uiu.fade(false, container.time * 9, bg, bgPrev, bgNext) then
+            self:repaint()
+        end
+    end,
+
+})
+
+
 function alert.init(root)
     alert.root = root
     alert.count = 0
 end
-
 
 function alert.show(data)
     scener.lock()
@@ -22,20 +69,11 @@ function alert.show(data)
         cacheable = false
     }):with(uiu.fill):as("container")
 
-    local bg = uie.group({}):hook({
+    local bg = uie.alertBG(container):hook({
         onClick = function(orig, self, x, y, button)
             orig(self, x, y, button)
             container:close(false)
         end
-    }):with({
-        interactive = 1,
-        style = {
-            bg = { 0.1, 0.1, 0.1, 0 },
-            padding = 0,
-            radius = 0
-        },
-        clip = false,
-        cacheable = false
     }):with(uiu.fill):as("bg")
     container:addChild(bg)
 
@@ -72,10 +110,6 @@ function alert.show(data)
             self.realX = math.floor(self.parent.width * 0.5 - self.width * 0.5)
             self.y = math.floor(self.parent.innerHeight * 0.5 - self.height * 0.5)
             self.realY = math.floor(self.parent.height * 0.5 - self.height * 0.5)
-            local style = self.style
-            style.bg = nil
-            local boxBG = style.bg
-            style.bg = { boxBG[1], boxBG[2], boxBG[3], 1 }
         end
     }):as("box")
 
@@ -130,8 +164,6 @@ function alert.show(data)
         update = function(orig, self, dt)
             orig(self, dt)
 
-            local alphaMax = config.quality.bgBlur and 0.93 or 0.98
-
             local time = container.time
             if container.closing then
                 time = time + dt
@@ -139,7 +171,6 @@ function alert.show(data)
                     self:removeSelf()
                     return
                 end
-                bg.style.bg[4] = math.min(alphaMax, 1 - time * 9)
                 box.fade = math.min(1, 1 - time * 7)
 
             else
@@ -147,7 +178,6 @@ function alert.show(data)
                 if time > 1 then
                     time = 1
                 end
-                bg.style.bg[4] = math.min(alphaMax, time * 9)
                 box.fade = math.min(1, time * 7)
             end
 

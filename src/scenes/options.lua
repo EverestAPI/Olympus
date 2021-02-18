@@ -338,7 +338,7 @@ local root = uie.column({
                                         installer.update(string.format("Extra data %s successfully installed", data.path), 1, "done")
                                         installer.done({
                                             {
-                                                "Restart",
+                                                "Restart Olympus",
                                                 function()
                                                     sharp.restart(love.filesystem.getSource()):result()
                                                     love.event.quit()

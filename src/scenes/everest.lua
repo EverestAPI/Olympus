@@ -397,7 +397,7 @@ function scene.load()
                             }
                         }), 1)
                         list:addChild(uie.row({
-                            uie.image("pin"):with({
+                            uie.icon("pin"):with({
                                 scale = 16 / 256,
                                 y = 2
                             }),
@@ -414,7 +414,7 @@ function scene.load()
                 end
 
                 if pin then
-                    item:addChild(uie.image("pin"):with({
+                    item:addChild(uie.icon("pin"):with({
                         scale = 16 / 256,
                         y = 2
                     }), 1)
