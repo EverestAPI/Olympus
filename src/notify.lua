@@ -16,7 +16,7 @@ function notify.show(data)
         prevs[i] = notify.root.children[i]
     end
 
-    local notif = uie.column({}):with({
+    local notif = uie.paneled.column({}):with({
         time = 0,
         offs = 0,
         interactive = 2,

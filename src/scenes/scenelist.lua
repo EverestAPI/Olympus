@@ -7,18 +7,14 @@ local scene = {
 }
 
 
-local root = uie.column({
-    uie.image("header"),
-
+local root = uie.group({
     uie.scrollbox(
-        uie.list({
-        }):with({
-            grow = false
-        }):with(uiu.fillWidth):with(function(list)
-            list.selected = list.children[1] or false
-        end):as("scenes")
-    ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
-
+        uie.column({
+        }):with(uiu.fillWidth):as("scenes")
+    ):with({
+        clip = false,
+        cacheable = false
+    }):with(uiu.fill),
 })
 scene.root = root
 
@@ -36,7 +32,7 @@ function scene.load()
                 else
                     scener.push(path)
                 end
-            end))
+            end):with(uiu.fillWidth))
         end
     end
 end
