@@ -91,38 +91,42 @@ for i = 1, #themes do
             uie.label(text, ui.fontBig):with(themer.skin(theme, false)),
 
             uie.row({
-                uie.column({
-                    uie.label([[
+                uie.panel({
+                    uie.column({
+                        uie.label([[
 This is your current theme.
 The quick brown fox jumps]]),
 
-                    uie.list(uiu.map(uiu.listRange(1, 3), function(i)
-                        return string.format("Item %i!", i)
-                    end)):with(function(self)
-                        local children = self.children
-                        for i = 1, #children do
-                            children[i].interactive = 0
-                            children[i].owner = self
-                        end
-                        children[1].selected = true
-                    end):with(uiu.fillWidth)
+                        uie.list(uiu.map(uiu.listRange(1, 3), function(i)
+                            return string.format("Item %i!", i)
+                        end)):with(function(self)
+                            local children = self.children
+                            for i = 1, #children do
+                                children[i].interactive = 0
+                                children[i].owner = self
+                            end
+                            children[1].selected = true
+                        end):with(uiu.fillWidth)
+                    })
                 }),
 
-                uie.column({
-                    uie.label([[
+                uie.panel({
+                    uie.column({
+                        uie.label([[
 This is the new theme.
 over the lazy dog.]]),
 
-                    uie.list(uiu.map(uiu.listRange(1, 3), function(i)
-                        return string.format("Item %i!", i)
-                    end)):with(function(self)
-                        local children = self.children
-                        for i = 1, #children do
-                            children[i].interactive = 0
-                            children[i].owner = self
-                        end
-                        children[1].selected = true
-                    end):with(uiu.fillWidth)
+                        uie.list(uiu.map(uiu.listRange(1, 3), function(i)
+                            return string.format("Item %i!", i)
+                        end)):with(function(self)
+                            local children = self.children
+                            for i = 1, #children do
+                                children[i].interactive = 0
+                                children[i].owner = self
+                            end
+                            children[1].selected = true
+                        end):with(uiu.fillWidth)
+                    })
                 }):with(themer.skin(theme))
             }):with(uiu.rightbound)
 
@@ -134,7 +138,9 @@ over the lazy dog.]]),
             scene.root:findChild("themeDropdown"):updateSelected()
         end
     ):with({
-        height = 100
+        height = 100,
+        clip = true,
+        clipPadding = 1
     }):with(uiu.fillWidth):with(themer.skin(theme, false))
 
     themePickerEntries[#themePickerEntries + 1] = bigbtn
@@ -143,7 +149,7 @@ end
 scene.themePicker = uie.scrollbox(
     uie.column(themePickerEntries):with(uiu.fillWidth)
 ):with({
-    clip = true,
+    clip = false,
     cacheable = false
 }):with(uiu.fillWidth):with(uiu.fillHeight(true))
 
