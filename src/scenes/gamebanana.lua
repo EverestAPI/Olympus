@@ -619,25 +619,28 @@ function scene.item(info)
 
                                 for _, file in pairs(files) do
                                     if file and file._id then
-                                        btns[#btns + 1] = uie[#btns == 0 and "buttonGreen" or "button"](
-                                            { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file._tsDateAdded) .. " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file._sDescription},
-                                            function(self)
-                                                modinstaller.install(file._sDownloadUrl)
-                                                self:getParent("container"):close("OK")
-                                            end
-                                        ):with({
-                                            date = file._tsDateAdded
-                                        })
+                                        btns[#btns + 1] = file
                                     end
+                                end
+
+                                table.sort(btns, function(a, b)
+                                    return a._tsDateAdded > b._tsDateAdded
+                                end)
+
+                                for i = 1, #btns do
+                                    local file = btns[i]
+                                    btns[i] = uie[i == 1 and "buttonGreen" or "button"](
+                                        { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file._tsDateAdded) .. " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file._sDescription},
+                                        function(self)
+                                            modinstaller.install(file._sDownloadUrl)
+                                            self:getParent("container"):close("OK")
+                                        end
+                                    )
                                 end
 
                                 if #btns == 0 then
                                     return
                                 end
-
-                                table.sort(btns, function(a, b)
-                                    return a.date > b.date
-                                end)
 
                                 alert({
                                     title = name,
