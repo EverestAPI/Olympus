@@ -1,9 +1,9 @@
 {
 	"__name": "Light",
 	"alertBG": {
+        "hiddenBG": [0.95, 0.95, 0.95, 0],
 		"visibleBG": [0.95, 0.95, 0.95, 0.98],
-        "visibleBlurBG": [0.95, 0.95, 0.95, 0.75],
-        "hiddenBG": [0.95, 0.95, 0.95, 0]
+        "visibleBlurBG": [0.95, 0.95, 0.95, 0.75]
 	},
 	"button": {
 		"disabledBG": [0.4, 0.4, 0.4, 0.7],
@@ -23,6 +23,11 @@
 		"hoveredBG": [0.85, 0.25, 0.25, 1],
 		"normalBG": [0.9, 0.1, 0.2, 0.3],
 		"pressedBG": [0.6, 0.08, 0.14, 1]
+	},
+	"buttonGreen": {
+        "hoveredBG": [0.7, 0.9, 0.7, 0.9],
+        "normalBG": [0.5, 0.8, 0.5, 0.8],
+        "pressedBG": [0.5, 0.9, 0.5, 0.9]
 	},
 	"default": [],
 	"dropdown": [],
@@ -69,6 +74,18 @@
 		"selectedBG": [0.2, 0.5, 0.8, 0.9],
 		"selectedBorder": [0, 0, 0, 0, 1],
 		"selectedFG": [1, 1, 1, 1]
+	},
+	"listItemGreen": {
+        "hoveredBG": [0.7, 0.9, 0.7, 0.9],
+        "normalBG": [0.5, 0.8, 0.5, 0.8],
+        "pressedBG": [0.1, 0.6, 0.1, 0.9],
+		"selectedBG": [0.2, 0.7, 0.2, 0.9]
+	},
+	"listItemYellow": {
+        "hoveredBG": [0.9, 0.8, 0.4, 0.9],
+        "normalBG": [0.8, 0.7, 0.3, 0.8],
+        "pressedBG": [0.3, 0.2, 0, 0.9],
+        "selectedBG": [0.4, 0.3, 0.1, 0.9]
 	},
 	"menuItem": {
 		"bg": [0.08, 0.08, 0.08, 0.8]

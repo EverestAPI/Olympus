@@ -62,7 +62,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
-        uie.button(uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install") }):with({
+        uie.buttonGreen(uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install") }):with({
             clip = false,
             cacheable = false
         }):with(uiu.styleDeep), function()
@@ -78,11 +78,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 orig(self, ...)
             end
         }):with({
-            style = {
-                normalBG = { 0.2, 0.4, 0.2, 0.8 },
-                hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
-                pressedBG = { 0.2, 0.6, 0.2, 0.9 }
-            },
             clip = false,
             cacheable = false
         }):with(uiu.fillWidth(true)):with(utils.important(24, function(self) return self.parent.enabled end)):as("install"),
@@ -352,16 +347,12 @@ function scene.load()
 
                 ::readd::
 
-                local item = uie.listItem(text, build):with(uiu.fillWidth)
+                local item = uie[branch == "stable" and "listItemGreen" or branch == "beta" and "listItemYellow" or "listItem"](text, build):with(uiu.fillWidth)
                 item.label.wrap = true
 
                 local index = nil
 
                 if branch == "stable" then
-                    item.style.normalBG = { 0.2, 0.4, 0.2, 0.8 }
-                    item.style.hoveredBG = { 0.36, 0.46, 0.39, 0.9 }
-                    item.style.pressedBG = { 0.1, 0.5, 0.2, 0.9 }
-                    item.style.selectedBG = { 0.5, 0.8, 0.5, 0.9 }
                     if not firstStable then
                         firstStable = item
                         if firstBeta then
@@ -372,10 +363,6 @@ function scene.load()
                     end
 
                 elseif branch == "beta" then
-                    item.style.normalBG = { 0.5, 0.4, 0.1, 0.8 }
-                    item.style.hoveredBG = { 0.8, 0.7, 0.3, 0.9 }
-                    item.style.pressedBG = { 0.5, 0.4, 0.2, 0.9 }
-                    item.style.selectedBG = { 0.8, 0.7, 0.3, 0.9 }
                     if not firstBeta then
                         firstBeta = item
                         if firstStable then

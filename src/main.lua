@@ -177,6 +177,7 @@ function love.load(args)
     ui = require("ui")
     uie = require("ui.elements")
     uiu = require("ui.utils")
+    require("elements")
 
     local fonts = {table.unpack(config.fonts)}
     for i = #fonts, 1, -1 do

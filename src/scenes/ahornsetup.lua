@@ -579,7 +579,7 @@ function scene.reload()
                 local icon = item[1]
                 local text = item[2]
                 local cb = item[3]
-                local btn = uie.button(
+                local btn = uie[(not important or i > 1) and "button" or "buttonGreen"](
                     uie.row({ uie.icon(icon):with({ scale = 21 / 256 }), uie.label(type(text) == "function" and text() or text) }):with({
                         clip = false,
                         cacheable = false
@@ -592,11 +592,6 @@ function scene.reload()
                         cb()
                     end
                 ):with((not important or i > 1) and {} or {
-                    style = {
-                        normalBG = { 0.2, 0.4, 0.2, 0.8 },
-                        hoveredBG = { 0.3, 0.6, 0.3, 0.9 },
-                        pressedBG = { 0.2, 0.6, 0.2, 0.9 }
-                    },
                     clip = false,
                     cacheable = false
                 })
