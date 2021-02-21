@@ -21,8 +21,10 @@ local logFile
 
 local ui
 local uie
+local megacanvas
 
 local debugLabel
+local debugDetailed = false
 local logWindow
 local logList
 
@@ -32,6 +34,8 @@ local focusStatus = 0
 local canvasWidth = 0
 local canvasHeight = 0
 local canvas
+
+local drawstats = {}
 
 local function logDump()
     while true do
@@ -177,6 +181,7 @@ function love.load(args)
     ui = require("ui")
     uie = require("ui.elements")
     uiu = require("ui.utils")
+    megacanvas = require("ui.megacanvas")
     require("elements")
 
     local fonts = {table.unpack(config.fonts)}
@@ -274,6 +279,7 @@ function love.load(args)
                     },
 
                     interactive = 1,
+                    cacheable = false,
 
                     onPress = function(self, ...)
                         self.parent.titlebar:onPress(...)
@@ -293,7 +299,9 @@ function love.load(args)
                     padding = 8
                 },
                 visible = profile ~= nil,
-                interactive = profile ~= nil and 1 or -1
+                interactive = profile ~= nil and 1 or -1,
+                cacheable = false,
+                clip = false
             }):with(function(el)
                 table.remove(el.children, 1).parent = el
             end),
@@ -619,26 +627,41 @@ function love.update(dt)
             profile.start()
 
         elseif debugLabel.parent.visible then
-            debugLabel.text =
-                "FPS: " .. love.timer.getFPS() .. (canvas and " throttled" or "") .. "\n" ..
-                "hovering: " .. tostring(ui.hovering) .. "\n" ..
-                "dragging: " .. tostring(ui.dragging) .. "\n" ..
-                "focusing: " .. tostring(ui.focusing) .. "\n" ..
-                "debug: " .. tostring(lldb ~= nil) .. "\n" ..
-                "debugDraw: " .. tostring(ui.debug.draw) .. "\n" ..
-                -- "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState) ..
-                "\n" ..
-                -- "storageDir: " .. fs.getStorageDir() .. "\n" .. -- Can contain invalid UTF-8!
-                "threader: " .. tostring(threader.unsafe) .. "\n" ..
-                "sharp: " .. sharp.getStatus() .. "\n" ..
-                "sharpTx: " .. sharp.getStatusTx() .. "\n" ..
-                "sharpRx: " .. sharp.getStatusRx() .. "\n" ..
-                "sharpWaiting: " .. "\n  " .. table.concat(sharp.getStatusWaiting(), "\n  ") .. "\n" ..
-                "\n" ..
-                "canvases: " .. tostring(ui.stats.canvases) .. "\n" ..
-                "draws: " .. tostring(ui.stats.draws) .. "\n" ..
-                "layouts: " .. tostring(ui.stats.layouts) .. "\n" ..
-                ""
+            if debugDetailed then
+                debugLabel.text =
+                    "FPS: " .. love.timer.getFPS() .. (canvas and " throttled" or "") .. "\n" ..
+                    "hovering: " .. tostring(ui.hovering) .. "\n" ..
+                    "dragging: " .. tostring(ui.dragging) .. "\n" ..
+                    "focusing: " .. tostring(ui.focusing) .. "\n" ..
+                    "debug: " .. tostring(lldb ~= nil) .. "\n" ..
+                    "debugDraw: " .. tostring(ui.debug.draw) .. "\n" ..
+                    -- "mouseing: " .. mouseX .. ", " .. mouseY .. ": " .. tostring(mouseState) ..
+                    "cachecanvases: " .. tostring(ui.stats.canvases) .. "\n" ..
+                    "draws: " .. tostring(ui.stats.draws) .. "\n" ..
+                    "layouts: " .. tostring(ui.stats.layouts) .. "\n" ..
+                    "\n" ..
+                    "megalayers: " .. tostring(megacanvas.layers) .. "\n" ..
+                    "megapages: " .. tostring(megacanvas.pagesCount) .. "\n" ..
+                    "megaquads: " .. tostring(megacanvas.quadsAlive) .. " / " .. tostring(megacanvas.quadsCount) .. "\n" ..
+                    "\n" ..
+                    "texturememory: " .. string.format("%.2f", (drawstats.texturememory or 0) / 1024 / 1024) .. " MB\n" ..
+                    "drawcalls: " .. tostring(drawstats.drawcalls) .. "\n" ..
+                    "drawcallsbatched: " .. tostring(drawstats.drawcallsbatched) .. "\n" ..
+                    "canvases: " .. tostring(drawstats.canvases) .. "\n" ..
+                    "canvasswitches: " .. tostring(drawstats.canvasswitches) .. "\n" ..
+                    "shaderswitches: " .. tostring(drawstats.shaderswitches) .. "\n" ..
+                    "\n" ..
+                    -- "storageDir: " .. fs.getStorageDir() .. "\n" .. -- Can contain invalid UTF-8!
+                    "threader: " .. tostring(threader.unsafe) .. "\n" ..
+                    "sharp: " .. sharp.getStatus() .. "\n" ..
+                    "sharpTx: " .. sharp.getStatusTx() .. "\n" ..
+                    "sharpRx: " .. sharp.getStatusRx() .. "\n" ..
+                    "sharpWaiting: " .. "\n  " .. table.concat(sharp.getStatusWaiting(), "\n  ") .. "\n" ..
+                    "\n" ..
+                    ""
+            else
+                debugLabel.text = "FPS: " .. love.timer.getFPS() .. (canvas and " throttled" or "")
+            end
         end
     end
 
@@ -719,7 +742,11 @@ function love.draw()
 
         -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
-        pcall(ui.draw)
+        if lldb or profile then
+            pcall(ui.draw)
+        else
+            ui.draw()
+        end
 
         if config.overlay >= 0.01 then
             love.graphics.setBlendMode("add", "premultiplied")
@@ -748,6 +775,10 @@ function love.draw()
 
     if canvas then
         love.graphics.draw(canvas)
+    end
+
+    if debugDetailed then
+        love.graphics.getStats(drawstats)
     end
 
     if love.version[1] ~= 0 then
@@ -786,8 +817,15 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f1" then
-        debugLabel.parent.visible = not debugLabel.parent.visible
-        debugLabel.parent.interactive = debugLabel.parent.visible and 1 or -1
+        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+            debugDetailed = true
+            debugLabel.parent.visible = true
+            debugLabel.parent.interactive = 1
+        else
+            debugLabel.parent.visible = not debugLabel.parent.visible or debugDetailed
+            debugLabel.parent.interactive = debugLabel.parent.visible and 1 or -1
+            debugDetailed = false
+        end
         ui.root:recollect(false, true)
     end
 
@@ -798,6 +836,7 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f3" then
+        debugDetailed = false
         if not profile then
             debugLabel.parent.visible = true
             debugLabel.parent.interactive = 1
@@ -818,6 +857,12 @@ function love.keypressed(key, scancode, isrepeat)
 
     if key == "f6" then
         scener.push("scenelist")
+    end
+
+    if key == "f7" then
+        local dir = fs.joinpath(fs.getStorageDir(), "megacanvasdump")
+        fs.mkdir(dir)
+        megacanvas.dump(dir .. fs.dirSeparator)
     end
 
     if key == "f9" then

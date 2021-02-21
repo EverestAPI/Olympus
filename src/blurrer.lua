@@ -8,9 +8,7 @@ local blurrer = {}
 function blurrer.drawBlurredCanvasContent(canvas, x, y, paddingL, paddingT, blurFade)
     love.graphics.clear(0, 0, 0, 0)
     love.graphics.setColor(blurFade, blurFade, blurFade, blurFade)
-    love.graphics.setBlendMode("alpha", "premultiplied")
-    love.graphics.draw(canvas, x - paddingL, y - paddingT)
-    love.graphics.setBlendMode("alpha", "alphamultiply")
+    canvas:draw(x - paddingL, y - paddingT)
 end
 
 function blurrer.drawBlurredCanvas(orig, el, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
@@ -25,9 +23,7 @@ function blurrer.drawBlurredCanvas(orig, el, canvas, x, y, width, height, paddin
     local blurFadeInv = math.sin(math.pi * (1 - blurFade) * 0.5)
     if blurFadeInv > 0.01 then
         love.graphics.setColor(blurFadeInv, blurFadeInv, blurFadeInv, blurFadeInv)
-        love.graphics.setBlendMode("alpha", "premultiplied")
-        love.graphics.draw(canvas, x - paddingL, y - paddingT)
-        love.graphics.setBlendMode("alpha", "alphamultiply")
+        canvas:draw(x - paddingL, y - paddingT)
     end
 
     love.graphics.setColor(1, 1, 1, 1)
@@ -78,9 +74,9 @@ function blurrer.blur(el, cb)
             local width = self.width + 32
             local height = self.height + 32
             if width > self.blurWidth or height > self.blurHeight then
-                self.blurEffect.resize(width, height)
-                self.blurWidth = width
-                self.blurHeight = height
+                self.blurEffect.resize(width + 128, height + 128)
+                self.blurWidth = width + 128
+                self.blurHeight = height + 128
             end
         end,
 
