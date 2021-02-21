@@ -640,9 +640,11 @@ function love.update(dt)
                     "draws: " .. tostring(ui.stats.draws) .. "\n" ..
                     "layouts: " .. tostring(ui.stats.layouts) .. "\n" ..
                     "\n" ..
-                    "megalayers: " .. tostring(megacanvas.layers) .. "\n" ..
-                    "megapages: " .. tostring(megacanvas.pagesCount) .. "\n" ..
-                    "megaquads: " .. tostring(megacanvas.quadsAlive) .. " / " .. tostring(megacanvas.quadsCount) .. "\n" ..
+                    "layersMax: " .. tostring(megacanvas.layersMax) .. "\n" ..
+                    "atlases: " .. table.concat(uiu.map(megacanvas.atlases, function(a) return a.layersAllocated end), ", ") .. "\n" ..
+                    "quads: " .. tostring(megacanvas.quadsAlive) .. " / " .. tostring(#megacanvas.quads) .. "\n" ..
+                    "pooled: " .. tostring(megacanvas.poolAlive) .. " / " .. tostring(#megacanvas.pool) .. " + " .. tostring(megacanvas.poolNew) .. " / " .. tostring(megacanvas.poolUsed) .. "\n" ..
+                    "marked: " .. tostring(#megacanvas.marked) .. "\n" ..
                     "\n" ..
                     "texturememory: " .. string.format("%.2f", (drawstats.texturememory or 0) / 1024 / 1024) .. " MB\n" ..
                     "drawcalls: " .. tostring(drawstats.drawcalls) .. "\n" ..
