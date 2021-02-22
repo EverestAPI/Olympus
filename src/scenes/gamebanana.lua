@@ -334,11 +334,11 @@ end
 
 function scene.load()
     scene.loadPage(0)
-    
+
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
         local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories"):result()
-        
+
         if not data then
             -- Error while calling the API
             root:addChild(uie.row({
@@ -353,7 +353,7 @@ function scene.load()
             for _, category in ipairs(data) do
                 table.insert(allTypes, { text = category.formatted .. " (" .. category.count .. ")", data = category.itemtype })
             end
-            
+
             -- Refresh the dropdown
             local itemtypeFilterDropdown = scene.root:findChild("itemtypeFilter")
             itemtypeFilterDropdown.data = allTypes
@@ -543,7 +543,9 @@ function scene.item(info)
                 padding = 0,
                 radius = 0,
                 patch = false
-            }
+            },
+            clip = false,
+            cacheable = false
         }):with(uiu.fill):as("bgdarken"),
 
         uie.group({
@@ -708,6 +710,9 @@ function scene.item(info)
                                 })
                             end
                         ):with({
+                            clip = false,
+                            cacheable = false
+                        }):with({
                             enabled = containsEverestYaml
                         })
 
