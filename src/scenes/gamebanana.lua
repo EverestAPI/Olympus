@@ -387,10 +387,17 @@ function scene.downloadEntries(page)
         return data
     end
 
+    local attempt = 0
+    ::retry::
     local msg
     data, msg = threader.wrap("utils").downloadJSON(url):result()
     if data then
         scene.cache[url] = data
+    else
+        attempt = attempt + 1
+        if attempt < 5 then
+            goto retry
+        end
     end
     return data, msg
 end
@@ -432,8 +439,14 @@ function scene.downloadFeaturedEntries()
         return entries
     end
 
+    local attempt = 0
+    ::retry::
     local data, msg = threader.wrap("utils").downloadXML(url):result()
     if not data then
+        attempt = attempt + 1
+        if attempt < 5 then
+            goto retry
+        end
         return data, msg
     end
 
@@ -486,10 +499,17 @@ function scene.downloadInfo(entries, id)
         return data
     end
 
+    local attempt = 0
+    ::retry::
     local msg
     data, msg = threader.wrap("utils").downloadJSON(url):result()
     if data then
         scene.cache[url] = data
+    else
+        attempt = attempt + 1
+        if attempt < 5 then
+            goto retry
+        end
     end
     return data, msg
 end
