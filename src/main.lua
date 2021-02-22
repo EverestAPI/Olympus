@@ -617,7 +617,7 @@ function love.update(dt)
     if love.frame > 1 then
         if profile then
             profile.frame = (profile.frame or 0) + 1
-            if profile.frame % 100 == 0 then
+            if profile.frame % 500 == 0 then
                 debugLabel.text =
                     "FPS: " .. love.timer.getFPS() ..
                     profile.report(20)
