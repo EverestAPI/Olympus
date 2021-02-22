@@ -261,7 +261,7 @@ function scene.load()
         local builds, buildsError = buildsTask:result()
         if not builds then
             root:findChild("loadingVersions"):removeSelf()
-            root:findChild("versionsParent"):addChild(uie.row({
+            root:findChild("versionsParent"):addChild(uie.paneled.row({
                 uie.label("Error downloading builds list: " .. tostring(buildsError)),
             }):with({
                 clip = false,
@@ -274,7 +274,7 @@ function scene.load()
 
         local commits, commitsError = commitsTask:result()
         if not commits then
-            root:findChild("versionsParent"):addChild(uie.row({
+            root:findChild("versionsParent"):addChild(uie.paneled.row({
                 uie.label("Error downloading commits list: " .. tostring(commitsError)),
             }):with({
                 clip = false,

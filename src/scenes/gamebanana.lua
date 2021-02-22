@@ -212,6 +212,11 @@ function scene.loadPage(page)
     scene.loadingPage = threader.routine(function()
         local lists, pagePrev, pageLabel, pageNext, sortDropdown, itemtypeFilterDropdown = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext", "sort", "itemtypeFilter")
 
+        local errorPrev = root:findChild("error")
+        if errorPrev then
+            errorPrev:removeSelf()
+        end
+
         local isQuery = type(page) == "string"
 
         if not isQuery then
@@ -271,12 +276,12 @@ function scene.loadPage(page)
 
         if not entries then
             loading:removeSelf()
-            root:addChild(uie.row({
+            root:addChild(uie.paneled.row({
                 uie.label("Error downloading mod list: " .. tostring(entriesError)),
             }):with({
                 clip = false,
                 cacheable = false
-            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
             -- "Featured" should be inaccessible if there is a sort or a filter
             pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
@@ -293,12 +298,12 @@ function scene.loadPage(page)
         local infos, infosError = scene.downloadInfo(entries)
         if not infos then
             loading:removeSelf()
-            root:addChild(uie.row({
+            root:addChild(uie.paneled.row({
                 uie.label("Error downloading mod info: " .. tostring(infosError)),
             }):with({
                 clip = false,
                 cacheable = false
-            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
             -- "Featured" should be inaccessible if there is a sort or a filter
             pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
@@ -341,12 +346,12 @@ function scene.load()
 
         if not data then
             -- Error while calling the API
-            root:addChild(uie.row({
+            root:addChild(uie.paneled.row({
                 uie.label("Error downloading categories list: " .. tostring(msg)),
             }):with({
                 clip = false,
                 cacheable = false
-            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
+            }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
         else
             -- Convert the list retrieved from the API to a dropdown option list
             local allTypes = {}
