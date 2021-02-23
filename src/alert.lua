@@ -28,13 +28,13 @@ uie.add("alertBG", {
     init = function(self, container)
         uie.panel.init(self, {})
         self.container = container
-        self.style.bg, self._fadeBG, self._fadeBGPrev = {table.unpack(self.style.hiddenBG)}, false, false
+        self._fadeBGStyle, self._fadeBG, self._fadeBGPrev = {table.unpack(self.style.hiddenBG)}, false, false
     end,
 
     update = function(self)
         local container = self.container
         local style = self.style
-        local bg, bgPrev, bgNext = style.bg, self._fadeBG, nil
+        local bg, bgPrev, bgNext = self._fadeBGStyle, self._fadeBG, nil
 
         if container.closing then
             bgNext = style.hiddenBG
@@ -44,7 +44,7 @@ uie.add("alertBG", {
             bgNext = style.visibleBG
         end
 
-        _, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(false, bg, self._fadeBGPrev, bgPrev, bgNext)
+        _, style.bg, bgPrev, self._fadeBGPrev, self._fadeBG = uiu.fadeSwap(false, bg, self._fadeBGPrev, bgPrev, bgNext)
         if uiu.fade(false, container.time * 9, bg, bgPrev, bgNext) then
             self:repaint()
         end
