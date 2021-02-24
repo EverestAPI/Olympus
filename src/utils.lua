@@ -1,10 +1,4 @@
 require("love.filesystem")
-local requestStatus, request = pcall(require, "luajit-request")
-if not requestStatus then
-    print("luajit-request not loaded")
-    print(request)
-    request = nil
-end
 local dkjson = require("dkjson")
 local yaml = require("yaml")
 local fs = require("fs")
@@ -12,6 +6,18 @@ local threader = require("threader")
 local xml2lua = require("xml2lua")
 local xml2luaTree = require("xmlhandler.tree")
 local loveSystemAsync = threader.wrap("love.system")
+
+local requestStatusChannel = require("love.thread").getChannel("utilsRequestStatus")
+local requestStatus, request
+if requestStatusChannel:peek() ~= 0 then
+    local requestStatus, request = pcall(require, "luajit-request")
+    if not requestStatus then
+        print("luajit-request not loaded")
+        print(request)
+        requestStatusChannel:push(0)
+        request = nil
+    end
+end
 
 local utils = {}
 
@@ -124,6 +130,7 @@ function utils.load(path)
 end
 
 function utils.download(url, headers)
+    ::retry::
     if not request then
         if headers then
             return false, "luajit-request not loaded: " .. tostring(request)
@@ -164,6 +171,14 @@ function utils.download(url, headers)
         end
         headers["Referer"] = url
         return utils.download(redirect, headers)
+    end
+
+    if code == 0 then
+        print("luajit-request returned error code 0, switching to downloading via Olympus.Sharp")
+        requestStatusChannel:push(0)
+        requestStatus = false
+        request = nil
+        goto retry
     end
 
     return false, code, body
