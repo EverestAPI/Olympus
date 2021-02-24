@@ -65,21 +65,17 @@ It can also use your existing system-wide Julia and Ahorn installs.]]),
                             config.save()
                             scene.reload()
                         end
-                    ):hook({
+                    ):with({
+                        selectedData = config.ahorn.mode
+                    }):hook({
                         update = function(orig, self, ...)
                             self.enabled = not scene.reloading
                             orig(self, ...)
                         end
                     }):with(function(self)
-                        for i = 1, #modes do
-                            if config.ahorn.mode == modes[i].data then
-                                self.selected = self:getItem(i)
-                                self.text = self.selected.text
-                                return
-                            end
+                        if not self.selected then
+                            self.text = "???"
                         end
-                        self.selected = self:getItem(1)
-                        self.text = "???"
                     end):with(uiu.fillWidth),
 
                     uie.button("Open the Olympus Ahorn folder", function()
@@ -101,16 +97,12 @@ Ahorn will use the following theme:]]),
                             config.ahorn.theme = value
                             config.save()
                         end
-                    ):with(function(self)
-                        for i = 1, #themes do
-                            if config.ahorn.theme == themes[i].data then
-                                self.selected = self:getItem(i)
-                                self.text = self.selected.text
-                                return
-                            end
+                    ):with({
+                        selectedData = config.ahorn.theme
+                    }):with(function(self)
+                        if not self.selected then
+                            self.text = tostring(config.ahorn.theme or "???")
                         end
-                        self.selected = self:getItem(1)
-                        self.text = tostring(config.ahorn.theme or "???")
                     end):with(uiu.fillWidth),
 
                     uie.group({}),

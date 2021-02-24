@@ -212,13 +212,7 @@ local root = uie.column({
                             end
                         }):with(function(self)
                             function self.updateSelected(self)
-                                for i = 1, #themes do
-                                    if config.theme == themes[i].data then
-                                        self.selected = self:getItem(i)
-                                        self.text = self.selected.text
-                                        break
-                                    end
-                                end
+                                self.selectedData = config.theme
                             end
 
                             self:updateSelected()
@@ -240,8 +234,7 @@ local root = uie.column({
                             end
                         }):with(function(self)
                             function self.updateSelected(self)
-                                self.selected = self:getItem(config.bg + 1)
-                                self.text = self.selected.text
+                                self.selectedIndex = config.bg + 1
                             end
 
                             self:updateSelected()
@@ -256,12 +249,10 @@ local root = uie.column({
                         end):with(function(self)
                             for i = 1, #qualities do
                                 if config.quality.id == qualities[i].data.id then
-                                    self.selected = self:getItem(i)
-                                    self.text = self.selected.text
+                                    self.selectedIndex = i
                                     return
                                 end
                             end
-                            self.selected = self:getItem(1)
                             self.text = "???"
                         end)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
@@ -275,10 +266,9 @@ local root = uie.column({
                         }, function(self, value)
                             config.overlay = value
                             config.save()
-                        end):with(function(self)
-                            self.selected = self:getItem(config.overlay <= 0 and 3 or config.overlay <= 0.5 and 2 or 1)
-                            self.text = self.selected.text
-                        end)
+                        end):with({
+                            selectedIndex = config.overlay <= 0 and 3 or config.overlay <= 0.5 and 2 or 1
+                        })
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
                     uie.column({
@@ -290,10 +280,9 @@ local root = uie.column({
                             config.vsync = value
                             config.save()
                             love.window.setVSync(value and 1 or 0)
-                        end):with(function(self)
-                            self.selected = self:getItem(config.vsync and 1 or 2)
-                            self.text = self.selected.text
-                        end)
+                        end):with({
+                            selectedIndex = config.vsync and 1 or 2
+                        })
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
 
                     uie.column({
@@ -302,17 +291,10 @@ local root = uie.column({
                             config.updates = value
                             config.save()
                             updater.check()
-                        end):with(function(self)
-                            for i = 1, #updatepaths do
-                                if config.updates == updatepaths[i].data then
-                                    self.selected = self:getItem(i)
-                                    self.text = self.selected.text
-                                    return
-                                end
-                            end
-                            self.selected = self:getItem(1)
-                            self.text = "???"
-                        end)
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.updates
+                        })
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(5 / optioncount, 0)),
 
                 }):with(uiu.fillWidth),
