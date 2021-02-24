@@ -356,10 +356,10 @@ scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
     buttonBig("mainmenu/everest", "Everest", function()
-        utils.launch(nil)
+        utils.launch(nil, false, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
     buttonBig("mainmenu/celeste", "Celeste", function()
-        utils.launch(nil, true)
+        utils.launch(nil, true, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(2.5 - 32 - 2, 0)),
     buttonBig("cogwheel", "", "everest"):with({
         width = 48

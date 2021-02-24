@@ -313,8 +313,15 @@ function utils.cleanHTML(body)
     return body
 end
 
-function utils.launch(path, vanilla)
-    return threader.routine(function()
+local launching = {}
+
+function utils.launch(path, vanilla, notify)
+    local key = string.format("%s | %s", path, vanilla and "vanilla" or "everest")
+    if launching[key] then
+        return launching[key]
+    end
+
+    launching[key] = threader.routine(function()
         if not path then
             local config = require("config")
             if config then
@@ -328,32 +335,41 @@ function utils.launch(path, vanilla)
 
         local sharp = require("sharp")
         local alert = require("alert")
+        notify = notify and require("notify") or alert
 
         local launching = sharp.launch(path, vanilla and "--vanilla" or nil)
         local container
 
         if vanilla then
-            container = alert([[
+            container = notify([[
 Celeste is now starting in the background.
 You can close this window.]])
         else
-            container = alert([[
+            container = notify([[
 Everest is now starting in the background.
 You can close this window.]])
         end
 
         local rv = launching:result()
         if rv == "missing" then
-            container:close()
+            if container and container.close then
+                container:close()
+            end
+
             alert([[
 Olympus couldn't find the Celeste launch binary.
 Please check if the installed version of Celeste matches your OS.
 If you are using Lutris or similar, you are on your own.]])
+            launching[key] = nil
             return false
         end
 
+        threader.sleep(5)
+        launching[key] = nil
         return true
     end)
+
+    return launching[key]
 end
 
 local ffiStatus, ffi = pcall(require, "ffix")
