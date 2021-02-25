@@ -107,7 +107,7 @@ end
 function love.load(args)
     local userOS = love.system.getOS()
 
-    local protocol
+    local protocolArg
 
     for i = 1, #args do
         local arg = args[i]
@@ -136,7 +136,7 @@ function love.load(args)
             arg = arg:match("^[Ee]verest:(.*)")
             if arg then
                 -- love.window.showMessageBox("Olympus Debug", "huh, neat.\n" .. require("fs").getcwd() .. "\n" .. protocol)
-                protocol = arg
+                protocolArg = arg
             end
         end
     end
@@ -546,30 +546,15 @@ function love.load(args)
     notify.init(root:findChild("notifyroot"))
 
     scener.set("mainmenu")
-    require("updater").check(not protocol)
     require("modinstaller").register()
 
     require("dragndrop")
 
-    if protocol then
-        require("modinstaller").install(protocol, function(launch)
-            if launch then
-                scener.set("installer")
-                launch:calls(function(task, launched)
-                    threader.routine(function()
-                        if launched then
-                            threader.sleep(1)
-                            love.event.quit()
-                            return
-                        end
+    if protocolArg then
+        require("updater").check(not require("protocol")(protocolArg))
 
-                        scener.pop()
-                    end)
-                end)
-            else
-                love.event.quit()
-            end
-        end)
+    else
+        require("updater").check(true)
     end
 
     if userOS == "OS X" and love.versionSDL and love.versionSDL.major == 2 and love.versionSDL.minor == 0 and love.versionSDL.patch < 12 then

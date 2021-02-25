@@ -43,9 +43,9 @@ Do you want to go to the Celeste installation manager?]],
         -- On macOS, launching an app via the browser requires special event handling.
         -- SDL2 exposes that as a file drop event.
         -- See https://bugzilla.libsdl.org/show_bug.cgi?id=5073
-        local protocol = file:match("^[Ee]verest:(.*)")
-        if protocol then
-            modinstaller.install(protocol)
+        local protocolArg = file:match("^[Ee]verest:(.*)")
+        if protocolArg then
+            require("protocol")(protocolArg)
             return
         end
 
