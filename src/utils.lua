@@ -318,6 +318,9 @@ local launching = {}
 function utils.launch(path, vanilla, notify)
     local key = string.format("%s | %s", path, vanilla and "vanilla" or "everest")
     if launching[key] then
+        require("alert")([[
+            Celeste is already starting up. Please wait.
+            You can close this window.]])
         return launching[key]
     end
 
@@ -337,7 +340,7 @@ function utils.launch(path, vanilla, notify)
         local alert = require("alert")
         notify = notify and require("notify") or alert
 
-        local launching = sharp.launch(path, vanilla and "--vanilla" or nil)
+        local launch = sharp.launch(path, vanilla and "--vanilla" or nil)
         local container
 
         if vanilla then
@@ -350,7 +353,7 @@ Everest is now starting in the background.
 You can close this window.]])
         end
 
-        local rv = launching:result()
+        local rv = launch:result()
         if rv == "missing" then
             if container and container.close then
                 container:close()
