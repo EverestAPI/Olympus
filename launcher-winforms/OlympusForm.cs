@@ -44,9 +44,10 @@ namespace Olympus {
             Console.WriteLine("Downloader thread running");
 
             if (Directory.Exists(Program.InstallDir) && Directory.GetFiles(Program.InstallDir).Length != 0) {
-                Invoke(() => {
-                    MessageBox.Show(
-                        @"
+                try {
+                    Invoke(() => {
+                        MessageBox.Show(
+                            @"
 A previous version of Olympus was already downloaded.
 Sadly, some important files went missing or are corrupted.
 
@@ -54,10 +55,15 @@ The Olympus downloader will now try to redownload them.
 If Olympus is still crashing or if this happens often:
 Please ping the Everest team on the Celeste Discord server.
                         ".Trim().Replace("\r\n", "\n"),
-                        "Olympus Downloader",
-                        MessageBoxButtons.OK
-                    );
-                });
+                            "Olympus Downloader",
+                            MessageBoxButtons.OK
+                        );
+                    });
+                } catch (Win32Exception e) {
+                    // FIXME: *Invoke itself* can fail on some PCs for no apparent reason.
+                    Console.WriteLine("Corrupt install message box invoke failed");
+                    Console.WriteLine(e);
+                }
             }
 
             Console.WriteLine($"Wiping {Program.InstallDir}");
@@ -134,11 +140,19 @@ Please ping the Everest team on the Celeste Discord server.
 
             Console.WriteLine("Done");
 
-            Invoke(() => {
+            try {
+                Invoke(() => {
+                    Program.StartMain();
+                    Application.Exit();
+                });
+            } catch (Win32Exception e) {
+                // FIXME: *Invoke itself* can fail on some PCs for no apparent reason.
+                Console.WriteLine("Downloader end invoke failed");
+                Console.WriteLine(e);
                 Program.StartMain();
-                Application.Exit();
-            });
-        }
+                Environment.Exit(0);
+            }
+}
 
         public static unsafe T LoadAsset<T>(string name, bool fullPath = false) where T : class {
             Assembly assembly = Assembly.GetExecutingAssembly();
