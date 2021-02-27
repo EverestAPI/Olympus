@@ -62,7 +62,7 @@ function background.new()
             local random = love.math.random
 
             local width, height = love.graphics.getWidth(), love.graphics.getHeight()
-            local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
+            local mouseX, mouseY = (ui.mouseX - width / 2) * config.parallax, (ui.mouseY - height / 2) * config.parallax
 
             if config.quality.bgSnow then
                 self.dotsSet = true
@@ -114,7 +114,7 @@ function background.new()
 
         drawBG = function(self)
             local width, height = love.graphics.getWidth() + 4, love.graphics.getHeight() + 4
-            local mouseX, mouseY = ui.mouseX - width / 2, ui.mouseY - height / 2
+            local mouseX, mouseY = (ui.mouseX - width / 2) * config.parallax, (ui.mouseY - height / 2) * config.parallax
             local time = self.time
             local cog = background.cog
 

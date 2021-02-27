@@ -112,6 +112,8 @@ function config.load()
 
     default(data, "overlay", 1)
 
+    default(data, "parallax", 1)
+
     default(data, "ahorn", {})
 
     default(data.ahorn, "rootPath", "")

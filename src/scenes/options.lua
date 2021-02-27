@@ -187,7 +187,7 @@ scene.bgPicker = uie.scrollbox(
     cacheable = false
 }):with(uiu.fillWidth):with(uiu.fillHeight(true))
 
-local optioncount = 6
+local optioncount = 4
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -216,11 +216,11 @@ local root = uie.column({
                             end
 
                             self:updateSelected()
-                        end):as("themeDropdown")
+                        end):with(uiu.fillWidth):as("themeDropdown")
                     }):with(uiu.fillWidth(8.25)),
 
                     uie.column({
-                        uie.label("Background"),
+                        uie.label("Background image"),
                         uie.dropdown(bgs):with({
                             onClick = function(self)
                                 local container = alert({
@@ -238,7 +238,7 @@ local root = uie.column({
                             end
 
                             self:updateSelected()
-                        end):as("bgDropdown")
+                        end):with(uiu.fillWidth):as("bgDropdown")
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
@@ -254,7 +254,7 @@ local root = uie.column({
                                 end
                             end
                             self.text = "???"
-                        end)
+                        end):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                     uie.column({
@@ -268,8 +268,29 @@ local root = uie.column({
                             config.save()
                         end):with({
                             selectedIndex = config.overlay <= 0 and 3 or config.overlay <= 0.5 and 2 or 1
-                        })
+                        }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
+
+                }):with(uiu.fillWidth),
+
+                uie.group({}),
+
+                uie.row({
+
+                    uie.column({
+                        uie.label("Parallax"),
+                        uie.dropdown({
+                            { text = "Enabled (Default)", data = 1 },
+                            { text = "Medium", data = 0.5 },
+                            { text = "Low", data = 0.2 },
+                            { text = "Disabled", data = 0 },
+                        }, function(self, value)
+                            config.parallax = value
+                            config.save()
+                        end):with({
+                            selectedIndex = config.parallax <= 0 and 4 or config.parallax <= 0.2 and 3 or config.parallax <= 0.5 and 2 or 1
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Vertical Sync"),
@@ -282,8 +303,8 @@ local root = uie.column({
                             love.window.setVSync(value and 1 or 0)
                         end):with({
                             selectedIndex = config.vsync and 1 or 2
-                        })
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Updates"),
@@ -294,10 +315,12 @@ local root = uie.column({
                         end):with({
                             placeholder = "???",
                             selectedData = config.updates
-                        })
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(5 / optioncount, 0)),
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                 }):with(uiu.fillWidth),
+
+                uie.group({}),
 
                 uie.row({
 

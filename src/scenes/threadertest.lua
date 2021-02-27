@@ -22,7 +22,7 @@ function scene.reloadSharp()
     if list then
         list.children = {}
     else
-        list = uie.column({}):with(uiu.fillWidth)
+        list = uie.paneled.column({}):with(uiu.fillWidth)
 
         all:addChild(list:as("listSharp"))
     end
@@ -83,7 +83,7 @@ function scene.reloadRun()
     if list then
         list.children = {}
     else
-        list = uie.column({}):with(uiu.fillWidth)
+        list = uie.paneled.column({}):with(uiu.fillWidth)
 
         all:addChild(list:as("listRun"))
     end
@@ -113,7 +113,7 @@ function scene.reloadRoutine()
     if list then
         list.children = {}
     else
-        list = uie.column({}):with(uiu.fillWidth)
+        list = uie.paneled.column({}):with(uiu.fillWidth)
 
         all:addChild(list:as("listRoutine"))
     end
