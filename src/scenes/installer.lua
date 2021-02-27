@@ -92,8 +92,8 @@ local root = uie.group({
 
             local cx = sx + w * 0.5
             local cy = sy + h * 0.5
-            local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
-            local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
+            local cmx = cx - (ui.mouseX - fw * 0.5) * 0
+            local cmy = cy - (ui.mouseY - fh * 0.5) * 0
 
             local shape = scene.shape
             if shape then
@@ -187,8 +187,8 @@ local root = uie.group({
 
             local cx = sx + w * 0.5
             local cy = sy + h * 0.5
-            local cmx = cx - (ui.mouseX - fw * 0.5) * 0.015
-            local cmy = cy - (ui.mouseY - fh * 0.5) * 0.015
+            local cmx = cx - (ui.mouseX - fw * 0.5) * 0
+            local cmy = cy - (ui.mouseY - fh * 0.5) * 0
 
             local shape = scene.shape
             if shape then
