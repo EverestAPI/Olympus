@@ -10,7 +10,7 @@ local loveSystemAsync = threader.wrap("love.system")
 local requestStatusChannel = require("love.thread").getChannel("utilsRequestStatus")
 local requestStatus, request
 if requestStatusChannel:peek() ~= 0 then
-    local requestStatus, request = pcall(require, "luajit-request")
+    requestStatus, request = pcall(require, "luajit-request")
     if not requestStatus then
         print("luajit-request not loaded")
         print(request)
