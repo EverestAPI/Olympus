@@ -26,6 +26,8 @@ namespace Olympus {
 
         public static readonly Encoding UTF8NoBOM = new UTF8Encoding(false);
 
+        public static Dictionary<string, Message> Cache = new Dictionary<string, Message>();
+
         public static void Main(string[] args) {
             bool debug = false;
             bool verbose = false;
@@ -123,6 +125,10 @@ namespace Olympus {
                         Stream stream = client.GetStream();
 
                         MessageContext ctx = new MessageContext();
+
+                        lock (Cache)
+                            foreach (Message msg in Cache.Values)
+                                ctx.Reply(msg);
 
                         Thread threadW = new Thread(() => {
                             try {
@@ -226,33 +232,49 @@ namespace Olympus {
                 if (verbose)
                     Console.Error.WriteLine("[sharp] Awaiting next command");
 
-                Message msg = new Message();
-
                 // Unique ID
-                msg.UID = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter));
+                string uid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter));
                 if (verbose)
-                    Console.Error.WriteLine($"[sharp] Receiving command {msg.UID}");
+                    Console.Error.WriteLine($"[sharp] Receiving command {uid}");
 
                 // Command ID
-                msg.CID = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter)).ToLowerInvariant();
-                Cmd cmd = Cmds.Get(msg.CID);
+                string cid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter)).ToLowerInvariant();
+                if (cid == "_ack") {
+                    reader.ReadTerminatedString(delimiter);
+                    if (verbose)
+                        Console.Error.WriteLine($"[sharp] Ack'd command {uid}");
+                    lock (Cache)
+                        if (Cache.ContainsKey(uid)) {
+                            Cache.Remove(uid);
+                        } else {
+                            Console.Error.WriteLine($"[sharp] Ack'd command that was already ack'd {uid}");
+                        }
+                    continue;
+                }
+
+                Message msg = new Message() {
+                    UID = uid,
+                    CID = cid
+                };
+
+                Cmd cmd = Cmds.Get(cid);
                 if (cmd == null) {
                     reader.ReadTerminatedString(delimiter);
-                    Console.Error.WriteLine($"[sharp] Unknown command {msg.CID}");
-                    msg.Error = "cmd failed running: not found: " + msg.CID;
+                    Console.Error.WriteLine($"[sharp] Unknown command {cid}");
+                    msg.Error = "cmd failed running: not found: " + cid;
                     ctx.Reply(msg);
                     continue;
                 }
 
                 if (verbose)
-                    Console.Error.WriteLine($"[sharp] Parsing args for {msg.CID}");
+                    Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
 
                 // Payload
                 object input = JsonConvert.DeserializeObject(reader.ReadTerminatedString(delimiter), cmd.InputType);
                 object output;
                 try {
                     if (verbose || cmd.LogRun)
-                        Console.Error.WriteLine($"[sharp] Executing {msg.CID}");
+                        Console.Error.WriteLine($"[sharp] Executing {cid}");
                     if (cmd.Taskable) {
                         output = Task.Run(() => cmd.Run(input));
                     } else {
@@ -260,7 +282,7 @@ namespace Olympus {
                     }
 
                 } catch (Exception e) {
-                    Console.Error.WriteLine($"[sharp] Failed running {msg.CID}: {e}");
+                    Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
                     msg.Error = "cmd failed running: " + e;
                     ctx.Reply(msg);
                     continue;
@@ -270,18 +292,22 @@ namespace Olympus {
                     task.ContinueWith(t => {
                         if (task.Exception != null) {
                             Exception e = task.Exception;
-                            Console.Error.WriteLine($"[sharp] Failed running task {msg.CID}: {e}");
+                            Console.Error.WriteLine($"[sharp] Failed running task {cid}: {e}");
                             msg.Error = "cmd task failed running: " + e;
                             ctx.Reply(msg);
                             return;
                         }
 
                         msg.Value = t.Result;
+                        lock (Cache)
+                            Cache[uid] = msg;
                         ctx.Reply(msg);
                     });
 
                 } else {
                     msg.Value = output;
+                    lock (Cache)
+                        Cache[uid] = msg;
                     ctx.Reply(msg);
                 }
             }

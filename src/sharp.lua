@@ -269,6 +269,11 @@ local function sharpthread()
                         end
                         sendReturn(data.UID, data)
 
+                        client:send(
+                            utils.toJSON(uid, { indent = false }) .. "\0\n" ..
+                            utils.toJSON("_ack", { indent = false }) .. "\0\n" ..
+                            utils.toJSON(nil, { indent = false }) .. "\0\n")
+
                         for i = 1, #waiting do
                             if waiting[i] == data.UID then
                                 table.remove(waiting, i)
