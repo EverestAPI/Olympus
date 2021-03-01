@@ -101,6 +101,40 @@ function love.errhand(...)
     print("ERROR")
     print(...)
     logDump()
+
+    if logFile then
+        logFile:close()
+        logFile = nil
+    end
+
+    if sharp then
+        sharp.stop()
+    end
+
+    if fs then
+        pcall(function()
+            local fromdir = fs.getStorageDir()
+            local todir = fs.joinpath(fromdir, "error " .. os.date("%Y-%m-%d %H-%M-%S"))
+
+            local function copy(name)
+                local from = fs.joinpath(fromdir, name)
+                local to = fs.joinpath(todir, name)
+                fs.mkdir(fs.dirname(to))
+
+                from = io.open(from, "rb")
+                local data = from:read("*a")
+                from:close()
+
+                to = io.open(to, "wb")
+                to:write(data)
+                to:close()
+            end
+
+            copy("log.txt")
+            copy("log-sharp.txt")
+        end)
+    end
+
     return _love_errhand(...)
 end
 
@@ -853,8 +887,12 @@ function love.keypressed(key, scancode, isrepeat)
     end
 
     if key == "f9" then
-        collectgarbage("collect")
-        collectgarbage("collect")
+        if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
+            error("SHIFT + F9")
+        else
+            collectgarbage("collect")
+            collectgarbage("collect")
+        end
     end
 
     if key == "f10" then

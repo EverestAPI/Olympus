@@ -252,6 +252,12 @@ namespace Olympus {
                     continue;
                 }
 
+                if (cid == "_stop") {
+                    // Let's hope that everyone knows how to handle this.
+                    Environment.Exit(0);
+                    continue;
+                }
+
                 Message msg = new Message() {
                     UID = uid,
                     CID = cid

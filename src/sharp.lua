@@ -114,6 +114,9 @@ local function sharpthread()
         local process = assert(subprocess.popen(pargs))
         local stdout = process.stdout
 
+        local stopping = false
+        local running = true
+
         local uid = "?"
 
         local function dprint(...)
@@ -180,7 +183,7 @@ local function sharpthread()
                 return part, true
             end
 
-            if err ~= "timeout" then
+            if err ~= "timeout" and not stopping then
                 print("[sharp read]", "hard error reconnecting", err, channelStatus:peek())
                 channelSet(channelStatus, "reread")
                 client:close()
@@ -207,7 +210,7 @@ local function sharpthread()
         local waiting = {}
         channelSet(channelStatusWaiting, waiting)
 
-        while true do
+        while running do
             channelSet(channelStatus, "idle")
 
             local nop = true
@@ -281,6 +284,11 @@ local function sharpthread()
                                 break
                             end
                         end
+
+                        if data.UID == "_stop" then
+                            running = false
+                            break
+                        end
                     end
 
                     ::next::
@@ -289,7 +297,7 @@ local function sharpthread()
             end
             client:settimeout(nil)
 
-            local cmd = channelQueue:pop()
+            local cmd = not stopping and channelQueue:pop()
             if not cmd and (socket.gettime() - lastSend) >= 0.4 then
                 cmd = timeoutping
             end
@@ -324,6 +332,10 @@ local function sharpthread()
                         channelSet(channelStatusTx, uid .. " " .. cid)
                     end
 
+                    if cid == "_stop" then
+                        stopping = true
+                    end
+
                     local argsSharp = {}
                     -- Olympus.Sharp expects C# Tuples, which aren't lists.
                     for i = 1, #args do
@@ -333,6 +345,10 @@ local function sharpthread()
                         utils.toJSON(uid, { indent = false }) .. "\0\n" ..
                         utils.toJSON(cid, { indent = false }) .. "\0\n" ..
                         utils.toJSON(argsSharp, { indent = false }) .. "\0\n")
+
+                    if stopping then
+                        break
+                    end
 
                     if not rv then
                         print("[sharp queue]", "hard error reconnecting", err, channelStatus:peek())
@@ -417,9 +433,9 @@ function sharp._run(cid, ...)
     local uid = string.format("(%s)(%s)#%d", cid, require("threader").id, tuid)
     tuid = tuid + 1
 
-    local status = channelStatus:peek(100)
+    local status = channelStatus:peek()
     if status == "rip" then
-        if cid == "_init" then
+        if cid == "_init" or cid == "_stop" then
             return false
         else
             error(string.format("Failed running %s %s: sharp thread died", uid, cid))
@@ -438,11 +454,11 @@ function sharp._run(cid, ...)
     dprint("awaiting return value")
     ::reget::
     local channelReturn = love.thread.getChannel("sharpReturn" .. uid)
-    local rv = channelReturn:demand(100)
+    local rv = channelReturn:demand(0.1)
     if not rv or rv == uid then
-        status = channelStatus:peek(100)
+        status = channelStatus:demand(0.1)
         if status == "rip" then
-            if cid == "_init" then
+            if cid == "_init" or cid == "_stop" then
                 channelReturn:release()
                 return false
             else
@@ -490,6 +506,10 @@ function sharp.init(debug, debugSharp)
     sharp.initStatus = sharp._run("_init")
 
     return sharp.initStatus
+end
+
+function sharp.stop()
+    sharp._run("_stop")
 end
 
 local function channelSetCb(channel, value)
