@@ -397,7 +397,7 @@ steps:
       git checkout ec6edc5c39c25e4eb3fca51b753f9995e97215da
       MACOSX_DEPLOYMENT_TARGET=10.7 make
       popd
-      cp luajit-2.0/src/libluajit.so love/love.app/Contents/Frameworks/Lua.frameworks/Versions/A/Lua
+      cp -f luajit-2.0/src/libluajit.so love/love.app/Contents/Frameworks/Lua.frameworks/Versions/A/Lua
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
