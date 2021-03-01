@@ -26,7 +26,7 @@ if lfsStatus then
     fs.attributes = lfs.attributes
 
     function fs.mkdir(path, mode)
-        return lfs.mkdir(path, mode or 509) -- 0o755
+        return lfs.mkdir(path, mode or 509) -- 0o775
     end
 
     function fs.isFile(path)
