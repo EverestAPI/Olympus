@@ -2,7 +2,7 @@
 # Olympus launch script bundled with Linux and macOS builds.
 
 # macOS doesn't have readlink -f and Linux can symlink this launch script.
-function realpath {
+realpath() {
     [ "." = "${1}" ] && n=${PWD} || n=${1}; while nn=$( readlink -n "$n" ); do n=$nn; done; echo "$n"
 }
 
