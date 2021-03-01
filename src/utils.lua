@@ -154,23 +154,30 @@ function utils.download(url, headers)
     local response, error = request.send(url, {
         headers = headers
     })
+
+    local body, code
     if not response then
-        return false, error
+        body = nil
+        code = error
+    else
+        body = response.body
+        code = response.code
     end
-    local body = response.body
-    local code = response.code
 
-    if body and code == 200 then
-        return body
+    if response then
+        if body and code == 200 then
+            return body
 
-    elseif code >= 300 and code <= 399 then
-        -- "Location" is correct but "location" is what curl sometimes spits out.
-        local redirect = (response.headers["Location"] or response.headers["location"] or ""):match("^%s*(.*)%s*$")
-        if not redirect then
-            return false, code, body
+        elseif code >= 300 and code <= 399 then
+            -- "Location" is correct but "location" is what curl sometimes spits out.
+            local redirect = response and (response.headers["Location"] or response.headers["location"] or ""):match("^%s*(.*)%s*$")
+            if not redirect then
+                return false, code, body
+            end
+            headers["Referer"] = url
+            url = redirect
+            goto retry
         end
-        headers["Referer"] = url
-        return utils.download(redirect, headers)
     end
 
     if code == 0 then
