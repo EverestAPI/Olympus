@@ -392,6 +392,11 @@ steps:
       rm -rf love/love.app/Contents/Frameworks/SDL2.framework
       cp -rf sdl2mount/SDL2.framework love/love.app/Contents/Frameworks/SDL2.framework
       hdiutil detach sdl2mount
+      git clone https://luajit.org/git/luajit-2.0.git -b v2.1
+      pushd luajit-2.0
+      MACOSX_DEPLOYMENT_TARGET=10.7 make
+      popd
+      cp luajit-2.0/src/libluajit.so love/love.app/Contents/Frameworks/Lua.frameworks/Versions/A/Lua
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
