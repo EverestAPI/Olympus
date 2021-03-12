@@ -800,7 +800,7 @@ function scene.item(info)
         end
 
         img = downloadImage(screenshots[1]._sFile, (screenshots[1]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-            "https://screenshots.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. (screenshots[1]._sFile220 or screenshots[1]._sFile100))
+            "https://screenshots.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. (screenshots[1]._sFile220 or screenshots[1]._sFile100 or screenshots[1]._sFile))
 
         if screenshots[2] then
             bg = downloadImage(screenshots[2]._sFile, (screenshots[2]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
