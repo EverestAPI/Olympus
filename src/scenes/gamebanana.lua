@@ -490,7 +490,7 @@ function scene.downloadInfo(entries, id)
         multicall = multicall ..
             mcitem(i, "itemtype", entry[1] or entry.itemtype) ..
             mcitem(i, "itemid", tostring(entry[2] or entry.itemid)) ..
-            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sGetProfileUrl()")
+            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sProfileUrl()")
     end
 
     local url = "https://api.gamebanana.com/Core/Item/Data?format=json_min&" .. multicall:sub(2)
