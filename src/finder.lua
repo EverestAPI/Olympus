@@ -36,6 +36,8 @@ function finder.findSteamRoot()
         local paths = {
             fs.joinpath(os.getenv("HOME"), ".local", "share", "Steam"),
             fs.joinpath(os.getenv("HOME"), ".steam", "steam"),
+            fs.joinpath(os.getenv("HOME"), ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam"),
+            fs.joinpath(os.getenv("HOME"), ".var", "app", "com.valvesoftware.Steam", ".steam", "steam"),
         }
 
         for i = 1, #paths do
