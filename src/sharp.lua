@@ -273,7 +273,7 @@ local function sharpthread()
                         sendReturn(data.UID, data)
 
                         client:send(
-                            utils.toJSON(uid, { indent = false }) .. "\0\n" ..
+                            utils.toJSON(data.UID, { indent = false }) .. "\0\n" ..
                             utils.toJSON("_ack", { indent = false }) .. "\0\n" ..
                             utils.toJSON(nil, { indent = false }) .. "\0\n")
 
