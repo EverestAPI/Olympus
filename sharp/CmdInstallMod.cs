@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdInstallMod : Cmd<string, string, IEnumerator> {
 
+        public static readonly string MirrorPattern = "https://celestemodupdater.0x0ade.ga/banana-mirror/{0}.zip";
+
         public override IEnumerator Run(string root, string url) {
             string mods = Path.Combine(root, "Mods");
             if (!Directory.Exists(mods))
@@ -42,9 +44,34 @@ namespace Olympus {
                     if (File.Exists(from))
                         File.Delete(from);
 
-                    yield return Status($"Downloading {url}", false, "download", false);
-                    using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
-                        yield return Download(url, 0, zipStream);
+                    uint gbid = 0;
+                    if ((url.StartsWith("http://gamebanana.com/dl/") && !uint.TryParse(url.Substring("http://gamebanana.com/dl/".Length), out gbid)) ||
+                        (url.StartsWith("https://gamebanana.com/dl/") && !uint.TryParse(url.Substring("https://gamebanana.com/dl/".Length), out gbid)) ||
+                        (url.StartsWith("http://gamebanana.com/mmdl/") && !uint.TryParse(url.Substring("http://gamebanana.com/mmdl/".Length), out gbid)) ||
+                        (url.StartsWith("https://gamebanana.com/mmdl/") && !uint.TryParse(url.Substring("https://gamebanana.com/mmdl/".Length), out gbid)))
+                        gbid = 0;
+
+                    if (gbid != 0) {
+                        yield return Status($"Downloading {gbid} from GameBanana", false, "download", false);
+                        Exception[] ea = new Exception[1];
+                        using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
+                            yield return Try(Download(url, 0, zipStream), ea);
+
+                        if (ea[0] != null) {
+                            yield return Status($"Downloading from GameBanana failed, trying mirror", false, "download", false);
+                            if (File.Exists(from))
+                                File.Delete(from);
+                            url = string.Format(MirrorPattern, gbid);
+                            yield return Status($"Downloading {url}", false, "download", false);
+                            using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
+                                yield return Download(url, 0, zipStream);
+                        }
+
+                    } else {
+                        yield return Status($"Downloading {url}", false, "download", false);
+                        using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
+                            yield return Download(url, 0, zipStream);
+                    }
                 }
 
                 using (FileStream zipStream = File.Open(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {

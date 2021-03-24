@@ -66,6 +66,23 @@ namespace Olympus {
             return new object[] { text, progress, shape, update };
         }
 
+
+        public static IEnumerator Try(IEnumerator inner, Exception[] ea) {
+            bool moveNext;
+            do {
+                try {
+                    moveNext = inner.MoveNext();
+                } catch (Exception e) {
+                    moveNext = false;
+                    ea[0] = e;
+                }
+                if (!moveNext)
+                    yield break;
+                yield return inner.Current;
+            } while (true);
+        }
+
+
         public static IEnumerator Download(string url, long length, Stream copy) {
             // The following blob of code mostly comes from the old Everest.Installer, which inherited it from the old ETGMod.Installer.
 
@@ -75,8 +92,12 @@ namespace Olympus {
 
             DateTime timeStart = DateTime.Now;
             int pos = 0;
-            using (WebClient wc = new WebClient()) {
-                using (Stream input = wc.OpenRead(url)) {
+
+            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(url);
+            req.Timeout = 10000;
+            req.ReadWriteTimeout = 10000;
+            using (HttpWebResponse res = (HttpWebResponse) req.GetResponse()) {
+                using (Stream input = res.GetResponseStream()) {
                     if (length == 0) {
                         if (input.CanSeek) {
                             // Mono
@@ -84,10 +105,10 @@ namespace Olympus {
                         } else {
                             // .NET
                             try {
-                                HttpWebRequest request = (HttpWebRequest) WebRequest.Create(url);
-                                request.Method = "HEAD";
-                                using (HttpWebResponse response = (HttpWebResponse) request.GetResponse())
-                                    length = response.ContentLength;
+                                HttpWebRequest reqHEAD = (HttpWebRequest) WebRequest.Create(url);
+                                reqHEAD.Method = "HEAD";
+                                using (HttpWebResponse resHEAD = (HttpWebResponse) reqHEAD.GetResponse())
+                                    length = resHEAD.ContentLength;
                             } catch (Exception) {
                                 length = 0;
                             }
