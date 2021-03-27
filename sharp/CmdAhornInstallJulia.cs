@@ -192,7 +192,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
 
                     yield return Status("Copying Julia", false, "download", false);
                     yield return Status("", false, "download", false);
-                    using (Process process = ProcessHelper.Wrap("cp", $"-rvf \"{Path.Combine(mount, beta ? "Julia-1.6.app" : "Julia-1.5.app", "Contents", "Resources", "julia")}\" \"{julia}\"")) {
+                    using (Process process = ProcessHelper.Wrap("cp", $"-rvf \"{Path.Combine(mount, beta ? "Julia-1.6.app" : "Julia-1.6.app", "Contents", "Resources", "julia")}\" \"{julia}\"")) {
                         process.Start();
                         for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                             yield return Status(line, false, "download", true);
