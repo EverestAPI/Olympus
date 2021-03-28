@@ -244,13 +244,15 @@ function scene.reloadInstalls(scene, cb)
         sharp.getVersionString(entry.path):calls(function(t, version)
             version = version or "???"
 
-            local celeste = version:match("Celeste ([^ ]+)")
-            local everest = version:match("Everest ([^ ]+)")
-            if everest then
-                version = celeste .. " + " .. everest
-
-            else
-                version = celeste or version
+            local celeste, everest
+            if version and version:sub(1, 4) ~= "? - " then
+                celeste = version:match("Celeste ([^ ]+)")
+                everest = version:match("Everest ([^ ]+)")
+                if celeste and everest then
+                    version = celeste .. " + " .. everest
+                else
+                    version = celeste or version
+                end
             end
 
             item.text = {{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\n" .. version}
