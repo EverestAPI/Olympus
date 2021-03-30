@@ -1,5 +1,6 @@
 local fs = require("fs")
 local utils = require("utils")
+local finder = require("finder")
 
 local configData = {}
 
@@ -72,6 +73,7 @@ function config.load()
         data.install = 1 -- Old versions of Olympus defaulted to 0
     end
     default(data, "installs", {})
+    finder.fixRoots(data.installs, true, true)
 
     local csd = os.getenv("OLYMPUS_CSD")
     if csd == "1" then

@@ -196,7 +196,7 @@ function finder.findSteamInstalls(id)
     local libraries = finder.findSteamLibraries()
     for i = 1, #libraries do
         local path = libraries[i]
-        path = fs.joinpath(path, "Celeste")
+        path = fs.joinpath(path, id)
         if fs.isDirectory(path) then
             print("[finder]", "steam install", path)
             list[#list + 1] = {
@@ -475,11 +475,11 @@ function finder.findLutrisYamlInstalls(name)
     end
 
     for game in fs.dir(games) do
-        game = game:match("^celeste-.+%.yml$") and fs.joinpath(games, game)
+        game = game:match("^" .. name:lower() .. "-.+%.yml$") and fs.joinpath(games, game)
         local data = game and utils.fromYAML(fs.read(game))
         if data and data.game and data.game then
             local path = data.game.exe
-            if path and path:match("Celeste.exe$") and fs.isFile(path) then
+            if path and path:match(name .. ".exe$") and fs.isFile(path) then
                 path = fs.dirname(path)
                 print("[finder]", "lutris yml install", path)
                 list[#list + 1] = {
@@ -534,19 +534,26 @@ function finder.fixRoot(root, appname)
         return nil
     end
 
-    root = fs.normalize(root)
     appname = appname or finder.defaultName
+
+    root = fs.normalize(root)
+    -- If dealing with a macOS root, get the root's root to get the new real root.
+    root = (
+        root:match([=[^(.*)[\/]]=] .. appname .. [=[%.app[\/]Contents[\/]Resources[\/]?$]=]) or
+        root:match([=[^(.*)[\/]]=] .. appname .. [=[%.app[\/]Contents[\/]MacOS[\/]?$]=]) or
+        root
+    )
 
     local dirs = {
         root,
+        fs.joinpath(root, appname .. ".app", "Contents", "Resources"), -- 1.3.3.0 and newer
         fs.joinpath(root, appname .. ".app", "Contents", "MacOS"), -- pre 1.3.3.0
-        fs.joinpath(root, appname .. ".app", "Contents", "Resources") -- 1.3.3.0 and newer
     }
 
     for i = 1, #dirs do
         local path = dirs[i]
-        if fs.isFile(fs.joinpath(path, "Celeste.exe")) then
-            print("[finder]", "found Celeste.exe root", path)
+        if fs.isFile(fs.joinpath(path, appname .. ".exe")) then
+            print("[finder]", "found " .. appname .. ".exe root", path)
             return path
         end
     end
@@ -567,6 +574,32 @@ local function channelSet(channel, value)
     channel:performAtomic(channelSetCb, value)
 end
 
+function finder.fixRoots(all, keepStale, keepDupe, appname)
+    for i = #all, 1, -1 do
+        local entryA = all[i]
+        local pathA = finder.fixRoot(entryA and entryA.path, appname)
+        if not pathA then
+            if not keepStale then
+                table.remove(all, i)
+            end
+        else
+            all[i].path = pathA
+            if not keepDupe then
+                local j = i + 1
+                while j <= #all do
+                    local entryB = all[j]
+                    local pathB = entryB.path
+                    if pathB and pathB == pathA then
+                        table.remove(all, j)
+                    else
+                        j = j + 1
+                    end
+                end
+            end
+        end
+    end
+end
+
 function finder.findAll(uncached)
     local all = uncached and channelCache:peek()
     if all then
@@ -582,25 +615,7 @@ function finder.findAll(uncached)
         finder.findUWPInstalls(finder.defaultUWPName)
     )
 
-    for i = #all, 1, -1 do
-        local entryA = all[i]
-        local pathA = finder.fixRoot(entryA and entryA.path)
-        if not pathA then
-            table.remove(all, i)
-        else
-            all[i].path = pathA
-            local j = i + 1
-            while j <= #all do
-                local entryB = all[j]
-                local pathB = entryB.path
-                if pathB and pathB == pathA then
-                    table.remove(all, j)
-                else
-                    j = j + 1
-                end
-            end
-        end
-    end
+    finder.fixRoots(all)
 
     channelSet(channelCache, all)
     return all
