@@ -92,7 +92,12 @@ function fs.dirname(path, sep)
     end
     sep = sep or fs.dirSeparator
 
-    path = path:match("(.*" .. sep .. ")"):gsub("([^/\\])[/\\]$", "%1")
+    path = path:match("(.*" .. sep .. ")")
+    if not path then
+        return nil
+    end
+
+    path = path:gsub("([^/\\])[/\\]$", "%1")
     return path
 end
 
