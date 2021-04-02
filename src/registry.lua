@@ -13,6 +13,8 @@ end
 registry.setKey = registry.setKeySharp
 
 
+-- Fuck LuaCOM. Besides the fact that it likes to not work at random, it also keeps main.exe alive.
+--[[
 local luacomStatus, luacom = pcall(require, "luacom")
 if luacomStatus and luacom then
   function registry.getKey(key)
@@ -42,3 +44,4 @@ if luacomStatus and luacom then
 end
 
 return registry
+]]
