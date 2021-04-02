@@ -77,6 +77,9 @@ function fs.getsrc()
 end
 
 function fs.filename(path, sep)
+    if not path then
+        return path
+    end
     sep = sep or fs.dirSeparator
 
     path = path:gsub("([^/\\])[/\\]$", "%1"):match("[^" .. sep .. "]+$")
@@ -84,6 +87,9 @@ function fs.filename(path, sep)
 end
 
 function fs.dirname(path, sep)
+    if not path then
+        return path
+    end
     sep = sep or fs.dirSeparator
 
     path = path:match("(.*" .. sep .. ")"):gsub("([^/\\])[/\\]$", "%1")

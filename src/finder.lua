@@ -212,7 +212,7 @@ function finder.findSteamInstalls(id)
         local shortcut = shortcuts[i]
 
         local path = shortcut.exe
-        path = path and fs.isDirectory(fs.dirname(path:match("^\"?([^\" ]*)")))
+        path = path and fs.isDirectory(fs.dirname(path:match("^\"?([^\" ]*)") or path))
         if fs.isDirectory(path) then
             -- print("[finder]", "steam shortcut", path)
             list[#list + 1] = {
