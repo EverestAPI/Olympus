@@ -43,5 +43,6 @@ if luacomStatus and luacom then
 
 end
 
-return registry
 ]]
+
+return registry

@@ -139,6 +139,8 @@ function love.errhand(...)
 end
 
 function love.load(args)
+    love.window.setDisplaySleepEnabled(true)
+
     local userOS = love.system.getOS()
 
     local protocolArg
@@ -526,6 +528,7 @@ function love.load(args)
         for i = 1, #pathbar.children do
             pathbar.children[i].enabled = not locked
         end
+        love.window.setDisplaySleepEnabled(not locked)
     end
 
     function scener.onChange(prev, next)
