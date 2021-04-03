@@ -357,7 +357,7 @@ DON'T CLOSE OLYMPUS OR IT WILL CONTINUE INSTALLING IN THE BACKGROUND.
 If you really need to cancel the installation process:
 ]] .. (
 (love.system.getOS() == "Windows" and "Open Task Manager and force-close julia.exe") or
-(love.system.getOS() == "macOS" and "Open the Activity Monitor and force-close the Julia process.") or
+(love.system.getOS() == "OS X" and "Open the Activity Monitor and force-close the Julia process.") or
 (love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
 ("... Good luck killing the Julia process.")),
         buttons = {
@@ -385,7 +385,7 @@ DON'T CLOSE OLYMPUS OR IT WILL CONTINUE UPDATING IN THE BACKGROUND.
 If you really need to cancel the installation process:
 ]] .. (
 (love.system.getOS() == "Windows" and "Open Task Manager and force-close julia.exe") or
-(love.system.getOS() == "macOS" and "Open the Activity Monitor and force-close the Julia process.") or
+(love.system.getOS() == "OS X" and "Open the Activity Monitor and force-close the Julia process.") or
 (love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
 ("... Good luck killing the Julia process.")),
         buttons = {
@@ -419,7 +419,7 @@ DON'T CLOSE OLYMPUS OR IT WILL CONTINUE UPDATING IN THE BACKGROUND.
 If you really need to cancel the installation process:
 ]] .. (
 (love.system.getOS() == "Windows" and "Open Task Manager and force-close julia.exe") or
-(love.system.getOS() == "macOS" and "Open the Activity Monitor and force-close the Julia process.") or
+(love.system.getOS() == "OS X" and "Open the Activity Monitor and force-close the Julia process.") or
 (love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
 ("... Good luck killing the Julia process.")),
             installed, found),
