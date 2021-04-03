@@ -72,6 +72,21 @@ Do you want to close Olympus?]],
     })
 end
 
+
+local function back()
+    if #alert.root.children > 0 then
+        alert.root.children[#alert.root.children]:close(false)
+
+    elseif not scener.locked then
+        if #scener.stack > 0 then
+            scener.pop()
+        else
+            askExit()
+            -- love.event.quit()
+        end
+    end
+end
+
 -- Needed to avoid running the same frame twice on resize
 -- and to avoid Löve2D's default sleep throttle.
 local _love_timer = love.timer
@@ -812,17 +827,7 @@ end
 
 function love.keypressed(key, scancode, isrepeat)
     if key == "escape" then
-        if #alert.root.children > 0 then
-            alert.root.children[#alert.root.children]:close(false)
-
-        elseif not scener.locked then
-            if #scener.stack > 0 then
-                scener.pop()
-            else
-                askExit()
-                -- love.event.quit()
-            end
-        end
+        back()
     end
 
     if key == "f11" then
@@ -905,5 +910,11 @@ function love.keypressed(key, scancode, isrepeat)
 
             ui.root:recollect()
         end
+    end
+end
+
+function love.mousepressed(x, y, button, istouch, presses)
+    if button == 4 then
+        back()
     end
 end
