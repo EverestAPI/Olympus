@@ -528,15 +528,35 @@ function scene.item(info)
 
     local containsEverestYaml = false
 
-    for id, file in pairs(files) do
-        if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
-            for k, v in pairs(file._aMetadata._aArchiveFileTree) do
-                if v == "everest.yaml" then
-                    containsEverestYaml = true
-                    file._id = id
-                    break
+    local function crawl(id, container, dir, key, value)
+        if type(value) == "table" then
+            dir = dir .. "/" .. key
+            for k, v in pairs(value) do
+                if not crawl(id, container, dir, k, v) then
+                    return false
                 end
             end
+            return true
+        end
+
+        if value == ".disable_gb1click" or value == ".disable_gb1click_everest" then
+            containsEverestYaml = false
+            container._id = false
+            return false
+        end
+
+        if dir == "/" and value == "everest.yaml" then
+            containsEverestYaml = true
+            container._id = id
+            return true
+        end
+
+        return true
+    end
+
+    for id, file in pairs(files) do
+        if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
+            crawl(id, file, "", "", file._aMetadata._aArchiveFileTree)
         end
     end
 
