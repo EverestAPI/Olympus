@@ -108,7 +108,7 @@ function utils.concat(...)
 end
 
 function utils.toURLComponent(value)
-    return value and value:gsub("([^%w _%%%-%.~])", function(c) return string.format("%%%02X", string.byte(c)) end):gsub(" ", "+")
+    return value and value:gsub("([^%w _%-%.~])", function(c) return string.format("%%%02X", string.byte(c)) end):gsub(" ", "+")
 end
 
 function utils.fromURLComponent(value)
