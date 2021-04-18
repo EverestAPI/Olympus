@@ -83,6 +83,14 @@ function alert.show(data)
         }
     end
 
+    if type(data.body) == "table" and data.body.is and data.body:is("group")
+        and data.body.clip and not data.body.skipAlertPadding then
+        data.body:with({
+            clipPadding = { 8, 4, 8, 8 },
+            cachePadding = { 8, 4, 8, 8 }
+        })
+    end
+
     if not data.buttons then
         data.buttons = {
             { "OK", function(container)
