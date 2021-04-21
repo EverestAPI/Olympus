@@ -7,12 +7,12 @@ local modinstaller = require("modinstaller")
 
 local scene = {
     name = "GameBanana",
-    sort = "",
-    itemtypeFilter = ""
+    sort = "latest",
+    itemtypeFilter = { filtertype = "itemtype", filtervalue = "" }
 }
 
 local sortOptions = {
-    { text = "Most Recent", data = "" },
+    { text = "Most Recent", data = "latest" },
     { text = "Most Downloaded", data = "downloads" },
     { text = "Most Viewed", data = "views" },
     { text = "Most Liked", data = "likes" }
@@ -265,8 +265,9 @@ function scene.loadPage(page)
 
         local entries, entriesError
         if not isQuery then
-            if scene.sort ~= "" then
-                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter)
+            -- The GameBanana Core/List/New API is only used when filters are default (Most Recent / All).
+            if scene.sort ~= "latest" or scene.itemtypeFilter.filtervalue ~= "" then
+                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
             else
                 entries, entriesError = scene.downloadEntries(page)
             end
@@ -284,7 +285,7 @@ function scene.loadPage(page)
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
             -- "Featured" should be inaccessible if there is a sort or a filter
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
             itemtypeFilterDropdown.enabled = not isQuery
@@ -306,7 +307,7 @@ function scene.loadPage(page)
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
             -- "Featured" should be inaccessible if there is a sort or a filter
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
             itemtypeFilterDropdown.enabled = not isQuery
@@ -324,7 +325,7 @@ function scene.loadPage(page)
         loading:removeSelf()
         scene.loadingPage = nil
         -- "Featured" should be inaccessible if there is a sort or a filter
-        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "" and scene.itemtypeFilter == "") or page > 1)
+        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
         pageNext.enabled = not isQuery
         sortDropdown.enabled = not isQuery
         itemtypeFilterDropdown.enabled = not isQuery
@@ -342,7 +343,7 @@ function scene.load()
 
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories"):result()
+        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories?version=2"):result()
 
         if not data then
             -- Error while calling the API
@@ -356,7 +357,14 @@ function scene.load()
             -- Convert the list retrieved from the API to a dropdown option list
             local allTypes = {}
             for _, category in ipairs(data) do
-                table.insert(allTypes, { text = category.formatted .. " (" .. category.count .. ")", data = category.itemtype })
+                table.insert(allTypes, {
+                    text = category.formatted .. " (" .. category.count .. ")",
+                    data = {
+                        -- filters can either be category ids, or item types.
+                        filtertype = category.itemtype and "itemtype" or "category",
+                        filtervalue = category.itemtype or category.categoryid
+                    }
+                })
             end
 
             -- Refresh the dropdown
@@ -381,7 +389,7 @@ function scene.downloadEntries(page)
         return scene.downloadFeaturedEntries()
     end
 
-    local url = "https://api.gamebanana.com/Core/List/New?format=json_min&gameid=6460&page=" .. tostring(page) .. (scene.itemtypeFilter ~= "" and "&itemtype=" .. scene.itemtypeFilter or "")
+    local url = "https://api.gamebanana.com/Core/List/New?format=json_min&gameid=6460&page=" .. tostring(page)
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -417,8 +425,12 @@ function scene.downloadSearchEntries(query)
     return data, msg
 end
 
-function scene.downloadSortedEntries(page, sort, itemtype)
-    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" .. (sort ~= "" and "sort=" .. sort .. "&" or "") .. (itemtype ~= "" and "type=" .. itemtype .. "&" or "") .. "page=" .. page
+function scene.downloadSortedEntries(page, sort, itemtypeFilterType, itemtypeFilterValue)
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" ..
+        (sort ~= "" and "sort=" .. sort .. "&" or "") ..
+        (itemtypeFilterValue ~= "" and itemtypeFilterType .. "=" .. itemtypeFilterValue .. "&" or "") ..
+        "page=" .. page
+
     local data = scene.cache[url]
     if data ~= nil then
         return data
