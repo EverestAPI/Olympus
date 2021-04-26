@@ -682,6 +682,10 @@ function scene.item(info)
                                     end
                                 end
 
+                                table.sort(btns, function(a, b)
+                                    return a._tsDateAdded > b._tsDateAdded
+                                end)
+
                                 for i = 1, #btns do
                                     local file = btns[i]
                                     btns[i] = uie[i == 1 and "buttonGreen" or "button"](
