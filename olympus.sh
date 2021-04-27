@@ -7,7 +7,7 @@ if [ -f "olympus.new.love" ]; then
     if [ -n "${OLYMPUS_RESTARTER_PID+x}" ]; then
         attempt=0
         while [ "$attempt" -lt 30 ] && kill -0 "$OLYMPUS_RESTARTER_PID"; do
-            attempt=$((attempt + 1))
+            $((attempt += 1))
             sleep 0.1
         done
     fi
