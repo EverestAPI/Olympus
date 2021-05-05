@@ -308,7 +308,12 @@ function scene.update(status, progress, shape, replace)
 end
 
 
-function scene.done(buttons)
+function scene.done(success, buttons)
+    if not buttons then
+        buttons = success
+        success = true
+    end
+
     native.flashWindow()
 
     local row = uie.row({}):with({
@@ -327,7 +332,7 @@ function scene.done(buttons)
         row:addChild(btn)
     end
 
-    scene.actionsholder:addChild(row:with(utils.importantCheck(24)))
+    scene.actionsholder:addChild(row:with(success and utils.importantCheck(24) or utils.important(24)))
     scene.actionsrow = row
 end
 
@@ -357,7 +362,7 @@ function scene.sharpTask(id, ...)
         local status = sharp.free(task):result()
         if status == "error" then
             scene.update(last and last[1], 1, "error", true)
-            scene.done({
+            scene.done(false, {
                 {
                     "Open log",
                     function()

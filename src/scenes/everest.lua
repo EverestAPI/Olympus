@@ -152,7 +152,7 @@ function scene.install()
             local path = fs.openDialog("zip"):result()
             if not path then
                 installer.update("Installation canceled", 1, "error")
-                installer.done({
+                installer.done(false, {
                     {
                         "Retry",
                         function()
