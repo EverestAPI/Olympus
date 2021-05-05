@@ -529,6 +529,25 @@ function finder.findUWPInstalls(package)
 end
 
 
+function finder.findRunningInstall(name)
+    if not sharpStatus then
+        return {}
+    end
+
+    local path = sharp.getRunningPath("", name):result()
+    if not path or #path == 0 then
+        return {}
+    end
+
+    return {
+        {
+            type = "manual",
+            path = path
+        }
+    }
+end
+
+
 function finder.fixRoot(root, appname)
     if not root or #root == 0 then
         return nil
@@ -612,6 +631,7 @@ function finder.findAll(uncached)
         finder.findItchInstalls(finder.defaultName),
         finder.findLutrisInstalls(finder.defaultName),
         finder.findLegendaryInstalls(finder.defaultName),
+        finder.findRunningInstall(finder.defaultName),
         finder.findUWPInstalls(finder.defaultUWPName)
     )
 

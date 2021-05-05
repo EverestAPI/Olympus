@@ -130,6 +130,7 @@ function fs.normalize(path)
 
     local fixed = ""
     local real = true
+    local sensitive = love.system.getOS() ~= "Windows"
     for part in path:gmatch("([^/\\]*)") do
         if part == "" then
             if fixed == "" then
@@ -138,7 +139,7 @@ function fs.normalize(path)
             goto skip
         end
 
-        if #fixed ~= 0 and real then
+        if #fixed ~= 0 and real and sensitive then
             real = false
             local status = pcall(function()
                 for realpart in fs.dir(fixed) do
