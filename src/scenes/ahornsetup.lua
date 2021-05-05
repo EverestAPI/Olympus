@@ -601,7 +601,7 @@ function scene.reload()
             }):with(uiu.fillWidth)
 
             if important then
-                row = row:with(utils.important(24))
+                row = row:with(important == "check" and utils.importantCheck(24) or utils.important(24))
             end
 
             return row
@@ -686,7 +686,7 @@ Ahorn-VHD will be loaded to:
 %s]],
                     tostring(info.VHDPath), tostring(info.VHDMountPath)
                 )),
-                btnRow({
+                btnRow("check", {
                     { "disk_mount", "Load Ahorn-VHD", scene.sharpTaskScreenGen("ahornMountAhornVHD") }
                 })
             }):with(uiu.fillWidth))
@@ -781,7 +781,7 @@ Found installation path:
 Found version: %s]],
                         tostring(info.AhornPath), tostring(info.AhornVersion)
                     )),
-                    btnRow({
+                    btnRow("check", {
                         { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
                         { "update", "Force update", scene.forceUpdateAhornAlert }
                     }):with(function(row)

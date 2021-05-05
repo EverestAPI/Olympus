@@ -94,6 +94,7 @@ end
 
 utils.important = utils._important("important")
 utils.importantPin = utils._important("importantPin")
+utils.importantCheck = utils._important("importantCheck")
 
 function utils.concat(...)
     local all = {}

@@ -206,7 +206,7 @@ anything to work in the near future, if at all.]],
                         else
                             add()
                         end
-                    end):with(utils.important(24, function() return #config.installs == 0 end))
+                    end):with(entry.type == "uwp" and utils.important(24) or utils.importantCheck(24, function() return #config.installs == 0 end))
                 )
 
             }):with({
@@ -277,7 +277,9 @@ function scene.reloadManual()
 
         local installs = config.installs
 
+        local foundAny
         if #installs > 0 then
+            foundAny = true
             for i = 1, #installs do
                 local entry = installs[i]
                 scene.createEntry(listManual, entry, i)
@@ -285,6 +287,7 @@ function scene.reloadManual()
             end
 
         else
+            foundAny = false
             local info = uie.label([[
 Olympus needs to know which Celeste installations you want to manage.
 Automatically found installations will be listed below and can be added to this list.
@@ -292,7 +295,8 @@ Manually select Celeste.exe if no installations have been found automatically.]]
             listManual:addChild(info)
 
             local function handleFound(task, all)
-                if #all > 0 then
+                foundAny = #all > 0
+                if foundAny then
                     info.text = [[
 Olympus needs to know which Celeste installations you want to manage.
 You can add automatically found installations from the list below to this one.
@@ -313,7 +317,7 @@ No installations were found automatically. Manually select Celeste.exe to add it
             end
         end
 
-        listManual:addChild(uie.button("Manually select Celeste.exe", scene.browse):with(utils.important(24, function() return #config.installs == 0 end)))
+        listManual:addChild(uie.button("Manually select Celeste.exe", scene.browse):with(utils.important(24, function() return not foundAny end)))
     end)
 end
 

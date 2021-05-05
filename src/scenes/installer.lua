@@ -327,7 +327,7 @@ function scene.done(buttons)
         row:addChild(btn)
     end
 
-    scene.actionsholder:addChild(row:with(utils.important(24)))
+    scene.actionsholder:addChild(row:with(utils.importantCheck(24)))
     scene.actionsrow = row
 end
 
