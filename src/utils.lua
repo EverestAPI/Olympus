@@ -323,7 +323,7 @@ end
 
 local launching = {}
 
-function utils.launch(path, vanilla, notify)
+function utils.launch(path, vanilla, notify, force)
     local key = string.format("%s | %s", path, vanilla and "vanilla" or "everest")
     if launching[key] then
         require("alert")([[
@@ -348,7 +348,7 @@ function utils.launch(path, vanilla, notify)
         local alert = require("alert")
         notify = notify and require("notify") or alert
 
-        local launch = sharp.launch(path, vanilla and "--vanilla" or nil)
+        local launch = sharp.launch(path, vanilla and "--vanilla" or "", (force or not notify) and true or false)
         local container
 
         if vanilla then
@@ -371,6 +371,37 @@ You can close this window.]])
 Olympus couldn't find the Celeste launch binary.
 Please check if the installed version of Celeste matches your OS.
 If you are using Lutris or similar, you are on your own.]])
+            launching[key] = nil
+            return false
+        end
+
+        if rv == "running" then
+            if container and container.close then
+                container:close()
+            end
+
+            alert({
+                body = [[
+Celeste (or something looking like Celeste) is already running.
+If you can't see it, it's probably still launching]] .. (
+    (love.system.getOS() == "Windows" and " - check the Task Manager") or
+    (love.system.getOS() == "OS X" and " - check the Activity Monitor") or
+    (love.system.getOS() == "Linux" and " - check htop") or
+    ("")
+) .. [[.
+
+Do you want to launch another instance anyway?]],
+                buttons = {
+                    {
+                        "Launch",
+                        function(container)
+                            utils.launch(path, vanilla, notify, true)
+                            container:close("OK")
+                        end
+                    },
+                    { "Cancel" }
+                }
+            })
             launching[key] = nil
             return false
         end
