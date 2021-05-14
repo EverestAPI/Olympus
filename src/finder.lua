@@ -5,6 +5,14 @@ local sqlite3status, sqlite3 = pcall(require, "lsqlite3")
 if not sqlite3status then
     sqlite3status, sqlite3 = pcall(require, "lsqlite3complete")
 end
+if not sqlite3status then
+    sqlite3status, sqlite3 = pcall(require, "lsqlite3")
+    print("Failed loading lsqlite3")
+    print(sqlite3)
+    sqlite3status, sqlite3 = pcall(require, "lsqlite3complete")
+    print("Failed loading lsqlite3complete")
+    print(sqlite3)
+end
 local sharpStatus, sharp = pcall(require, "sharp")
 require("love.system")
 
@@ -361,6 +369,9 @@ end
 
 function finder.findItchInstalls(name)
     local list = {}
+    if not sqlite3status then
+        return list
+    end
 
     local dbPath = finder.findItchDatabase()
     if not dbPath then
@@ -417,6 +428,9 @@ end
 
 function finder.findLutrisDatabaseInstalls(name)
     local list = {}
+    if not sqlite3status then
+        return list
+    end
 
     local dbPath = finder.findLutrisDatabase()
     if not dbPath then
