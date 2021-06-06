@@ -153,7 +153,9 @@ Ahorn will use the following theme:]]),
                     uie.label("ahornsetup.lua machine broke, please fix."),
 
                 }):with({
-                    locked = true
+                    locked = true,
+                    clip = false,
+                    cacheable = false,
                 }):hook({
                     layoutLateLazy = function(orig, self)
                         self:layoutLate()

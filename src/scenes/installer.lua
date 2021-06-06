@@ -208,6 +208,7 @@ local root = uie.group({
 
                 }):with({
                     clip = false,
+                    cacheable = false,
                     locked = true
                 }):hook({
                     layoutLateLazy = function(orig, self)
