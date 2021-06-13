@@ -19,9 +19,14 @@ namespace Olympus {
 
             if (PlatformHelper.Is(Platform.Unix)) {
                 // macOS lacks procfs and this sucks but oh well.
-                string path = ProcessHelper.Read(
+                // FIXME: This can hang on some macOS machines, but running ps in terminal works?! Further debugging required!
+                if (PlatformHelper.Is(Platform.MacOS))
+                    return null;
+
+                string path = ProcessHelper.ReadTimeout(
                     "ps",
                     "-wweo args",
+                    1000,
                     out _
                 ).Trim().Split('\n').FirstOrDefault(p => (string.IsNullOrEmpty(root) || p.Contains(root)) && p.ToLowerInvariant().Contains(procname))?.Trim();
 

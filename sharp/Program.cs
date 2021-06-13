@@ -43,6 +43,8 @@ namespace Olympus {
                 }
             }
 
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
+
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
@@ -187,6 +189,12 @@ namespace Olympus {
 
             Console.Error.WriteLine("[sharp] Goodbye");
 
+        }
+
+        private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
+            Exception ex = e.ExceptionObject as Exception ?? new Exception("Unknown unhandled exception");
+            Console.Error.WriteLine(e.IsTerminating ? "FATAL ERROR" : "UNHANDLED ERROR");
+            Console.Error.WriteLine(ex.ToString());
         }
 
         public static void WriteLoop(Process parentProc, MessageContext ctx, StreamWriter writer, bool verbose, char delimiter = '\0') {

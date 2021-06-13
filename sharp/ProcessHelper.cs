@@ -27,11 +27,35 @@ namespace Olympus {
         }
 
         public static string Read(string name, string args, out string err) {
-            using (Process process = Wrap(name, args)) {
-                process.Start();
-                process.WaitForExit();
-                err = process.StandardError.ReadToEnd().Trim();
-                return process.StandardOutput.ReadToEnd().Trim();
+            try {
+                using (Process process = Wrap(name, args)) {
+                    process.Start();
+                    process.WaitForExit();
+                    err = process.StandardError.ReadToEnd().Trim();
+                    return process.StandardOutput.ReadToEnd().Trim();
+                }
+            } catch (Exception e) {
+                Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
+                Console.Error.WriteLine(e);
+                err = "";
+                return "";
+            }
+        }
+
+        public static string ReadTimeout(string name, string args, int timeout, out string err) {
+            // FIXME: WaitForExit isn't brutal enough on macOS. Maybe use a separate thread?
+            try {
+                using (Process process = Wrap(name, args)) {
+                    process.Start();
+                    process.WaitForExit(timeout);
+                    err = process.StandardError.ReadToEnd().Trim();
+                    return process.StandardOutput.ReadToEnd().Trim();
+                }
+            } catch (Exception e) {
+                Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
+                Console.Error.WriteLine(e);
+                err = "";
+                return "";
             }
         }
 
