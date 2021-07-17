@@ -7,19 +7,19 @@ local modinstaller = require("modinstaller")
 
 local scene = {
     name = "GameBanana",
-    sort = "latest",
-    itemtypeFilter = { filtertype = "itemtype", filtervalue = "" }
+    sort = "_tsDateUpdated",
+    categoryFilter = ""
 }
 
 local sortOptions = {
-    { text = "Most Recent", data = "latest" },
-    { text = "Most Downloaded", data = "downloads" },
-    { text = "Most Viewed", data = "views" },
-    { text = "Most Liked", data = "likes" }
+    { text = "Last Updated", data = "_tsDateUpdated" },
+    { text = "Most Downloaded", data = "_nDownloadCount" },
+    { text = "Most Viewed", data = "_nViewCount" },
+    { text = "Most Liked", data = "_nLikeCount" }
 }
 
 -- this will be the type filter dropdown content until the type list is loaded through the API.
-local itemtypeOptionsTemp = {
+local categoryOptionsTemp = {
     { text = "All", data = "" }
 }
 
@@ -135,14 +135,14 @@ local root = uie.column({
                 ):as("sort"),
 
                 uie.dropdown(
-                    itemtypeOptionsTemp,
+                    categoryOptionsTemp,
                     function(self, value)
-                        if value ~= scene.itemtypeFilter then
-                            scene.itemtypeFilter = value
+                        if value ~= scene.categoryFilter then
+                            scene.categoryFilter = value
                             scene.loadPage(1)
                         end
                     end
-                ):as("itemtypeFilter"),
+                ):as("categoryFilter"),
 
                 uie.field(
                     "",
@@ -210,7 +210,7 @@ function scene.loadPage(page)
     end
 
     scene.loadingPage = threader.routine(function()
-        local lists, pagePrev, pageLabel, pageNext, sortDropdown, itemtypeFilterDropdown = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext", "sort", "itemtypeFilter")
+        local lists, pagePrev, pageLabel, pageNext, sortDropdown, categoryFilterDropdown = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext", "sort", "categoryFilter")
 
         local errorPrev = root:findChild("error")
         if errorPrev then
@@ -232,12 +232,12 @@ function scene.loadPage(page)
         pageNext.enabled = false
         sortDropdown.enabled = false
         sortDropdown.visible = not isQuery
-        itemtypeFilterDropdown.enabled = false
-        itemtypeFilterDropdown.visible = not isQuery
+        categoryFilterDropdown.enabled = false
+        categoryFilterDropdown.visible = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
         sortDropdown:reflow()
-        itemtypeFilterDropdown:reflow()
+        categoryFilterDropdown:reflow()
 
         if not isQuery then
             if page == 0 then
@@ -265,12 +265,7 @@ function scene.loadPage(page)
 
         local entries, entriesError
         if not isQuery then
-            -- The GameBanana Core/List/New API is only used when filters are default (Most Recent / All).
-            if scene.sort ~= "latest" or scene.itemtypeFilter.filtervalue ~= "" then
-                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
-            else
-                entries, entriesError = scene.downloadEntries(page)
-            end
+            entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.categoryFilter, page == 0)
         else
             entries, entriesError = scene.downloadSearchEntries(page)
         end
@@ -285,54 +280,32 @@ function scene.loadPage(page)
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
             -- "Featured" should be inaccessible if there is a sort or a filter
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "_tsDateUpdated" and scene.categoryFilter == "") or page > 1)
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
-            itemtypeFilterDropdown.enabled = not isQuery
+            categoryFilterDropdown.enabled = not isQuery
             pagePrev:reflow()
             pageNext:reflow()
             sortDropdown:reflow()
-            itemtypeFilterDropdown:reflow()
+            categoryFilterDropdown:reflow()
             return
         end
 
-        local infos, infosError = scene.downloadInfo(entries)
-        if not infos then
-            loading:removeSelf()
-            root:addChild(uie.paneled.row({
-                uie.label("Error downloading mod info: " .. tostring(infosError)),
-            }):with({
-                clip = false,
-                cacheable = false
-            }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
-            scene.loadingPage = nil
-            -- "Featured" should be inaccessible if there is a sort or a filter
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
-            pageNext.enabled = not isQuery
-            sortDropdown.enabled = not isQuery
-            itemtypeFilterDropdown.enabled = not isQuery
-            pagePrev:reflow()
-            pageNext:reflow()
-            sortDropdown:reflow()
-            itemtypeFilterDropdown:reflow()
-            return
-        end
-
-        for i = 1, #infos do
-            lists.next:addChild(scene.item(infos[i]))
+        for i = 1, #entries do
+            lists.next:addChild(scene.item(entries[i]))
         end
 
         loading:removeSelf()
         scene.loadingPage = nil
         -- "Featured" should be inaccessible if there is a sort or a filter
-        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
+        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "_tsDateUpdated" and scene.categoryFilter == "") or page > 1)
         pageNext.enabled = not isQuery
         sortDropdown.enabled = not isQuery
-        itemtypeFilterDropdown.enabled = not isQuery
+        categoryFilterDropdown.enabled = not isQuery
         pagePrev:reflow()
         pageNext:reflow()
         sortDropdown:reflow()
-        itemtypeFilterDropdown:reflow()
+        categoryFilterDropdown:reflow()
     end)
     return scene.loadingPage
 end
@@ -341,9 +314,9 @@ end
 function scene.load()
     scene.loadPage(0)
 
-    -- Load the categories / item types list upon entering the GameBanana screen
+    -- Load the categories list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories?version=2"):result()
+        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv3/ModCategory/ByGame?_aGameRowIds%5B%5D=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
 
         if not data then
             -- Error while calling the API
@@ -357,21 +330,27 @@ function scene.load()
             -- Convert the list retrieved from the API to a dropdown option list
             local allTypes = {}
             for _, category in ipairs(data) do
-                table.insert(allTypes, {
-                    text = category.formatted .. " (" .. category.count .. ")",
-                    data = {
-                        -- filters can either be category ids, or item types.
-                        filtertype = category.itemtype and "itemtype" or "category",
-                        filtervalue = category.itemtype or category.categoryid
-                    }
-                })
+                if category._idParentCategoryRow == 0 then
+                    table.insert(allTypes, {
+                        text = category._sName,
+                        data = category._idRow
+                    })
+                end
             end
 
+            -- Sort categories by ascending name
+            table.sort(allTypes, function(a, b)
+                return a.text < b.text
+            end)
+
+            -- Add back the "All" option
+            table.insert(allTypes, 1, { text = "All", data = "" })
+
             -- Refresh the dropdown
-            local itemtypeFilterDropdown = scene.root:findChild("itemtypeFilter")
-            itemtypeFilterDropdown.data = allTypes
-            itemtypeFilterDropdown:setText(allTypes[1].text)
-            itemtypeFilterDropdown:reflow()
+            local categoryFilterDropdown = scene.root:findChild("categoryFilter")
+            categoryFilterDropdown.data = allTypes
+            categoryFilterDropdown:setText(allTypes[1].text)
+            categoryFilterDropdown:reflow()
         end
     end)
 
@@ -384,192 +363,71 @@ function scene.enter()
 end
 
 
-function scene.downloadEntries(page)
-    if page == 0 then
-        return scene.downloadFeaturedEntries()
-    end
-
-    local url = "https://api.gamebanana.com/Core/List/New?format=json_min&gameid=6460&page=" .. tostring(page)
-    local data = scene.cache[url]
-    if data ~= nil then
-        return data
-    end
-
-    local attempt = 0
-    ::retry::
-    local msg
-    data, msg = threader.wrap("utils").downloadJSON(url):result()
-    if data then
-        scene.cache[url] = data
-    else
-        attempt = attempt + 1
-        if attempt < 5 then
-            goto retry
-        end
-    end
-    return data, msg
-end
-
 function scene.downloadSearchEntries(query)
-    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?version=2&q=" .. utils.toURLComponent(query)
     local data = scene.cache[url]
     if data ~= nil then
         return data
     end
 
-    local msg
-    data, msg = threader.wrap("utils").downloadYAML(url):result()
-    if data then
-        scene.cache[url] = data
-    end
-    return data, msg
-end
-
-function scene.downloadSortedEntries(page, sort, itemtypeFilterType, itemtypeFilterValue)
-    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" ..
-        (sort ~= "" and "sort=" .. sort .. "&" or "") ..
-        (itemtypeFilterValue ~= "" and itemtypeFilterType .. "=" .. itemtypeFilterValue .. "&" or "") ..
-        "page=" .. page
-
-    local data = scene.cache[url]
-    if data ~= nil then
-        return data
-    end
-
-    local msg
-    data, msg = threader.wrap("utils").downloadYAML(url):result()
-    if data then
-        scene.cache[url] = data
-    end
-    return data, msg
-end
-
-function scene.downloadFeaturedEntries()
-    local url = "https://api.gamebanana.com/Rss/Featured?gameid=6460"
-    local entries = scene.cache[url]
-    if entries ~= nil then
-        return entries
-    end
-
-    local attempt = 0
-    ::retry::
-    local data, msg = threader.wrap("utils").downloadXML(url):result()
-    if not data then
-        attempt = attempt + 1
-        if attempt < 5 then
-            goto retry
-        end
-        return data, msg
-    end
-
-    local items = data.rss.items.item
-    entries = {}
-    for i = 1, #items do
-        local item = items[i]
-        local itemtype, id = item.link:match("https://.*/(.*)/(.*)")
-        id = tonumber(id)
-        if itemtype and id then
-            entries[#entries + 1] = { itemtype:sub(1, 1):upper() .. itemtype:sub(2, #itemtype - 1), id }
-        end
-    end
-
-    scene.cache[url] = entries
-    return entries, msg
-end
-
-
-function scene.downloadInfo(entries, id)
-    if not entries then
-        return threader.wrap("utils").nop()
-    end
-
-    local function mcitem(index, key, value)
-        return string.format("&%s[%d]=%s", key, index, value)
-    end
-
-    if id then
-        entries = {{ entries, id }}
-        mcitem = function(index, key, value)
-            return string.format("&%s=%s", key, value)
-        end
-    end
-
-    local multicall = ""
-    for ei = 1, #entries do
-        local entry = entries[ei]
-
-        local i = ei - 1
-        multicall = multicall ..
-            mcitem(i, "itemtype", entry[1] or entry.itemtype) ..
-            mcitem(i, "itemid", tostring(entry[2] or entry.itemid)) ..
-            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sProfileUrl()")
-    end
-
-    local url = "https://api.gamebanana.com/Core/Item/Data?format=json_min&" .. multicall:sub(2)
-    local data = scene.cache[url]
-    if data ~= nil then
-        return data
-    end
-
-    local attempt = 0
-    ::retry::
     local msg
     data, msg = threader.wrap("utils").downloadJSON(url):result()
     if data then
         scene.cache[url] = data
-    else
-        attempt = attempt + 1
-        if attempt < 5 then
-            goto retry
-        end
     end
     return data, msg
 end
 
+function scene.downloadSortedEntries(page, sort, categoryFilter, featured)
+    local url
+    if categoryFilter ~= "" then
+        url = "https://gamebanana.com/apiv3/Mod/ByCategory?_aCategoryRowIds%5B%5D=" .. categoryFilter
+    else
+        url = "https://gamebanana.com/apiv3/Mod/ByGame?_aGameRowIds%5B%5D=6460"
+
+        if featured then
+            url = url .. "&_aArgs%5B%5D=_sbWasFeatured%20%3D%20true"
+        end
+    end
+
+    url = url .. "&_sRecordSchema=Olympus&_sOrderBy=" .. sort .. ",DESC&_nPage=" .. (featured and 1 or page) .. "&_nPerpage=20"
+
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadJSON(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
+end
 
 function scene.item(info)
     if not info or info.error then
         return nil
     end
 
-    local withheld, name, owner, date, description, text, views, likes, downloads, screenshotsRaw, files, website = table.unpack(info)
+    local name = info._sName
+    local owner = info._aSubmitter._sName
+    local date = info._tsDateAdded
+    local description = info._sDescription
+    local text = info._sText
+    local views = info._nViewCount
+    local likes = info._nLikeCount
+    local downloads = info._nDownloadCount
+    local screenshots = info._aPreviewMedia
+    local files = info._aFiles
+    local website = info._sProfileUrl
+    local oneClickIntegrations = info._aModManagerIntegrations
 
-    if withheld then
-        return nil
-    end
+    local hasOneClickIntegration = false
 
-    local containsEverestYaml = false
-
-    local function crawl(id, container, dir, key, value)
-        if type(value) == "table" then
-            dir = dir .. "/" .. key
-            for k, v in pairs(value) do
-                if not crawl(id, container, dir, k, v) then
-                    return false
-                end
-            end
-            return true
-        end
-
-        if value == ".disable_gb1click" or value == ".disable_gb1click_everest" then
-            containsEverestYaml = false
-            container._id = false
-            return false
-        end
-
-        if dir == "/" and value == "everest.yaml" then
-            containsEverestYaml = true
-            container._id = id
-            return true
-        end
-
-        return true
-    end
-
-    for id, file in pairs(files) do
-        if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
-            crawl(id, file, "", "", file._aMetadata._aArchiveFileTree)
-        end
+    for _ in pairs(oneClickIntegrations) do
+        -- as long as there is 1 integration, we're good.
+        hasOneClickIntegration = true
     end
 
     local item = uie.group({
@@ -677,14 +535,10 @@ function scene.item(info)
                                 local btns = {}
 
                                 for _, file in pairs(files) do
-                                    if file and file._id then
+                                    if file and file._sDownloadUrl then
                                         btns[#btns + 1] = file
                                     end
                                 end
-
-                                table.sort(btns, function(a, b)
-                                    return a._tsDateAdded > b._tsDateAdded
-                                end)
 
                                 for i = 1, #btns do
                                     local file = btns[i]
@@ -770,7 +624,7 @@ function scene.item(info)
                             clip = false,
                             cacheable = false
                         }):with({
-                            enabled = containsEverestYaml
+                            enabled = hasOneClickIntegration
                         })
 
                     }):with({
@@ -809,8 +663,6 @@ function scene.item(info)
         local bgholder = item:findChild("bgholder")
         local imgholder = item:findChild("imgholder")
 
-        local screenshots = utilsAsync.fromJSON(screenshotsRaw):result()
-
         local bg, img
 
         local function downloadImage(name, url)
@@ -831,12 +683,14 @@ function scene.item(info)
             return status and rv
         end
 
-        img = downloadImage(screenshots[1]._sFile, (screenshots[1]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-            "https://screenshots.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. (screenshots[1]._sFile220 or screenshots[1]._sFile100 or screenshots[1]._sFile))
+        img = downloadImage(screenshots[1]._sFile100,
+            (screenshots[1]._sFile100:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
+            screenshots[1]._sBaseUrl .. "/" .. screenshots[1]._sFile100)
 
         if screenshots[2] then
-            bg = downloadImage(screenshots[2]._sFile, (screenshots[2]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-                "https://screenshots.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile)
+            bg = downloadImage(screenshots[2]._sFile,
+                (screenshots[2]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
+                screenshots[2]._sBaseUrl .. "/" .. screenshots[2]._sFile)
         end
 
         bg = bg or img
