@@ -55,6 +55,19 @@ namespace Olympus {
                 ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus");
             Console.Error.WriteLine(RootDirectory);
 
+            // .NET hates it when strong-named dependencies get updated.
+            AppDomain.CurrentDomain.AssemblyResolve += (asmSender, asmArgs) => {
+                AssemblyName asmName = new AssemblyName(asmArgs.Name);
+                if (!asmName.Name.StartsWith("Mono.Cecil"))
+                    return null;
+
+                Assembly asm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(other => other.GetName().Name == asmName.Name);
+                if (asm != null)
+                    return asm;
+
+                return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(SelfPath), asmName.Name + ".dll"));
+            };
+
             if (Type.GetType("Mono.Runtime") != null) {
                 // Mono hates HTTPS.
                 ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => {
