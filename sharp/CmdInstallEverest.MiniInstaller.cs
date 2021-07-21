@@ -101,6 +101,19 @@ namespace Olympus {
 
         class MiniInstallerProxy : MarshalByRefObject {
             public void Boot(MiniInstallerBridge bridge) {
+                // .NET hates it when strong-named dependencies get updated.
+                AppDomain.CurrentDomain.AssemblyResolve += (asmSender, asmArgs) => {
+                    AssemblyName asmName = new AssemblyName(asmArgs.Name);
+                    if (!asmName.Name.StartsWith("Mono.Cecil"))
+                        return null;
+
+                    Assembly asm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(other => other.GetName().Name == asmName.Name);
+                    if (asm != null)
+                        return asm;
+
+                    return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(bridge.Root), asmName.Name + ".dll"));
+                };
+
                 Assembly installerAssembly = Assembly.LoadFrom(Path.Combine(bridge.Root, "MiniInstaller.exe"));
                 Type installerType = installerAssembly.GetType("MiniInstaller.Program");
 
@@ -141,6 +154,11 @@ namespace Olympus {
                         } finally {
                             Console.SetOut(origOut);
                             Console.SetIn(origIn);
+
+                            // MiniInstaller can pollute this process with env vars which trip up Everest's runtime relinker.
+                            Environment.SetEnvironmentVariable("MONOMOD_DEPDIRS", "");
+                            Environment.SetEnvironmentVariable("MONOMOD_MODS", "");
+                            Environment.SetEnvironmentVariable("MONOMOD_DEPENDENCY_MISSING_THROW", "");
                         }
                     }
 
