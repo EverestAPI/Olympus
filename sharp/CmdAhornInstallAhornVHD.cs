@@ -41,7 +41,7 @@ namespace Olympus {
                 if (tmpPerm) {
                     yield return Status($"{Path.GetFileName(archive)} already exists - reusing and preserving", false, "", false);
                 } else {
-                    const string url = "https://0x0ade.ga/ahornvhd/files/ahornvhd.7z";
+                    const string url = "https://0x0a.de/ahornvhd/files/ahornvhd.7z";
                     yield return Status($"Downloading {url} to {archive}", false, "download", false);
                     string tmp = archive + ".part";
                     if (File.Exists(tmp))
