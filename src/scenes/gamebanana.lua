@@ -316,7 +316,7 @@ function scene.load()
 
     -- Load the categories list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv3/ModCategory/ByGame?_aGameRowIds%5B%5D=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
+        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv3/ModCategory/ByGame?_aGameRowIds[]=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
 
         if not data then
             -- Error while calling the API
@@ -381,12 +381,12 @@ end
 function scene.downloadSortedEntries(page, sort, categoryFilter, featured)
     local url
     if categoryFilter ~= "" then
-        url = "https://gamebanana.com/apiv3/Mod/ByCategory?_aCategoryRowIds%5B%5D=" .. categoryFilter
+        url = "https://gamebanana.com/apiv3/Mod/ByCategory?_aCategoryRowIds[]=" .. categoryFilter
     else
-        url = "https://gamebanana.com/apiv3/Mod/ByGame?_aGameRowIds%5B%5D=6460"
+        url = "https://gamebanana.com/apiv3/Mod/ByGame?_aGameRowIds[]=6460"
 
         if featured then
-            url = url .. "&_aArgs%5B%5D=_sbWasFeatured%20%3D%20true"
+            url = url .. "&_aArgs[]=_sbWasFeatured%20%3D%20true"
         end
     end
 
