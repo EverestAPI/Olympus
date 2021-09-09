@@ -686,13 +686,11 @@ function scene.item(info)
         end
 
         img = downloadImage(screenshots[1]._sFile100,
-            (screenshots[1]._sFile100:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-            screenshots[1]._sBaseUrl .. "/" .. screenshots[1]._sFile100)
+            screenshots[1]._sFile100:match("%.webp$") and getMirrorURLForWebp(screenshots[1]._sBaseUrl .. "/" .. screenshots[1]._sFile) or screenshots[1]._sBaseUrl .. "/" .. screenshots[1]._sFile100)
 
         if screenshots[2] then
-            bg = downloadImage(screenshots[2]._sFile,
-                (screenshots[2]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-                screenshots[2]._sBaseUrl .. "/" .. screenshots[2]._sFile)
+            bg = downloadImage(screenshots[2]._sFile100,
+                screenshots[2]._sFile100:match("%.webp$") and getMirrorURLForWebp(screenshots[2]._sBaseUrl .. "/" .. screenshots[2]._sFile) or screenshots[2]._sBaseUrl .. "/" .. screenshots[2]._sFile100)
         end
 
         bg = bg or img
@@ -770,5 +768,12 @@ function scene.item(info)
     return item
 end
 
+-- Figures out the mirror URL for a given webp image, turning for instance https://images.gamebanana.com/img/ss/mods/5d5ae491a3cf5.webp
+-- into https://celestemodupdater.0x0a.de/banana-mirror-images/img_ss_mods_5d5ae491a3cf5.png.
+-- This allows Olympus to get those webp images converted to png.
+function getMirrorURLForWebp(image)
+    local _, _, path = string.find(image, "^https?://[^/]+/(.*)%.webp$")
+    return "https://celestemodupdater.0x0a.de/banana-mirror-images/" .. string.gsub(path, "/", "_") .. ".png"
+end
 
 return scene
