@@ -316,7 +316,7 @@ function scene.load()
 
     -- Load the categories list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv3/ModCategory/ByGame?_aGameRowIds[]=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
+        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv5/ModCategory/ByGame?_aGameRowIds[]=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
 
         if not data then
             -- Error while calling the API
@@ -381,16 +381,18 @@ end
 function scene.downloadSortedEntries(page, sort, categoryFilter, featured)
     local url
     if categoryFilter ~= "" then
-        url = "https://gamebanana.com/apiv3/Mod/ByCategory?_aCategoryRowIds[]=" .. categoryFilter
+        url = "https://gamebanana.com/apiv5/Mod/ByCategory?_aCategoryRowIds[]=" .. categoryFilter
     else
-        url = "https://gamebanana.com/apiv3/Mod/ByGame?_aGameRowIds[]=6460"
+        url = "https://gamebanana.com/apiv5/Mod/ByGame?_aGameRowIds[]=6460"
 
         if featured then
             url = url .. "&_aArgs[]=_sbWasFeatured%20%3D%20true"
         end
     end
 
-    url = url .. "&_sRecordSchema=Olympus&_sOrderBy=" .. sort .. ",DESC&_nPage=" .. (featured and 1 or page) .. "&_nPerpage=20"
+    url = url ..
+        "&_csvProperties=_sName,_sProfileUrl,_aSubmitter,_tsDateAdded,_aPreviewMedia,_sDescription,_sText,_nViewCount,_nLikeCount,_nDownloadCount,_aFiles,_aModManagerIntegrations&_sOrderBy=" .. sort .. ",DESC" ..
+        "&_nPage=" .. (featured and 1 or page) .. "&_nPerpage=20"
 
     local data = scene.cache[url]
     if data ~= nil then
