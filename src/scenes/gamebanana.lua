@@ -316,7 +316,7 @@ function scene.load()
 
     -- Load the categories list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv6/ModCategory/ByGame?_aGameRowIds[]=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
+        local data, msg = threader.wrap("utils").downloadJSON("https://gamebanana.com/apiv5/ModCategory/ByGame?_aGameRowIds[]=6460&_sRecordSchema=Custom&_csvProperties=_idRow,_sName,_idParentCategoryRow&_nPerpage=50"):result()
 
         if not data then
             -- Error while calling the API
@@ -364,8 +364,7 @@ end
 
 
 function scene.downloadSearchEntries(query)
-    local url = "https://gamebanana.com/apiv6/Mod/ByName?_sName=*" .. utils.toURLComponent(query) .. "*&_nPerpage=20&_idGameRow=6460" ..
-	  "&_csvProperties=_sName,_sProfileUrl,_aSubmitter,_tsDateAdded,_aPreviewMedia,_sDescription,_sText,_nViewCount,_nLikeCount,_nDownloadCount,_aFiles,_aModManagerIntegrations"
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?version=2&q=" .. utils.toURLComponent(query)
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -382,9 +381,9 @@ end
 function scene.downloadSortedEntries(page, sort, categoryFilter, featured)
     local url
     if categoryFilter ~= "" then
-        url = "https://gamebanana.com/apiv6/Mod/ByCategory?_aCategoryRowIds[]=" .. categoryFilter
+        url = "https://gamebanana.com/apiv5/Mod/ByCategory?_aCategoryRowIds[]=" .. categoryFilter
     else
-        url = "https://gamebanana.com/apiv6/Mod/ByGame?_aGameRowIds[]=6460"
+        url = "https://gamebanana.com/apiv5/Mod/ByGame?_aGameRowIds[]=6460"
 
         if featured then
             url = url .. "&_aArgs[]=_sbWasFeatured%20%3D%20true"
