@@ -534,7 +534,7 @@ function scene.item(info)
 
     local withheld, name, owner, date, description, text, views, likes, downloads, screenshotsRaw, files, website = table.unpack(info)
 
-    if withheld then
+    if withheld == true or not files then
         return nil
     end
 
