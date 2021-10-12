@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Olympus install script bundled with Linux builds.
 
 SRCDIR="$(dirname "$(realpath "$0")")"
