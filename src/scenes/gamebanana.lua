@@ -221,8 +221,8 @@ function scene.loadPage(page)
 
         if not isQuery then
             scene.searchLast = ""
-            if page < 1 then
-                page = 1
+            if page < 0 then
+                page = 0
             end
         end
 
@@ -240,7 +240,11 @@ function scene.loadPage(page)
         itemtypeFilterDropdown:reflow()
 
         if not isQuery then
-            pageLabel.text = "Page #" .. tostring(page)
+            if page == 0 then
+                pageLabel.text = "Featured"
+            else
+                pageLabel.text = "Page #" .. tostring(page)
+            end
             scene.page = page
         else
             pageLabel.text = page
@@ -261,7 +265,11 @@ function scene.loadPage(page)
 
         local entries, entriesError
         if not isQuery then
-            entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
+            if page == 0 then
+                entries, entriesError = scene.downloadFeaturedEntries()
+            else
+                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
+            end
         else
             entries, entriesError = scene.downloadSearchEntries(page)
         end
@@ -275,7 +283,7 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 1
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
             itemtypeFilterDropdown.enabled = not isQuery
@@ -292,7 +300,8 @@ function scene.loadPage(page)
 
         loading:removeSelf()
         scene.loadingPage = nil
-        pagePrev.enabled = not isQuery and page > 1
+        -- "Featured" should be inaccessible if there is a sort or a filter
+        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
         pageNext.enabled = not isQuery
         sortDropdown.enabled = not isQuery
         itemtypeFilterDropdown.enabled = not isQuery
@@ -348,6 +357,21 @@ end
 
 function scene.enter()
 
+end
+
+function scene.downloadFeaturedEntries()
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-featured"
+    local data = scene.cache[url]
+    if data ~= nil then
+        return data
+    end
+
+    local msg
+    data, msg = threader.wrap("utils").downloadJSON(url):result()
+    if data then
+        scene.cache[url] = data
+    end
+    return data, msg
 end
 
 function scene.downloadSearchEntries(query)
