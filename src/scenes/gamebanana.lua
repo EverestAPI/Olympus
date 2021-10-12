@@ -265,11 +265,10 @@ function scene.loadPage(page)
 
         local entries, entriesError
         if not isQuery then
-            -- The GameBanana Core/List/New API is only used when filters are default (Most Recent / All).
-            if scene.sort ~= "latest" or scene.itemtypeFilter.filtervalue ~= "" then
-                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
+            if page == 0 then
+                entries, entriesError = scene.downloadFeaturedEntries()
             else
-                entries, entriesError = scene.downloadEntries(page)
+                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
             end
         else
             entries, entriesError = scene.downloadSearchEntries(page)
@@ -284,7 +283,6 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
-            -- "Featured" should be inaccessible if there is a sort or a filter
             pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
@@ -296,30 +294,8 @@ function scene.loadPage(page)
             return
         end
 
-        local infos, infosError = scene.downloadInfo(entries)
-        if not infos then
-            loading:removeSelf()
-            root:addChild(uie.paneled.row({
-                uie.label("Error downloading mod info: " .. tostring(infosError)),
-            }):with({
-                clip = false,
-                cacheable = false
-            }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
-            scene.loadingPage = nil
-            -- "Featured" should be inaccessible if there is a sort or a filter
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
-            pageNext.enabled = not isQuery
-            sortDropdown.enabled = not isQuery
-            itemtypeFilterDropdown.enabled = not isQuery
-            pagePrev:reflow()
-            pageNext:reflow()
-            sortDropdown:reflow()
-            itemtypeFilterDropdown:reflow()
-            return
-        end
-
-        for i = 1, #infos do
-            lists.next:addChild(scene.item(infos[i]))
+        for i = 1, #entries do
+            lists.next:addChild(scene.item(entries[i]))
         end
 
         loading:removeSelf()
@@ -383,42 +359,30 @@ function scene.enter()
 
 end
 
-
-function scene.downloadEntries(page)
-    if page == 0 then
-        return scene.downloadFeaturedEntries()
-    end
-
-    local url = "https://api.gamebanana.com/Core/List/New?format=json_min&gameid=6460&page=" .. tostring(page)
+function scene.downloadFeaturedEntries()
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-featured"
     local data = scene.cache[url]
     if data ~= nil then
         return data
     end
 
-    local attempt = 0
-    ::retry::
     local msg
     data, msg = threader.wrap("utils").downloadJSON(url):result()
     if data then
         scene.cache[url] = data
-    else
-        attempt = attempt + 1
-        if attempt < 5 then
-            goto retry
-        end
     end
     return data, msg
 end
 
 function scene.downloadSearchEntries(query)
-    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query) .. "&full=true"
     local data = scene.cache[url]
     if data ~= nil then
         return data
     end
 
     local msg
-    data, msg = threader.wrap("utils").downloadYAML(url):result()
+    data, msg = threader.wrap("utils").downloadJSON(url):result()
     if data then
         scene.cache[url] = data
     end
@@ -429,146 +393,39 @@ function scene.downloadSortedEntries(page, sort, itemtypeFilterType, itemtypeFil
     local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" ..
         (sort ~= "" and "sort=" .. sort .. "&" or "") ..
         (itemtypeFilterValue ~= "" and itemtypeFilterType .. "=" .. itemtypeFilterValue .. "&" or "") ..
-        "page=" .. page
+        "page=" .. page .. "&full=true"
 
     local data = scene.cache[url]
     if data ~= nil then
         return data
     end
 
-    local msg
-    data, msg = threader.wrap("utils").downloadYAML(url):result()
-    if data then
-        scene.cache[url] = data
-    end
-    return data, msg
-end
-
-function scene.downloadFeaturedEntries()
-    local url = "https://api.gamebanana.com/Rss/Featured?gameid=6460"
-    local entries = scene.cache[url]
-    if entries ~= nil then
-        return entries
-    end
-
-    local attempt = 0
-    ::retry::
-    local data, msg = threader.wrap("utils").downloadXML(url):result()
-    if not data then
-        attempt = attempt + 1
-        if attempt < 5 then
-            goto retry
-        end
-        return data, msg
-    end
-
-    local items = data.rss.items.item
-    entries = {}
-    for i = 1, #items do
-        local item = items[i]
-        local itemtype, id = item.link:match("https://.*/(.*)/(.*)")
-        id = tonumber(id)
-        if itemtype and id then
-            entries[#entries + 1] = { itemtype:sub(1, 1):upper() .. itemtype:sub(2, #itemtype - 1), id }
-        end
-    end
-
-    scene.cache[url] = entries
-    return entries, msg
-end
-
-
-function scene.downloadInfo(entries, id)
-    if not entries then
-        return threader.wrap("utils").nop()
-    end
-
-    local function mcitem(index, key, value)
-        return string.format("&%s[%d]=%s", key, index, value)
-    end
-
-    if id then
-        entries = {{ entries, id }}
-        mcitem = function(index, key, value)
-            return string.format("&%s=%s", key, value)
-        end
-    end
-
-    local multicall = ""
-    for ei = 1, #entries do
-        local entry = entries[ei]
-
-        local i = ei - 1
-        multicall = multicall ..
-            mcitem(i, "itemtype", entry[1] or entry.itemtype) ..
-            mcitem(i, "itemid", tostring(entry[2] or entry.itemid)) ..
-            mcitem(i, "fields", "Withhold().bIsWithheld(),name,Owner().name,date,description,text,views,likes,downloads,screenshots,Files().aFiles(),Url().sProfileUrl()")
-    end
-
-    local url = "https://api.gamebanana.com/Core/Item/Data?format=json_min&" .. multicall:sub(2)
-    local data = scene.cache[url]
-    if data ~= nil then
-        return data
-    end
-
-    local attempt = 0
-    ::retry::
     local msg
     data, msg = threader.wrap("utils").downloadJSON(url):result()
     if data then
         scene.cache[url] = data
-    else
-        attempt = attempt + 1
-        if attempt < 5 then
-            goto retry
-        end
     end
     return data, msg
 end
 
-
 function scene.item(info)
-    if not info or info.error then
-        return nil
-    end
-
-    local withheld, name, owner, date, description, text, views, likes, downloads, screenshotsRaw, files, website = table.unpack(info)
-
-    if withheld == true or not files then
-        return nil
-    end
+    local name = info.Name
+    local owner = info.Author
+    local date = info.CreatedDate
+    local description = info.Description
+    local text = info.Text
+    local views = info.Views
+    local likes = info.Likes
+    local downloads = info.Downloads
+    local screenshots = info.Screenshots
+    local files = info.Files
+    local website = 'https://gamebanana.com/' .. string.lower(info.GameBananaType) .. 's/' .. info.GameBananaId
 
     local containsEverestYaml = false
 
-    local function crawl(id, container, dir, key, value)
-        if type(value) == "table" then
-            dir = dir .. "/" .. key
-            for k, v in pairs(value) do
-                if not crawl(id, container, dir, k, v) then
-                    return false
-                end
-            end
-            return true
-        end
-
-        if value == ".disable_gb1click" or value == ".disable_gb1click_everest" then
-            containsEverestYaml = false
-            container._id = false
-            return false
-        end
-
-        if dir == "/" and value == "everest.yaml" then
+    for _, file in pairs(files) do
+        if file.HasEverestYaml then
             containsEverestYaml = true
-            container._id = id
-            return true
-        end
-
-        return true
-    end
-
-    for id, file in pairs(files) do
-        if file and file._aMetadata and file._aMetadata._aArchiveFileTree then
-            crawl(id, file, "", "", file._aMetadata._aArchiveFileTree)
         end
     end
 
@@ -676,22 +533,18 @@ function scene.item(info)
                             function()
                                 local btns = {}
 
-                                for _, file in pairs(files) do
-                                    if file and file._id then
+                                for _, file in ipairs(files) do
+                                    if file.HasEverestYaml then
                                         btns[#btns + 1] = file
                                     end
                                 end
 
-                                table.sort(btns, function(a, b)
-                                    return a._tsDateAdded > b._tsDateAdded
-                                end)
-
                                 for i = 1, #btns do
                                     local file = btns[i]
                                     btns[i] = uie[i == 1 and "buttonGreen" or "button"](
-                                        { { 1, 1, 1, 1 }, file._sFile, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file._tsDateAdded) .. " ∙ " .. uiu.countformat(file._nDownloadCount, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file._sDescription},
+                                        { { 1, 1, 1, 1 }, file.Name, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file.CreatedDate) .. " ∙ " .. uiu.countformat(file.Downloads, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file.Description},
                                         function(self)
-                                            modinstaller.install(file._sDownloadUrl)
+                                            modinstaller.install(file.URL)
                                             self:getParent("container"):close("OK")
                                         end
                                     )
@@ -809,8 +662,6 @@ function scene.item(info)
         local bgholder = item:findChild("bgholder")
         local imgholder = item:findChild("imgholder")
 
-        local screenshots = utilsAsync.fromJSON(screenshotsRaw):result()
-
         local bg, img
 
         local function downloadImage(name, url)
@@ -831,12 +682,10 @@ function scene.item(info)
             return status and rv
         end
 
-        img = downloadImage(screenshots[1]._sFile, (screenshots[1]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-            "https://images.gamebanana.com/" .. screenshots[1]._sRelativeImageDir .. "/" .. (screenshots[1]._sFile220 or screenshots[1]._sFile100 or screenshots[1]._sFile))
+        img = downloadImage(screenshots[1], "https://max480-random-stuff.appspot.com/celeste/banana-mirror-image?src=" .. screenshots[1])
 
         if screenshots[2] then
-            bg = downloadImage(screenshots[2]._sFile, (screenshots[2]._sFile:match("%.webp$") and "https://max480-random-stuff.appspot.com/celeste/webp-to-png?src=" or "") ..
-                "https://images.gamebanana.com/" .. screenshots[2]._sRelativeImageDir .. "/" .. screenshots[2]._sFile)
+            bg = downloadImage(screenshots[2], "https://max480-random-stuff.appspot.com/celeste/banana-mirror-image?src=" .. screenshots[2])
         end
 
         bg = bg or img
