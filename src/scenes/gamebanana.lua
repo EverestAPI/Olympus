@@ -417,9 +417,9 @@ function scene.item(info)
     local views = info.Views
     local likes = info.Likes
     local downloads = info.Downloads
-    local screenshots = info.Screenshots
+    local screenshots = info.MirroredScreenshots
     local files = info.Files
-    local website = 'https://gamebanana.com/' .. string.lower(info.GameBananaType) .. 's/' .. info.GameBananaId
+    local website = info.PageURL
 
     local containsEverestYaml = false
 
@@ -664,7 +664,7 @@ function scene.item(info)
 
         local bg, img
 
-        local function downloadImage(name, url)
+        local function downloadImage(url)
             local img = scene.cache[url]
             if img ~= nil then
                 local status, rv = pcall(love.graphics.newImage, img)
@@ -676,16 +676,16 @@ function scene.item(info)
                 return false
             end
 
-            img = love.filesystem.newFileData(img, name)
+            img = love.filesystem.newFileData(img, url)
             scene.cache[url] = img
             local status, rv = pcall(love.graphics.newImage, img)
             return status and rv
         end
 
-        img = downloadImage(screenshots[1], "https://max480-random-stuff.appspot.com/celeste/banana-mirror-image?src=" .. screenshots[1])
+        img = downloadImage(screenshots[1])
 
         if screenshots[2] then
-            bg = downloadImage(screenshots[2], "https://max480-random-stuff.appspot.com/celeste/banana-mirror-image?src=" .. screenshots[2])
+            bg = downloadImage(screenshots[2])
         end
 
         bg = bg or img
