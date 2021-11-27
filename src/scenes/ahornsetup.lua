@@ -12,11 +12,11 @@ local scene = {
 }
 
 local modes = {
-    { text = "Let Olympus manage Julia and Ahorn", data = "local" },
+    { text = "Let Olympus manage Julia and Ahorn separately", data = "local" },
     { text = "Use system-wide Julia and Ahorn if existing", data = "system" },
 }
 if love.system.getOS() == "Windows" then
-    table.insert(modes, 1, { text = "Use pre-bundled Ahorn-VHD (fast, experimental)", data = "vhd" })
+    table.insert(modes, 1, { text = "Use pre-bundled Ahorn-VHD (fast, Windows 10+)", data = "vhd" })
 end
 
 local themes = {
@@ -40,15 +40,16 @@ local root = uie.column({
             uie.column({
 
                 uie.paneled.column({
-                    uie.label("About", ui.fontBig),
+                    uie.label("About Ahorn", ui.fontBig),
 
                     uie.label([[
-Olympus can install and launch Ahorn for you.
 Ahorn is the community map editor for Celeste.
-This function isn't officially supported by the Ahorn developers.
-Feel free to visit the Ahorn GitHub page for more info.]]),
-                    uie.button("Open https://github.com/CelestialCartographers/Ahorn", function()
-                        utils.openURL("https://github.com/CelestialCartographers/Ahorn")
+Olympus can fully install, update and launch it for you.
+This is maintained by the Olympus team, not the Ahorn team.
+The Ahorn devs don't officially support this, but it's still endorsed.
+Check the README for usage instructions, keybinds, help and more.]]),
+                    uie.buttonGreen("Open the Ahorn README", function()
+                        utils.openURL("https://github.com/CelestialCartographers/Ahorn#ahorn")
                     end):with(uiu.fillWidth),
                 }):with(uiu.fillWidth),
 
@@ -651,6 +652,7 @@ function scene.reload()
 Olympus couldn't find Ahorn-VHD.
 
 Ahorn-VHD is a virtual hard disk with everything needed to run Ahorn.
+It is NOT a partition. It's a file that pretends to be a separate hard drive.
 It comes with its own version of Julia and other files prebundled.
 
 This will also download the latest version of Ahorn into the VHD.
@@ -683,6 +685,8 @@ Olympus was able to find Ahorn-VHD at:
 Ahorn-VHD isn't loaded right now.
 Loading ("attaching" / "mounting") the virtual hard disk
 might open a window asking for administrator permissions.
+It is NOT a partition.
+It's a file that pretends to be a separate hard drive.
 
 Ahorn-VHD will be loaded to:
 %s]],
