@@ -250,6 +250,7 @@ function love.load(args)
     ui.fontMono = love.graphics.newFont("data/fonts/Perfect DOS VGA 437.ttf", 16)
     ui.fontBig = love.graphics.newFont("data/fonts/Renogare-Regular.otf", 28)
     ui.fontMedium = love.graphics.newFont("data/fonts/Renogare-Regular.otf", 21)
+    ui.features.megacanvas = true
 
     overlay = uiu.image("overlay")
 
