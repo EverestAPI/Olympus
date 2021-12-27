@@ -126,7 +126,7 @@ function notify.show(data)
             local scale = 0.7 + 0.3 * sfade
             local hw = math.floor(width * 0.5)
             local hh = math.floor(height * 0.5)
-            canvas:draw(x - padding + hw, y - padding + hh + 20 * (1 - sfade), 0.1 * math.max(0, 0.7 - sfade * 1.2), scale, scale, hw, hh)
+            uiu.drawCanvas(canvas, x - padding + hw, y - padding + hh + 20 * (1 - sfade), 0.1 * math.max(0, 0.7 - sfade * 1.2), scale, scale, hw, hh)
         end,
     })
 

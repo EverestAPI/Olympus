@@ -8,7 +8,7 @@ local blurrer = {}
 function blurrer.drawBlurredCanvasContent(canvas, x, y, paddingL, paddingT, blurFade)
     love.graphics.clear(0, 0, 0, 0)
     love.graphics.setColor(blurFade, blurFade, blurFade, blurFade)
-    canvas:draw(x - paddingL, y - paddingT)
+    uiu.drawCanvas(canvas, x - paddingL, y - paddingT)
 end
 
 function blurrer.drawBlurredCanvas(orig, el, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
@@ -23,7 +23,7 @@ function blurrer.drawBlurredCanvas(orig, el, canvas, x, y, width, height, paddin
     local blurFadeInv = math.sin(math.pi * (1 - blurFade) * 0.5)
     if blurFadeInv > 0.01 then
         love.graphics.setColor(blurFadeInv, blurFadeInv, blurFadeInv, blurFadeInv)
-        canvas:draw(x - paddingL, y - paddingT)
+        uiu.drawCanvas(canvas, x - paddingL, y - paddingT)
     end
 
     love.graphics.setColor(1, 1, 1, 1)
