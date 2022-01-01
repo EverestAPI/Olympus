@@ -28,6 +28,9 @@ uie.add("alertBG", {
     init = function(self, container)
         uie.panel.init(self, {})
         self.container = container
+    end,
+
+    revive = function(self)
         self._fadeBGStyle, self._fadeBG, self._fadeBGPrev = {table.unpack(self.style.hiddenBG)}, false, false
     end,
 
