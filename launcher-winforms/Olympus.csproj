@@ -68,10 +68,6 @@
     <PackageReference Include="ILRepack.Lib.MSBuild" Version="2.1.14" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-
   <!--
 	On macOS .NET Framework builds, ILRepack uses Mono.Posix package for copying file permissions, but this problematic because:
 	1) Its P/Invoke usage relies on dynamic linking with the native libs (specifically, libMonoPosixHelper.dylib) of the Mono install(s),

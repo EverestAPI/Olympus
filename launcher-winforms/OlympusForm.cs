@@ -43,7 +43,43 @@ namespace Olympus {
         public void RunDownloader() {
             Console.WriteLine("Downloader thread running");
 
+            // Azure no longer supports TLS 1.1 and .NET Framework loves to default to Ssl3 | Tls
+            try {
+                ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | /* Tls13 */ (SecurityProtocolType) 0x3000;
+            } catch (NotSupportedException) {
+                try {
+                    ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+                } catch (NotSupportedException) {
+                    Console.WriteLine("No TLS 1.2");
+                    try {
+                        Invoke(() => {
+                            MessageBox.Show(
+                                @"
+Your operating system must support HTTPS TLS version 1.2.
+
+If you're on Windows 7 or older, please update to a newer version.
+Windows 7 Service Pack 1 should support it. Maybe.
+Microsoft is no longer supporting those old versions anyway.
+
+If you're on a newer version of Windows and seeing this,
+please ping the Everest team on the Celeste Discord server.
+                            ".Trim().Replace("\r\n", "\n"),
+                                "Olympus Downloader",
+                                MessageBoxButtons.OK
+                            );
+                            Application.Exit();
+                        });
+                    } catch (Win32Exception e) {
+                        // FIXME: *Invoke itself* can fail on some PCs for no apparent reason.
+                        Console.WriteLine("Corrupt install message box invoke failed");
+                        Console.WriteLine(e);
+                    }
+                    return;
+                }
+            }
+
             if (Directory.Exists(Program.InstallDir) && Directory.GetFiles(Program.InstallDir).Length != 0) {
+                Console.WriteLine("Corrupt install");
                 try {
                     Invoke(() => {
                         MessageBox.Show(
@@ -152,7 +188,7 @@ Please ping the Everest team on the Celeste Discord server.
                 Program.StartMain();
                 Environment.Exit(0);
             }
-}
+        }
 
         public static unsafe T LoadAsset<T>(string name, bool fullPath = false) where T : class {
             Assembly assembly = Assembly.GetExecutingAssembly();
