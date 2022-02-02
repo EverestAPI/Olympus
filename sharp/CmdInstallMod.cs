@@ -53,7 +53,8 @@ namespace Olympus {
 
                     if (gbid != 0) {
                         // At the time of writing this, GB download speeds go as low as 5 kilobytes per second.
-#if false
+                        // At the time of writing this, GB download speeds have normalized again. 0x0a.de only hosts its files in Germany, no CDN, thus slower than GB for some.
+#if true
                         yield return Status($"Downloading {gbid} from GameBanana", false, "download", false);
                         Exception[] ea = new Exception[1];
                         using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
