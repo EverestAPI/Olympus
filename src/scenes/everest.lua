@@ -66,7 +66,28 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             clip = false,
             cacheable = false
         }):with(uiu.styleDeep), function()
-            scene.install()
+            local install = scene.root:findChild("installs").selected
+            install = install and install.data
+            -- Check for any version before 1.4.0.0
+            local minorVersion = install and tonumber(install.versionCeleste:match("^1%.(%d+)%."))
+            if minorVersion ~= nil and minorVersion < 4 then
+                alert({
+                    body = [[
+Your current version of Celeste is outdated.
+Please update to the latest version before installing Everest.]],
+                    buttons = {
+                        { "Attempt Installation Anyway", function(container)
+                            container:close("OK")
+                            scene.install()
+                        end },
+                        { "OK", function(container)
+                            container:close("OK")
+                        end }
+                    }
+                })
+            else
+                scene.install()
+            end
         end):hook({
             update = function(orig, self, ...)
                 local root = scene.root
