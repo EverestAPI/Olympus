@@ -357,10 +357,11 @@ If that doesn't help, y]]
             {
                 "MonoModRules failed resolving Microsoft.Xna.Framework.Game",
                 [[
-Celeste needs to install some dependencies.
-Please run Celeste normally at least once before installing Everest.
+It is required to install XNA before installing Everest.
+If this copy of Celeste comes from Steam, run Celeste normally to install XNA.
+Otherwise, manually install XNA from https://www.microsoft.com/en-ca/download/details.aspx?id=20914.
 
-If that doesn't help, y]]
+If there are any problems, y]]
             }
         }
         repeat
