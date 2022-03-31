@@ -344,26 +344,6 @@ function scene.sharpTask(id, ...)
         local task = sharp[id](table.unpack(args)):result()
         local batch
         local last
-        local heuristicError
-        local heuristicErrors = {
-            {
-                "Unsupported version of Celeste:",
-                [[
-Your current version of Celeste is outdated.
-Please update to the latest version before installing Everest.
-
-If that doesn't help, y]]
-            },
-            {
-                "MonoModRules failed resolving Microsoft.Xna.Framework.Game",
-                [[
-It is required to install XNA before installing Everest.
-If this copy of Celeste comes from Steam, run Celeste normally to install XNA.
-Otherwise, manually install XNA from https://www.microsoft.com/en-ca/download/details.aspx?id=20914.
-
-If there are any problems, y]]
-            }
-        }
         repeat
             batch = sharp.pollWaitBatch(task):result()
             local all = batch[3]
@@ -372,13 +352,6 @@ If there are any problems, y]]
                 if update ~= nil then
                     if not last or last[1] ~= update[1] or last[2] ~= update[2] or last[3] ~= update[3] or last[4] ~= update[4] then
                         last = update
-                        if not heuristicError then
-                            for j = 1, #heuristicErrors do
-                                if string.find(update[1], heuristicErrors[j][1]) ~= nil then
-                                    heuristicError = heuristicErrors[j][2]
-                                end
-                            end
-                        end
                         scene.update(update[1], update[2], update[3], update[4])
                     end
                 else
@@ -395,8 +368,8 @@ If there are any problems, y]]
                     "Open log",
                     function()
                         alert({
-                            body = (heuristicError or "Y") .. [[
-ou can ask for help in the Celeste Discord server.
+                            body = [[
+You can ask for help in the Celeste Discord server.
 An invite can be found on the Everest website.
 
 Please drag and drop your files into the #modding_help channel.
