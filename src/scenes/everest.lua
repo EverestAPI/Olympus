@@ -68,11 +68,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             clip = false,
             cacheable = false
         }):with(uiu.styleDeep), function()
-            -- Check for XNA installed
-            local xnaInstalled =
-                love.system.getOS() == "Windows" and
-                (registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Microsoft\XNA\Framework\v4.0\Installed]]) or
-                registry.getKey([[HKLM\SOFTWARE\Microsoft\XNA\Framework\v4.0\Installed]]))
             local install = scene.root:findChild("installs").selected
             install = install and install.data
             -- Check for any version before 1.4.0.0
@@ -92,7 +87,9 @@ Please update to the latest version before installing Everest.]],
                         end }
                     }
                 })
-            elseif string.find(install.version, "xna") ~= nil and not xnaInstalled then
+            elseif love.system.getOS() == "Windows" and string.find(install.version, "xna") ~= nil and
+            not (registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Microsoft\XNA\Framework\v4.0\Installed]]) or
+            registry.getKey([[HKLM\SOFTWARE\Microsoft\XNA\Framework\v4.0\Installed]])) then
                 alert({
                     body = [[
 It is required to install XNA before installing Everest.
