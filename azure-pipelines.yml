@@ -91,6 +91,7 @@ steps:
   displayName: 'Setup: luarocks: config'
   inputs:
     script: |
+      git config --global url."https://github.com/".insteadOf git://github.com/
       luarocks config lua_version 5.1
       luarocks
 
