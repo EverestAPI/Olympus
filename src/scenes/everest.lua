@@ -1,12 +1,14 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local fs = require("fs")
+local registry = require("registry")
 local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
 local sharp = require("sharp")
 local alert = require("alert")
 local mainmenu = scener.preload("mainmenu")
+require("love.system")
 
 local scene = {
     name = "Everest Installer"
@@ -66,7 +68,50 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             clip = false,
             cacheable = false
         }):with(uiu.styleDeep), function()
-            scene.install()
+            local install = scene.root:findChild("installs").selected
+            install = install and install.data
+            -- Check for any version before 1.4.0.0
+            local minorVersion = install and tonumber(install.versionCeleste:match("^1%.(%d+)%."))
+            if minorVersion ~= nil and minorVersion < 4 then
+                alert({
+                    body = [[
+Your current version of Celeste is outdated.
+Please update to the latest version before installing Everest.]],
+                    buttons = {
+                        { "Attempt Installation Anyway", function(container)
+                            container:close("OK")
+                            scene.install()
+                        end },
+                        { "Cancel", function(container)
+                            container:close("OK")
+                        end }
+                    }
+                })
+            elseif love.system.getOS() == "Windows" and string.find(install.version, "xna") ~= nil and
+            not (registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Microsoft\XNA\Framework\v4.0\Installed]]) or
+            registry.getKey([[HKLM\SOFTWARE\Microsoft\XNA\Framework\v4.0\Installed]])) then
+                alert({
+                    body = [[
+It is required to install XNA before installing Everest.
+If this copy of Celeste comes from Steam, run Celeste normally to install XNA.
+Otherwise, manually install XNA using the button below.]],
+                    buttons = {
+                        { "Install XNA", function(container)
+                            container:close("OK")
+                            utils.openURL("https://www.microsoft.com/en-ca/download/details.aspx?id=20914")
+                        end },
+                        { "Attempt Installation Anyway", function(container)
+                            container:close("OK")
+                            scene.install()
+                        end },
+                        { "Cancel", function(container)
+                            container:close("OK")
+                        end }
+                    }
+                })
+            else
+                scene.install()
+            end
         end):hook({
             update = function(orig, self, ...)
                 local root = scene.root
