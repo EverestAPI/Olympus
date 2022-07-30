@@ -73,7 +73,7 @@ local function newsEntry(data)
 
     local item = uie.column({
 
-        data.title and uie.label(data.title, ui.fontMedium),
+        data.title and uie.label(data.title, ui.fontMedium):with({ wrap = true }),
 
         data.image and uie.group({
             uie.spinner():with({ time = love.math.random() }),
@@ -419,7 +419,7 @@ function scene.load()
 
         local all = threader.run(function()
             local utils = require("utils")
-            local list, err = utils.download("https://everestapi.github.io/olympusnews/index.txt")
+            local list, err = utils.downloadJSON("https://max480-random-stuff.appspot.com/celeste/olympus-news")
             if not list then
                 print("failed fetching news index")
                 print(err)
@@ -431,74 +431,7 @@ function scene.load()
                 }
             end
 
-            local all = {
-            }
-
-            for entryName in list:gmatch("[^\r\n]+") do
-                if entryName:match("%.md$") then
-                    all[#all + 1] = entryName
-                end
-            end
-
-            table.sort(all, function(a, b)
-                return b < a
-            end)
-
-            for i = 1, #all do
-                local entryName = all[i]
-                local data, err = utils.download("https://everestapi.github.io/olympusnews/" .. entryName)
-                if not data then
-                    print("failed fetching news entry", entryName)
-                    print(err)
-                    all[i] = {
-                        error = true,
-                        preview = "Olympus failed fetching a news entry."
-                    }
-                    goto next
-                end
-
-                local text
-                data, text = data:match("^%-%-%-\n(.-)\n%-%-%-\n(.*)$")
-                if not data or not text then
-                    print("news entry not in expected format", entryName)
-                    all[i] = {
-                        error = true,
-                        preview = "A news entry was in an unexpected format."
-                    }
-                    goto next
-                end
-
-                local status
-                status, data = pcall(utils.fromYAML, data)
-                if not status or not data then
-                    print("news entry contains malformed yaml", entryName)
-                    print(data)
-                    all[i] = {
-                        error = true,
-                        preview = "A news entry contained invalid metadata."
-                    }
-                    goto next
-                end
-
-                if data.ignore then
-                    all[i] = false
-                    goto next
-                end
-
-                local preview, body = text:match("^(.-)\n%-%-%-\n(.*)$")
-                if not data.preview and preview and body then
-                    data.preview = utils.trim(preview)
-                    data.text = utils.trim(body)
-                else
-                    data.preview = utils.trim(text)
-                end
-
-                all[i] = data
-
-                ::next::
-            end
-
-            return all
+            return list
         end):result()
 
         scene.news = all
