@@ -8,7 +8,7 @@ local modinstaller = require("modinstaller")
 local scene = {
     name = "GameBanana",
     sort = "latest",
-    itemtypeFilter = { filtertype = "itemtype", filtervalue = "" }
+    itemtypeFilter = {}
 }
 
 local sortOptions = {
@@ -268,7 +268,7 @@ function scene.loadPage(page)
             if page == 0 then
                 entries, entriesError = scene.downloadFeaturedEntries()
             else
-                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter.filtertype, scene.itemtypeFilter.filtervalue)
+                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter)
             end
         else
             entries, entriesError = scene.downloadSearchEntries(page)
@@ -283,7 +283,7 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
+            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and next(scene.itemtypeFilter) == nil) or page > 1)
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
             itemtypeFilterDropdown.enabled = not isQuery
@@ -301,7 +301,7 @@ function scene.loadPage(page)
         loading:removeSelf()
         scene.loadingPage = nil
         -- "Featured" should be inaccessible if there is a sort or a filter
-        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and scene.itemtypeFilter.filtervalue == "") or page > 1)
+        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and next(scene.itemtypeFilter) == nil) or page > 1)
         pageNext.enabled = not isQuery
         sortDropdown.enabled = not isQuery
         itemtypeFilterDropdown.enabled = not isQuery
@@ -319,7 +319,7 @@ function scene.load()
 
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories?version=2"):result()
+        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories?version=3"):result()
 
         if not data then
             -- Error while calling the API
@@ -333,13 +333,17 @@ function scene.load()
             -- Convert the list retrieved from the API to a dropdown option list
             local allTypes = {}
             for _, category in ipairs(data) do
+                categoryData = {}
+                if category.itemtype then
+                    categoryData["itemtype"] = category.itemtype
+                end
+                if category.categoryid then
+                    categoryData["categoryid"] = category.categoryid
+                end
+
                 table.insert(allTypes, {
                     text = category.formatted .. " (" .. category.count .. ")",
-                    data = {
-                        -- filters can either be category ids, or item types.
-                        filtertype = category.itemtype and "itemtype" or "category",
-                        filtervalue = category.itemtype or category.categoryid
-                    }
+                    data = categoryData
                 })
             end
 
@@ -389,10 +393,11 @@ function scene.downloadSearchEntries(query)
     return data, msg
 end
 
-function scene.downloadSortedEntries(page, sort, itemtypeFilterType, itemtypeFilterValue)
+function scene.downloadSortedEntries(page, sort, itemtypeFilter)
     local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" ..
         (sort ~= "" and "sort=" .. sort .. "&" or "") ..
-        (itemtypeFilterValue ~= "" and itemtypeFilterType .. "=" .. itemtypeFilterValue .. "&" or "") ..
+        (itemtypeFilter.itemtype and "type=" .. itemtypeFilter.itemtype .. "&" or "") ..
+        (itemtypeFilter.categoryid and "category=" .. itemtypeFilter.categoryid .. "&" or "") ..
         "page=" .. page .. "&full=true"
 
     local data = scene.cache[url]
