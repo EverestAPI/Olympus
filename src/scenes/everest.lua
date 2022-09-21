@@ -190,7 +190,7 @@ function scene.install()
             scene.installing = nil
         end
 
-        local url
+        local mainDownload, olympusMetaDownload, olympusBuildDownload
         if version == "manual" then
             installer.update("Select your Everest .zip file", false, "")
 
@@ -215,14 +215,18 @@ function scene.install()
                 return
             end
 
-            url = "file://" .. path
+            mainDownload = ""
+            olympusMetaDownload = ""
+            olympusBuildDownload = "file://" .. path
 
         else
             installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
-            url = version.artifactBase
+            mainDownload = version.mainDownload
+            olympusMetaDownload = version.olympusMetaDownload
+            olympusBuildDownload = version.olympusBuildDownload
         end
 
-        installer.sharpTask("installEverest", install.entry.path, url):calls(function(task, last)
+        installer.sharpTask("installEverest", install.entry.path, mainDownload, olympusMetaDownload, olympusBuildDownload):calls(function(task, last)
             if not last then
                 return
             end
@@ -295,9 +299,12 @@ function scene.load()
 
     threader.routine(function()
         local utilsAsync = threader.wrap("utils")
-        local buildsTask = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Everest/_apis/build/builds")
-        -- TODO: Limit commits range
-        local commitsTask = utilsAsync.downloadJSON("https://api.github.com/repos/EverestAPI/Everest/commits")
+        local buildsTask = utilsAsync.download("https://everestapi.github.io/everestupdater.txt")
+        local url, buildsError = buildsTask:result()
+
+        if url then
+            buildsTask = utilsAsync.downloadJSON(utils.trim(url))
+        end
 
         local list = root:findChild("versions")
 
@@ -315,147 +322,101 @@ function scene.load()
             list:addChild(manualItem)
             return
         end
-        builds = builds.value
-
-        local commits, commitsError = commitsTask:result()
-        if not commits then
-            root:findChild("versionsParent"):addChild(uie.paneled.row({
-                uie.label("Error downloading commits list: " .. tostring(commitsError)),
-            }):with({
-                clip = false,
-                cacheable = false
-            }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
-        end
 
         local firstStable, firstBeta
         local pinSpacer
 
-        local offset = 700
         for bi = 1, #builds do
             local build = builds[bi]
 
-            if (build.status == "completed" or build.status == "succeeded") and (build.reason == "manual" or build.reason == "individualCI") then
-                local text = tostring(build.id + offset)
+            local versionNumber = tostring(build.version)
 
-                local branch = build.sourceBranch:gsub("refs/heads/", "")
-                if branch ~= "dev" then
-                    text = text .. " (" .. branch .. ")"
-                end
+            local branch = build.branch
+            if branch ~= "dev" then
+                versionNumber = versionNumber .. " (" .. branch .. ")"
+            end
 
-                local version = text
+            local info = " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(build.date))
 
-                local info = ""
+            if build.author then
+                info = info .. " ∙ " .. build.author
+            end
 
-                local time = build.finishTime
-                if time then
-                    info = info .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(time))
-                end
+            if build.description then
+                info = info .. "\n" .. build.description
+            end
 
-                local sha = build.sourceVersion
-                if sha and commits then
-                    for ci = 1, #commits do
-                        local c = commits[ci]
-                        if c.sha == sha then
-                            if c.commit.author.email == c.commit.committer.email then
-                                info = info .. " ∙ " .. c.author.login
-                            end
+            if #info ~= 0 then
+                text = { { 1, 1, 1, 1 }, versionNumber, { 1, 1, 1, 0.5 }, info }
+            end
 
-                            local message = c.commit.message
-                            if c.commit.committer.email == "noreply@github.com" then
-                                local pr = ({message:match("(Merge pull request #[^\n]+\n\n)(.*)")})[2]
-                                if pr then
-                                    info = info .. " ∙ Pull Request"
-                                    message = pr
-                                end
-                            end
+            local pin = false
 
-                            local nl = message:find("\n")
-                            if nl then
-                                message = message:sub(1, nl - 1)
-                            end
+            ::readd::
 
-                            info = info .. "\n" .. message
+            local item = uie[branch == "stable" and "listItemGreen" or branch == "beta" and "listItemYellow" or "listItem"](text, build):with(uiu.fillWidth)
+            item.label.wrap = true
 
-                            break
-                        end
+            local index = nil
+
+            if branch == "stable" then
+                if not firstStable then
+                    firstStable = item
+                    if firstBeta then
+                        index = 2
+                    else
+                        index = 1
                     end
                 end
 
-                if #info ~= 0 then
-                    text = { { 1, 1, 1, 1 }, text, { 1, 1, 1, 0.5 }, info }
-                end
-
-                build.version = version
-                build.artifactBase = "https://dev.azure.com/EverestAPI/Everest/_apis/build/builds/" .. build.id .. "/artifacts?$format=zip&artifactName="
-
-                local pin = false
-
-                ::readd::
-
-                local item = uie[branch == "stable" and "listItemGreen" or branch == "beta" and "listItemYellow" or "listItem"](text, build):with(uiu.fillWidth)
-                item.label.wrap = true
-
-                local index = nil
-
-                if branch == "stable" then
-                    if not firstStable then
-                        firstStable = item
-                        if firstBeta then
-                            index = 2
-                        else
-                            index = 1
-                        end
-                    end
-
-                elseif branch == "beta" then
-                    if not firstBeta then
-                        firstBeta = item
-                        if firstStable then
-                            index = 2
-                        else
-                            index = 1
-                        end
+            elseif branch == "beta" then
+                if not firstBeta then
+                    firstBeta = item
+                    if firstStable then
+                        index = 2
+                    else
+                        index = 1
                     end
                 end
+            end
 
-                if index then
-                    if not pinSpacer then
-                        pinSpacer = true
-                        list:addChild(uie.row({
-                            uie.label("Newest")
-                        }):with({
-                            style = {
-                                padding = 4
-                            }
-                        }), 1)
-                        list:addChild(uie.row({
-                            uie.icon("pin"):with({
-                                scale = 16 / 256,
-                                y = 2
-                            }),
-                            uie.label("Pinned")
-                        }):with({
-                            style = {
-                                padding = 4
-                            }
-                        }), 1)
-                    end
-
-                    index = index + 1
-                    pin = true
-                end
-
-                if pin then
-                    item:addChild(uie.icon("pin"):with({
-                        scale = 16 / 256,
-                        y = 2
+            if index then
+                if not pinSpacer then
+                    pinSpacer = true
+                    list:addChild(uie.row({
+                        uie.label("Newest")
+                    }):with({
+                        style = {
+                            padding = 4
+                        }
+                    }), 1)
+                    list:addChild(uie.row({
+                        uie.icon("pin"):with({
+                            scale = 16 / 256,
+                            y = 2
+                        }),
+                        uie.label("Pinned")
+                    }):with({
+                        style = {
+                            padding = 4
+                        }
                     }), 1)
                 end
 
-                list:addChild(item, index)
-                if index then
-                    goto readd
-                end
+                index = index + 1
+                pin = true
+            end
+
+            if pin then
+                item:addChild(uie.icon("pin"):with({
+                    scale = 16 / 256,
+                    y = 2
+                }), 1)
+            end
+
+            list:addChild(item, index)
+            if index then
+                goto readd
             end
         end
 

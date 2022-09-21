@@ -17,9 +17,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
+    public unsafe partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
 
-        public override IEnumerator Run(string root, string artifactBase) {
+        public override IEnumerator Run(string root, string mainDownload, string olympusMetaDownload, string olympusBuildDownload) {
             // MiniInstaller reads orig/Celeste.exe and copies Celeste.exe into it but only if missing.
             // Olympus can help out and delete the orig folder if the existing Celeste.exe isn't modded.
             string installedVersion = Cmds.Get<CmdGetVersionString>().Run(root);
@@ -31,11 +31,11 @@ namespace Olympus {
                 }
             }
 
-            if (artifactBase.StartsWith("file://")) {
-                artifactBase = artifactBase.Substring("file://".Length);
-                yield return Status($"Unzipping {Path.GetFileName(artifactBase)}", false, "download", false);
+            if (olympusBuildDownload.StartsWith("file://")) {
+                olympusBuildDownload = olympusBuildDownload.Substring("file://".Length);
+                yield return Status($"Unzipping {Path.GetFileName(olympusBuildDownload)}", false, "download", false);
 
-                using (FileStream wrapStream = File.Open(artifactBase, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                using (FileStream wrapStream = File.Open(olympusBuildDownload, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                     ZipArchiveEntry zipEntry = wrap.GetEntry("olympus-build/build.zip");
                     if (zipEntry == null) {
@@ -56,7 +56,7 @@ namespace Olympus {
                 try {
                     byte[] zipData;
                     using (WebClient wc = new WebClient())
-                        zipData = wc.DownloadData(artifactBase + "olympus-meta");
+                        zipData = wc.DownloadData(olympusMetaDownload);
                     using (MemoryStream zipStream = new MemoryStream(zipData))
                     using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                         using (Stream sizeStream = zip.GetEntry("olympus-meta/size.txt").Open())
@@ -72,7 +72,7 @@ namespace Olympus {
                     yield return Status("Downloading olympus-build.zip", false, "download", false);
 
                     using (MemoryStream wrapStream = new MemoryStream()) {
-                        yield return Download(artifactBase + "olympus-build", size, wrapStream);
+                        yield return Download(olympusBuildDownload, size, wrapStream);
 
                         yield return Status("Unzipping olympus-build.zip", false, "download", false);
                         wrapStream.Seek(0, SeekOrigin.Begin);
@@ -88,7 +88,7 @@ namespace Olympus {
                     yield return Status("Downloading main.zip", false, "download", false);
 
                     using (MemoryStream zipStream = new MemoryStream()) {
-                        yield return Download(artifactBase + "main", size, zipStream);
+                        yield return Download(mainDownload, size, zipStream);
 
                         yield return Status("Unzipping main.zip", false, "download", false);
                         zipStream.Seek(0, SeekOrigin.Begin);
