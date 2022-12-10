@@ -74,6 +74,11 @@ local updatepaths = {
     { text = "Development", data = "stable,main" }
 }
 
+local mapeditors = {
+    { text = "Lönn (Default)", data = "loenn" },
+    { text = "Ahorn", data = "ahorn" }
+}
+
 
 local extradatas = {
     { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0ade.ga/olympus-extra/olympus-extra-cjk.zip" }
@@ -317,6 +322,17 @@ local root = uie.column({
                             selectedData = config.updates
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+
+                    uie.column({
+                        uie.label("Map Editor"),
+                        uie.dropdown(mapeditors, function(self, value)
+                            config.mapeditor = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.mapeditor
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
                 }):with(uiu.fillWidth),
 
