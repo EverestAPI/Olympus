@@ -5,7 +5,7 @@ using System.IO;
 using System.IO.Compression;
 
 namespace Olympus {
-    public unsafe class CmdInstallLoenn : Cmd<string, string, IEnumerator> {
+    public class CmdInstallLoenn : Cmd<string, string, IEnumerator> {
 
         public override IEnumerator Run(string installPath, string downloadLink) {
             using (MemoryStream wrapStream = new MemoryStream()) {
