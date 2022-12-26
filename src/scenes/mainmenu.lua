@@ -329,14 +329,13 @@ function scene.openLoennMenu()
         local downloadLink = data.Item2
 
         -- version info
+        local installedVersionLabel = "Lönn is currently not installed."
+        if config.loennInstalledVersion ~= "" then
+            installedVersionLabel = "Currently installed version: " .. config.loennInstalledVersion
+        end
+
         local content = {
-            uie.label(
-                (config.loennInstalledVersion == ""
-                    and "Lönn is currently not installed."
-                    or "Currently installed version: " .. config.loennInstalledVersion) .. "\n" ..
-                "Latest version: " .. latestVersion .. "\n" ..
-                "Install folder: " .. config.loennRootPath
-            )
+            uie.label(string.format("%s\nLatest version: %s\nInstall folder: %s", installedVersionLabel, latestVersion, config.loennRootPath))
         }
 
         if latestVersion ~= config.loennInstalledVersion and downloadLink ~= "" then
