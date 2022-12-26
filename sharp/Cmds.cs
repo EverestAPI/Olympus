@@ -96,6 +96,7 @@ namespace Olympus {
             HttpWebRequest req = (HttpWebRequest) WebRequest.Create(url);
             req.Timeout = 10000;
             req.ReadWriteTimeout = 10000;
+            req.UserAgent = "Olympus";
             using (HttpWebResponse res = (HttpWebResponse) req.GetResponse()) {
                 using (Stream input = res.GetResponseStream()) {
                     if (length == 0) {
