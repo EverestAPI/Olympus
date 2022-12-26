@@ -274,6 +274,11 @@ function scene.loadPage(page)
             entries, entriesError = scene.downloadSearchEntries(page)
         end
 
+        -- 1/ the previous page button is disabled if there is a search (search does not have pagination)
+        -- 2/ if a filter is active, the first page is 1
+        -- 3/ if no filter is active (itemtypeFilter is an empty table), the first page is 0 (featured entries)
+        local hasPreviousPage = not isQuery and page > 0 and ((scene.sort == "latest" and next(scene.itemtypeFilter) == nil) or page > 1)
+
         if not entries then
             loading:removeSelf()
             root:addChild(uie.paneled.row({
@@ -283,7 +288,7 @@ function scene.loadPage(page)
                 cacheable = false
             }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
             scene.loadingPage = nil
-            pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and next(scene.itemtypeFilter) == nil) or page > 1)
+            pagePrev.enabled = hasPreviousPage
             pageNext.enabled = not isQuery
             sortDropdown.enabled = not isQuery
             itemtypeFilterDropdown.enabled = not isQuery
@@ -301,7 +306,7 @@ function scene.loadPage(page)
         loading:removeSelf()
         scene.loadingPage = nil
         -- "Featured" should be inaccessible if there is a sort or a filter
-        pagePrev.enabled = not isQuery and page > 0 and ((scene.sort == "latest" and next(scene.itemtypeFilter) == nil) or page > 1)
+        pagePrev.enabled = hasPreviousPage
         pageNext.enabled = not isQuery
         sortDropdown.enabled = not isQuery
         itemtypeFilterDropdown.enabled = not isQuery
@@ -394,11 +399,15 @@ function scene.downloadSearchEntries(query)
 end
 
 function scene.downloadSortedEntries(page, sort, itemtypeFilter)
-    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-list?" ..
-        (sort ~= "" and "sort=" .. sort .. "&" or "") ..
-        (itemtypeFilter.itemtype and "type=" .. itemtypeFilter.itemtype .. "&" or "") ..
-        (itemtypeFilter.categoryid and "category=" .. itemtypeFilter.categoryid .. "&" or "") ..
-        "page=" .. page .. "&full=true"
+    local url = string.format("https://max480-random-stuff.appspot.com/celeste/gamebanana-list?page=%s&full=true&sort=%s", page, sort)
+
+    -- apply optional filters
+    if itemtypeFilter.itemtype then
+        url = url .. "&type=" .. itemtypeFilter.itemtype
+    end
+    if itemtypeFilter.categoryid then
+        url = url .. "&category=" .. itemtypeFilter.categoryid
+    end
 
     local data = scene.cache[url]
     if data ~= nil then
