@@ -71,8 +71,27 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             local install = scene.root:findChild("installs").selected
             install = install and install.data
             -- Check for any version before 1.4.0.0
-            local minorVersion = install and tonumber(install.versionCeleste:match("^1%.(%d+)%."))
-            if minorVersion ~= nil and minorVersion < 4 then
+            local minorVersion = install and install.versionCeleste and tonumber(install.versionCeleste:match("^1%.(%d+)%."))
+
+            if install.versionCeleste == nil then
+                -- getting the version of Celeste failed, and the "version" is the error message that is displayed in the installation list.
+                local errorMessage = install.version
+                if errorMessage:sub(1, 4) == "? - " then
+                    errorMessage = errorMessage:sub(5)
+                end
+                alert({
+                    body = string.format("Detecting the Celeste version failed:\n%s\n\nCheck the path of your install by selecting \"Manage\" in the main menu.", errorMessage),
+                    buttons = {
+                        { "Attempt Installation Anyway", function(container)
+                            container:close("OK")
+                            scene.install()
+                        end },
+                        { "Cancel", function(container)
+                            container:close("OK")
+                        end }
+                    }
+                })
+            elseif minorVersion ~= nil and minorVersion < 4 then
                 alert({
                     body = [[
 Your current version of Celeste is outdated.
