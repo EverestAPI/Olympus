@@ -72,8 +72,17 @@ try
     install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
     install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
 
+    println(""Downgrading Gtk to working version..."")
+    Pkg.add(name=""Gtk"", version=""1.2.2"")
+
+    println(""Cleaning up unused packages..."")
+    using Dates
+    Pkg.gc(collect_delay=Day(0))
+
     Pkg.instantiate()
-    Pkg.API.precompile()
+
+    println(""Precompiling packages..."")
+    Pkg.precompile()
 
     import Ahorn
 
