@@ -81,6 +81,9 @@ try
 
     import Ahorn
 
+    println(""Unpinning Gtk version..."")
+    Pkg.free(""Gtk"")
+
     println(""#OLYMPUS# TIMEOUT END"")
 catch e
     println(""FATAL ERROR"")
