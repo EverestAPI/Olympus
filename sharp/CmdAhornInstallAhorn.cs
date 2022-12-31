@@ -69,6 +69,10 @@ try
 
     Pkg.instantiate()
 
+    println(""Pinning Gtk version..."")
+    Pkg.add(name=""Gtk"", version=""1.2.2"")
+    Pkg.pin(""Gtk"")
+
     install_or_update(""https://github.com/CelestialCartographers/Maple.git"", ""Maple"")
     install_or_update(""https://github.com/CelestialCartographers/Ahorn.git"", ""Ahorn"")
 
