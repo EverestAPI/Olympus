@@ -108,21 +108,33 @@ namespace Olympus {
             public string Name;
             public string Version;
             public string DLL;
+            public string[] Dependencies;
             public bool IsValid;
 
             public void Parse(TextReader reader) {
-                if (reader != null && YamlHelper.Deserializer.Deserialize(reader) is List<object> yamlRoot &&
-                    yamlRoot.Count != 0 && yamlRoot[0] is Dictionary<object, object> yamlEntry) {
+                try {
+                    if (reader != null) {
+                        List<EverestModuleMetadata> yaml = YamlHelper.Deserializer.Deserialize<List<EverestModuleMetadata>>(reader);
+                        if (yaml != null && yaml.Count > 0) {
+                            Name = yaml[0].Name;
+                            Version = yaml[0].Version;
+                            DLL = yaml[0].DLL;
+                            Dependencies = yaml[0].Dependencies.Select(dep => dep.Name).ToArray();
 
-                    IsValid = yamlEntry.TryGetValue("Name", out object yamlName) &&
-                    !string.IsNullOrEmpty(Name = yamlName as string) &&
-                    yamlEntry.TryGetValue("Version", out object yamlVersion) &&
-                    !string.IsNullOrEmpty(Version = yamlVersion as string);
-
-                    if (yamlEntry.TryGetValue("DLL", out object yamlDLL))
-                        DLL = yamlDLL as string;
+                            IsValid = Name != null && Version != null;
+                        }
+                    }
+                } catch {
+                    // ignore parse errors
                 }
             }
+        }
+
+        public class EverestModuleMetadata {
+            public string Name;
+            public string Version;
+            public string DLL;
+            public List<EverestModuleMetadata> Dependencies;
         }
 
     }
