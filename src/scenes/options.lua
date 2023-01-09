@@ -76,7 +76,8 @@ local updatepaths = {
 
 local mapeditors = {
     { text = "Lönn (Default)", data = "loenn" },
-    { text = "Ahorn", data = "ahorn" }
+    { text = "Ahorn", data = "ahorn" },
+    { text = "Both", data = "both" }
 }
 
 
