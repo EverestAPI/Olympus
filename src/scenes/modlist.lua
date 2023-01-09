@@ -403,8 +403,10 @@ function scene.reload()
             local modIndex = 3 -- the 2 first elements are the header, and the search field
 
             for i, mod in ipairs(scene.modlist) do
-                -- a mod is visible if the search is part of the filename (case-insensitive) or if there is no search at all
-                local newVisible = value == "" or string.find(string.lower(mod.info.Path), value, 1, true)
+                -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
+                local newVisible = value == ""
+                    or string.find(string.lower(fs.filename(mod.info.Path)), value, 1, true)
+                    or (mod.info.Name and string.find(string.lower(mod.info.Name), value, 1, true))
 
                 if mod.visible and not newVisible then
                     -- remove from list
