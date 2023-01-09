@@ -339,7 +339,6 @@ Tip: Disabling the mod prevents Everest from loading it, and is as efficient as 
     return item
 end
 
-
 function scene.reload()
     local loadingID = scene.loadingID + 1
     scene.loadingID = loadingID
@@ -398,6 +397,36 @@ function scene.reload()
             }):with(uiu.fillWidth)
         }):with(uiu.fillWidth))
 
+        local searchField = uie.field("", function(self, value, prev)
+            value = string.lower(value)
+
+            local modIndex = 3 -- the 2 first elements are the header, and the search field
+
+            for i, mod in ipairs(scene.modlist) do
+                -- a mod is visible if the search is part of the filename (case-insensitive) or if there is no search at all
+                local newVisible = value == "" or string.find(string.lower(mod.info.Path), value, 1, true)
+
+                if mod.visible and not newVisible then
+                    -- remove from list
+                    list:removeChild(mod.row)
+
+                elseif not mod.visible and newVisible then
+                    -- add back to list
+                    list:addChild(mod.row, modIndex)
+                end
+
+                mod.visible = newVisible
+
+                if newVisible then
+                    modIndex = modIndex + 1
+                end
+            end
+        end):with({
+            placeholder = "Search by file name",
+            enabled = false
+        }):with(uiu.fillWidth)
+        list:addChild(searchField)
+
         local task = sharp.modlist(root):result()
 
         local batch
@@ -415,7 +444,7 @@ function scene.reload()
                     end
                     local row = scene.item(info)
                     list:addChild(row)
-                    table.insert(scene.modlist, { info = info, row = row })
+                    table.insert(scene.modlist, { info = info, row = row, visible = true })
                 else
                     print("modlist.reload encountered nil on poll", task)
                 end
@@ -432,6 +461,7 @@ function scene.reload()
         -- make the enable/disable mod buttons/checkboxes usable now that the list was loaded
         scene.root:findChild("enableAllButton"):setEnabled(true)
         scene.root:findChild("disableAllButton"):setEnabled(true)
+        searchField:setEnabled(true)
 
         for i, mod in ipairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
