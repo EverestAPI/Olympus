@@ -42,7 +42,7 @@ local function buttonBig(icon, text, scene, forceInstall)
     return uie.button(
         uie.row({
             uie.icon(icon):with({ scale = 48 / 256 }),
-            uie.label(text, ui.fontBig):with({ x = -4, y = 11 })
+            uie.label(text, ui.fontBig):with({ x = -4, y = 11 }):as("bigButtonLabel")
         }):with({ style = { spacing = 16 } }),
         type(scene) == "function" and scene or function()
             if checkInstall(forceInstall) then
@@ -681,11 +681,20 @@ function scene.enter()
     local mapeditor = scene.root:findChild("mapeditor")
     mapeditor.children = {}
 
-    if config.mapeditor == "loenn" then
+    local ahornButton
+    local loennButton
+
+    if config.mapeditor == "ahorn" or config.mapeditor == "both" then
+        ahornButton = buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", "ahornsetup", true)
+        mapeditor:addChild(ahornButton)
+    end
+
+    if config.mapeditor == "loenn" or config.mapeditor == "both" then
         if config.loennInstalledVersion ~= "" then
-            mapeditor:addChild(buttonBig("mainmenu/loenn", "Lönn (Map Editor)", function()
+            loennButton = buttonBig("mainmenu/loenn", "Lönn (Map Editor)", function()
                 sharp.launchLoenn(config.loennRootPath)
-            end, true):with(uiu.fillWidth(71)))
+            end, true)
+            mapeditor:addChild(loennButton)
 
             local cogwheel = buttonBig("cogwheel", "", scene.openLoennMenu):with({ width = 48 }):with(uiu.rightbound)
             mapeditor:addChild(cogwheel)
@@ -699,10 +708,30 @@ function scene.enter()
                 end
             end)
         else
-            mapeditor:addChild(buttonBig("mainmenu/loenn", "Lönn (Map Editor)", scene.openLoennMenu, true):with(uiu.fillWidth))
+            loennButton = buttonBig("mainmenu/loenn", "Lönn (Map Editor)", scene.openLoennMenu, true)
+            mapeditor:addChild(loennButton)
         end
-    else
-        mapeditor:addChild(buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", "ahornsetup", true):with(uiu.fillWidth))
+    end
+
+    if config.mapeditor == "both" then
+        -- Ahorn and Lönn buttons next to each other, with extra space for the cogwheel if Lönn is installed
+        -- We should also rename the buttons to remove the "(Map Editor)" part so that both buttons fit
+        local cogwheelSpace = config.loennInstalledVersion ~= "" and 36 or 0
+
+        ahornButton:findChild("bigButtonLabel"):setText("Ahorn")
+        ahornButton:with(uiu.fillWidth(4.5 + cogwheelSpace)):with(uiu.at(0, 0))
+
+        loennButton:findChild("bigButtonLabel"):setText("Lönn")
+        loennButton:with(uiu.fillWidth(4.5 + cogwheelSpace)):with(uiu.at(4.5 - cogwheelSpace, 0))
+
+    elseif config.mapeditor == "ahorn" then
+        -- Ahorn button takes the entire width
+        ahornButton:with(uiu.fillWidth)
+
+    elseif config.mapeditor == "loenn" then
+        -- Lönn button takes the entire width, or leaves some space for the cogwheel if necessary
+        local cogwheelSpace = config.loennInstalledVersion ~= "" and 71 or 0
+        loennButton:with(uiu.fillWidth(cogwheelSpace))
     end
 end
 
