@@ -15,6 +15,7 @@ local scene = {
 
 scene.loadingID = 0
 
+
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -31,51 +32,11 @@ local root = uie.column({
         },
         clip = false,
         cacheable = false
-    }):with(uiu.fill):as("scrollbox"),
+    }):with(uiu.fill),
 
 }):with({
     cacheable = false,
     _fullroot = true
-})
-
-root:findChild("scrollbox").handleY:hook({
-    layoutLate = function(orig, self)
-        orig(self)
-
-        if self.isNeeded and self.height < 20 then
-            -- back up the values used for rendering
-            self.renderY = self.realY
-            self.renderHeight = self.height
-            self.resizeRender = true
-
-            -- make the handle bigger so that it's easier to hit with the mouse!
-            local expandBy = 20 - self.height
-            self.height = 20
-            self.realY = uiu.round(self.realY - (expandBy / 2))
-        else
-            self.resizeRender = false
-        end
-    end,
-
-    draw = function(orig, self)
-        if self.resizeRender then
-            local origY = self.realY
-            local origHeight = self.height
-
-            -- change the dimensions to their rendering values
-            self.realY = self.renderY
-            self.height = self.renderHeight
-
-            -- render
-            orig(self)
-
-            -- change the dimensions back
-            self.realY = origY
-            self.height = origHeight
-        else
-            orig(self)
-        end
-    end
 })
 
 scene.root = root
