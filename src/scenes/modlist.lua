@@ -98,8 +98,119 @@ local function disableMod(row, info)
     end
 end
 
+-- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
+local function checkDisabledDependenciesOfEnabledMod(info, row)
+    local dependenciesToToggle = {}
+    for i, dep in ipairs(info.Dependencies) do
+        local foundDependency = nil
+
+        for j, mod in ipairs(scene.modlist) do
+            if mod.info.Name == dep and (foundDependency == nil or not mod.info.IsBlacklisted) then
+                foundDependency = mod
+
+                if not mod.info.IsBlacklisted then
+                    -- stop looking, we found an enabled mod that has the right mod ID
+                    break
+                end
+            end
+        end
+
+        if foundDependency ~= nil and foundDependency.info.IsBlacklisted then
+            table.insert(dependenciesToToggle, foundDependency)
+        end
+    end
+
+    if next(dependenciesToToggle) ~= nil then
+        alert({
+            body = string.format(
+                "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
+                #dependenciesToToggle,
+                #dependenciesToToggle == 1 and "mod" or "mods",
+                #dependenciesToToggle == 1 and "it" or "them"
+            ),
+            buttons = {
+                {
+                    "Yes",
+                    function(container)
+                        -- enable all the dependencies!
+                        for k, depToToggle in ipairs(dependenciesToToggle) do
+                            enableMod(depToToggle.row, depToToggle.info)
+                        end
+
+                        writeBlacklist()
+                        container:close()
+                    end
+                },
+                {
+                    "No"
+                },
+                {
+                    "Cancel",
+                    function(container)
+                        -- re-disable the mod
+                        disableMod(row, info)
+                        writeBlacklist()
+                        container:close()
+                    end
+                }
+            }
+        })
+    end
+end
+
+-- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
+local function checkEnabledModsDependingOnDisabledMod(info, row)
+    local dependenciesToToggle = {}
+    for i, mod in ipairs(scene.modlist) do
+        if not mod.info.IsBlacklisted then
+            for j, dep in ipairs(mod.info.Dependencies) do
+                if info.Name == dep then
+                    table.insert(dependenciesToToggle, mod)
+                end
+            end
+        end
+    end
+
+    if next(dependenciesToToggle) ~= nil then
+        alert({
+            body = string.format(
+                "%s other %s on this mod.\nDo you want to disable %s as well?",
+                #dependenciesToToggle,
+                #dependenciesToToggle == 1 and "mod depends" or "mods depend",
+                #dependenciesToToggle == 1 and "it" or "them"
+            ),
+            buttons = {
+                {
+                    "Yes",
+                    function(container)
+                        -- disable them all!
+                        for k, depToToggle in ipairs(dependenciesToToggle) do
+                            disableMod(depToToggle.row, depToToggle.info)
+                        end
+
+                        writeBlacklist()
+                        container:close()
+                    end
+                },
+                {
+                    "No"
+                },
+                {
+                    "Cancel",
+                    function(container)
+                        -- re-enable the mod
+                        enableMod(row, info)
+                        writeBlacklist()
+                        container:close()
+                    end
+                }
+            }
+        })
+    end
+end
+
 -- called whenever a mod is enabled or disabled
-local function toggleMod(info, checkbox)
+local function toggleMod(info, newState)
     -- find the UI row associated to this mod info
     local row
     for i, mod in ipairs(scene.modlist) do
@@ -109,121 +220,14 @@ local function toggleMod(info, checkbox)
         end
     end
 
-    if checkbox:getValue() then
-        -- enable the mod that was just checked
+    if newState then
         enableMod(row, info)
         writeBlacklist()
-
-        -- check if the mod has disabled dependencies
-        local dependenciesToToggle = {}
-        for i, dep in ipairs(info.Dependencies) do
-            local foundDependency = nil
-
-            for j, mod in ipairs(scene.modlist) do
-                if mod.info.Name == dep and (foundDependency == nil or not mod.info.IsBlacklisted) then
-                    foundDependency = mod
-
-                    if not mod.info.IsBlacklisted then
-                        -- stop looking, we found an enabled mod that has the right mod ID
-                        break
-                    end
-                end
-            end
-
-            if foundDependency ~= nil and foundDependency.info.IsBlacklisted then
-                table.insert(dependenciesToToggle, foundDependency)
-            end
-        end
-
-        if next(dependenciesToToggle) ~= nil then
-            alert({
-                body = string.format(
-                    "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
-                    #dependenciesToToggle,
-                    #dependenciesToToggle == 1 and "mod" or "mods",
-                    #dependenciesToToggle == 1 and "it" or "them"
-                ),
-                buttons = {
-                    {
-                        "Yes",
-                        function(container)
-                            -- enable all the dependencies!
-                            for k, depToToggle in ipairs(dependenciesToToggle) do
-                                enableMod(depToToggle.row, depToToggle.info)
-                            end
-
-                            writeBlacklist()
-                            container:close()
-                        end
-                    },
-                    {
-                        "No"
-                    },
-                    {
-                        "Cancel",
-                        function(container)
-                            -- re-disable the mod
-                            disableMod(row, info)
-                            writeBlacklist()
-                            container:close()
-                        end
-                    }
-                }
-            })
-        end
+        checkDisabledDependenciesOfEnabledMod(info, row)
     else
-        -- disable the mod that was just unchecked
         disableMod(row, info)
         writeBlacklist()
-
-        -- check if there are enabled mods that depend on the one we are disabling
-        local dependenciesToToggle = {}
-        for i, mod in ipairs(scene.modlist) do
-            if not mod.info.IsBlacklisted then
-                for j, dep in ipairs(mod.info.Dependencies) do
-                    if info.Name == dep then
-                        table.insert(dependenciesToToggle, mod)
-                    end
-                end
-            end
-        end
-
-        if next(dependenciesToToggle) ~= nil then
-            alert({
-                body = string.format(
-                    "%s other %s on this mod.\nDo you want to disable %s as well?",
-                    #dependenciesToToggle,
-                    #dependenciesToToggle == 1 and "mod depends" or "mods depend",
-                    #dependenciesToToggle == 1 and "it" or "them"
-                ),
-                buttons = {
-                    {
-                        "Yes",
-                        function(container)
-                            -- disable them all!
-                            for k, depToToggle in ipairs(dependenciesToToggle) do
-                                disableMod(depToToggle.row, depToToggle.info)
-                            end
-
-                            writeBlacklist()
-                            container:close()
-                        end
-                    },
-                    {
-                        "No"
-                    },
-                    {
-                        "Cancel",
-                        function(container)
-                            -- re-enable the mod
-                            enableMod(row, info)
-                            writeBlacklist()
-                            container:close()
-                        end
-                    }
-                }
-            })
-        end
+        checkEnabledModsDependingOnDisabledMod(info, row)
     end
 end
 
@@ -253,8 +257,8 @@ function scene.item(info)
         uie.label(getLabelTextFor(info)):as("title"),
 
         uie.row({
-            uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox)
-                toggleMod(info, checkbox)
+            uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox, newState)
+                toggleMod(info, newState)
             end)
                 :with(verticalCenter)
                 :with({
