@@ -17,8 +17,7 @@ strategy:
       loveBinary: 'love.exe'
     macos:
       jobArchName: 'macOS'
-      # TODO: Update to macOS-latest once all luarocks steps work on it.
-      imageName: 'macOS-10.15'
+      imageName: 'macOS-latest'
       agentArch: 'macOS'
       artifactPrefix: 'macos.'
       artifactSuffix: ''
