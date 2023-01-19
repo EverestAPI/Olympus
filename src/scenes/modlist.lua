@@ -389,7 +389,7 @@ function scene.reload()
                 end
             end
         end):with({
-            placeholder = "Search by file name",
+            placeholder = "Search by file name or everest.yaml ID",
             enabled = false
         }):with(uiu.fillWidth)
         list:addChild(searchField)
