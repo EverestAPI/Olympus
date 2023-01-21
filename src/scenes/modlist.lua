@@ -100,6 +100,11 @@ end
 
 -- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
 local function checkDisabledDependenciesOfEnabledMod(info, row)
+    if not info.Dependencies then
+        -- the mod has no dependencies to check (probably missing or corrupted everest.yaml)
+        return
+    end
+
     local dependenciesToToggle = {}
     for i, dep in ipairs(info.Dependencies) do
         local foundDependency = nil
@@ -162,7 +167,7 @@ end
 local function checkEnabledModsDependingOnDisabledMod(info, row)
     local dependenciesToToggle = {}
     for i, mod in ipairs(scene.modlist) do
-        if not mod.info.IsBlacklisted then
+        if not mod.info.IsBlacklisted and mod.info.Dependencies then
             for j, dep in ipairs(mod.info.Dependencies) do
                 if info.Name == dep then
                     table.insert(dependenciesToToggle, mod)
