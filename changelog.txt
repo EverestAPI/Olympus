@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ When a crash happens during an Olympus.Sharp task, display a "blue screen" instead of freezing
+∙ Add line wrapping to Olympus News titles
