@@ -296,7 +296,7 @@ Tip: Disabling the mod prevents Everest from loading it, and is as efficient as 
                     })
                 end
             ):with({
-                enabled = info.IsZIP
+                enabled = info.IsFile
             })
 
         }):with({
