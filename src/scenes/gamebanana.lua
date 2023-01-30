@@ -324,7 +324,7 @@ function scene.load()
 
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories?version=3"):result()
+        local data, msg = threader.wrap("utils").downloadYAML("https://max480-random-stuff.appspot.com/celeste/gamebanana-categories"):result()
 
         if not data then
             -- Error while calling the API
@@ -384,7 +384,7 @@ function scene.downloadFeaturedEntries()
 end
 
 function scene.downloadSearchEntries(query)
-    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query) .. "&full=true"
+    local url = "https://max480-random-stuff.appspot.com/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -399,7 +399,7 @@ function scene.downloadSearchEntries(query)
 end
 
 function scene.downloadSortedEntries(page, sort, itemtypeFilter)
-    local url = string.format("https://max480-random-stuff.appspot.com/celeste/gamebanana-list?page=%s&full=true&sort=%s", page, sort)
+    local url = string.format("https://max480-random-stuff.appspot.com/celeste/gamebanana-list?page=%s&sort=%s", page, sort)
 
     -- apply optional filters
     if itemtypeFilter.itemtype then

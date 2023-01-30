@@ -3,6 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ The "Manage Installed Mods" screen now shows .bin files, and folders were moved to the top of the list
-∙ Added line wrapping to Olympus News titles
-∙ Fixed "The operation has timed out" errors when downloading mods for some users with IPv6 issues
+∙ Removed obsolete query parameters from calls to max480-random-stuff.appspot.com
