@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -97,6 +98,15 @@ namespace Olympus {
             req.Timeout = 10000;
             req.ReadWriteTimeout = 10000;
             req.UserAgent = "Olympus";
+
+            // disable IPv6 for this request, as it is known to cause "the request has timed out" issues for some users
+            req.ServicePoint.BindIPEndPointDelegate = delegate (ServicePoint servicePoint, IPEndPoint remoteEndPoint, int retryCount) {
+                if (remoteEndPoint.AddressFamily != AddressFamily.InterNetwork) {
+                    throw new InvalidOperationException("no IPv4 address");
+                }
+                return new IPEndPoint(IPAddress.Any, 0);
+            };
+
             using (HttpWebResponse res = (HttpWebResponse) req.GetResponse()) {
                 using (Stream input = res.GetResponseStream()) {
                     if (length == 0) {

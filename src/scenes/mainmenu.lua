@@ -73,7 +73,7 @@ local function newsEntry(data)
 
     local item = uie.column({
 
-        data.title and uie.label(data.title, ui.fontMedium),
+        data.title and uie.label(data.title, ui.fontMedium):with({ wrap = true }),
 
         data.image and uie.group({
             uie.spinner():with({ time = love.math.random() }),
