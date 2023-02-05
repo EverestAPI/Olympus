@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Removed obsolete query parameters from calls to max480-random-stuff.appspot.com
+∙ Mod browser now uses max480.ovh instead of max480-random-stuff.appspot.com
