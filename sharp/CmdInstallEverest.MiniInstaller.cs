@@ -5,6 +5,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -101,6 +102,14 @@ namespace Olympus {
 
         class MiniInstallerProxy : MarshalByRefObject {
             public void Boot(MiniInstallerBridge bridge) {
+                string installerPath = Path.Combine(bridge.Root, "MiniInstaller.exe");
+
+                if (!File.Exists(installerPath)) {
+                    // This build ships with native MiniInstaller binaries
+                    BootNative(bridge);
+                    return;
+                }
+
                 // .NET hates it when strong-named dependencies get updated.
                 AppDomain.CurrentDomain.AssemblyResolve += (asmSender, asmArgs) => {
                     AssemblyName asmName = new AssemblyName(asmArgs.Name);
@@ -114,7 +123,7 @@ namespace Olympus {
                     return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(bridge.Root), asmName.Name + ".dll"));
                 };
 
-                Assembly installerAssembly = Assembly.LoadFrom(Path.Combine(bridge.Root, "MiniInstaller.exe"));
+                Assembly installerAssembly = Assembly.LoadFrom(installerPath);
                 Type installerType = installerAssembly.GetType("MiniInstaller.Program");
 
                 // Fix MonoMod dying when running with a debugger attached because it's running without a console.
@@ -163,6 +172,38 @@ namespace Olympus {
                     }
 
                 }
+            }
+
+            private void BootNative(MiniInstallerBridge bridge) {
+                string installerPath = Path.Combine(bridge.Root,
+                    PlatformHelper.Is(Platform.Windows) ? "MiniInstaller-win.exe" :
+                    PlatformHelper.Is(Platform.Linux)   ? "MiniInstaller-linux" :
+                    PlatformHelper.Is(Platform.MacOS)   ? "MiniInstaller-osx" :
+                    throw new Exception("Unknown OS platform")
+                );
+
+                if (!File.Exists(installerPath))
+                    throw new Exception("Couldn't find MiniInstaller executable");
+
+                Process proc = new Process();
+                proc.StartInfo.FileName = installerPath;
+                proc.StartInfo.UseShellExecute = false;
+                proc.StartInfo.RedirectStandardInput = true;
+                proc.StartInfo.RedirectStandardOutput = true;
+                proc.StartInfo.RedirectStandardError = true;
+
+                proc.OutputDataReceived += (o, e) => bridge.WriteLine(e.Data);
+                proc.ErrorDataReceived += (o, e) => bridge.WriteLine(e.Data);
+
+                proc.Start();
+                proc.BeginOutputReadLine();
+                proc.BeginErrorReadLine();
+
+                proc.WaitForExit();
+                proc.Close();
+
+                if (proc.ExitCode != 0)
+                    throw new Exception($"MiniInstaller process died: {proc.ExitCode}");
             }
         }
 
