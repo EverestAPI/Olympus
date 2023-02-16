@@ -21,12 +21,16 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
 
-        public static IEnumerator Install(string root) {
+        public static bool CheckNativeMiniInstaller(ZipArchive zip, string prefix = "")
+            => zip.GetEntry($"{prefix}MiniInstaller.exe") == null;
+
+        public static IEnumerator Install(string root, bool isNative) {
             Environment.CurrentDirectory = root;
 
-            yield return StatusSilent("Starting MiniInstaller", false, "monomod", false);
+            yield return StatusSilent($"Starting {(isNative ? "native" : "legacy")} MiniInstaller", false, "monomod", false);
 
             using (MiniInstallerBridge bridge = new MiniInstallerBridge {
+                IsNative = isNative,
                 Encoding = Console.Error.Encoding,
                 Root = root
             }) {
@@ -104,7 +108,7 @@ namespace Olympus {
             public void Boot(MiniInstallerBridge bridge) {
                 string installerPath = Path.Combine(bridge.Root, "MiniInstaller.exe");
 
-                if (!File.Exists(installerPath)) {
+                if (bridge.IsNative) {
                     // This build ships with native MiniInstaller binaries
                     BootNative(bridge);
                     return;
@@ -185,29 +189,30 @@ namespace Olympus {
                 if (!File.Exists(installerPath))
                     throw new Exception("Couldn't find MiniInstaller executable");
 
-                Process proc = new Process();
-                proc.StartInfo.FileName = installerPath;
-                proc.StartInfo.UseShellExecute = false;
-                proc.StartInfo.RedirectStandardInput = true;
-                proc.StartInfo.RedirectStandardOutput = true;
-                proc.StartInfo.RedirectStandardError = true;
+                using (Process proc = new Process() { StartInfo = new ProcessStartInfo() {
+                    FileName = installerPath,
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }}) {
+                    proc.OutputDataReceived += (o, e) => bridge.WriteLine(e.Data);
+                    proc.ErrorDataReceived += (o, e) => bridge.WriteLine(e.Data);
 
-                proc.OutputDataReceived += (o, e) => bridge.WriteLine(e.Data);
-                proc.ErrorDataReceived += (o, e) => bridge.WriteLine(e.Data);
+                    proc.Start();
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
 
-                proc.Start();
-                proc.BeginOutputReadLine();
-                proc.BeginErrorReadLine();
+                    proc.WaitForExit();
 
-                proc.WaitForExit();
-                proc.Close();
-
-                if (proc.ExitCode != 0)
-                    throw new Exception($"MiniInstaller process died: {proc.ExitCode}");
+                    if (proc.ExitCode != 0)
+                        throw new Exception($"MiniInstaller process died: {proc.ExitCode}");
+                }
             }
         }
 
         class MiniInstallerBridge : MarshalByRefObject, IDisposable {
+            public bool IsNative { get; set; }
             public Encoding Encoding { get; set; }
             public string Root { get; set; }
             public string LastLogLine { get; set; }

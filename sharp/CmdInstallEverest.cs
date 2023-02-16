@@ -31,6 +31,7 @@ namespace Olympus {
                 }
             }
 
+            bool isNative;
             if (artifactBase.StartsWith("file://")) {
                 artifactBase = artifactBase.Substring("file://".Length);
                 yield return Status($"Unzipping {Path.GetFileName(artifactBase)}", false, "download", false);
@@ -39,11 +40,14 @@ namespace Olympus {
                 using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                     ZipArchiveEntry zipEntry = wrap.GetEntry("olympus-build/build.zip");
                     if (zipEntry == null) {
+                        isNative = CheckNativeMiniInstaller(wrap, "main/");
                         yield return Unpack(wrap, root, "main/");
                     } else {
                         using (Stream zipStream = zipEntry.Open())
-                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
+                            isNative = CheckNativeMiniInstaller(zip);
                             yield return Unpack(zip, root);
+                        }
                     }
                 }
 
@@ -79,6 +83,7 @@ namespace Olympus {
                         using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                             using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
                             using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
+                                isNative = CheckNativeMiniInstaller(zip);
                                 yield return Unpack(zip, root);
                             }
                         }
@@ -93,6 +98,7 @@ namespace Olympus {
                         yield return Status("Unzipping main.zip", false, "download", false);
                         zipStream.Seek(0, SeekOrigin.Begin);
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
+                            isNative = CheckNativeMiniInstaller(zip, "main/");
                             yield return Unpack(zip, root, "main/");
                         }
                     }
@@ -100,7 +106,7 @@ namespace Olympus {
             }
 
             yield return Status("Starting MiniInstaller", false, "monomod", false);
-            yield return Install(root);
+            yield return Install(root, isNative);
         }
 
     }
