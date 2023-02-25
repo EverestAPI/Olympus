@@ -105,6 +105,33 @@ namespace Olympus {
                 }
             }
 
+            // Legacy MiniInstaller builds can't correctly downgrade .NET Core installs
+            // Restore the install backup in this case
+            if (!isNative && File.Exists(Path.Combine(root, "Celeste.dll"))) {
+                yield return Status("Restoring non-modded backup", false, "", false);
+
+                foreach (string origEntry in Directory.EnumerateFileSystemEntries(Path.Combine(root, "orig"))) {
+                    // Ignore the Content folder - it is either a symlink or a 1-to-1 copy
+                    if (Path.GetFileName(origEntry) == "Content")
+                        continue;
+
+                    if (!File.Exists(origEntry) && !Directory.Exists(origEntry))
+                        continue;
+
+                    string gameEntry = Path.Combine(root, Path.GetRelativePath(Path.Combine(root, "orig"), origEntry));
+                    if (File.Exists(origEntry)) {
+                        File.Delete(gameEntry);
+                        File.Move(origEntry, gameEntry);
+                    } else if (Directory.Exists(gameEntry)) {
+                        Directory.Delete(gameEntry, true);
+                        Directory.Move(origEntry, gameEntry);
+                    }
+                }
+
+                Directory.Delete(origDir, true);
+                File.Delete(Path.Combine(root, "Celeste.dll")); // Explicitly delete Celeste.dll
+            }
+
             yield return Status("Starting MiniInstaller", false, "monomod", false);
             yield return Install(root, isNative);
         }
