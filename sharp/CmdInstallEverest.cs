@@ -118,7 +118,7 @@ namespace Olympus {
                     if (!File.Exists(origEntry) && !Directory.Exists(origEntry))
                         continue;
 
-                    string gameEntry = Path.Combine(root, Path.GetRelativePath(Path.Combine(root, "orig"), origEntry));
+                    string gameEntry = Path.Combine(root, Path.GetFileName(origEntry));
                     if (File.Exists(origEntry)) {
                         File.Delete(gameEntry);
                         File.Move(origEntry, gameEntry);
@@ -128,7 +128,7 @@ namespace Olympus {
                     }
                 }
 
-                Directory.Delete(origDir, true);
+                Directory.Delete(Path.Combine(root, "orig"), true);
                 File.Delete(Path.Combine(root, "Celeste.dll")); // Explicitly delete Celeste.dll
             }
 
