@@ -18,7 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
+    public unsafe partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
 
         public static IEnumerator Install(string root) {
             Environment.CurrentDirectory = root;
