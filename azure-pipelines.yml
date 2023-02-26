@@ -34,7 +34,7 @@ strategy:
       launcher: ''
     linux:
       jobArchName: 'linux'
-      imageName: 'ubuntu-latest'
+      imageName: 'ubuntu-20.04'
       agentArch: 'linux'
       artifactPrefix: 'linux.'
       artifactSuffix: ''
