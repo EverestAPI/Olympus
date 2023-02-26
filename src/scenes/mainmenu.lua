@@ -42,7 +42,7 @@ local function buttonBig(icon, text, scene, forceInstall)
     return uie.button(
         uie.row({
             uie.icon(icon):with({ scale = 48 / 256 }),
-            uie.label(text, ui.fontBig):with({ x = -4, y = 11 })
+            uie.label(text, ui.fontBig):with({ x = -4, y = 11 }):as("bigButtonLabel")
         }):with({ style = { spacing = 16 } }),
         type(scene) == "function" and scene or function()
             if checkInstall(forceInstall) then
@@ -73,7 +73,7 @@ local function newsEntry(data)
 
     local item = uie.column({
 
-        data.title and uie.label(data.title, ui.fontMedium),
+        data.title and uie.label(data.title, ui.fontMedium):with({ wrap = true }),
 
         data.image and uie.group({
             uie.spinner():with({ time = love.math.random() }),
@@ -287,6 +287,169 @@ Press the manage button below.]])
     end
 end
 
+function scene.buttonWithIcon(icon, text, green, cb)
+    return uie[green and "buttonGreen" or "button"](
+        uie.row({ uie.icon(icon):with({ scale = 21 / 256 }), uie.label(text) }):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.styleDeep), function()
+            cb()
+        end
+    ):with(uiu.fillWidth)
+end
+
+function scene.openLoennMenu()
+    -- open an alert, with a "loading" message at first
+    local alertMessage = alert({
+        title = "Lönn (Map Editor)",
+        body = uie.column({
+            uie.row({
+                uie.spinner():with({
+                    width = 16,
+                    height = 16
+                }),
+                uie.label("Loading")
+            }):as("loading")
+        }):with(uiu.fillWidth),
+        buttons = {
+            { "Close", function(container)
+                container:close()
+            end }
+        },
+        init = function(container)
+            container:findChild("box"):with({
+                width = 600, height = 400
+            })
+            container:findChild("buttons"):with(uiu.bottombound)
+        end
+    })
+
+    sharp.getLoennLatestVersion():calls(function (t, data)
+        local latestVersion = data.Item1
+        local downloadLink = data.Item2
+
+        -- version info
+        local installedVersionLabel = "Lönn is currently not installed."
+        if config.loennInstalledVersion ~= "" then
+            installedVersionLabel = "Currently installed version: " .. config.loennInstalledVersion
+        end
+
+        local content = {
+            uie.label(string.format("%s\nLatest version: %s\nInstall folder: %s", installedVersionLabel, latestVersion, config.loennRootPath))
+        }
+
+        if latestVersion ~= config.loennInstalledVersion and downloadLink ~= "" then
+            -- "Install Lönn" or "Update Lönn" (if not installed or out of date, in green)
+            table.insert(content,
+                scene.buttonWithIcon(
+                    config.loennInstalledVersion == "" and "download" or "update",
+                    config.loennInstalledVersion == "" and "Install Lönn" or "Update Lönn",
+                    true,
+                    function(self)
+                        alertMessage:close()
+
+                        local installer = scener.push("installer")
+                        installer.update("Preparing installation of Lönn " .. latestVersion, false, "")
+
+                        installer.sharpTask("installLoenn", config.loennRootPath, downloadLink):calls(function(task, last)
+                            if not last then
+                                return
+                            end
+
+                            config.loennInstalledVersion = latestVersion
+                            config.save()
+
+                            installer.update("Lönn " .. latestVersion .. " successfully installed", 1, "done")
+                            installer.done({
+                                {
+                                    "Launch",
+                                    function()
+                                        sharp.launchLoenn(config.loennRootPath)
+                                        scener.pop(1)
+                                    end
+                                },
+                                {
+                                    "OK",
+                                    function()
+                                        scener.pop(1)
+                                    end
+                                }
+                            })
+                        end)
+                    end
+                ):with(uiu.fillWidth)
+            )
+        end
+
+        if config.loennInstalledVersion ~= "" then
+            -- "Launch Lönn" (if installed, in green if up-to-date)
+            table.insert(content,
+                scene.buttonWithIcon("mainmenu/loenn", "Launch Lönn", latestVersion == config.loennInstalledVersion, function(self)
+                    sharp.launchLoenn(config.loennRootPath)
+                    alertMessage:close()
+                end):with(uiu.fillWidth)
+            )
+
+            -- "Uninstall Lönn" (if installed), displays a confirmation message
+            table.insert(content,
+                scene.buttonWithIcon("delete", "Uninstall Lönn", false, function(self)
+                    local alertContainer = {}
+                    alertContainer.alert = alert({
+                        body = uie.paneled.column({
+                            uie.label("Uninstall Lönn", ui.fontBig),
+                            uie.label("This will delete directory " .. config.loennRootPath .. ".\nAre you sure?"),
+                            uie.row({
+                                uie.button("No", function()
+                                    alertContainer.alert:close()
+                                end),
+                                uie.button("Yes", function()
+                                    alertContainer.alert:close()
+                                    alertMessage:close()
+
+                                    local installer = scener.push("installer")
+                                    installer.update("Preparing uninstallation of Lönn", false, "")
+
+                                    installer.sharpTask("uninstallLoenn", config.loennRootPath):calls(function(task, last)
+                                        if not last then
+                                            return
+                                        end
+
+                                        config.loennInstalledVersion = ""
+                                        config.save()
+
+                                        installer.update("Lönn successfully uninstalled", 1, "done")
+                                        installer.done({
+                                            {
+                                                "OK",
+                                                function()
+                                                    scener.pop(1)
+                                                end
+                                            }
+                                        })
+                                    end)
+                                end)
+                            }):with(uiu.rightbound(0))
+                        }),
+                        buttons = {}
+                    })
+                end):with(uiu.fillWidth)
+            )
+        end
+
+        -- link to readme
+        table.insert(content, uie.label("\nCheck the README for usage instructions, keybinds, help and more:"))
+        table.insert(content, scene.buttonWithIcon("article", "Open Lönn README", false, function()
+            utils.openURL("https://github.com/CelestialCartographers/Loenn/blob/master/README.md")
+        end):with(uiu.fillWidth))
+
+        -- replace the "loading" alert contents with the buttons
+        alertMessage:findChild("loading"):removeSelf()
+        for k, v in ipairs(content) do
+            alertMessage:findChild("body"):addChild(v)
+        end
+    end)
+end
+
 
 local root = uie.row({
     uie.paneled.column({
@@ -299,7 +462,7 @@ local root = uie.row({
             uie.column({
                 buttonBig("mainmenu/gamebanana", "Download Mods", "gamebanana", true):with(uiu.fillWidth),
                 buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
-                buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", "ahornsetup"):with(uiu.fillWidth),
+                uie.row({}):with(uiu.fillWidth):as("mapeditor"),
                 buttonBig("cogwheel", updater.available and "Options & Updates" or "Options", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
                 -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
             }):with({
@@ -515,6 +678,61 @@ end
 function scene.enter()
     scene.reloadInstalls(scene, scene.updateMainList)
 
+    local mapeditor = scene.root:findChild("mapeditor")
+    mapeditor.children = {}
+
+    local ahornButton
+    local loennButton
+
+    if config.mapeditor == "ahorn" or config.mapeditor == "both" then
+        ahornButton = buttonBig("mainmenu/ahorn", "Ahorn (Map Editor)", "ahornsetup", true)
+        mapeditor:addChild(ahornButton)
+    end
+
+    if config.mapeditor == "loenn" or config.mapeditor == "both" then
+        if config.loennInstalledVersion ~= "" then
+            loennButton = buttonBig("mainmenu/loenn", "Lönn (Map Editor)", function()
+                sharp.launchLoenn(config.loennRootPath)
+            end, true)
+            mapeditor:addChild(loennButton)
+
+            local cogwheel = buttonBig("cogwheel", "", scene.openLoennMenu):with({ width = 48 }):with(uiu.rightbound)
+            mapeditor:addChild(cogwheel)
+
+            -- check for updates, and display a (!) if there is a new version available
+            sharp.getLoennLatestVersion():calls(function (t, data)
+                local latestVersion = data.Item1
+
+                if latestVersion ~= config.loennInstalledVersion then
+                    cogwheel:with(utils.important(32))
+                end
+            end)
+        else
+            loennButton = buttonBig("mainmenu/loenn", "Lönn (Map Editor)", scene.openLoennMenu, true)
+            mapeditor:addChild(loennButton)
+        end
+    end
+
+    if config.mapeditor == "both" then
+        -- Ahorn and Lönn buttons next to each other, with extra space for the cogwheel if Lönn is installed
+        -- We should also rename the buttons to remove the "(Map Editor)" part so that both buttons fit
+        local cogwheelSpace = config.loennInstalledVersion ~= "" and 36 or 0
+
+        ahornButton:findChild("bigButtonLabel"):setText("Ahorn")
+        ahornButton:with(uiu.fillWidth(4.5 + cogwheelSpace)):with(uiu.at(0, 0))
+
+        loennButton:findChild("bigButtonLabel"):setText("Lönn")
+        loennButton:with(uiu.fillWidth(4.5 + cogwheelSpace)):with(uiu.at(4.5 - cogwheelSpace, 0))
+
+    elseif config.mapeditor == "ahorn" then
+        -- Ahorn button takes the entire width
+        ahornButton:with(uiu.fillWidth)
+
+    elseif config.mapeditor == "loenn" then
+        -- Lönn button takes the entire width, or leaves some space for the cogwheel if necessary
+        local cogwheelSpace = config.loennInstalledVersion ~= "" and 71 or 0
+        loennButton:with(uiu.fillWidth(cogwheelSpace))
+    end
 end
 
 

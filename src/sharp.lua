@@ -433,13 +433,18 @@ function sharp._run(cid, ...)
     local uid = string.format("(%s)(%s)#%d", cid, require("threader").id, tuid)
     tuid = tuid + 1
 
-    local status = channelStatus:peek()
-    if status == "rip" then
+    local function handleDeath()
+        channelStatus:push("rip") -- let the next ones picking know of the death as well
         if cid == "_init" or cid == "_stop" then
             return false
         else
             error(string.format("Failed running %s %s: sharp thread died", uid, cid))
         end
+    end
+
+    local status = channelStatus:peek()
+    if status == "rip" then
+        return handleDeath()
     end
 
     local function dprint(...)
@@ -458,13 +463,8 @@ function sharp._run(cid, ...)
     if not rv or rv == uid then
         status = channelStatus:demand(0.1)
         if status == "rip" then
-            if cid == "_init" or cid == "_stop" then
-                channelReturn:release()
-                return false
-            else
-                channelReturn:release()
-                error(string.format("Failed running %s %s: sharp thread died", uid, cid))
-            end
+            channelReturn:release()
+            return handleDeath()
         end
         goto reget
     end

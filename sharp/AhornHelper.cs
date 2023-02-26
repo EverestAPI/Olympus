@@ -194,6 +194,7 @@ redirect_stdout(stdoutPrev)
             string env = local ? AhornEnvPath : AhornGlobalEnvPath;
             Environment.SetEnvironmentVariable("AHORN_ENV", env);
             Environment.SetEnvironmentVariable("AHORN_GLOBALENV", AhornGlobalEnvPath);
+            Environment.SetEnvironmentVariable("JULIA_PKG_PRECOMPILE_AUTO", "0");
             if (!Directory.Exists(env))
                 Directory.CreateDirectory(env);
 

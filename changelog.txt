@@ -1,7 +1,6 @@
 Note: This changelog file is manually maintained
 and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
-In case of emergency, copy this: ∙
 
 #changelog#
-∙ I currently don't have the time to maintain a changelog, oops. -jade
+∙ The GameBanana mod browser now connects to a different server

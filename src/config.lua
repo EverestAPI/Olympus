@@ -116,6 +116,8 @@ function config.load()
 
     default(data, "parallax", 1)
 
+    default(data, "mapeditor", "loenn")
+
     default(data, "ahorn", {})
 
     default(data.ahorn, "rootPath", "")
@@ -131,6 +133,9 @@ function config.load()
         "data/fonts/NotoSansCJKsc-Regular.otf",
         "data/fonts/NotoSansCJKtc-Regular.otf"
     })
+
+    default(data, "loennRootPath", fs.joinpath(fs.getStorageDir(), "loenn"))
+    default(data, "loennInstalledVersion", "")
 
     default(data, "extradata", {})
 end

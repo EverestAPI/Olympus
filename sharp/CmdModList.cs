@@ -1,4 +1,4 @@
-﻿using Mono.Cecil;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using MonoMod.Utils;
 using System;
@@ -35,33 +35,9 @@ namespace Olympus {
             else
                 blacklist = new List<string>();
 
-            string[] files = Directory.GetFiles(root);
-            for (int i = 0; i < files.Length; i++) {
-                string file = files[i];
-                string name = Path.GetFileName(file);
-                if (!file.EndsWith(".zip"))
-                    continue;
+            // === mod directories
 
-                ModInfo info = new ModInfo() {
-                    Path = file,
-                    IsZIP = true,
-                    IsBlacklisted = blacklist.Contains(name)
-                };
-
-                using (FileStream zipStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
-                    // info.Hash = BitConverter.ToString(Hasher.ComputeHash(zipStream)).Replace("-", "");
-                    zipStream.Seek(0, SeekOrigin.Begin);
-
-                    using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
-                    using (Stream stream = (zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml"))?.Open())
-                    using (StreamReader reader = stream == null ? null : new StreamReader(stream))
-                        info.Parse(reader);
-                }
-
-                yield return info;
-            }
-
-            files = Directory.GetDirectories(root);
+            string[] files = Directory.GetDirectories(root);
             for (int i = 0; i < files.Length; i++) {
                 string file = files[i];
                 string name = Path.GetFileName(file);
@@ -70,7 +46,7 @@ namespace Olympus {
 
                 ModInfo info = new ModInfo() {
                     Path = file,
-                    IsZIP = false,
+                    IsFile = false,
                     IsBlacklisted = blacklist.Contains(name)
                 };
 
@@ -97,32 +73,91 @@ namespace Olympus {
 
                 yield return info;
             }
+
+
+            // === mod zips
+
+            files = Directory.GetFiles(root);
+            for (int i = 0; i < files.Length; i++) {
+                string file = files[i];
+                string name = Path.GetFileName(file);
+                if (!file.EndsWith(".zip"))
+                    continue;
+
+                ModInfo info = new ModInfo() {
+                    Path = file,
+                    IsFile = true,
+                    IsBlacklisted = blacklist.Contains(name)
+                };
+
+                using (FileStream zipStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
+                    // info.Hash = BitConverter.ToString(Hasher.ComputeHash(zipStream)).Replace("-", "");
+                    zipStream.Seek(0, SeekOrigin.Begin);
+
+                    using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                    using (Stream stream = (zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml"))?.Open())
+                    using (StreamReader reader = stream == null ? null : new StreamReader(stream))
+                        info.Parse(reader);
+                }
+
+                yield return info;
+            }
+
+
+            // === bin files
+
+            for (int i = 0; i < files.Length; i++) {
+                string file = files[i];
+                string name = Path.GetFileName(file);
+                if (!file.EndsWith(".bin"))
+                    continue;
+
+                ModInfo info = new ModInfo() {
+                    Path = file,
+                    IsFile = true,
+                    IsBlacklisted = blacklist.Contains(name)
+                };
+
+                yield return info;
+            }
         }
 
         public class ModInfo {
             public string Path;
             public string Hash;
-            public bool IsZIP;
+            public bool IsFile;
             public bool IsBlacklisted;
 
             public string Name;
             public string Version;
             public string DLL;
+            public string[] Dependencies;
             public bool IsValid;
 
             public void Parse(TextReader reader) {
-                if (reader != null && YamlHelper.Deserializer.Deserialize(reader) is List<object> yamlRoot &&
-                    yamlRoot.Count != 0 && yamlRoot[0] is Dictionary<object, object> yamlEntry) {
+                try {
+                    if (reader != null) {
+                        List<EverestModuleMetadata> yaml = YamlHelper.Deserializer.Deserialize<List<EverestModuleMetadata>>(reader);
+                        if (yaml != null && yaml.Count > 0) {
+                            Name = yaml[0].Name;
+                            Version = yaml[0].Version;
+                            DLL = yaml[0].DLL;
+                            Dependencies = yaml[0].Dependencies.Select(dep => dep.Name).ToArray();
 
-                    IsValid = yamlEntry.TryGetValue("Name", out object yamlName) &&
-                    !string.IsNullOrEmpty(Name = yamlName as string) &&
-                    yamlEntry.TryGetValue("Version", out object yamlVersion) &&
-                    !string.IsNullOrEmpty(Version = yamlVersion as string);
-
-                    if (yamlEntry.TryGetValue("DLL", out object yamlDLL))
-                        DLL = yamlDLL as string;
+                            IsValid = Name != null && Version != null;
+                        }
+                    }
+                } catch {
+                    // ignore parse errors
                 }
             }
+        }
+
+        public class EverestModuleMetadata {
+            public string Name;
+            public string Version;
+            public string DLL;
+            public List<EverestModuleMetadata> Dependencies;
         }
 
     }

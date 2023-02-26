@@ -897,6 +897,8 @@ function love.keypressed(key, scancode, isrepeat)
     if key == "f9" then
         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
             error("SHIFT + F9")
+        elseif love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
+            sharp.crash()
         else
             collectgarbage("collect")
             collectgarbage("collect")
