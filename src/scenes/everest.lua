@@ -73,9 +73,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             -- Check for any version before 1.4.0.0
             local minorVersion = install and install.versionCeleste and tonumber(install.versionCeleste:match("^1%.(%d+)%."))
 
-            local version = root:findChild("versions").selected
-            version = version and version.data
-            
             if install.versionCeleste == nil then
                 -- getting the version of Celeste failed, and the "version" is the error message that is displayed in the installation list.
                 local errorMessage = install.version
@@ -99,23 +96,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                     body = [[
 Your current version of Celeste is outdated.
 Please update to the latest version before installing Everest.]],
-                    buttons = {
-                        { "Attempt Installation Anyway", function(container)
-                            container:close("OK")
-                            scene.install()
-                        end },
-                        { "Cancel", function(container)
-                            container:close("OK")
-                        end }
-                    }
-                })
-            elseif love.system.getOS() == "Windows" and string.find(install.version, "xna") ~= nil and
-            version and version.sourceBranch and version.sourceBranch:gsub("refs/heads/", "") == "core" then
-                alert({
-                    body = [[
-.NET Core Everest builds only support FNA.
-If this copy of Celeste comes from Steam, switch to the opengl beta in the game properties.
-Otherwise, obtain an FNA build of the game from the place where you purchased it.]],
                     buttons = {
                         { "Attempt Installation Anyway", function(container)
                             container:close("OK")
