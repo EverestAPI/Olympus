@@ -19,7 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe partial class CmdInstallEverest : Cmd<string, string, IEnumerator> {
+    public unsafe partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
 
         public static bool CheckNativeMiniInstaller(ZipArchive zip, string prefix = "")
             => zip.GetEntry($"{prefix}MiniInstaller.exe") == null;

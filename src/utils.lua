@@ -147,13 +147,13 @@ function utils.download(url, headers)
         return false, 0, data
     end
 
-    headers = headers or {
+    local headersToUse = headers or {
         ["User-Agent"] = "curl/7.64.1",
         ["Accept"] = "*/*"
     }
 
     local response, error = request.send(url, {
-        headers = headers
+        headers = headersToUse
     })
 
     local body, code
