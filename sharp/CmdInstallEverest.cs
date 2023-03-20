@@ -31,8 +31,21 @@ namespace Olympus {
                 }
             }
 
-            bool isNative;
-            
+            bool isNativeInstall = File.Exists(Path.Combine(root, "Celeste.dll")), isNativeArtifact = false;
+
+            IEnumerator UnpackEverestArtifact(ZipArchive zip, string prefix = "") {
+                isNativeArtifact = CheckNativeMiniInstaller(zip, prefix);
+
+                // Legacy MiniInstaller builds can't correctly downgrade .NET Core installs
+                // Restore the install backup in this case
+                if (!isNativeArtifact && isNativeInstall) {
+                    yield return Status("Restoring non-modded backup", false, "", false);
+                    yield return Cmds.Get<CmdUninstallEverest>().Run(root, mainDownload);
+                }
+
+                yield return Unpack(zip, root, prefix);
+            }
+
             if (olympusBuildDownload.StartsWith("file://")) {
                 olympusBuildDownload = olympusBuildDownload.Substring("file://".Length);
                 yield return Status($"Unzipping {Path.GetFileName(olympusBuildDownload)}", false, "download", false);
@@ -40,15 +53,12 @@ namespace Olympus {
                 using (FileStream wrapStream = File.Open(olympusBuildDownload, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                     ZipArchiveEntry zipEntry = wrap.GetEntry("olympus-build/build.zip");
-                    if (zipEntry == null) {
-                        isNative = CheckNativeMiniInstaller(wrap, "main/");
-                        yield return Unpack(wrap, root, "main/");
-                    } else {
+                    if (zipEntry == null)
+                        yield return UnpackEverestArtifact(wrap, "main/");
+                    else {
                         using (Stream zipStream = zipEntry.Open())
-                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                            isNative = CheckNativeMiniInstaller(zip);
-                            yield return Unpack(zip, root);
-                        }
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                            yield return UnpackEverestArtifact(zip);
                     }
                 }
 
@@ -83,10 +93,8 @@ namespace Olympus {
                         wrapStream.Seek(0, SeekOrigin.Begin);
                         using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                             using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
-                            using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                                isNative = CheckNativeMiniInstaller(zip);
-                                yield return Unpack(zip, root);
-                            }
+                            using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                                yield return UnpackEverestArtifact(zip);
                         }
                     }
 
@@ -98,43 +106,14 @@ namespace Olympus {
 
                         yield return Status("Unzipping main.zip", false, "download", false);
                         zipStream.Seek(0, SeekOrigin.Begin);
-                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                            isNative = CheckNativeMiniInstaller(zip, "main/");
-                            yield return Unpack(zip, root, "main/");
-                        }
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                            yield return UnpackEverestArtifact(zip, "main/");
                     }
                 }
-            }
-
-            // Legacy MiniInstaller builds can't correctly downgrade .NET Core installs
-            // Restore the install backup in this case
-            if (!isNative && File.Exists(Path.Combine(root, "Celeste.dll"))) {
-                yield return Status("Restoring non-modded backup", false, "", false);
-
-                foreach (string origEntry in Directory.EnumerateFileSystemEntries(Path.Combine(root, "orig"))) {
-                    // Ignore the Content folder - it is either a symlink or a 1-to-1 copy
-                    if (Path.GetFileName(origEntry) == "Content")
-                        continue;
-
-                    if (!File.Exists(origEntry) && !Directory.Exists(origEntry))
-                        continue;
-
-                    string gameEntry = Path.Combine(root, Path.GetFileName(origEntry));
-                    if (File.Exists(origEntry)) {
-                        File.Delete(gameEntry);
-                        File.Move(origEntry, gameEntry);
-                    } else if (Directory.Exists(gameEntry)) {
-                        Directory.Delete(gameEntry, true);
-                        Directory.Move(origEntry, gameEntry);
-                    }
-                }
-
-                Directory.Delete(Path.Combine(root, "orig"), true);
-                File.Delete(Path.Combine(root, "Celeste.dll")); // Explicitly delete Celeste.dll
             }
 
             yield return Status("Starting MiniInstaller", false, "monomod", false);
-            yield return Install(root, isNative);
+            yield return Install(root, isNativeArtifact);
         }
 
     }

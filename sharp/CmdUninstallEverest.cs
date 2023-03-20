@@ -29,13 +29,36 @@ namespace Olympus {
             }
 
             int i = 0;
-            string[] origs = Directory.GetFiles(origdir);
+            string[] origs = Directory.GetFileSystemEntries(origdir);
 
-            yield return Status($"Reverting {origs.Length} files", 0f, "backup", false);
-
+            List<string> revertEntries = new List<string>(); 
             foreach (string orig in origs) {
                 string name = Path.GetFileName(orig);
-                yield return Status($"Reverting #{i} / {origs.Length}: {name}", i / (float) origs.Length, "backup", true);
+                
+                // Ignore the Content folder - it is either a symlink or a 1-to-1 copy
+                if (Path.GetFileName(orig) == "Content")
+                    continue;
+
+                // Ignore non-file/directory entries and symlinks
+                // The symlink check is usually not good enough, but it works for our purposes
+                // (the Celeste files should *not* have reparse points)
+                if (!File.Exists(orig) && !Directory.Exists(orig))
+                    continue;
+
+                if (File.Exists(orig) && new FileInfo(orig).Attributes.HasFlag(FileAttributes.ReparsePoint))
+                    continue;
+
+                if (Directory.Exists(orig) && new DirectoryInfo(orig).Attributes.HasFlag(FileAttributes.ReparsePoint))
+                    continue;
+
+                revertEntries.Add(orig);
+            }
+
+            yield return Status($"Reverting {revertEntries.Count} files", 0f, "backup", false);
+
+            foreach (string orig in revertEntries) {
+                string name = Path.GetFileName(orig);
+                yield return Status($"Reverting #{i} / {revertEntries.Count}: {name}", i / (float) revertEntries.Count, "backup", true);
                 i++;
 
                 string to = Path.Combine(root, name);
@@ -45,13 +68,29 @@ namespace Olympus {
                 if (!Directory.Exists(toParent))
                     Directory.CreateDirectory(toParent);
 
-                if (File.Exists(to))
-                    File.Delete(to);
+                if (File.Exists(orig)) {
+                    if (File.Exists(to))
+                        File.Delete(to);
 
-                File.Copy(orig, to);
+                    File.Copy(orig, to);
+                } else {
+                    if (Directory.Exists(to))
+                        Directory.Delete(to, true);
+
+                    void CopyDirectory(DirectoryInfo src, DirectoryInfo dst) {
+                        foreach (FileInfo file in src.GetFiles())
+                            file.CopyTo(Path.Combine(dst.FullName, file.Name));
+
+                        foreach (DirectoryInfo dir in src.GetDirectories())
+                            CopyDirectory(dir, dst.CreateSubdirectory(dir.Name));
+                    }
+
+                    Directory.CreateDirectory(to);
+                    CopyDirectory(new DirectoryInfo(orig), new DirectoryInfo(to));
+                }
             }
 
-            yield return Status($"Reverted {origs.Length} files", 1f, "done", true);
+            yield return Status($"Reverted {revertEntries.Count} files", 1f, "done", true);
         }
 
     }
