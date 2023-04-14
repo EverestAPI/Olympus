@@ -98,14 +98,18 @@ local function disableMod(row, info)
     end
 end
 
--- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
-local function checkDisabledDependenciesOfEnabledMod(info, row)
-    if not info.Dependencies then
-        -- the mod has no dependencies to check (probably missing or corrupted everest.yaml)
-        return
+-- simple "table contains element" function
+local function contains(table, element)
+    for _, value in pairs(table) do
+        if value == element then
+            return true
+        end
     end
+    return false
+end
 
-    local dependenciesToToggle = {}
+-- recursively lists all dependencies of the given mod that should be enabled for this mod to work
+local function findDependenciesToEnableRecursively(info, dependenciesFoundSoFar)
     for i, dep in ipairs(info.Dependencies) do
         local foundDependency = nil
 
@@ -120,10 +124,24 @@ local function checkDisabledDependenciesOfEnabledMod(info, row)
             end
         end
 
-        if foundDependency ~= nil and foundDependency.info.IsBlacklisted then
-            table.insert(dependenciesToToggle, foundDependency)
+        if foundDependency ~= nil and foundDependency.info.IsBlacklisted and not contains(dependenciesFoundSoFar, foundDependency) then
+            -- add this dependency to the list of mods to enable, and check if we should enable any of its dependencies as well
+            table.insert(dependenciesFoundSoFar, foundDependency)
+            dependenciesFoundSoFar = findDependenciesToEnableRecursively(foundDependency.info, dependenciesFoundSoFar)
         end
     end
+
+    return dependenciesFoundSoFar
+end
+
+-- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
+local function checkDisabledDependenciesOfEnabledMod(info, row)
+    if not info.Dependencies then
+        -- the mod has no dependencies to check (probably missing or corrupted everest.yaml)
+        return
+    end
+
+    local dependenciesToToggle = findDependenciesToEnableRecursively(info, {})
 
     if next(dependenciesToToggle) ~= nil then
         alert({
@@ -163,18 +181,26 @@ local function checkDisabledDependenciesOfEnabledMod(info, row)
     end
 end
 
--- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
-local function checkEnabledModsDependingOnDisabledMod(info, row)
-    local dependenciesToToggle = {}
+-- recursively lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency
+local function findDependenciesToDisableRecursively(info, dependenciesFoundSoFar)
     for i, mod in ipairs(scene.modlist) do
         if not mod.info.IsBlacklisted and mod.info.Dependencies then
             for j, dep in ipairs(mod.info.Dependencies) do
-                if info.Name == dep then
-                    table.insert(dependenciesToToggle, mod)
+                if info.Name == dep and not contains(dependenciesFoundSoFar, mod) then
+                    -- add this dependency to the list of mods to disable, and check if we should disable any of the mods depending on it as well
+                    table.insert(dependenciesFoundSoFar, mod)
+                    dependenciesFoundSoFar = findDependenciesToDisableRecursively(mod.info, dependenciesFoundSoFar)
                 end
             end
         end
     end
+
+    return dependenciesFoundSoFar
+end
+
+-- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
+local function checkEnabledModsDependingOnDisabledMod(info, row)
+    local dependenciesToToggle = findDependenciesToDisableRecursively(info, {})
 
     if next(dependenciesToToggle) ~= nil then
         alert({
