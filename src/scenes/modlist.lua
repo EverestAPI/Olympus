@@ -110,6 +110,11 @@ end
 
 -- recursively lists all dependencies of the given mod that should be enabled for this mod to work
 local function findDependenciesToEnableRecursively(info, dependenciesFoundSoFar)
+    if not info.Dependencies then
+        -- the mod has no dependencies to check (probably missing or corrupted everest.yaml)
+        return dependenciesFoundSoFar
+    end
+
     for i, dep in ipairs(info.Dependencies) do
         local foundDependency = nil
 
@@ -136,11 +141,6 @@ end
 
 -- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
 local function checkDisabledDependenciesOfEnabledMod(info, row)
-    if not info.Dependencies then
-        -- the mod has no dependencies to check (probably missing or corrupted everest.yaml)
-        return
-    end
-
     local dependenciesToToggle = findDependenciesToEnableRecursively(info, {})
 
     if next(dependenciesToToggle) ~= nil then
