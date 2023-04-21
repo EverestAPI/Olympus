@@ -10,7 +10,9 @@ local notify = require("notify")
 
 local scene = {
     name = "Mod Manager",
-    modlist = {}
+    modlist = {},
+    onlyShowEnabledMods = false,
+    search = ""
 }
 
 scene.loadingID = 0
@@ -56,6 +58,41 @@ local function writeBlacklist()
     fs.write(fs.joinpath(root, "Mods", "blacklist.txt"), contents)
 end
 
+-- shows or hides mods depending on search and "only show enabled mods" checkbox
+local function refreshVisibleMods()
+    local list = root:findChild("mods")
+
+    local modIndex = 3 -- the 2 first elements are the header, and the search field
+
+    for i, mod in ipairs(scene.modlist) do
+        -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
+        local newVisible =
+            -- only show enabled mods
+            (not scene.onlyShowEnabledMods
+                or not mod.info.IsBlacklisted)
+            and
+            -- search terms
+            (scene.search == ""
+                or string.find(string.lower(fs.filename(mod.info.Path)), scene.search, 1, true)
+                or (mod.info.Name and string.find(string.lower(mod.info.Name), scene.search, 1, true)))
+
+        if mod.visible and not newVisible then
+            -- remove from list
+            list:removeChild(mod.row)
+
+        elseif not mod.visible and newVisible then
+            -- add back to list
+            list:addChild(mod.row, modIndex)
+        end
+
+        mod.visible = newVisible
+
+        if newVisible then
+            modIndex = modIndex + 1
+        end
+    end
+end
+
 -- updates the "X enabled mod(s)" label next to the "enable all" and "disable all" buttons
 local function updateEnabledModCountLabel()
     local enabledModCount = 0
@@ -85,6 +122,10 @@ local function enableMod(row, info)
         info.IsBlacklisted = false
         row:findChild("title"):setText(getLabelTextFor(info))
         updateEnabledModCountLabel()
+
+        if scene.onlyShowEnabledMods then
+            refreshVisibleMods()
+        end
     end
 end
 
@@ -95,6 +136,10 @@ local function disableMod(row, info)
         info.IsBlacklisted = true
         row:findChild("title"):setText(getLabelTextFor(info))
         updateEnabledModCountLabel()
+
+        if scene.onlyShowEnabledMods then
+            refreshVisibleMods()
+        end
     end
 end
 
@@ -375,6 +420,10 @@ function scene.reload()
                 uie.button("Edit blacklist.txt", function()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
                 end),
+                uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
+                    scene.onlyShowEnabledMods = newState
+                    refreshVisibleMods()
+                end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button("Enable All", function()
@@ -394,31 +443,8 @@ function scene.reload()
         }):with(uiu.fillWidth))
 
         local searchField = uie.field("", function(self, value, prev)
-            value = string.lower(value)
-
-            local modIndex = 3 -- the 2 first elements are the header, and the search field
-
-            for i, mod in ipairs(scene.modlist) do
-                -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
-                local newVisible = value == ""
-                    or string.find(string.lower(fs.filename(mod.info.Path)), value, 1, true)
-                    or (mod.info.Name and string.find(string.lower(mod.info.Name), value, 1, true))
-
-                if mod.visible and not newVisible then
-                    -- remove from list
-                    list:removeChild(mod.row)
-
-                elseif not mod.visible and newVisible then
-                    -- add back to list
-                    list:addChild(mod.row, modIndex)
-                end
-
-                mod.visible = newVisible
-
-                if newVisible then
-                    modIndex = modIndex + 1
-                end
-            end
+            scene.search = string.lower(value)
+            refreshVisibleMods()
         end):with({
             placeholder = "Search by file name or everest.yaml ID",
             enabled = false
@@ -459,6 +485,7 @@ function scene.reload()
         -- make the enable/disable mod buttons/checkboxes usable now that the list was loaded
         scene.root:findChild("enableAllButton"):setEnabled(true)
         scene.root:findChild("disableAllButton"):setEnabled(true)
+        scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
 
         for i, mod in ipairs(scene.modlist) do

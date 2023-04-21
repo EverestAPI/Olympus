@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Use maddie480.ovh instead of max480.ovh for the GameBanana mod browser
-∙ Better handling of transitive dependencies when toggling mods
+∙ New "Only show enabled mods" filter in Manage Installed Mods
