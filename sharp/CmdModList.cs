@@ -89,7 +89,7 @@ namespace Olympus {
                         info.Parse(reader);
                 }
 
-                if (!onlyHashEnabledMods || (!info.IsBlacklisted && !info.IsUpdaterBlacklisted)) {
+                if (info.Name != null && (!onlyHashEnabledMods || (!info.IsBlacklisted && !info.IsUpdaterBlacklisted))) {
                     using (FileStream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                         info.Hash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
                 }
