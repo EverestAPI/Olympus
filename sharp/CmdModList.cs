@@ -1,29 +1,18 @@
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using YYProject.XXHash;
 
 namespace Olympus {
-    public unsafe class CmdModList : Cmd<string, IEnumerator> {
+    public class CmdModList : Cmd<string, bool, IEnumerator> {
 
         public static HashAlgorithm Hasher = XXHash64.Create();
 
-        public override IEnumerator Run(string root) {
+        public override IEnumerator Run(string root, bool onlyHashEnabledMods) {
             root = Path.Combine(root, "Mods");
             if (!Directory.Exists(root))
                 yield break;
@@ -34,6 +23,13 @@ namespace Olympus {
                 blacklist = File.ReadAllLines(blacklistPath).Select(l => (l.StartsWith("#") ? "" : l).Trim()).ToList();
             else
                 blacklist = new List<string>();
+
+            List<string> updaterBlacklist;
+            string updaterBlacklistPath = Path.Combine(root, "updaterblacklist.txt");
+            if (File.Exists(updaterBlacklistPath))
+                updaterBlacklist = File.ReadAllLines(updaterBlacklistPath).Select(l => (l.StartsWith("#") ? "" : l).Trim()).ToList();
+            else
+                updaterBlacklist = new List<string>();
 
             // === mod directories
 
@@ -47,7 +43,8 @@ namespace Olympus {
                 ModInfo info = new ModInfo() {
                     Path = file,
                     IsFile = false,
-                    IsBlacklisted = blacklist.Contains(name)
+                    IsBlacklisted = blacklist.Contains(name),
+                    IsUpdaterBlacklisted = updaterBlacklist.Contains(name)
                 };
 
                 try {
@@ -59,17 +56,8 @@ namespace Olympus {
                         using (FileStream stream = File.Open(yamlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                         using (StreamReader reader = new StreamReader(stream))
                             info.Parse(reader);
-
-                        if (!string.IsNullOrEmpty(info.DLL)) {
-                            string dllPath = Path.Combine(file, info.DLL);
-                            if (File.Exists(dllPath)) {
-                                using (FileStream stream = File.Open(dllPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-                                    info.Hash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "");
-                            }
-                        }
                     }
-                } catch (UnauthorizedAccessException) {
-                }
+                } catch (UnauthorizedAccessException) { }
 
                 yield return info;
             }
@@ -87,7 +75,8 @@ namespace Olympus {
                 ModInfo info = new ModInfo() {
                     Path = file,
                     IsFile = true,
-                    IsBlacklisted = blacklist.Contains(name)
+                    IsBlacklisted = blacklist.Contains(name),
+                    IsUpdaterBlacklisted = updaterBlacklist.Contains(name)
                 };
 
                 using (FileStream zipStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
@@ -98,6 +87,11 @@ namespace Olympus {
                     using (Stream stream = (zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml"))?.Open())
                     using (StreamReader reader = stream == null ? null : new StreamReader(stream))
                         info.Parse(reader);
+                }
+
+                if (!onlyHashEnabledMods || (!info.IsBlacklisted && !info.IsUpdaterBlacklisted)) {
+                    using (FileStream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+                        info.Hash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
                 }
 
                 yield return info;
@@ -115,7 +109,8 @@ namespace Olympus {
                 ModInfo info = new ModInfo() {
                     Path = file,
                     IsFile = true,
-                    IsBlacklisted = blacklist.Contains(name)
+                    IsBlacklisted = blacklist.Contains(name),
+                    IsUpdaterBlacklisted = updaterBlacklist.Contains(name)
                 };
 
                 yield return info;
@@ -127,6 +122,7 @@ namespace Olympus {
             public string Hash;
             public bool IsFile;
             public bool IsBlacklisted;
+            public bool IsUpdaterBlacklisted;
 
             public string Name;
             public string Version;

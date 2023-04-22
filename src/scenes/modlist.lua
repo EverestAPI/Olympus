@@ -451,7 +451,7 @@ function scene.reload()
         }):with(uiu.fillWidth)
         list:addChild(searchField)
 
-        local task = sharp.modlist(root):result()
+        local task = sharp.modlist(root, false):result()
 
         local batch
         repeat

@@ -7,6 +7,7 @@ local notify = require("notify")
 local config = require("config")
 local sharp = require("sharp")
 local updater = require("updater")
+local fs = require("fs")
 
 local scene = {
     name = "Main Menu"
@@ -516,12 +517,103 @@ local root = uie.row({
 })
 scene.root = root
 
+local function updateAllModsThenRunGame()
+    local task = sharp.updateAllMods(config.installs[config.install].path, config.updateModsOnStartup == "enabled"):result()
+
+    local alertMessage = alert({
+        title = config.updateModsOnStartup == "enabled" and "Updating enabled mods" or "Updating all mods",
+        body = uie.column({
+            uie.row({
+                uie.spinner():with({
+                    width = 16,
+                    height = 16
+                }),
+                uie.label("Please wait..."):as("loadingMessage")
+            })
+        }):with(uiu.fillWidth),
+        buttons = {
+            {
+                "Skip",
+                function(container)
+                    sharp.free(task)
+                    utils.launch(nil, false, true)
+                    container:close()
+                end
+            }
+        },
+        init = function(container)
+            container:findChild("box"):with({
+                width = 600, height = 120
+            })
+            container:findChild("buttons"):with(uiu.bottombound)
+        end
+    })
+
+    alertMessage:findChild("bg"):hook({
+        onClick = function() end
+    })
+
+    threader.routine(function()
+        local status
+        repeat
+            status = sharp.pollWait(task, true):result() or { "skipped", "", "" }
+            local lastStatusLine = status[3]
+
+            if lastStatusLine then
+                alertMessage:findChild("loadingMessage"):setText(lastStatusLine)
+            end
+        until status[1] ~= "running"
+
+        alertMessage:close()
+
+        if status[1] == "done" then
+            utils.launch(nil, false, true)
+        elseif status[1] ~= "skipped" then
+            alert({
+                body = "An error occurred while updating your mods.\nMake sure you are connected to the Internet and that Lönn is not running!",
+                buttons = {
+                    {
+                        "Retry",
+                        function(container)
+                            updateAllModsThenRunGame()
+                            container:close()
+                        end
+                    },
+                    {
+                        "Open logs folder",
+                        function(container)
+                            utils.openFile(fs.getStorageDir())
+                        end
+                    },
+                    {
+                        "Run anyway",
+                        function(container)
+                            utils.launch(nil, false, true)
+                            container:close()
+                        end
+                    },
+                    {
+                        "Cancel",
+                        function(container)
+                            container:close()
+                        end
+                    },
+                }
+            })
+        end
+    end)
+end
+
 
 scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
     buttonBig("mainmenu/everest", "Everest", function()
-        utils.launch(nil, false, true)
+        if config.updateModsOnStartup == "none" then
+            utils.launch(nil, false, true)
+        else
+            updateAllModsThenRunGame()
+        end
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
     buttonBig("mainmenu/celeste", "Celeste", function()
         utils.launch(nil, true, true)

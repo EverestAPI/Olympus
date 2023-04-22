@@ -80,9 +80,14 @@ local mapeditors = {
     { text = "Both", data = "both" }
 }
 
+local updateModsOnStartupOptions = {
+    { text = "All Mods", data = "all" },
+    { text = "Enabled Mods Only", data = "enabled" },
+    { text = "Disabled", data = "none" }
+}
 
 local extradatas = {
-    { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0ade.ga/olympus-extra/olympus-extra-cjk.zip" }
+    { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0a.de/olympus-extra/olympus-extra-cjk.zip" }
 }
 
 
@@ -193,7 +198,7 @@ scene.bgPicker = uie.scrollbox(
     cacheable = false
 }):with(uiu.fillWidth):with(uiu.fillHeight(true))
 
-local optioncount = 4
+local optioncount = 5
 local root = uie.column({
     uie.scrollbox(
         uie.column({
@@ -277,12 +282,6 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
-                }):with(uiu.fillWidth),
-
-                uie.group({}),
-
-                uie.row({
-
                     uie.column({
                         uie.label("Parallax"),
                         uie.dropdown({
@@ -296,8 +295,13 @@ local root = uie.column({
                         end):with({
                             selectedIndex = config.parallax <= 0 and 4 or config.parallax <= 0.2 and 3 or config.parallax <= 0.5 and 2 or 1
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
 
+                }):with(uiu.fillWidth),
+
+                uie.group({}),
+
+                uie.row({
                     uie.column({
                         uie.label("Vertical Sync"),
                         uie.dropdown({
@@ -310,7 +314,7 @@ local root = uie.column({
                         end):with({
                             selectedIndex = config.vsync and 1 or 2
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Updates"),
@@ -322,7 +326,7 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.updates
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Map Editor"),
@@ -332,6 +336,17 @@ local root = uie.column({
                         end):with({
                             placeholder = "???",
                             selectedData = config.mapeditor
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+
+                    uie.column({
+                        uie.label("Update Mods on Startup"),
+                        uie.dropdown(updateModsOnStartupOptions, function(self, value)
+                            config.updateModsOnStartup = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.updateModsOnStartup
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
