@@ -35,8 +35,8 @@ namespace Olympus {
             foreach (string orig in origs) {
                 string name = Path.GetFileName(orig);
                 
-                // Ignore the Content folder - it is either a symlink or a 1-to-1 copy
-                if (Path.GetFileName(orig) == "Content")
+                // Ignore the Content and Saves folder - it is either a symlink or a 1-to-1 copy
+                if (Path.GetFileName(orig) == "Content" || Path.GetFileName(orig) == "Saves")
                     continue;
 
                 // Ignore non-file/directory entries and symlinks
