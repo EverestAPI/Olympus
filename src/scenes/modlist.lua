@@ -451,7 +451,8 @@ function scene.reload()
         }):with(uiu.fillWidth)
         list:addChild(searchField)
 
-        local task = sharp.modlist(root, false):result()
+        -- string root, bool readYamls, bool onlyUpdatable, bool excludeDisabled
+        local task = sharp.modlist(root, true, false, false):result()
 
         local batch
         repeat
@@ -498,6 +499,10 @@ end
 
 function scene.enter()
     scene.reload()
+end
+
+function scene.leave()
+    scene.loadingID = scene.loadingID + 1
 end
 
 

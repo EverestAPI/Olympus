@@ -21,12 +21,17 @@ namespace Olympus {
             Dictionary<ModUpdateInfo, CmdModList.ModInfo> updates = new Dictionary<ModUpdateInfo, CmdModList.ModInfo>();
 
             int processedCount = 0;
+            int totalCount = 0;
 
-            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, onlyEnabled) }) {
+            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: false, onlyUpdatable: true, onlyEnabled) }) {
+                totalCount++;
+            }
+
+            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: true, onlyUpdatable: true, onlyEnabled) }) {
                 processedCount++;
-                yield return "Checking for outdated mods (" + processedCount + " processed so far)...";
+                yield return "Checking for outdated mods (" + (int) Math.Round(processedCount * 100f / totalCount) + "%)...";
 
-                if (info.Hash != null && modVersionList.ContainsKey(info.Name) && !info.IsUpdaterBlacklisted) {
+                if (info.Hash != null && modVersionList.ContainsKey(info.Name)) {
                     log($"Mod {info.Name}: installed hash {info.Hash}, latest hash(es) {string.Join(", ", modVersionList[info.Name].xxHash)}");
                     if (!modVersionList[info.Name].xxHash.Contains(info.Hash)) {
                         updates[modVersionList[info.Name]] = info;
@@ -62,6 +67,10 @@ namespace Olympus {
 
         private static IEnumerator tryDownloadWithMirror(ModUpdateInfo info, string messagePrefix, string destination) {
             bool success = true;
+
+            if (File.Exists(destination)) {
+                File.Delete(destination);
+            }
 
             using (FileStream stream = new FileStream(destination, FileMode.OpenOrCreate, FileAccess.Write)) {
                 IEnumerator download = Download(info.URL, info.Size, stream);
