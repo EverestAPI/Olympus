@@ -22,7 +22,7 @@ namespace Olympus {
         private static readonly string[] OldEverestFileNames = new string[] {
             "apphosts", "everest-lib",
             "lib64-win-x64", "lib64-win-x86", "lib64-linux", "lib64-osx",
-            "Celeste.xml",
+            "Celeste.dll", "Celeste.xml",
             "Celeste.Mod.mm.dll", "Celeste.Mod.mm.pdb", "Celeste.Mod.mm.xml", "Celeste.Mod.mm.deps.json",
             "NETCoreifier.dll", "NETCoreifier.pdb", "NETCoreifier.deps.json",
             "MiniInstaller.exe", "MiniInstaller-win.exe", "MiniInstaller-linux", "MiniInstaller-osx", "MiniInstaller-win.exe.manifest",
