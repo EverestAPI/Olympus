@@ -318,10 +318,11 @@ function scene.load()
 
     threader.routine(function()
         local utilsAsync = threader.wrap("utils")
-        local buildsTask = utilsAsync.download("https://everestapi.github.io/everestupdater.txt?supportsNativeBuilds=true")
+        local buildsTask = utilsAsync.download("https://everestapi.github.io/everestupdater.txt")
         local url, buildsError = buildsTask:result()
 
         if url then
+            url = url + (url:match("?") and "&" or "?") + "supportsNativeBuilds=true"
             buildsTask = utilsAsync.downloadJSON(utils.trim(url))
         end
 
