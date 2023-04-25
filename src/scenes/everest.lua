@@ -322,8 +322,11 @@ function scene.load()
         local url, buildsError = buildsTask:result()
 
         if url then
-            url = url + (url:match("?") and "&" or "?") + "supportsNativeBuilds=true"
-            buildsTask = utilsAsync.downloadJSON(utils.trim(url))
+            url = utils.trim(url)
+            if string:match(url, "?") then url = url + "&" else url = url + "?" end
+            url = url + "supportsNativeBuilds=true"
+
+            buildsTask = utilsAsync.downloadJSON(url)
         end
 
         local list = root:findChild("versions")
