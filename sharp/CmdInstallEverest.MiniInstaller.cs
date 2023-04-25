@@ -189,6 +189,14 @@ namespace Olympus {
                 if (!File.Exists(installerPath))
                     throw new Exception("Couldn't find MiniInstaller executable");
 
+                if (PlatformHelper.Is(Platform.Linux) || PlatformHelper.Is(Platform.MacOS)) {
+                    // Make MiniInstaller executable
+                    Process chmodProc = Process.Start(new ProcessStartInfo("chmod", $"u+x \"{installerPath}\""));
+                    chmodProc.WaitForExit();
+                    if (chmodProc.ExitCode != 0)
+                        throw new Exception("Failed to set MiniInstaller executable flag");
+                }
+                    
                 using (Process proc = new Process() { StartInfo = new ProcessStartInfo() {
                     FileName = installerPath,
                     UseShellExecute = false,
