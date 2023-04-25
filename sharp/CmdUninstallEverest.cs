@@ -19,6 +19,16 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe class CmdUninstallEverest : Cmd<string, string, IEnumerator> {
 
+        private static readonly string[] OldEverestFileNames = new string[] {
+            "apphosts", "everest-lib",
+            "lib64-win-x64", "lib64-win-x86", "lib64-linux", "lib64-osx",
+            "Celeste.xml",
+            "Celeste.Mod.mm.dll", "Celeste.Mod.mm.pdb", "Celeste.Mod.mm.xml", "Celeste.Mod.mm.deps.json",
+            "NETCoreifier.dll", "NETCoreifier.pdb", "NETCoreifier.deps.json",
+            "MiniInstaller.exe", "MiniInstaller-win.exe", "MiniInstaller-linux", "MiniInstaller-osx", "MiniInstaller-win.exe.manifest",
+            "MiniInstaller.dll", "MiniInstaller.pdb", "MiniInstaller.runtimeconfig.json", "MiniInstaller.deps.json"
+        };
+
         public override IEnumerator Run(string root, string artifactBase) {
             yield return Status("Uninstalling Everest", false, "backup", false);
 
@@ -91,6 +101,23 @@ namespace Olympus {
             }
 
             yield return Status($"Reverted {revertEntries.Count} files", 1f, "done", true);
+
+            yield return Status($"Removing old Everest files", 0f, "backup", false);
+
+            foreach (string name in OldEverestFileNames) {
+                string path = Path.Combine(root, name);
+
+                if (File.Exists(path))
+                    File.Delete(path);
+                else if (Directory.Exists(path))
+                    Directory.Delete(path);
+            }
+
+            foreach (string file in Directory.GetFiles(root)) {
+                string ext = Path.GetExtension(file);
+                if(Path.GetFileName(file).StartsWith("MonoMod.") && (ext == ".dll" || ext == ".pdb" || ext == ".xml" || ext == ".json"))
+                    File.Delete(file);
+            }
         }
 
     }

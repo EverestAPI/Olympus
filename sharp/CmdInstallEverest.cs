@@ -112,7 +112,7 @@ namespace Olympus {
                 }
             }
 
-            yield return Status("Starting MiniInstaller", false, "monomod", false);
+            yield return Status($"Starting {(isNativeArtifact ? "native" : "legacy")} MiniInstaller", false, "monomod", false);
             yield return Install(root, isNativeArtifact);
         }
 
