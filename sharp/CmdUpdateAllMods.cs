@@ -23,11 +23,11 @@ namespace Olympus {
             int processedCount = 0;
             int totalCount = 0;
 
-            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: false, onlyUpdatable: true, onlyEnabled) }) {
+            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: false, computeHashes: false, onlyUpdatable: true, onlyEnabled) }) {
                 totalCount++;
             }
 
-            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: true, onlyUpdatable: true, onlyEnabled) }) {
+            foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: true, computeHashes: true, onlyUpdatable: true, onlyEnabled) }) {
                 processedCount++;
                 yield return "Checking for outdated mods (" + (int) Math.Round(processedCount * 100f / totalCount) + "%)...";
 

@@ -8,11 +8,11 @@ using System.Security.Cryptography;
 using YYProject.XXHash;
 
 namespace Olympus {
-    public class CmdModList : Cmd<string, bool, bool, bool, IEnumerator> {
+    public class CmdModList : Cmd<string, bool, bool, bool, bool, IEnumerator> {
 
         public static HashAlgorithm Hasher = XXHash64.Create();
 
-        public override IEnumerator Run(string root, bool readYamls, bool onlyUpdatable, bool excludeDisabled) {
+        public override IEnumerator Run(string root, bool readYamls, bool computeHashes, bool onlyUpdatable, bool excludeDisabled) {
             root = Path.Combine(root, "Mods");
             if (!Directory.Exists(root))
                 yield break;
@@ -87,7 +87,6 @@ namespace Olympus {
 
                     if (readYamls) {
                         using (FileStream zipStream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
-                            // info.Hash = BitConverter.ToString(Hasher.ComputeHash(zipStream)).Replace("-", "");
                             zipStream.Seek(0, SeekOrigin.Begin);
 
                             using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
@@ -96,7 +95,7 @@ namespace Olympus {
                                 info.Parse(reader);
                         }
 
-                        if (info.Name != null) {
+                        if (computeHashes && info.Name != null) {
                             using (FileStream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                                 info.Hash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
                         }
