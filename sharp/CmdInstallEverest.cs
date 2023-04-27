@@ -31,6 +31,21 @@ namespace Olympus {
                 }
             }
 
+            bool isNativeInstall = File.Exists(Path.Combine(root, "Celeste.dll")), isNativeArtifact = false;
+
+            IEnumerator UnpackEverestArtifact(ZipArchive zip, string prefix = "") {
+                isNativeArtifact = CheckNativeMiniInstaller(zip, prefix);
+
+                // Legacy MiniInstaller builds can't correctly downgrade .NET Core installs
+                // Restore the install backup in this case
+                if (!isNativeArtifact && isNativeInstall) {
+                    yield return Status("Restoring non-modded backup", false, "", false);
+                    yield return Cmds.Get<CmdUninstallEverest>().Run(root, mainDownload);
+                }
+
+                yield return Unpack(zip, root, prefix);
+            }
+
             if (olympusBuildDownload.StartsWith("file://")) {
                 olympusBuildDownload = olympusBuildDownload.Substring("file://".Length);
                 yield return Status($"Unzipping {Path.GetFileName(olympusBuildDownload)}", false, "download", false);
@@ -38,12 +53,12 @@ namespace Olympus {
                 using (FileStream wrapStream = File.Open(olympusBuildDownload, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                     ZipArchiveEntry zipEntry = wrap.GetEntry("olympus-build/build.zip");
-                    if (zipEntry == null) {
-                        yield return Unpack(wrap, root, "main/");
-                    } else {
+                    if (zipEntry == null)
+                        yield return UnpackEverestArtifact(wrap, "main/");
+                    else {
                         using (Stream zipStream = zipEntry.Open())
                         using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
-                            yield return Unpack(zip, root);
+                            yield return UnpackEverestArtifact(zip);
                     }
                 }
 
@@ -78,9 +93,8 @@ namespace Olympus {
                         wrapStream.Seek(0, SeekOrigin.Begin);
                         using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
                             using (Stream zipStream = wrap.GetEntry("olympus-build/build.zip").Open())
-                            using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                                yield return Unpack(zip, root);
-                            }
+                            using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                                yield return UnpackEverestArtifact(zip);
                         }
                     }
 
@@ -92,15 +106,14 @@ namespace Olympus {
 
                         yield return Status("Unzipping main.zip", false, "download", false);
                         zipStream.Seek(0, SeekOrigin.Begin);
-                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
-                            yield return Unpack(zip, root, "main/");
-                        }
+                        using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
+                            yield return UnpackEverestArtifact(zip, "main/");
                     }
                 }
             }
 
-            yield return Status("Starting MiniInstaller", false, "monomod", false);
-            yield return Install(root);
+            yield return Status($"Starting {(isNativeArtifact ? "native" : "legacy")} MiniInstaller", false, "monomod", false);
+            yield return Install(root, isNativeArtifact);
         }
 
     }

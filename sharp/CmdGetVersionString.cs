@@ -32,7 +32,12 @@ namespace Olympus {
             }
 
             try {
-                using (ModuleDefinition game = ModuleDefinition.ReadModule(Path.Combine(root, "Celeste.exe"))) {
+                // Prefer Celeste.dll over Celeste.exe
+                string gamePath = Path.Combine(root, "Celeste.dll");
+                if (!File.Exists(gamePath))
+                    gamePath = Path.Combine(root, "Celeste.exe");
+
+                using (ModuleDefinition game = ModuleDefinition.ReadModule(gamePath)) {
                     TypeDefinition t_Celeste = game.GetType("Celeste.Celeste");
                     if (t_Celeste == null)
                         return new Tuple<string, Version, Version>("Not Celeste!", null, null);

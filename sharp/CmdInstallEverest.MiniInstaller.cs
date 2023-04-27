@@ -5,6 +5,7 @@ using MonoMod.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
@@ -20,12 +21,16 @@ using System.Threading.Tasks;
 namespace Olympus {
     public unsafe partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
 
-        public static IEnumerator Install(string root) {
+        public static bool CheckNativeMiniInstaller(ZipArchive zip, string prefix = "")
+            => zip.GetEntry($"{prefix}MiniInstaller.exe") == null;
+
+        public static IEnumerator Install(string root, bool isNative) {
             Environment.CurrentDirectory = root;
 
-            yield return StatusSilent("Starting MiniInstaller", false, "monomod", false);
+            yield return StatusSilent($"Starting {(isNative ? "native" : "legacy")} MiniInstaller", false, "monomod", false);
 
             using (MiniInstallerBridge bridge = new MiniInstallerBridge {
+                IsNative = isNative,
                 Encoding = Console.Error.Encoding,
                 Root = root
             }) {
@@ -101,6 +106,14 @@ namespace Olympus {
 
         class MiniInstallerProxy : MarshalByRefObject {
             public void Boot(MiniInstallerBridge bridge) {
+                string installerPath = Path.Combine(bridge.Root, "MiniInstaller.exe");
+
+                if (bridge.IsNative) {
+                    // This build ships with native MiniInstaller binaries
+                    BootNative(bridge);
+                    return;
+                }
+
                 // .NET hates it when strong-named dependencies get updated.
                 AppDomain.CurrentDomain.AssemblyResolve += (asmSender, asmArgs) => {
                     AssemblyName asmName = new AssemblyName(asmArgs.Name);
@@ -114,7 +127,7 @@ namespace Olympus {
                     return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(bridge.Root), asmName.Name + ".dll"));
                 };
 
-                Assembly installerAssembly = Assembly.LoadFrom(Path.Combine(bridge.Root, "MiniInstaller.exe"));
+                Assembly installerAssembly = Assembly.LoadFrom(installerPath);
                 Type installerType = installerAssembly.GetType("MiniInstaller.Program");
 
                 // Fix MonoMod dying when running with a debugger attached because it's running without a console.
@@ -164,9 +177,50 @@ namespace Olympus {
 
                 }
             }
+
+            private void BootNative(MiniInstallerBridge bridge) {
+                string installerPath = Path.Combine(bridge.Root,
+                    PlatformHelper.Is(Platform.Windows) ? "MiniInstaller-win.exe" :
+                    PlatformHelper.Is(Platform.Linux)   ? "MiniInstaller-linux" :
+                    PlatformHelper.Is(Platform.MacOS)   ? "MiniInstaller-osx" :
+                    throw new Exception("Unknown OS platform")
+                );
+
+                if (!File.Exists(installerPath))
+                    throw new Exception("Couldn't find MiniInstaller executable");
+
+                if (PlatformHelper.Is(Platform.Linux) || PlatformHelper.Is(Platform.MacOS)) {
+                    // Make MiniInstaller executable
+                    Process chmodProc = Process.Start(new ProcessStartInfo("chmod", $"u+x \"{installerPath}\""));
+                    chmodProc.WaitForExit();
+                    if (chmodProc.ExitCode != 0)
+                        throw new Exception("Failed to set MiniInstaller executable flag");
+                }
+                    
+                using (Process proc = new Process() { StartInfo = new ProcessStartInfo() {
+                    FileName = installerPath,
+                    UseShellExecute = false,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                }}) {
+                    proc.OutputDataReceived += (o, e) => bridge.WriteLine(e.Data);
+                    proc.ErrorDataReceived += (o, e) => bridge.WriteLine(e.Data);
+
+                    proc.Start();
+                    proc.BeginOutputReadLine();
+                    proc.BeginErrorReadLine();
+
+                    proc.WaitForExit();
+
+                    if (proc.ExitCode != 0)
+                        throw new Exception($"MiniInstaller process died: {proc.ExitCode}");
+                }
+            }
         }
 
         class MiniInstallerBridge : MarshalByRefObject, IDisposable {
+            public bool IsNative { get; set; }
             public Encoding Encoding { get; set; }
             public string Root { get; set; }
             public string LastLogLine { get; set; }
