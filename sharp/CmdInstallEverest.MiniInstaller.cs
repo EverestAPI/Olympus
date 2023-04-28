@@ -180,7 +180,8 @@ namespace Olympus {
 
             private void BootNative(MiniInstallerBridge bridge) {
                 string installerPath = Path.Combine(bridge.Root,
-                    PlatformHelper.Is(Platform.Windows) ? "MiniInstaller-win.exe" :
+                    PlatformHelper.Is(Platform.Windows) ?
+                        (PlatformHelper.Is(Platform.Bits64) ? "MiniInstaller-win64.exe" : "MiniInstaller-win.exe") :
                     PlatformHelper.Is(Platform.Linux)   ? "MiniInstaller-linux" :
                     PlatformHelper.Is(Platform.MacOS)   ? "MiniInstaller-osx" :
                     throw new Exception("Unknown OS platform")
