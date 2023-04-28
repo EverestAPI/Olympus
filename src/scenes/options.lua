@@ -228,7 +228,7 @@ local root = uie.column({
 
                             self:updateSelected()
                         end):with(uiu.fillWidth):as("themeDropdown")
-                    }):with(uiu.fillWidth(8.25)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Background image"),

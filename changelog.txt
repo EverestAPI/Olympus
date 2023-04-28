@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added support for .NET Core Everest builds (new "core" branch)
+∙ Fixed overlapping dropdowns in Options & Updates
