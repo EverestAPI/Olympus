@@ -134,7 +134,13 @@ Otherwise, manually install XNA using the button below.]],
                     }
                 })
             elseif version ~= "manual" and version.branch == "core" then
-                exitCode, runtimeOutput = subprocess.call_capture({ "dotnet", "--list-runtimes" })
+                if love.system.getOS() == "Windows" then
+                    runtimeCmd = { "C:\\Windows\\System32\\cmd.exe", "/c", "dotnet", "--list-runtimes" }
+                else
+                    runtimeCmd = { "dotnet", "--list-runtimes" }
+                end
+                
+                exitCode, runtimeOutput = subprocess.call_capture(runtimeCmd)
                 if exitCode == nil or exitCode ~= 0 or not runtimeOutput:match("Microsoft.NETCore.App 7.") then
                     alert({
                         body = [[
