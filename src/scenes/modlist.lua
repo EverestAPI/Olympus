@@ -385,6 +385,8 @@ function scene.reload()
     scene.loadingID = loadingID
 
     scene.modlist = {}
+    scene.onlyShowEnabledMods = false
+    scene.search = ""
 
     return threader.routine(function()
         local loading = scene.root:findChild("loadingMods")
