@@ -134,14 +134,16 @@ Otherwise, manually install XNA using the button below.]],
                     }
                 })
             elseif version ~= "manual" and version.branch == "core" then
-                if love.system.getOS() == "Windows" then
-                    runtimeCmd = { "C:\\Windows\\System32\\cmd.exe", "/c", "dotnet", "--list-runtimes" }
-                else
-                    runtimeCmd = { "dotnet", "--list-runtimes" }
-                end
+                procFile, _ = io.popen("dotnet --list-runtimes")
                 
-                exitCode, runtimeOutput = subprocess.call_capture(runtimeCmd)
-                if exitCode == nil or exitCode ~= 0 or not runtimeOutput:match("Microsoft.NETCore.App 7.") then
+                if procFile then
+                    runtimeOutput = procFile:read("*all")
+                    procFile:close()
+                else
+                    runtimeOutput = nil
+                end
+
+                if not (runtimeOutput and runtimeOutput:match("Microsoft.NETCore.App 7.")) then
                     alert({
                         body = [[
     It is required to install the .NET 7.0 Runtime before installing .NET Core versions of Everest.
