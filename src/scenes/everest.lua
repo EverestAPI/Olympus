@@ -2,6 +2,7 @@ local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local fs = require("fs")
 local registry = require("registry")
+local subprocess = require("subprocess")
 local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
@@ -70,6 +71,10 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
         }):with(uiu.styleDeep), function()
             local install = scene.root:findChild("installs").selected
             install = install and install.data
+            
+            local version = scene.root:findChild("versions").selected
+            version = version and version.data
+
             -- Check for any version before 1.4.0.0
             local minorVersion = install and install.versionCeleste and tonumber(install.versionCeleste:match("^1%.(%d+)%."))
 
@@ -128,6 +133,44 @@ Otherwise, manually install XNA using the button below.]],
                         end }
                     }
                 })
+            elseif version ~= "manual" and version.branch == "core" then
+                exitCode, runtimeOutput = subprocess.call_capture({ "dotnet", "--list-runtimes" })
+                if true or exitCode == nil or exitCode ~= 0 or not runtimeOutput:match("Microsoft.NETCore.App 7.") then
+                    alert({
+                        body = [[
+    It is required to install the .NET 7.0 Runtime before installing .NET Core versions of Everest.
+    Click the button below to download the installer.
+    Alternatively, you can manually install the runtime, then attempt the installation again.]],
+                        buttons = {
+                            { "Install Runtime", function(container)
+                                container:close("OK")
+                                if love.system.getOS() == "Windows" then
+                                    arch = os.getenv("PROCESSOR_ARCHITEW6432") or os.getenv("PROCESSOR_ARCHITECTURE")
+                                    if arch and arch:match("64") then
+                                        utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.5-windows-x64-installer")
+                                    else
+                                        utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.5-windows-x86-installer")
+                                    end
+                                elseif love.system.getOS() == "Linux" then
+                                    utils.openURL("https://learn.microsoft.com/en-us/dotnet/core/install/linux?WT.mc_id=dotnet-35129-website")
+                                elseif love.system.getOS() == "OS X" then
+                                    utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.5-macos-x64-installer")
+                                else
+                                    utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/7.0")
+                                end
+                            end },
+                            { "Attempt Installation Anyway", function(container)
+                                container:close("OK")
+                                scene.install()
+                            end },
+                            { "Cancel", function(container)
+                                container:close("OK")
+                            end }
+                        }
+                    })
+                else
+                    scene.install()
+                end
             else
                 scene.install()
             end
