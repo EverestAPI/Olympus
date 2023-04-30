@@ -26,10 +26,11 @@ namespace Olympus {
 
             Process process = new Process();
 
-            if (exe.EndsWith(".love")) {
-                string sh = exe.Substring(0, exe.Length - 4) + "sh";
-                if (File.Exists(sh))
-                    exe = sh;
+            if (Path.GetExtension(exe) == ".love") {
+                if (File.Exists(Path.ChangeExtension(exe, ".sh")))
+                    exe = Path.ChangeExtension(exe, ".sh");
+                else if (File.Exists(Path.ChangeExtension(exe, null)))
+                    exe = Path.ChangeExtension(exe, null);
             }
 
             process.StartInfo.FileName = exe;
