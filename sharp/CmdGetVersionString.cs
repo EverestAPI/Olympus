@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -32,10 +33,16 @@ namespace Olympus {
             }
 
             try {
-                // Prefer Celeste.dll over Celeste.exe
-                string gamePath = Path.Combine(root, "Celeste.dll");
-                if (!File.Exists(gamePath))
-                    gamePath = Path.Combine(root, "Celeste.exe");
+                string gamePath = Path.Combine(root, "Celeste.exe");
+
+                // Use Celeste.dll if Celeste.exe is not a managed assembly
+                try {
+                    _ = AssemblyName.GetAssemblyName(gamePath);
+                } catch (FileNotFoundException) {
+                    gamePath = Path.Combine(root, "Celeste.dll");
+                } catch (BadImageFormatException) {
+                    gamePath = Path.Combine(root, "Celeste.dll");
+                }
 
                 using (ModuleDefinition game = ModuleDefinition.ReadModule(gamePath)) {
                     TypeDefinition t_Celeste = game.GetType("Celeste.Celeste");

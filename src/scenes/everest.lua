@@ -111,6 +111,27 @@ Please update to the latest version before installing Everest.]],
                         end }
                     }
                 })
+            elseif not install.versionEverest and fs.isFile(install.entry.path .. "/Celeste.dll") then
+                alert({
+                    body = [[
+Residual files from a .NET Core build have been detected.
+These files could cause the installation of older Everest versions to fail.
+They should be removed before attempting to install Everest.
+]],
+                    buttons = {
+                        { "Remove Residual Files", function(container)
+                            container:close("OK")
+                            scene.uninstall()
+                        end },
+                        { "Attempt Installation Anyway", function(container)
+                            container:close("OK")
+                            scene.install()
+                        end },
+                        { "Cancel", function(container)
+                            container:close("OK")
+                        end }
+                    }
+                })
             elseif love.system.getOS() == "Windows" and string.find(install.version, "xna") ~= nil and
             not (registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Microsoft\XNA\Framework\v4.0\Installed]]) or
             registry.getKey([[HKLM\SOFTWARE\Microsoft\XNA\Framework\v4.0\Installed]])) then

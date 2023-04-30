@@ -588,11 +588,14 @@ function finder.fixRoot(root, appname)
         if fs.isFile(fs.joinpath(path, appname .. ".exe")) then
             print("[finder]", "found " .. appname .. ".exe root", path)
             return path
+        elseif fs.isFile(fs.joinpath(path, appname .. ".dll")) then
+            print("[finder]", "found " .. appname .. ".dll root", path)
+            return path
         end
     end
 
     if root:match("[Cc]eleste") then
-        print("[finder]", "found install root without Celeste.exe", root)
+        print("[finder]", "found install root without Celeste.exe or Celeste.dll", root)
     end
     return nil
 end
