@@ -8,6 +8,7 @@ local scener = require("scener")
 local config = require("config")
 local sharp = require("sharp")
 local alert = require("alert")
+local modupdater = require("modupdater")
 local mainmenu = scener.preload("mainmenu")
 require("love.system")
 
@@ -331,7 +332,7 @@ function scene.install()
                 {
                     "Launch",
                     function()
-                        utils.launch(install.entry.path)
+                        modupdater.updateAllModsThenRunGame(install.entry.path)
                         scener.pop(2)
                     end
                 },

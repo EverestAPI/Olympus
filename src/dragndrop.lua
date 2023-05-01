@@ -1,6 +1,5 @@
 local ui, uiu, uie = require("ui").quick()
 local fs = require("fs")
-local utils = require("utils")
 local threader = require("threader")
 local scener = require("scener")
 local config = require("config")
@@ -9,6 +8,7 @@ local native = require("native")
 local alert = require("alert")
 local notify = require("notify")
 local modinstaller = require("modinstaller")
+local modupdater = require("modupdater")
 
 function love.filedropped(file)
     threader.routine(function()
@@ -72,7 +72,7 @@ Do you want to go to the Celeste installation manager?]],
                     {
                         "Launch",
                         function()
-                            utils.launch(install.entry.path)
+                            modupdater.updateAllModsThenRunGame(install.entry.path, true)
                             scener.pop()
                         end
                     },

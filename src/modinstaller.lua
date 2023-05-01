@@ -7,6 +7,7 @@ local alert = require("alert")
 local scener = require("scener")
 local sharp = require("sharp")
 local registry = require("registry")
+local modupdater = require("modupdater")
 
 local modinstaller = {}
 
@@ -89,7 +90,7 @@ function modinstaller.install(modurl, cb)
             {
                 "Launch",
                 function()
-                    cb(utils.launch(install))
+                    cb(modupdater.updateAllModsThenRunGame(install))
                 end
             },
             {

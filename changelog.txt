@@ -3,6 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Fixed overlapping dropdowns in Options & Updates
-∙ Fixed search and "only show enabled mods" not being reset properly when leaving
-the "Manage Installed Mods" screen and coming back
+∙ Made mod updating trigger at all places launching the game (after installing a mod, updating Everest, etc)
