@@ -137,7 +137,7 @@ function config.load()
     default(data, "loennRootPath", fs.joinpath(fs.getStorageDir(), "loenn"))
     default(data, "loennInstalledVersion", "")
 
-    default(data, "updateModsOnStartup", "enabled")
+    default(data, "updateModsOnStartup", "none")
 
     default(data, "extradata", {})
 end

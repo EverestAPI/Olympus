@@ -83,7 +83,7 @@ local mapeditors = {
 local updateModsOnStartupOptions = {
     { text = "All Mods", data = "all" },
     { text = "Enabled Mods Only", data = "enabled" },
-    { text = "Disabled", data = "none" }
+    { text = "Disabled (Default)", data = "none" }
 }
 
 local extradatas = {
