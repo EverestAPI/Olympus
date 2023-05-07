@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,6 +65,8 @@ namespace Olympus {
             Restep:
             try {
                 if (Enumerator.MoveNext()) {
+                    if (Status == "interrupted") return false;
+
                     object current = Enumerator.Current;
                     if (current is IEnumerator pass) {
                         Stack.Push(Enumerator);
@@ -192,6 +194,13 @@ namespace Olympus {
         }
 
         public void Dispose() {
+            if (Alive) {
+                Console.Error.WriteLine($"[sharp] Task {ID} was interrupted while running");
+                Status = "interrupted";
+                Alive = false;
+                Event.Set();
+            }
+
             Event.Dispose();
         }
 

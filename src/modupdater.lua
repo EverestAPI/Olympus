@@ -52,7 +52,7 @@ function modupdater.updateAllModsThenRunGame(path, notify)
     threader.routine(function()
         local status
         repeat
-            status = sharp.pollWait(task, true):result() or { "skipped", "", "" }
+            status = sharp.pollWait(task, true):result() or { "interrupted", "", "" }
             local lastStatusLine = status[3]
 
             if lastStatusLine then
@@ -64,7 +64,7 @@ function modupdater.updateAllModsThenRunGame(path, notify)
 
         if status[1] == "done" then
             utils.launch(nil, false, notify)
-        elseif status[1] ~= "skipped" then
+        elseif status[1] ~= "interrupted" then
             alert({
                 body = "An error occurred while updating your mods.\nMake sure you are connected to the Internet and that Lönn is not running!",
                 buttons = {
