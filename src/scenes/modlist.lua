@@ -34,11 +34,31 @@ local root = uie.column({
         },
         clip = false,
         cacheable = false
-    }):with(uiu.fill),
+    }):with(uiu.fill):as("scrollbox"),
 
 }):with({
     cacheable = false,
     _fullroot = true
+})
+
+root:findChild("scrollbox").handleY:hook({
+    layoutLate = function(orig, self)
+        orig(self)
+
+        self.expandBy = 0
+        if self.isNeeded and self.height < 20 then
+            -- make the handle bigger so that it's easier to hit with the mouse!
+            self.expandBy = 20 - self.height
+            self.height = 20
+            self.realY = uiu.round(self.realY - self.expandBy * (self.realY / self.parent.height))
+        end
+    end,
+
+    onDrag = function(orig, self, x, y, dx, dy)
+        -- adapt the scrolling speed to the bigger handle, so that it doesn't "slip" behind the mouse
+        dy = dy + dy * self.expandBy / self.parent.height
+        orig(self, x, y, dx, dy)
+    end
 })
 
 scene.root = root
