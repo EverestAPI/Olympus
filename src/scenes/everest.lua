@@ -157,6 +157,24 @@ Otherwise, manually install XNA using the button below.]],
                 })
             elseif version ~= "manual" and version.branch == "core" then
                 procFile, _ = io.popen("dotnet --list-runtimes")
+
+                if not procFile then
+                    -- Fallback to the default installation path
+                    local dotnetPath = nil
+                    if love.system.getOS() == "Windows" then
+                        arch = os.getenv("PROCESSOR_ARCHITEW6432") or os.getenv("PROCESSOR_ARCHITECTURE")
+                        if arch and arch:match("64") then
+                            dotnetPath = os.getenv("ProgramFiles") .. "\\dotnet"
+                        else
+                            dotnetPath = os.getenv("ProgramFiles(x86)") .. "\\dotnet"
+                        end
+                    elseif love.system.getOS() == "Linux" then
+                        dotnetPath = "/usr/share/dotnet"
+                    elseif love.system.getOS() == "OS X" then
+                        dotnetPath = "/usr/local/share/dotnet"
+                    end
+                    procFile, _ = io.popen(dotnetPath .. fs.dirSeparator .. "dotnet --list-runtimes")
+                end
                 
                 if procFile then
                     runtimeOutput = procFile:read("*all")
