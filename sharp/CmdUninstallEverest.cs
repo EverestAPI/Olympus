@@ -30,7 +30,9 @@ namespace Olympus {
         };
 
         public override IEnumerator Run(string root, string artifactBase) {
-            yield return Status("Uninstalling Everest", false, "backup", false);
+            bool isCoreBuild = File.Exists(Path.Combine(root, "Celeste.dll"));
+
+            yield return Status(isCoreBuild ? "Uninstalling .NET Core Everest" : "Uninstalling Everest", false, "backup", false);
 
             string origdir = Path.Combine(root, "orig");
             if (!Directory.Exists(origdir)) {
@@ -38,6 +40,36 @@ namespace Olympus {
                 throw new Exception($"Backup folder not found: {origdir}");
             }
 
+            // Remove old Everest files
+            yield return Status($"Removing old Everest files", 0f, "backup", false);
+
+            foreach (string name in OldEverestFileNames) {
+                string path = Path.Combine(root, name);
+
+                if (File.Exists(path))
+                    File.Delete(path);
+                else if (Directory.Exists(path))
+                    Directory.Delete(path, true);
+            }
+
+            foreach (string file in Directory.GetFiles(root)) {
+                string ext = Path.GetExtension(file);
+                if(Path.GetFileName(file).StartsWith("MonoMod.") && (ext == ".dll" || ext == ".pdb" || ext == ".xml" || ext == ".json"))
+                    File.Delete(file);
+            }
+
+            if (isCoreBuild && File.Exists(Path.Combine(root, "Celeste")))
+                File.Delete(Path.Combine(root, "Celeste"));
+
+            // Determine if this is a MacOS build
+            string pathOsxExecDir = null;
+            if (root.Replace(Path.DirectorySeparatorChar, '/').Trim('/').EndsWith(".app/Contents/Resources")) {
+                pathOsxExecDir = Path.Combine(Path.GetDirectoryName(root), "MacOS");
+                if (!Directory.Exists(pathOsxExecDir))
+                    pathOsxExecDir = null;
+            }
+
+            // Determine files to revert
             int i = 0;
             string[] origs = Directory.GetFileSystemEntries(origdir);
 
@@ -64,6 +96,7 @@ namespace Olympus {
                 revertEntries.Add(orig);
             }
 
+            // Revert files
             yield return Status($"Reverting {revertEntries.Count} files", 0f, "backup", false);
 
             foreach (string orig in revertEntries) {
@@ -72,6 +105,15 @@ namespace Olympus {
                 i++;
 
                 string to = Path.Combine(root, name);
+
+                if (isCoreBuild && pathOsxExecDir != null) {
+                    // Some .NET Core backups are not from the game's folder
+                    if (name.Equals("Celeste", StringComparison.OrdinalIgnoreCase))
+                        to = Path.Combine(pathOsxExecDir, "Celeste");
+                    else if (name.Equals("osx", StringComparison.OrdinalIgnoreCase))
+                        to = Path.Combine(pathOsxExecDir, "osx");
+                }
+
                 string toParent = Path.GetDirectoryName(to);
                 Console.Error.WriteLine($"{orig} -> {to}");
 
@@ -101,23 +143,6 @@ namespace Olympus {
             }
 
             yield return Status($"Reverted {revertEntries.Count} files", 1f, "done", true);
-
-            yield return Status($"Removing old Everest files", 0f, "backup", false);
-
-            foreach (string name in OldEverestFileNames) {
-                string path = Path.Combine(root, name);
-
-                if (File.Exists(path))
-                    File.Delete(path);
-                else if (Directory.Exists(path))
-                    Directory.Delete(path, true);
-            }
-
-            foreach (string file in Directory.GetFiles(root)) {
-                string ext = Path.GetExtension(file);
-                if(Path.GetFileName(file).StartsWith("MonoMod.") && (ext == ".dll" || ext == ".pdb" || ext == ".xml" || ext == ".json"))
-                    File.Delete(file);
-            }
         }
 
     }
