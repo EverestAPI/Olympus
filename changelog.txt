@@ -3,7 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added support for the Everest "core" branch
-∙ New "Only show enabled mods" filter in Manage Installed Mods
-∙ Ability to auto-update mods before game startup when clicking the "Everest" button
-∙ The scrollbar in "Manage Installed Mods" now has a minimal height of 20 pixels
+∙ Prefer system install of love2d on Mac/Linux if it is more recent than the bundled one

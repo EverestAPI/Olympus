@@ -36,37 +36,37 @@ fi
 # 4. love2d is always too old, but it is used as a last resource, if missing just cry
 
 if command -v love >/dev/null 2>&1; then
-	# Get installed love version
-	LOVE_VER=$(love --version | awk '{split($0,ver," "); print ver[2]}')
-	LOVE_VER_MAJ=$(echo $LOVE_VER | awk '{split($0,mver,"."); print mver[1]}')
-	LOVE_VER_MIN=$(echo $LOVE_VER | awk '{split($0,mver,"."); print mver[2]}')
-	
-	# Get bundled love version
-	if [ -f "love" ]; then
-		BUN_LOVE_VER=$(./love --version | awk '{split($0,ver," "); print ver[2]}')
-		BUN_LOVE_VER_MAJ=$(echo $BUN_LOVE_VER | awk '{split($0,mver,"."); print mver[1]}')
-		BUN_LOVE_VER_MIN=$(echo $BUN_LOVE_VER | awk '{split($0,mver,"."); print mver[2]}')
-		# Compare versions
-		if [ $LOVE_VER_MAJ -gt $BUN_LOVE_VER_MAJ ] || 
-			([ $LOVE_VER_MAJ -eq $BUN_LOVE_VER_MAJ ] && [ $LOVE_VER_MIN -ge $BUN_LOVE_VER_MIN ]); then
-			echo "Using system wide love installation"
-			love --fused olympus.love $@ # Go with it
-			exit
-		fi # Too old, check other options
-	else # if no bundled love, just use it
-		echo "Using system wide love installation, unknown target version"
-		love --fused olympus.love $@
-		exit
-	fi
+    # Get installed love version
+    LOVE_VER=$(love --version | awk '{split($0,ver," "); print ver[2]}')
+    LOVE_VER_MAJ=$(echo $LOVE_VER | awk '{split($0,mver,"."); print mver[1]}')
+    LOVE_VER_MIN=$(echo $LOVE_VER | awk '{split($0,mver,"."); print mver[2]}')
+
+    # Get bundled love version
+    if [ -f "love" ]; then
+        BUN_LOVE_VER=$(./love --version | awk '{split($0,ver," "); print ver[2]}')
+        BUN_LOVE_VER_MAJ=$(echo $BUN_LOVE_VER | awk '{split($0,mver,"."); print mver[1]}')
+        BUN_LOVE_VER_MIN=$(echo $BUN_LOVE_VER | awk '{split($0,mver,"."); print mver[2]}')
+        # Compare versions
+        if [ $LOVE_VER_MAJ -gt $BUN_LOVE_VER_MAJ ] ||
+            ([ $LOVE_VER_MAJ -eq $BUN_LOVE_VER_MAJ ] && [ $LOVE_VER_MIN -ge $BUN_LOVE_VER_MIN ]); then
+            echo "Using system wide love installation"
+            love --fused olympus.love $@ # Go with it
+            exit
+        fi # Too old, check other options
+    else # if no bundled love, just use it
+        echo "Using system wide love installation, unknown target version"
+        love --fused olympus.love $@
+        exit
+    fi
 fi
 if [ -f "love" ]; then
-	echo "Using bundled love"
+    echo "Using bundled love"
     ./love --fused olympus.love $@
 elif command -v love >/dev/null 2>&1; then # We know it is old, but go for it anyway
-	echo "Using oudated system wide love installation"
-	love --fused olympus.love $@
+    echo "Using oudated system wide love installation"
+    love --fused olympus.love $@
 elif command -v love2d >/dev/null 2>&1; then
-	echo "Using love2d, trouble incoming (hopefully not)"
+    echo "Using love2d, trouble incoming (hopefully not)"
     love2d --fused olympus.love $@
 else
     echo "love2d not found!"
