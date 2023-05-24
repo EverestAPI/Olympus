@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ The scrollbar in "Manage Installed Mods" now has a minimal height of 20 pixels
+∙ Fixed a crash when clicking "Retry" after mod updating failed

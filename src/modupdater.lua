@@ -71,7 +71,7 @@ function modupdater.updateAllModsThenRunGame(path, notify)
                     {
                         "Retry",
                         function(container)
-                            updateAllModsThenRunGame()
+                            modupdater.updateAllModsThenRunGame()
                             container:close()
                         end
                     },
