@@ -5,6 +5,7 @@ require("love_filesystem_unsandboxing")
 local lfsStatus, lfs = pcall(require, "lfs_ffi")
 local physfsStatus, physfs = pcall(require, "physfs")
 local threader = require("threader")
+local sharp = require("sharp")
 require("love.system")
 require("love.filesystem")
 
@@ -297,7 +298,8 @@ function fs.getStorageDir()
     local userOS = love.system.getOS()
 
     if userOS == "Windows" then
-        return fs.joinpath(os.getenv("LocalAppData"), name)
+        local appdata = sharp.initStatus and sharp.getEnv("LocalAppdata"):result() or os.getenv("LocalAppData")
+        return fs.joinpath(appdata, name)
 
     elseif userOS == "Linux" then
         return fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), name)

@@ -197,6 +197,21 @@ function love.load(args)
 
     fs = require("fs")
 
+    sharp = require("sharp")
+    local sharpStatus, sharpError = pcall(sharp.init, debugging or debuggingSharp, debuggingSharp)
+    if not sharpStatus then
+        love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
+    else
+        threader.routine(function()
+            for i = 1, 4 do
+                for j = 1, 10 do
+                    sharp.echo("warmup " .. tostring(i) .. " " .. tostring(j)):result()
+                end
+                threader.sleep(0.01)
+            end
+        end)
+    end
+
     config = require("config")
     config.load()
 
@@ -260,21 +275,6 @@ function love.load(args)
     themer = require("themer")
 
     themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
-
-    sharp = require("sharp")
-    local sharpStatus, sharpError = pcall(sharp.init, debugging or debuggingSharp, debuggingSharp)
-    if not sharpStatus then
-        love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
-    else
-        threader.routine(function()
-            for i = 1, 4 do
-                for j = 1, 10 do
-                    sharp.echo("warmup " .. tostring(i) .. " " .. tostring(j)):result()
-                end
-                threader.sleep(0.01)
-            end
-        end)
-    end
 
     local root = uie.column({
         require("background")(),

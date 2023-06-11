@@ -302,7 +302,7 @@ function finder.findLegendaryRoot()
 
     -- As of the time of writing this, Legendary is only supported for Windows and Linux.
     -- It follows XDG_CONFIG_HOME and ~/.config/legendary on all platforms.
-    local root = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(userOS == "Windows" and os.getenv("USERPROFILE") or os.getenv("HOME"), ".config"), "legendary")
+    local root = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(userOS == "Windows" and sharp.getEnv("USERPROFILE"):result() or os.getenv("HOME"), ".config"), "legendary")
 
     if root then
         local rootReal = fs.isDirectory(root)
@@ -351,7 +351,7 @@ function finder.findItchDatabase()
     local db
 
     if userOS == "Windows" then
-        db = fs.joinpath(os.getenv("APPDATA"), "itch", "db", "butler.db")
+        db = fs.joinpath(sharp.getEnv("APPDATA"):result(), "itch", "db", "butler.db")
 
     elseif userOS == "OS X" then
         db = fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db")
