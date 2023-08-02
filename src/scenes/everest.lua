@@ -195,14 +195,14 @@ Otherwise, manually install XNA using the button below.]],
                                 if love.system.getOS() == "Windows" then
                                     arch = os.getenv("PROCESSOR_ARCHITEW6432") or os.getenv("PROCESSOR_ARCHITECTURE")
                                     if arch and arch:match("64") then
-                                        utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.5-windows-x64-installer")
+                                        utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.9-windows-x64-installer")
                                     else
-                                        utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.5-windows-x86-installer")
+                                        utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.9-windows-x86-installer")
                                     end
                                 elseif love.system.getOS() == "Linux" then
                                     utils.openURL("https://learn.microsoft.com/en-us/dotnet/core/install/linux?WT.mc_id=dotnet-35129-website")
                                 elseif love.system.getOS() == "OS X" then
-                                    utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.5-macos-x64-installer")
+                                    utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-7.0.9-macos-x64-installer")
                                 else
                                     utils.openURL("https://dotnet.microsoft.com/en-us/download/dotnet/7.0")
                                 end
