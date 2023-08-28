@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ (Hopefully) fixed crashes on startup when the itch.io client is installed and the Windows username has non-Latin characters
+∙ When creating Olympus shortcuts, set the working directory so that it does not roll back to an older version in some cases (???)
