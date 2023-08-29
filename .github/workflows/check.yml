@@ -1,0 +1,24 @@
+name: Basic formatting checks
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Check for tabs
+      run: |
+        find "(" -name "*.cs" -or -name "*.lua" -or -name "*.jl" -or -name "*.yml" -or -name "*.txt" -or -name "*.md" ")" -exec grep -Pl "\t" {} \; > matches.txt
+        grep "" matches.txt && exit 1 || echo "No tab found!"
+
+    - name: Check for CRLF
+      run: |
+        find "(" -name "*.cs" -or -name "*.lua" -or -name "*.jl" -or -name "*.yml" -or -name "*.txt" -or -name "*.md" ")" -exec grep -Plz "\r\n" {} \; > matches.txt
+        grep "" matches.txt && exit 1 || echo "No CRLF found!"
+
+    - name: Check for trailing spaces
+      run: |
+        find "(" -name "*.cs" -or -name "*.lua" -or -name "*.jl" -or -name "*.yml" -or -name "*.txt" -or -name "*.md" ")" -exec grep -Pl " $" {} \; > matches.txt
+        grep "" matches.txt && exit 1 || echo "No trailing space found!"
