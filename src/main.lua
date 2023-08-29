@@ -250,7 +250,15 @@ function love.load(args)
     megacanvas = require("ui.megacanvas")
     require("elements")
 
-    local fonts = {table.unpack(config.fonts)}
+    local fonts = {
+        "data/fonts/Poppins-Regular.ttf",
+        "data/fonts/NotoSans-Regular.ttf",
+        "data/fonts/NotoSansCJKjp-Regular.otf",
+        "data/fonts/NotoSansCJKkr-Regular.otf",
+        "data/fonts/NotoSansCJKsc-Regular.otf",
+        "data/fonts/NotoSansCJKtc-Regular.otf"
+    }
+
     for i = #fonts, 1, -1 do
         if love.filesystem.getInfo(fonts[i], "file") then
             fonts[i] = love.graphics.newFont(fonts[i], 14)
