@@ -434,8 +434,15 @@ function scene.reload()
         local root = config.installs[config.install].path
 
         list:addChild(uie.paneled.column({
-            uie.label("Manage Installed Mods", ui.fontBig),
-            uie.label("This menu allows you to enable, disable or delete the mods you currently have installed."),
+            uie.row({
+                uie.column({
+                    uie.label("Manage Installed Mods", ui.fontBig),
+                    uie.label("This menu allows you to enable, disable or delete the mods you currently have installed."),
+                }),
+                uie.buttonGreen("Update All", function()
+                    modupdater.updateAllMods(root, nil, "all", scene.reload)
+                end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
+            }):with(uiu.fillWidth),
             uie.row({
                 uie.button("Open mods folder", function()
                     utils.openFile(fs.joinpath(root, "Mods"))
@@ -443,9 +450,6 @@ function scene.reload()
                 uie.button("Edit blacklist.txt", function()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
                 end),
-                uie.button("Update all mods", function()
-                    modupdater.updateAllMods(root, nil, "all", scene.reload)
-                end):with({ enabled = false }):as("updateAllButton"),
                 uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
