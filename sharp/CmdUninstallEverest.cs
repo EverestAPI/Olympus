@@ -73,10 +73,10 @@ namespace Olympus {
             int i = 0;
             string[] origs = Directory.GetFileSystemEntries(origdir);
 
-            List<string> revertEntries = new List<string>(); 
+            List<string> revertEntries = new List<string>();
             foreach (string orig in origs) {
                 string name = Path.GetFileName(orig);
-                
+
                 // Ignore the Content and Saves folder - it is either a symlink or a 1-to-1 copy
                 if (Path.GetFileName(orig) == "Content" || Path.GetFileName(orig) == "Saves")
                     continue;

@@ -27,17 +27,17 @@ function luacomE.ExportConstants(obj, const_table)
   if luacomE.GetType(obj) == "LuaCOM" then
      obj = luacom.GetTypeInfo(obj)
   end
-  
+
   if luacomE.GetType(obj) == "ITypeInfo" then
     obj = obj:GetTypeLib()
   end
-  
+
   assert(luacomE.GetType(obj) == "ITypeLib")
-  
+
   if const_table == nil then
     const_table = _G
   end
-  
+
   obj:ExportConstants(const_table)
 end
 
@@ -74,7 +74,7 @@ function luacomE.pairs(luacom_obj)
 
   local function iterator(state, index)
     local value = state:Next()
-    
+
     if value == nil then
       return nil
     else
@@ -95,13 +95,13 @@ end
 
 function luacomE.GetType(obj)
   local typetable = getmetatable(obj)
-  
+
   if typetable ~= nil then
     return typetable.type
   else
     return nil
   end
-  
+
 end
 
 
@@ -121,12 +121,12 @@ function luacomE._copyFields(dest, src, fields)
       src_field = field
       dest_field = field
     end
-    
+
     if src[src_field] ~= "" then
       dest[dest_field] = src[src_field]
     end
   end
-  
+
   table.foreach(fields, copyField)
 end
 
@@ -140,30 +140,30 @@ function luacomE.FillTypeInfo(rawTypeInfo)
   if rawTypeInfo.FilledTypeInfo then
     return rawTypeInfo.FilledTypeInfo
   end
-  
+
   local doc, attr
   local typeinfo = {}
-  
+
   rawTypeInfo.FilledTypeInfo = typeinfo
-    
-  -- Basic information  
+
+  -- Basic information
   doc = rawTypeInfo:GetDocumentation()
   typeinfo.name = doc.name
   typeinfo.description = doc.helpstring
 
   -- Now the attributes
   attr = rawTypeInfo:GetTypeAttr()
-  
+
   typeinfo.type = attr.typekind
   typeinfo.guid = attr.GUID
 
   -- copies flags
   table.foreach(attr.flags, function(i,v) typeinfo[i] = v end)
-  
+
   -- function to fill the different types of elements
   local function fillMethods(methods, num_methods)
     local i, index, method, rawmethod
-    
+
     index = 1
     for i = 0, num_methods - 1 do
       method = {}
@@ -177,7 +177,7 @@ function luacomE.FillTypeInfo(rawTypeInfo)
           {"dispid", "memid"}, {"typeinv", "invkind"},
           {"num_params", "Params"}, "parameters", "type"
         }
-        
+
         luacomE._copyFields(method, rawmethod, fields)
 
         local prototype
@@ -185,12 +185,12 @@ function luacomE.FillTypeInfo(rawTypeInfo)
           prototype = method.type.." "..method.name
           prototype = prototype.."("
         end
-        
+
         -- builds prototype
         if method.parameters then
           -- builds parameter list
           local first_param = true
-          
+
           local function add_param(i, param)
 
             if first_param then
@@ -199,24 +199,24 @@ function luacomE.FillTypeInfo(rawTypeInfo)
               prototype = prototype..", "
               first_param = false
             end
-            
+
             if param.type then
               prototype = prototype..param.type.." "
             end
-            
+
             prototype = prototype..param.name
           end
-          
+
           table.foreachi(method.parameters, add_param)
 
         end
 
-        if prototype then      
+        if prototype then
           prototype = prototype..")"
           method.prototype = prototype
         end
-        
-        methods[index] = method        
+
+        methods[index] = method
         index = index+1
       end
 
@@ -225,39 +225,39 @@ function luacomE.FillTypeInfo(rawTypeInfo)
 
   local function fillEnum(values, num_values)
     local i, rawConstant
-    
+
     local fields = {"name", "value"}
-    
+
     for i = 0, num_values - 1 do
       rawConstant = rawTypeInfo:GetVarDesc(i)
       constant = {}
       constant.rawConstant = rawConstant
       luacomE._copyFields(constant, rawConstant, fields)
-     
+
       values[i+1] = constant
     end
   end
-  
-  
+
+
   local function fillCoClass(interfaces, num_interfaces)
     local i, interface, rawinterface, typeflags
-    
+
     for i = 0, num_interfaces - 1 do
       rawinterface = rawTypeInfo:GetImplType(i)
       interface = {}
       interface.dispinterface = luacomE.FillTypeInfo(rawinterface)
 
-      -- copies impltypeflags      
+      -- copies impltypeflags
       typeflags = rawTypeInfo:GetImplTypeFlags(i)
       table.foreach(typeflags, function(i,v) interface[i] = v end)
-  
-      interfaces[i+1] = interface      
+
+      interfaces[i+1] = interface
     end
   end
-  
-  
+
+
   -- Creates tables to hold components of the typeinfo
-  
+
   if attr.typekind == "dispinterface" then
     typeinfo.methods = {}
     fillMethods(typeinfo.methods, attr.Funcs)
@@ -268,7 +268,7 @@ function luacomE.FillTypeInfo(rawTypeInfo)
     typeinfo.values = {}
     fillEnum(typeinfo.values, attr.Vars)
   end
-  
+
   return typeinfo
 
 end
@@ -287,30 +287,30 @@ function luacomE.FillTypeLib(rawtlb)
   if rawtlb._luacom_isfilled then
     return rawtlb
   end
-  
+
   -- Stores type library information
   local tlb = {}
   tlb._luacom_isfilled = true
-  
+
   tlb.rawtlb = rawtlb
-  
+
   local doc = rawtlb:GetDocumentation()
-  
+
   tlb.name = doc.name
   tlb.description = doc.helpstring
-  
+
   -- stores typeinfos
-  
+
   local typeinfo, rawtypeinfo, attr
 
   for i = 0, rawtlb:GetTypeInfoCount() - 1 do
-  
+
     rawTypeInfo = rawtlb:GetTypeInfo(i)
     typeinfo = luacomE.FillTypeInfo(rawTypeInfo)
     tlb[i+1] = typeinfo
-    
+
   end
-    
+
   return tlb
 end
 
@@ -334,61 +334,61 @@ function luacomE.DumpTypeLib(obj, htmlfile)
   elseif luacomE.GetType(obj) == "ITypeInfo" then
     rawtlb = obj:GetTypeLib()
   end
-  
+
   if rawtlb == nil then
-	  error("Type library not found.")
+      error("Type library not found.")
   end
-  
-  tlb = luacomE.FillTypeLib(rawtlb)  
+
+  tlb = luacomE.FillTypeLib(rawtlb)
   rawtlb = nil
-  
+
 
   if htmlfile == nil then
-  	htmlfile = tlb.name..".html"
+    htmlfile = tlb.name..".html"
   elseif string.sub(htmlfile, -1) == "\\" then
-  	htmlfile = htmlfile..tlb.name..".html"
+    htmlfile = htmlfile..tlb.name..".html"
   end
-  
+
   local filehandle = io.open(htmlfile, "w")
-  
+
   if filehandle == nil then
     error("Could not create "..htmlfile..": file exists")
   end
-  
+
   io.output(filehandle)
-  
+
   -- writes html header
   io.write("<html>\n")
   io.write("<head>")
-  
+
   -- writes title
   io.write("<title>")
-  
+
   if tlb.description then
     io.write(tlb.description)
   else
     io.write(tlb.name)
   end
-   
+
   io.write("</title>\n")
-  
+
   io.write("<h1>")
-  
+
   if tlb.description then
     io.write(tlb.description)
   else
     io.write(tlb.name)
   end
-  
+
   io.write(" Type Library")
-  
+
   io.write("</h1>\n")
   io.write("<hr>\n")
-  
+
   --
   -- First, makes an index for the entire type library
   --
-  
+
   io.write("<h2>Summary</h2>\n")
 
   -- Output function
@@ -401,10 +401,10 @@ function luacomE.DumpTypeLib(obj, htmlfile)
     else
       io.write(typeinfo.name)
     end
-    
+
     io.write("</b>")
     io.write("</li>")
-    
+
     if typeinfo.description and typeinfo.description ~= "" then
       io.write(" - "..typeinfo.description)
     end
@@ -420,12 +420,12 @@ function luacomE.DumpTypeLib(obj, htmlfile)
         map_function(i, typeinfo)
       end
     end
-    
+
     table.foreachi(tlb, filter)
   end
-  
+
   map_function = write_typeinfo
-  
+
   io.write("<h3>Components</h3>\n")
   filter_typeinfo("coclass")
 
@@ -434,147 +434,147 @@ function luacomE.DumpTypeLib(obj, htmlfile)
 
   io.write("<h3>Interfaces</h3>\n")
   filter_typeinfo("dispinterface")
-  
+
   --
   -- Now, describe each element
   --
-  
+
   io.write("<hr>\n")
   io.write("<h2>Detailed description</h2>\n")
-  
+
   -- describes coclasses
 
   io.write("<h3>Components Classes</h3>\n")
 
   local function describe_coclass(i, typeinfo)
     assert(typeinfo.type == "coclass")
-    
+
     if typeinfo.restricted or typeinfo.hidden then
       return
     end
-    
+
     io.write("<h4>")
     io.write("<a name=\""..typeinfo.name.."\"></a>")
     io.write(typeinfo.name)
-    
+
     io.write("</h4>\n")
-    
+
     if typeinfo.description then
       io.write(typeinfo.description.."<p>")
     end
-    
+
     io.write("<pre>"..typeinfo.guid.."</pre><p>")
-    
+
     local i, default, source
-    
+
     -- locates the default interface and the source interface
     for i=1, table.getn(typeinfo.interfaces) do
-    
+
       if typeinfo.interfaces[i].source and source == nil then
         source = typeinfo.interfaces[i].dispinterface
-      elseif typeinfo.interfaces[i].source 
+      elseif typeinfo.interfaces[i].source
              and typeinfo.interfaces[i].default then
         source = typeinfo.interfaces[i].dispinterface
       end
-      
+
       if not typeinfo.interfaces[i].source and default == nil then
         default = typeinfo.interfaces[i].dispinterface
-      elseif typeinfo.interfaces[i].default 
+      elseif typeinfo.interfaces[i].default
              and not typeinfo.interfaces[i].source then
         default = typeinfo.interfaces[i].dispinterface
       end
-      
+
     end
-    
-    if default then    
+
+    if default then
       if default.dispatchable then
         io.write("<a href=\"#"..default.name.."\">"..default.name.."</a>")
       else
         io.write(default.name)
       end
-      
+
       io.write(" is the default interface for this component.<br>")
     end
-    
-    if source then    
+
+    if source then
       if source.dispatchable then
         io.write("<a href=\"#"..source.name.."\">"..source.name.."</a>")
       else
         io.write(source.name)
       end
-      
+
       io.write(" is the default set of events for this component.<br>")
     end
 
     if typeinfo.appobject then
       io.write("This is the Application object.<br>")
     end
-    
+
     if typeinfo.control then
       io.write("This component is an OLE control.<br>")
     end
-    
+
     if typeinfo.cancreate then
       io.write("Instances of this component can be created.<br>")
     end
-   
+
   end
-  
+
   map_function = describe_coclass
-  
+
   filter_typeinfo("coclass")
-  
-  
-  
+
+
+
   -- describes enumerations
-  
+
   io.write("<hr><h3>Enumerations</h3>\n")
-  
+
   local function describe_enum(i, typeinfo)
     assert(typeinfo.type == "enumeration")
-    
+
     io.write("<h4>")
     io.write("<a name=\""..typeinfo.name.."\"></a>")
     io.write(typeinfo.name)
-    
+
     io.write("</h4>\n")
-    
+
     if typeinfo.description and typeinfo.description ~= nil then
       io.write(typeinfo.description.."<p>")
     end
-    
+
     local function describe_constant(i, constant)
       io.write("<li>")
       io.write(constant.name.." = "..tostring(constant.value))
       io.write("</li>\n")
     end
-    
+
     io.write("<ul>\n")
     table.foreachi(typeinfo.values, describe_constant)
     io.write("</ul>\n")
   end
-  
+
   map_function = describe_enum
-  
+
   filter_typeinfo("enumeration")
-    
-  
+
+
   -- describes interfaces
-  
+
   io.write("<hr><h3>Interfaces</h3>\n")
-  
+
   local function describe_interface(i, typeinfo)
     assert(typeinfo.type == "dispinterface")
-    
+
     io.write("<h4>")
     io.write("<a name=\""..typeinfo.name.."\"></a>")
     io.write(typeinfo.name)
     io.write("</h4>\n")
     io.write("<pre>"..typeinfo.guid.."</pre><p>")
-    
+
     local function describe_method_use(method)
       io.write("<b>LuaCOM examples:</b><br><br>")
-      
+
       local function param_lister()
         local first_param = true
         local function add_param(i, param)
@@ -592,13 +592,13 @@ function luacomE.DumpTypeLib(obj, htmlfile)
               io.write(name)
               first_param = false
             else
-              io.write(", " .. name) 
+              io.write(", " .. name)
             end
           end
         end
         return add_param
       end
-      
+
       local function retval_lister(first_retval)
         local has_retval = false
         return function(i, param)
@@ -613,7 +613,7 @@ function luacomE.DumpTypeLib(obj, htmlfile)
             end
           end, function() return has_retval end
       end
-      
+
       if method.typeinv == "propget" then
         if method.num_params == 0 then
           io.write("com_obj." .. method.name .. "<br>")
@@ -647,78 +647,78 @@ function luacomE.DumpTypeLib(obj, htmlfile)
           io.write(")<br>")
       end
     end
-    
+
     local function describe_method(i, method)
       if method.rawMethod == nil then
         return
       end
-      
+
       io.write("<li>")
       io.write(method.name)
-      
+
       if method.prototype then
         io.write("<pre>"..method.prototype.."</pre>\n")
       else
         io.write("<br>")
       end
-      
+
       if method.description then
         io.write(method.description.."<br>\n")
       end
-      
+
       describe_method_use(method)
-      
+
       io.write("<p>")
-      
+
       io.write("</li>\n")
     end
-    
+
     io.write("<ul>\n")
     table.foreachi(typeinfo.methods, describe_method)
     io.write("</ul>\n")
   end
-  
+
   map_function = describe_interface
-  
+
   filter_typeinfo("dispinterface")
-  
+
   io.write("</html>")
-  
+
   io.output():close()
-  
+
   return htmlfile
-  
+
 end
 
 
 
 --
---    shows TypeLib dump to the user 
+--    shows TypeLib dump to the user
 --
 
 function luacomE.ViewTypeLib(obj)
 
-	local filename = os.getenv("TEMP")
-	
-	if filename == nil then
-		filename = os.getenv("TMP")
-	end
-	
-	if filename == nil then
-	  filename = luacom.GetCurrentDirectory()
+    local filename = os.getenv("TEMP")
+
+    if filename == nil then
+        filename = os.getenv("TMP")
+    end
+
+    if filename == nil then
+      filename = luacom.GetCurrentDirectory()
   end
-  
+
   if string.sub(filename, -1) ~= "\\" then
-  	filename = filename.."\\"
+    filename = filename.."\\"
   end
-  
+
   filename = luacomE.DumpTypeLib(obj, filename)
 
   local browser = luacom.CreateObject("InternetExplorer.Application")
-  
+
   browser.Visible = true
   browser:Navigate2(filename)
- 
+
   return filename
 end
 
@@ -736,7 +736,7 @@ end]]--
 --[[function interface_proto:AddTypedef(type, typedef)
   table.insert(self.typedefs, { type = type, typedef = typedef })
 end]]--
-  
+
 function interface_proto:AddMethod(methodinfo)
   table.insert(self.methods, methodinfo)
 end
@@ -763,7 +763,7 @@ function interface_proto:Write(file)
         first_attribute = false
         if(type(name) == "number") then
           file:write(value)
-        else 
+        else
           file:write(name .. "(" .. value .. ")")
         end
       end
@@ -777,7 +777,7 @@ function interface_proto:Write(file)
   local function typedef_writer(i, typedef)
     file:write("\n" .. "  typedef " .. typedef.type .. " " .. typedef.typedef .. ";\n")
   end
-  
+
   local function param_writer()
     local first_param = true
     return function(i, param)
@@ -804,7 +804,7 @@ function interface_proto:Write(file)
     file:write("\n  ]\n  ")
     file:write(property.type .. " " .. property.name .. ";\n")
   end
-  
+
   local function method_writer(i, method)
     if not method.attributes then
       method.attributes = { id = tostring(start_id + i) }
@@ -818,7 +818,7 @@ function interface_proto:Write(file)
     if method.type then
       file:write(method.type)
     else
-      file:write("void")  
+      file:write("void")
     end
     file:write(" " .. method.name .. "(")
     if method.parameters then
@@ -829,7 +829,7 @@ function interface_proto:Write(file)
       file:write("void" .. ");\n")
     end
   end
-  
+
   if self.attributes then
     file:write("[\n  ")
     table.foreach(self.attributes, attribute_writer(true))
@@ -873,7 +873,7 @@ function coclass_proto:Write(file)
         first_attribute = false
         if(type(name) == "number") then
           file:write(value)
-        else 
+        else
           file:write(name .. "(" .. value .. ")")
         end
       end
@@ -883,7 +883,7 @@ function coclass_proto:Write(file)
     local name = interface.name
     interface.name = nil
     file:write("[")
-    table.foreach(interface, attribute_writer(false))   
+    table.foreach(interface, attribute_writer(false))
     file:write("] ")
     file:write("dispinterface " .. name .. ";\n")
     interface.name = name
@@ -934,10 +934,10 @@ end
 function library_proto:AddImport(library)
   table.insert(self.imports, library)
 end
-  
+
 function library_proto:WriteODL(filename)
   local file = io.open(filename .. ".odl","w+")
-  
+
   local function attribute_writer(line_break)
     local first_attribute = true
     return function(name, value)
@@ -951,20 +951,20 @@ function library_proto:WriteODL(filename)
         first_attribute = false
         if(type(name) == "number") then
           file:write(value)
-        else 
+        else
           file:write(name .. "(" .. value .. ")")
         end
       end
   end
-  
+
   local function import_writer(i, import)
     file:write("  " .. "importlib(\"" .. import .. "\");\n")
   end
-  
+
   local function typedef_writer(i, typedef)
     file:write("\n" .. "  typedef " .. typedef.type .. " " .. typedef.typedef .. ";\n")
   end
-  
+
   local function interface_writer(i, interface)
     interface:Write(file)
   end
@@ -972,7 +972,7 @@ function library_proto:WriteODL(filename)
   local function coclass_writer(i, coclass)
     coclass:Write(file)
   end
-  
+
   if self.attributes then
     file:write("[\n  ")
     table.foreach(self.attributes, attribute_writer(true))

@@ -3,9 +3,9 @@ local function init()
         root = {},
         options = {noreduce = {}}
     }
-    
-    obj._stack = {obj.root, n=1}  
-    return obj  
+
+    obj._stack = {obj.root, n=1}
+    return obj
 end
 
 --- @module XML Tree Handler.
@@ -29,7 +29,7 @@ end
 -- are ignored.
 --
 -- This format has some limitations - primarily
--- 
+--
 -- * Mixed-Content behaves unpredictably - the relationship
 --   between text elements and embedded tags is lost and
 --   multiple levels of mixed content does not work
@@ -79,7 +79,7 @@ function tree:reduce(node, key, parent)
             self:reduce(v,k,node)
         end
     end
-    if #node == 1 and not self.options.noreduce[key] and 
+    if #node == 1 and not self.options.noreduce[key] and
         node._attr == nil then
         parent[key] = node[1]
     else
@@ -99,7 +99,7 @@ function tree:starttag(tag)
 
     --Table in the stack representing the tag being processed
     local current = self._stack[#self._stack]
-    
+
     if current[tag.name] then
         table.insert(current[tag.name], node)
     else

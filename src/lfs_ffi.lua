@@ -594,11 +594,11 @@ else
     else
         flock_def = [[
             struct flock {
-                int64_t	l_start;
-                int64_t	l_len;
-                int32_t	l_pid;
-                short	l_type;
-                short	l_whence;
+                int64_t l_start;
+                int64_t l_len;
+                int32_t l_pid;
+                short   l_type;
+                short   l_whence;
             };
         ]]
         mode_ltype_map = {

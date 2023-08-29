@@ -27,18 +27,18 @@ namespace Olympus {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OlympusForm));
             this.progress = new System.Windows.Forms.ProgressBar();
             this.SuspendLayout();
-            // 
+            //
             // progress
-            // 
+            //
             this.progress.Location = new System.Drawing.Point(11, 241);
             this.progress.MarqueeAnimationSpeed = 1;
             this.progress.Name = "progress";
             this.progress.Size = new System.Drawing.Size(236, 9);
             this.progress.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
             this.progress.TabIndex = 0;
-            // 
+            //
             // OlympusForm
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(59)))), ((int)(((byte)(45)))), ((int)(((byte)(74)))));

@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Olympus {
     public unsafe class CmdAhornLaunch : Cmd<string, IEnumerator> {
-        
+
         public override IEnumerator Run(string theme) {
             yield return "Initializing...";
 

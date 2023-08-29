@@ -17,7 +17,7 @@ namespace Olympus {
 
         public static RegistryKey OpenOrCreateKey(string path, bool writable) {
             string[] parts = path.Split('\\');
-            
+
             RegistryKey key;
             switch (parts[0].ToUpperInvariant()) {
                 case "HKEY_CURRENT_USER":

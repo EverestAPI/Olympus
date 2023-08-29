@@ -66,7 +66,7 @@ namespace Olympus {
                     } else if (DpiUtils.SetProcessDPIAware != null) {
                         DpiUtils.SetProcessDPIAware();
                     }
-                    
+
                     Application.EnableVisualStyles();
                     Application.SetCompatibleTextRenderingDefault(false);
                     Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);

@@ -72,7 +72,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
         }):with(uiu.styleDeep), function()
             local install = scene.root:findChild("installs").selected
             install = install and install.data
-            
+
             local version = scene.root:findChild("versions").selected
             version = version and version.data
 
@@ -175,7 +175,7 @@ Otherwise, manually install XNA using the button below.]],
                     end
                     procFile, _ = io.popen(dotnetPath .. fs.dirSeparator .. "dotnet --list-runtimes")
                 end
-                
+
                 if procFile then
                     runtimeOutput = procFile:read("*all")
                     procFile:close()
