@@ -23,7 +23,15 @@ local root = uie.column({
         mainmenu.createInstalls(),
 
         uie.paneled.column({
-            uie.label("Versions", ui.fontBig),
+            uie.row({
+                uie.label("Versions", ui.fontBig),
+                uie.button("Reload versions list", function()
+                    local list = scene.root:findChild("versions")
+                    list.children = {}
+                    list:reflow()
+                    scene.load()
+                end):with(uiu.rightbound):as("reloadVersionsList"),
+            }):with(uiu.fillWidth):as("titlebar"),
             uie.panel({
                 uie.label({{ 1, 1, 1, 1 },
 [[Use the newest version for more features and bugfixes.
@@ -35,7 +43,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
             }):with(uiu.fillWidth),
 
             uie.column({
-
                 uie.scrollbox(
                     uie.list({
                     }):with({
@@ -44,18 +51,6 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                         list.selected = list.children[1] or false
                     end):as("versions")
                 ):with(uiu.fill),
-
-                uie.paneled.row({
-                    uie.label("Loading"),
-                    uie.spinner():with({
-                        width = 16,
-                        height = 16
-                    })
-                }):with({
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.bottombound):with(uiu.rightbound):as("loadingVersions")
-
             }):with({
                 clip = false
             }):with(uiu.fillWidth):with(uiu.fillHeight(true)):as("versionsParent")
@@ -408,6 +403,28 @@ end
 function scene.load()
 
     threader.routine(function()
+        -- remove the displayed error if we are retrying after the versions list loading failed
+        local previousError = root:findChild("error")
+        if previousError then
+            previousError:removeSelf()
+        end
+
+        root:findChild("reloadVersionsList").enabled = false
+
+        -- display a "Loading" spinner
+        root:findChild("versionsParent"):addChild(
+            uie.paneled.row({
+                uie.label("Loading"),
+                uie.spinner():with({
+                    width = 16,
+                    height = 16
+                })
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound):with(uiu.rightbound):as("loadingVersions")
+        )
+
         local utilsAsync = threader.wrap("utils")
         local buildsTask = utilsAsync.download("https://everestapi.github.io/everestupdater.txt")
         local url, buildsError = buildsTask:result()
@@ -434,6 +451,7 @@ function scene.load()
                 cacheable = false
             }):with(uiu.bottombound):with(uiu.rightbound):as("error"))
             list:addChild(manualItem)
+            root:findChild("reloadVersionsList").enabled = true
             return
         end
 
@@ -536,6 +554,8 @@ function scene.load()
 
         root:findChild("loadingVersions"):removeSelf()
         list:addChild(manualItem)
+
+        root:findChild("reloadVersionsList").enabled = true
     end)
 
 end

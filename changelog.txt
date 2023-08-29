@@ -5,3 +5,4 @@ Its purpose is to be shown in Olympus when updating.
 #changelog#
 ∙ Added an "Update All" button to the Manage Installed Mods screen
 ∙ Added Noto Sans font to make Olympus able to render Russian characters
+∙ Added a "Reload versions list" button to the Everest install screen
