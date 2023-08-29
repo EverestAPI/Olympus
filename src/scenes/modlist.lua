@@ -7,6 +7,7 @@ local config = require("config")
 local sharp = require("sharp")
 local alert = require("alert")
 local notify = require("notify")
+local modupdater = require("modupdater")
 
 local scene = {
     name = "Mod Manager",
@@ -442,6 +443,9 @@ function scene.reload()
                 uie.button("Edit blacklist.txt", function()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
                 end),
+                uie.button("Update all mods", function()
+                    modupdater.updateAllMods(root, nil, "all", scene.reload)
+                end):with({ enabled = false }):as("updateAllButton"),
                 uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
@@ -508,6 +512,7 @@ function scene.reload()
         -- make the enable/disable mod buttons/checkboxes usable now that the list was loaded
         scene.root:findChild("enableAllButton"):setEnabled(true)
         scene.root:findChild("disableAllButton"):setEnabled(true)
+        scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
 

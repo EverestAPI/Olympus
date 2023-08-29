@@ -8,16 +8,26 @@ local fs = require("fs")
 
 local modupdater = {}
 
-function modupdater.updateAllModsThenRunGame(path, notify)
-    if config.updateModsOnStartup == "none" then
+function modupdater.updateAllMods(path, notify, mode, callback)
+    local willRunGame = callback == nil
+
+    local origMode = mode
+    local origCallback = mode
+
+    mode = mode or config.updateModsOnStartup
+    callback = callback or function()
         utils.launch(nil, false, notify)
+    end
+
+    if mode == "none" then
+        callback()
         return
     end
 
-    local task = sharp.updateAllMods(path or config.installs[config.install].path, config.updateModsOnStartup == "enabled"):result()
+    local task = sharp.updateAllMods(path or config.installs[config.install].path, mode == "enabled"):result()
 
     local alertMessage = alert({
-        title = config.updateModsOnStartup == "enabled" and "Updating enabled mods" or "Updating all mods",
+        title = mode == "enabled" and "Updating enabled mods" or "Updating all mods",
         body = uie.column({
             uie.row({
                 uie.spinner():with({
@@ -29,10 +39,10 @@ function modupdater.updateAllModsThenRunGame(path, notify)
         }):with(uiu.fillWidth),
         buttons = {
             {
-                "Skip",
+                willRunGame and "Skip" or "Cancel",
                 function(container)
                     sharp.free(task)
-                    utils.launch(nil, false, notify)
+                    callback()
                     container:close()
                 end
             }
@@ -63,38 +73,44 @@ function modupdater.updateAllModsThenRunGame(path, notify)
         alertMessage:close()
 
         if status[1] == "done" then
-            utils.launch(nil, false, notify)
+            callback()
         elseif status[1] ~= "interrupted" then
+            local buttons = {
+                {
+                    "Retry",
+                    function(container)
+                        modupdater.updateAllMods(path, notify, origMode, origCallback)
+                        container:close()
+                    end
+                },
+                {
+                    "Open logs folder",
+                    function(container)
+                        utils.openFile(fs.getStorageDir())
+                    end
+                },
+                {
+                    willRunGame and "Run anyway" or "Cancel",
+                    function(container)
+                        callback()
+                        container:close()
+                    end
+                }
+            }
+
+            if willRunGame then
+                table.insert(buttons,
+                {
+                    "Cancel",
+                    function(container)
+                        container:close()
+                    end
+                })
+            end
+
             alert({
                 body = "An error occurred while updating your mods.\nMake sure you are connected to the Internet and that Lönn is not running!",
-                buttons = {
-                    {
-                        "Retry",
-                        function(container)
-                            modupdater.updateAllModsThenRunGame()
-                            container:close()
-                        end
-                    },
-                    {
-                        "Open logs folder",
-                        function(container)
-                            utils.openFile(fs.getStorageDir())
-                        end
-                    },
-                    {
-                        "Run anyway",
-                        function(container)
-                            utils.launch(nil, false, notify)
-                            container:close()
-                        end
-                    },
-                    {
-                        "Cancel",
-                        function(container)
-                            container:close()
-                        end
-                    },
-                }
+                buttons = buttons
             })
         end
     end)

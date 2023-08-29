@@ -350,7 +350,7 @@ function scene.install()
                 {
                     "Launch",
                     function()
-                        modupdater.updateAllModsThenRunGame(install.entry.path)
+                        modupdater.updateAllMods(install.entry.path)
                         scener.pop(2)
                     end
                 },
