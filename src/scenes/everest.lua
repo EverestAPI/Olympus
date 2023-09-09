@@ -155,7 +155,7 @@ Otherwise, manually install XNA using the button below.]],
                         end }
                     }
                 })
-            elseif version ~= "manual" and version.branch == "core" then
+            elseif version ~= "manual" and version.isNative then
                 procFile, _ = io.popen("dotnet --list-runtimes")
 
                 if not procFile then
