@@ -227,7 +227,7 @@ redirect_stdout(stdoutPrev)
         public static string FindJulia(bool force) {
             if (!force && !string.IsNullOrEmpty(JuliaPath) && File.Exists(JuliaPath))
                 return JuliaPath;
-            
+
             string name = PlatformHelper.Is(Platform.Windows) ? "julia.exe" : "julia";
             string path;
 
@@ -291,7 +291,7 @@ redirect_stdout(stdoutPrev)
         public static string FindAhorn(bool force) {
             if (!force && !string.IsNullOrEmpty(AhornPath) && File.Exists(AhornPath))
                 return AhornPath;
-            
+
             if (string.IsNullOrEmpty(JuliaPath) || !File.Exists(JuliaPath))
                 return null;
 

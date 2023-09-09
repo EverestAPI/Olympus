@@ -197,7 +197,7 @@ namespace Olympus {
                     if (chmodProc.ExitCode != 0)
                         throw new Exception("Failed to set MiniInstaller executable flag");
                 }
-                    
+
                 using (Process proc = new Process() { StartInfo = new ProcessStartInfo() {
                     FileName = installerPath,
                     UseShellExecute = false,

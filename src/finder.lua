@@ -379,7 +379,7 @@ function finder.findItchInstalls(name)
     end
 
     -- sqlite3 can deal with UTF-8 or UTF-16. lsqlite3 can only deal with UTF-8.
-    local db = sqlite3.open(utils.cpSYStoUTF8(dbPath))
+    local db = sqlite3.open(dbPath)
     if not db then
         return list
     end

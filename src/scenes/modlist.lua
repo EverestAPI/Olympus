@@ -7,6 +7,7 @@ local config = require("config")
 local sharp = require("sharp")
 local alert = require("alert")
 local notify = require("notify")
+local modupdater = require("modupdater")
 
 local scene = {
     name = "Mod Manager",
@@ -433,8 +434,15 @@ function scene.reload()
         local root = config.installs[config.install].path
 
         list:addChild(uie.paneled.column({
-            uie.label("Manage Installed Mods", ui.fontBig),
-            uie.label("This menu allows you to enable, disable or delete the mods you currently have installed."),
+            uie.row({
+                uie.column({
+                    uie.label("Manage Installed Mods", ui.fontBig),
+                    uie.label("This menu allows you to enable, disable or delete the mods you currently have installed."),
+                }),
+                uie.buttonGreen("Update All", function()
+                    modupdater.updateAllMods(root, nil, "all", scene.reload)
+                end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
+            }):with(uiu.fillWidth),
             uie.row({
                 uie.button("Open mods folder", function()
                     utils.openFile(fs.joinpath(root, "Mods"))
@@ -508,6 +516,7 @@ function scene.reload()
         -- make the enable/disable mod buttons/checkboxes usable now that the list was loaded
         scene.root:findChild("enableAllButton"):setEnabled(true)
         scene.root:findChild("disableAllButton"):setEnabled(true)
+        scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
 

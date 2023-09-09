@@ -35,7 +35,7 @@ namespace YYProject.XXHash {
     /// <summary>
     /// Represents the class which provides a implementation of the xxHash32 algorithm.
     /// </summary>
-    /// <threadsafety static="true" instance="false"/>   
+    /// <threadsafety static="true" instance="false"/>
     public sealed class XXHash32 : HashAlgorithm {
         private const uint PRIME32_1 = 2654435761U;
         private const uint PRIME32_2 = 2246822519U;

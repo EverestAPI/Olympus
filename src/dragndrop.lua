@@ -72,7 +72,7 @@ Do you want to go to the Celeste installation manager?]],
                     {
                         "Launch",
                         function()
-                            modupdater.updateAllModsThenRunGame(install.entry.path, true)
+                            modupdater.updateAllMods(install.entry.path, true)
                             scener.pop()
                         end
                     },

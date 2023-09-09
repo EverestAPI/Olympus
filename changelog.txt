@@ -3,4 +3,9 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Updated OlympUI, the UI framework behind Olympus and Lönn
+∙ Updated the mention of Ahorn to include Lönn as well in the "UWP is not supported" error message
+∙ (Hopefully) fixed crashes on startup when the itch.io client is installed and the Windows username has non-Latin characters
+∙ When creating Olympus shortcuts, set the working directory so that it does not roll back to an older version in some cases (???)
+∙ Added an "Update All" button to the Manage Installed Mods screen
+∙ Added Noto Sans font to make Olympus able to render Russian characters
+∙ Added a "Reload versions list" button to the Everest install screen

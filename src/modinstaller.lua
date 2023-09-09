@@ -90,7 +90,7 @@ function modinstaller.install(modurl, cb)
             {
                 "Launch",
                 function()
-                    cb(modupdater.updateAllModsThenRunGame(install))
+                    cb(modupdater.updateAllMods(install))
                 end
             },
             {

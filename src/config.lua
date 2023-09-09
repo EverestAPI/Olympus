@@ -126,14 +126,6 @@ function config.load()
     default(data.ahorn, "mode", love.system.getOS() == "Windows" and "vhd" or "local")
     default(data.ahorn, "theme", "")
 
-    default(data, "fonts", {
-        "data/fonts/Poppins-Regular.ttf",
-        "data/fonts/NotoSansCJKjp-Regular.otf",
-        "data/fonts/NotoSansCJKkr-Regular.otf",
-        "data/fonts/NotoSansCJKsc-Regular.otf",
-        "data/fonts/NotoSansCJKtc-Regular.otf"
-    })
-
     default(data, "loennRootPath", fs.joinpath(fs.getStorageDir(), "loenn"))
     default(data, "loennInstalledVersion", "")
 
