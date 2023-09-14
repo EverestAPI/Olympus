@@ -391,6 +391,8 @@ steps:
       cp -f luajit-2.0/src/libluajit.so love/love.app/Contents/Frameworks/Lua.framework/Versions/A/Lua
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
+      cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
+      chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp.bin*
       codesign --remove-signature love/$LOVEBINARYDIRECTORY/love
@@ -409,6 +411,8 @@ steps:
     script: |
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus
+      cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
+      chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       chmod a+rx love/$LOVEBINARYDIRECTORY/install.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp.bin*
