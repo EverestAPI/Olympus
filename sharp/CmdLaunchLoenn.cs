@@ -19,13 +19,13 @@ namespace Olympus {
                 loenn.StartInfo.FileName = Path.Combine(Program.RootDirectory, "find-love");
                 loenn.StartInfo.Arguments = Path.Combine(root, "Lönn.love");
                 loenn.StartInfo.UseShellExecute = true;
-				loenn.StartInfo.WorkingDirectory = Program.RootDirectory;
+                loenn.StartInfo.WorkingDirectory = Program.RootDirectory;
             } else {
                 // run the app
                 loenn.StartInfo.FileName = "open";
                 loenn.StartInfo.Arguments = "Lönn.app";
                 loenn.StartInfo.UseShellExecute = true;
-				loenn.StartInfo.WorkingDirectory = root;
+                loenn.StartInfo.WorkingDirectory = root;
             }
 
 
