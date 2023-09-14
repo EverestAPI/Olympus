@@ -13,7 +13,7 @@ namespace Olympus {
 
             if (PlatformHelper.Is(Platform.Windows)) {
                 loenn.StartInfo.FileName = Path.Combine(root, "Lönn.exe");
-				loenn.StartInfo.WorkingDirectory = root;
+                loenn.StartInfo.WorkingDirectory = root;
             } else if (PlatformHelper.Is(Platform.Linux)) {
                 // use the find-love script that olympus also uses
                 loenn.StartInfo.FileName = Path.Combine(Program.RootDirectory, "find-love");
