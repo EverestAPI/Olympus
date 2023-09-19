@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Make sure Lönn is run with the same Love2d install as Olympus itself on Linux
+∙ Fixed a crash at the end of mod updating if "Retry" has been used at least once
