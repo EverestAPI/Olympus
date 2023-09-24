@@ -4,8 +4,6 @@
 # This script's working directory must be the bundled love's one and it'll set 
 # everything up by itself
 
-BUN_LOVE_DIR="$(pwd)/love"
-
 # Order priority goes as follows:
 # 1. love if its not too old, if too old or missing then
 # 2. bundled love, if missing then
@@ -41,7 +39,7 @@ fi
 if [ -f "love" ]; then
     echo "Using bundled love"
 	cd $(dirname $1)
-    "$BUN_LOVE_DIR"/love --fused $@
+    ./love --fused $@
 elif command -v love >/dev/null 2>&1; then # We know it is old, but go for it anyway
     echo "Using oudated system wide love installation"
 	cd $(dirname $1)
