@@ -25,6 +25,14 @@ finder.defaultName = "Celeste"
 -- https://bspmts.mp.microsoft.com/v1/public/catalog/Retail/Products/bwmql2rpwbhb/applockerdata
 finder.defaultUWPName = "MattMakesGamesInc.Celeste_79daxvg0dq3v6"
 
+-- enhance linux compatibility 
+local function getLinuxConfigDir()
+    local xdg_cfg = os.getenv("XDG_CONFIG_HOME")
+    if fs.isFile("/.flatpak-info") or xdg == "" then
+       return fs.joinpath(os.getenv("HOME"), ".config")
+    end
+    return xdg_cfg
+end
 
 function finder.findSteamRoot()
     local userOS = love.system.getOS()
@@ -302,7 +310,7 @@ function finder.findLegendaryRoot()
 
     -- As of the time of writing this, Legendary is only supported for Windows and Linux.
     -- It follows XDG_CONFIG_HOME and ~/.config/legendary on all platforms.
-    local root = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(userOS == "Windows" and sharp.getEnv("USERPROFILE"):result() or os.getenv("HOME"), ".config"), "legendary")
+    local root = fs.joinpath(getLinuxConfigDir() or fs.joinpath(userOS == "Windows" and sharp.getEnv("USERPROFILE"):result(), ".config"), "legendary")
 
     if root then
         local rootReal = fs.isDirectory(root)
@@ -357,7 +365,7 @@ function finder.findItchDatabase()
         db = fs.joinpath(os.getenv("HOME"), "Library", "Application Support", "itch", "db", "butler.db")
 
     elseif userOS == "Linux" then
-        db = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "itch", "db", "butler.db")
+        db = fs.joinpath(getLinuxConfigDir(), "itch", "db", "butler.db")
     end
 
     if db then
@@ -465,7 +473,7 @@ function finder.findLutrisRoot()
     local root
 
     if userOS == "Linux" then
-        root = fs.joinpath(os.getenv("XDG_CONFIG_HOME") or fs.joinpath(os.getenv("HOME"), ".config"), "lutris")
+        root = fs.joinpath(getLinuxConfigDir(), "lutris")
     end
 
     if root then
