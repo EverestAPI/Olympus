@@ -54,6 +54,7 @@ function finder.findSteamRoot()
             fs.joinpath(os.getenv("HOME"), ".steam", "steam"),
             fs.joinpath(os.getenv("HOME"), ".var", "app", "com.valvesoftware.Steam", ".local", "share", "Steam"),
             fs.joinpath(os.getenv("HOME"), ".var", "app", "com.valvesoftware.Steam", ".steam", "steam"),
+            fs.joinpath("/run", "media", "mmcblk0p1"), -- Add Steam Deck micro SD folder
         }
 
         for i = 1, #paths do
