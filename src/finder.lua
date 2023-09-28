@@ -311,7 +311,12 @@ function finder.findLegendaryRoot()
 
     -- As of the time of writing this, Legendary is only supported for Windows and Linux.
     -- It follows XDG_CONFIG_HOME and ~/.config/legendary on all platforms.
-    local root = fs.joinpath(getLinuxConfigDir() or fs.joinpath(userOS == "Windows" and sharp.getEnv("USERPROFILE"):result(), ".config"), "legendary")
+    local root = fs.joinpath(
+        userOS == "Windows"
+            and fs.joinpath(sharp.getEnv("USERPROFILE"):result(), ".config")
+            or getLinuxConfigDir(),
+        "legendary"
+    )
 
     if root then
         local rootReal = fs.isDirectory(root)

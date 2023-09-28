@@ -69,7 +69,7 @@ namespace Olympus {
             // or string.Equals(Environment.GetEnvironmentVariable("container"), "flatpak");
             if (File.Exists("/.flatpak-info")) {
             	if (!string.IsNullOrEmpty(args))
-                    game.StartInfo.Arguments = string.Join(" ", game.StartInfo.FileName, args);
+                    game.StartInfo.Arguments = string.Join(" ", "\"" + game.StartInfo.FileName + "\"", args);
                 else
                     game.StartInfo.Arguments = game.StartInfo.FileName;
                 game.StartInfo.FileName = Path.Combine(Program.RootDirectory, "flatpak-wrapper");
