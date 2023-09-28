@@ -411,6 +411,8 @@ steps:
     script: |
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus
+      cp flatpak-wrapper.sh love/$LOVEBINARYDIRECTORY/flatpak-wrapper
+      chmod a+rx love/$LOVEBINARYDIRECTORY/flatpak-wrapper
       cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/love

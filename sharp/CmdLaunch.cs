@@ -64,6 +64,17 @@ namespace Olympus {
 
             if (!string.IsNullOrEmpty(args))
                 game.StartInfo.Arguments = args;
+        
+            // Flatpak detection
+            // or string.Equals(Environment.GetEnvironmentVariable("container"), "flatpak");
+            if (File.Exists("/.flatpak-info")) {
+            	if (!string.IsNullOrEmpty(args))
+                    game.StartInfo.Arguments = string.Join(" ", game.StartInfo.FileName, args);
+                else
+                    game.StartInfo.Arguments = game.StartInfo.FileName;
+                game.StartInfo.FileName = Path.Combine(Program.RootDirectory, "flatpak-wrapper");
+                game.StartInfo.UseShellExecute = true;
+            }
 
             Console.Error.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
 
