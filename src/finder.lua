@@ -25,7 +25,7 @@ finder.defaultName = "Celeste"
 -- https://bspmts.mp.microsoft.com/v1/public/catalog/Retail/Products/bwmql2rpwbhb/applockerdata
 finder.defaultUWPName = "MattMakesGamesInc.Celeste_79daxvg0dq3v6"
 
--- enhance linux compatibility 
+-- enhance linux compatibility
 local function getLinuxConfigDir()
     local xdg_cfg = os.getenv("XDG_CONFIG_HOME")
     if fs.isFile("/.flatpak-info") or xdg_cfg == "" then
