@@ -31,9 +31,9 @@ fi
 
 # On Linux/osx we use the wrapper script, the .sh version is here for debugging purposes
 if [ -f "find-love.sh" ]; then
-	./find-love.sh olympus.love
+	./find-love.sh olympus.love $@
 elif [ -f "find-love" ]; then
-	./find-love olympus.love
+	./find-love olympus.love $@
 else
 	echo "find-love script not found, can't proceed!"
 	exit 1
