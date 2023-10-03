@@ -323,25 +323,25 @@ redirect_stdout(stdoutPrev)
             return GetJuliaOutput(@"println(VERSION)", out _);
         }
 
-        public static string GetAhornPkgVersion() {
-            return GetJuliaOutput(PrefixPkgActivate + @"
+        public static string GetPkgVersion(string package) {
+            return GetJuliaOutput(PrefixPkgActivate + $@"
 if !(""Ahorn"" ∈ keys(Pkg.installed()))
     return
 end
 
 try
     local ctx = Pkg.Types.Context()
-    println(string(ctx.env.manifest[ctx.env.project.deps[""Ahorn""]].tree_hash))
+    println(string(ctx.env.manifest[ctx.env.project.deps[""{package}""]].tree_hash))
 catch e
     println(""?"")
 end
 ", out _);
         }
 
-        public static string GetAhornVersion() {
+        public static string GetVersion(string package) {
             string path = AhornPath;
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
-                return GetAhornPkgVersion() + " (pkg)";
+                return GetPkgVersion(package) + " (pkg)";
 
             // julia-depot/packages/Ahorn/*/src/Ahorn.jl
             path = Path.GetDirectoryName(path); // julia-depot/packages/Ahorn/*/src
@@ -350,11 +350,11 @@ end
             path = Path.GetDirectoryName(path); // julia-depot/packages
             path = Path.GetDirectoryName(path); // julia-depot
             if (string.IsNullOrEmpty(path) || !Directory.Exists(path))
-                return GetAhornPkgVersion() + " (pkg)";
+                return GetPkgVersion(package) + " (pkg)";
 
             path = Path.Combine(path, "clones");
             if (!Directory.Exists(path))
-                return GetAhornPkgVersion() + " (pkg)";
+                return GetPkgVersion(package) + " (pkg)";
 
             foreach (string clone in Directory.EnumerateDirectories(path)) {
                 string config = Path.Combine(clone, "config");
@@ -364,7 +364,7 @@ end
                 using (StreamReader reader = new StreamReader(stream)) {
                     if (!reader.ReadLineUntil("[remote \"origin\"]"))
                         continue;
-                    if (reader.ReadLine()?.Trim() != "url = https://github.com/CelestialCartographers/Ahorn.git")
+                    if (reader.ReadLine()?.Trim() != $"url = https://github.com/CelestialCartographers/{package}.git")
                         continue;
                 }
 
@@ -383,7 +383,7 @@ end
                 }
             }
 
-            return GetAhornPkgVersion() + " (pkg)";
+            return GetPkgVersion(package) + " (pkg)";
         }
 
     }

@@ -41,7 +41,9 @@ namespace Olympus {
             public string AhornEnvPath = AhornHelper.AhornEnvPath;
             public string AhornPath = AhornHelper.AhornPath;
             public bool AhornIsLocal = AhornHelper.AhornIsLocal;
-            public string AhornVersion = AhornHelper.GetAhornVersion();
+            public string AhornVersion = AhornHelper.GetVersion("Ahorn");
+
+            public string MapleVersion = AhornHelper.GetVersion("Maple");
 
         }
 

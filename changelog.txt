@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added the ground work for the future Flatpak package
-∙ Fixed 1-click installing on Linux
+∙ Also check for Maple updates when checking for Ahorn updates

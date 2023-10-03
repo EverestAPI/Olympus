@@ -404,16 +404,18 @@ If you really need to cancel the installation process:
     })
 end
 
-function scene.updateAhornAlert(installed, found)
+function scene.updateAhornAlert(installedAhorn, installedMaple, foundAhorn, foundMaple)
     alert({
         body = string.format([[
-Olympus has found a possibly newer version of Ahorn.
+Olympus has found a possibly newer version of Ahorn and/or Maple.
 
-Detected installed version:
-%s
+Detected installed versions:
+Ahorn: %s
+Maple: %s
 
-Latest available version:
-%s
+Latest available versions:
+Ahorn: %s
+Maple: %s
 
 Just like installing Ahorn, IT WILL TAKE A LONG TIME.
 Olympus will detect hangs and abort too slow installation processes.
@@ -425,7 +427,7 @@ If you really need to cancel the installation process:
 (love.system.getOS() == "OS X" and "Open the Activity Monitor and force-close the Julia process.") or
 (love.system.getOS() == "Linux" and "You probably know your way around htop and kill.") or
 ("... Good luck killing the Julia process.")),
-            installed, found),
+            installedAhorn, foundAhorn, installedMaple, foundMaple),
         buttons = {
             {
                 "Install updates",
@@ -784,8 +786,9 @@ Olympus can download Ahorn and start the installation process for you.
                     uie.label(string.format([[
 Found installation path:
 %s
-Found version: %s]],
-                        tostring(info.AhornPath), tostring(info.AhornVersion)
+Found Ahorn version: %s
+Found Maple version: %s]],
+                        tostring(info.AhornPath), tostring(info.AhornVersion), tostring(info.MapleVersion)
                     )),
                     btnRow("check", {
                         { "mainmenu/ahorn", "Launch Ahorn", scene.launchAhorn },
@@ -793,27 +796,34 @@ Found version: %s]],
                     }):with(function(row)
                         local btn = row.children[2]
                         scene.latestGet:calls(function(thread, latest)
-                            local installedHash, installedHashType = tostring(info.AhornVersion or ""):match("(.*) %((.*)%)")
-
-                            if installedHashType == "git" then
-                                latest = latest and latest.sha
-                            elseif installedHashType == "pkg" then
-                                latest = latest and latest.commit
-                                latest = latest and latest.tree
-                                latest = latest and latest.sha
-                            else
-                                latest = nil
+                            local function getLatest(latest, installedHashType)
+                                if installedHashType == "git" then
+                                    latest = latest and latest.sha
+                                elseif installedHashType == "pkg" then
+                                    latest = latest and latest.commit
+                                    latest = latest and latest.tree
+                                    latest = latest and latest.sha
+                                else
+                                    latest = nil
+                                end
+                                return latest
                             end
 
-                            if not installedHash or not latest then
+                            local installedAhornHash, installedAhornHashType = tostring(info.AhornVersion or ""):match("(.*) %((.*)%)")
+                            local installedMapleHash, installedMapleHashType = tostring(info.MapleVersion or ""):match("(.*) %((.*)%)")
+
+                            local latestAhorn = getLatest(latest.ahorn, installedAhornHashType)
+                            local latestMaple = getLatest(latest.maple, installedMapleHashType)
+
+                            if not installedAhornHash or not installedMapleHash or not latestAhorn or not latestMaple then
                                 return
                             end
 
-                            if installedHash ~= latest then
+                            if installedAhornHash ~= latestAhorn or installedMapleHash ~= latestMaple then
                                 btn.children[1].children[1].image = uiu.image("download")
                                 btn.children[1].children[2].text = "Install updates"
                                 btn.cb = function()
-                                    scene.updateAhornAlert(installedHash, latest)
+                                    scene.updateAhornAlert(installedAhornHash, latestAhorn, installedMapleHash, latestMaple)
                                 end
                                 btn:with(utils.important(24))
                             end
@@ -836,8 +846,10 @@ end
 
 function scene.load()
     scene.latestGet = threader.routine(function()
-        scene.latest = threader.wrap("utils").downloadJSON("https://api.github.com/repos/CelestialCartographers/Ahorn/commits/master"):result()
-        return scene.latest
+        return {
+            ahorn = threader.wrap("utils").downloadJSON("https://api.github.com/repos/CelestialCartographers/Ahorn/commits/master"):result(),
+            maple = threader.wrap("utils").downloadJSON("https://api.github.com/repos/CelestialCartographers/Maple/commits/master"):result()
+        }
     end)
 end
 
