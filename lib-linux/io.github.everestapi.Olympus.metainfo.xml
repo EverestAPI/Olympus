@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>io.github.everestapi.Olympus</id>
-  
+
   <name>Olympus</name>
   <summary>Cross-platform Celeste Mod Manager</summary>
-  
+
   <metadata_license>MIT</metadata_license>
   <project_license>MIT</project_license>
-  
+
   <description>
     <p>The new Everest installer / manager, powered by Löve2D.</p>
     <p>Everest is an open-source mod loader and modding API for Celeste, allowing you to create custom map packs, texture replacements and code mods to your heart&apos;s content.</p>
@@ -24,7 +24,7 @@
         <li>And much more that did not fit into this list. Whew!</li>
     </ul>
   </description>
-  
+
   <launchable type="desktop-id">io.github.everestapi.Olympus.desktop</launchable>
   <screenshots>
     <screenshot type="default">
@@ -37,7 +37,7 @@
     </screenshot>
   </screenshots>
   <url type="homepage">https://everestapi.github.io/</url>
-	<url type="bugtracker">https://github.com/EverestAPI/Olympus/issues</url>
-	<url type="faq">https://github.com/EverestAPI/Resources/wiki/FAQ</url>
-	<url type="vcs-browser">https://github.com/EverestAPI/Olympus</url>
+  <url type="bugtracker">https://github.com/EverestAPI/Olympus/issues</url>
+  <url type="faq">https://github.com/EverestAPI/Resources/wiki/FAQ</url>
+  <url type="vcs-browser">https://github.com/EverestAPI/Olympus</url>
 </component>

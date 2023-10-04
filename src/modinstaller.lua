@@ -41,12 +41,14 @@ function modinstaller.register()
         return false
 
     elseif userOS == "Linux" then
+        if fs.isFile("/.flatpak-info") then
+            return false
+        end
+
         -- While we're here, might as well check if the everest scheme handler is registered.
         local p = io.popen([["xdg-mime" "query" "default" "x-scheme-handler/everest"]])
         local data = utils.trim(p:read("*a")) or ""
-        if fs.isFile("/.flatpak-info") then
-            return false
-        elseif p:close() and data == "" then
+        if p:close() and data == "" then
             alert([[
 Olympus isn't fully installed.
 Please run install.sh to install the one-click installer handler.
