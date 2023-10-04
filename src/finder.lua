@@ -28,7 +28,7 @@ finder.defaultUWPName = "MattMakesGamesInc.Celeste_79daxvg0dq3v6"
 -- enhance linux compatibility
 local function getLinuxConfigDir()
     local xdg_cfg = os.getenv("XDG_CONFIG_HOME")
-    if fs.isFile("/.flatpak-info") or xdg_cfg == "" then
+    if fs.isFile("/.flatpak-info") or xdg_cfg == "" or xdg_cfg == nil then
        return fs.joinpath(os.getenv("HOME"), ".config")
     end
     return xdg_cfg
