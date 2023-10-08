@@ -173,7 +173,7 @@ function scene.createEntry(list, entry, manualIndex)
                             alert({
                                 force = true,
                                 body = [[
-The UWP version of Celeste is currently unsupported.
+The UWP (Xbox/Microsoft Store) version of Celeste is currently unsupported.
 All game data is encrypted, even dialog text files are uneditable.
 The game code itself is AOT-compiled - no existing code mods would work.
 Even Lönn and Ahorn currently can't load the necessary game data either.
