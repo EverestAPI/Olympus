@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Linux: added the appdata spec of Olympus
-∙ Flatpak: removed the "Olympus is not fully installed" prompt
+∙ Linux: Updated the metainfo file to add version and content rating info
