@@ -30,7 +30,7 @@ function config.getName()
 end
 
 function config.getPath()
-    return fs.joinpath(fs.getStorageDir(), config.getName())
+    return fs.joinpath(fs.getStorageDir(false), config.getName())
 end
 
 function config.load()
