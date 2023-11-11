@@ -468,7 +468,7 @@ function scene.load()
                 versionNumber = versionNumber .. " (" .. branch .. ")"
             end
 
-            local info = " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(build.date))
+            local info = " ∙ " .. (build.isNative and "core" or "legacy") .. " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", utils.dateToTimestamp(build.date))
 
             if build.author then
                 info = info .. " ∙ " .. build.author
