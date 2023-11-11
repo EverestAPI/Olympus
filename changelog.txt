@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Tried fixing yet another Windows path encoding issue preventing settings from saving
+∙ Added a tag to indicate Core and Legacy Everest builds
