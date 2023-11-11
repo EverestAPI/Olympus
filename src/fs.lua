@@ -287,7 +287,10 @@ function fs.unzip(zipPath, outputDir)
     love.filesystem.unmount(tmp)
 end
 
-function fs.getStorageDir()
+function fs.getStorageDir(allowSharp)
+    -- true by default
+    allowSharp = allowSharp == nil and true or allowSharp
+
     local path = os.getenv("OLYMPUS_CONFIG")
     if path ~= "" and fs.isDirectory(path) then
         return path
@@ -298,7 +301,7 @@ function fs.getStorageDir()
     local userOS = love.system.getOS()
 
     if userOS == "Windows" then
-        local appdata = sharp.initStatus and sharp.getEnv("LocalAppdata"):result() or os.getenv("LocalAppData")
+        local appdata = (allowSharp and sharp.initStatus) and sharp.getEnv("LocalAppdata"):result() or os.getenv("LocalAppData")
         return fs.joinpath(appdata, name)
 
     elseif userOS == "Linux" then

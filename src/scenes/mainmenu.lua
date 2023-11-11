@@ -704,7 +704,7 @@ function scene.enter()
             sharp.getLoennLatestVersion():calls(function (t, data)
                 local latestVersion = data.Item1
 
-                if latestVersion ~= config.loennInstalledVersion then
+                if latestVersion ~= "unknown" and latestVersion ~= config.loennInstalledVersion then
                     cogwheel:with(utils.important(32))
                 end
             end)

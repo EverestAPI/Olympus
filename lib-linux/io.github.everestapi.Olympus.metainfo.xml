@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.everestapi.Olympus</id>
+
+  <name>Olympus</name>
+  <summary>Cross-platform Celeste Mod Manager</summary>
+
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <developer_name>Everest Team</developer_name>
+
+  <description>
+    <p>The new Everest installer / manager, powered by Löve2D.</p>
+    <p>Everest is an open-source mod loader and modding API for Celeste, allowing you to create custom map packs, texture replacements and code mods to your heart&apos;s content.</p>
+    <ul>
+        <li>In-game updater and dependency downloader</li>
+        <li>Cross-platform: Windows, macOS, Linux </li>
+        <li>TASBot-verified</li>
+        <li>Easily switch between Everest and vanilla Celeste from the title screen or Olympus</li>
+        <li>Load mod files without messing with your original files</li>
+        <li>Sound test - including easter eggs hidden in Celeste by the legendary Kevin Regamey</li>
+        <li>Quality of life improvements</li>
+        <li>Enhanced Debug Mode</li>
+        <li>A lot of unhardcoded and customizable entities for your custom maps</li>
+        <li>And much more that did not fit into this list. Whew!</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">io.github.everestapi.Olympus.desktop</launchable>
+  
+  <releases>
+    <release version="BUILD_VERSION" date="BUILD_DATE"/>
+  </releases>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Main screen of Olympus</caption>
+      <image>https://everestapi.github.io/images/olympus-main.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>Everest version selection screen</caption>
+      <image>https://everestapi.github.io/main/olympus.png</image>
+    </screenshot>
+  </screenshots>
+  
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-fantasy">mild</content_attribute>
+    <content_attribute id="language-profanity">mild</content_attribute>
+    <content_attribute id="language-humor">mild</content_attribute>
+    <content_attribute id="social-info">mild</content_attribute>
+    <content_attribute id="money-advertising">mild</content_attribute>
+  </content_rating>
+  
+  <url type="homepage">https://everestapi.github.io/</url>
+  <url type="bugtracker">https://github.com/EverestAPI/Olympus/issues</url>
+  <url type="faq">https://github.com/EverestAPI/Resources/wiki/FAQ</url>
+  <url type="vcs-browser">https://github.com/EverestAPI/Olympus</url>
+</component>

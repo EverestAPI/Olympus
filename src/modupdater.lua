@@ -12,7 +12,7 @@ function modupdater.updateAllMods(path, notify, mode, callback)
     local willRunGame = callback == nil
 
     local origMode = mode
-    local origCallback = mode
+    local origCallback = callback
 
     mode = mode or config.updateModsOnStartup
     callback = callback or function()

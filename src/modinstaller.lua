@@ -41,6 +41,10 @@ function modinstaller.register()
         return false
 
     elseif userOS == "Linux" then
+        if fs.isFile("/.flatpak-info") then
+            return false
+        end
+
         -- While we're here, might as well check if the everest scheme handler is registered.
         local p = io.popen([["xdg-mime" "query" "default" "x-scheme-handler/everest"]])
         local data = utils.trim(p:read("*a")) or ""
