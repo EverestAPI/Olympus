@@ -150,7 +150,9 @@ Otherwise, manually install XNA using the button below.]],
                         end }
                     }
                 })
-            elseif version ~= "manual" and version.isNative then
+
+            -- Build 4415 is the first one to use Piton, so a runtime check isn't required anymore
+            elseif version ~= "manual" and version.isNative and version.build and version.build < 4415 then
                 procFile, _ = io.popen("dotnet --list-runtimes")
 
                 if not procFile then
