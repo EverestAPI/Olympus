@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Updated LÖVE to 11.5
-∙ Updated xml2lua to 1.6-1
+∙ Fixed running Lönn with Olympus bundled love2d

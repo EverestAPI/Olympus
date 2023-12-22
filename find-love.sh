@@ -38,8 +38,9 @@ if command -v love >/dev/null 2>&1; then
 fi
 if [ -f "love" ]; then
     echo "Using bundled love"
+    ORIG_DIR=$(pwd)
 	cd $(dirname $1)
-    ./love --fused $@
+    $ORIG_DIR/love --fused $@
 elif command -v love >/dev/null 2>&1; then # We know it is old, but go for it anyway
     echo "Using oudated system wide love installation"
 	cd $(dirname $1)
