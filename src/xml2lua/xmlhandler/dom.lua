@@ -89,16 +89,16 @@ function dom:endtag(tag)
     if not self.current then
        local node = { _children = {}, _type = "ROOT" }
        if self.decl then
-	  table.insert(node._children, self.decl)
-	  self.decl = nil
+          table.insert(node._children, self.decl)
+          self.decl = nil
        end
        if self.dtd then
-	  table.insert(node._children, self.dtd)
-	  self.dtd = nil
+          table.insert(node._children, self.dtd)
+          self.dtd = nil
        end
        if self.root then
-	  table.insert(node._children, self.root)
-	  self.root = node
+          table.insert(node._children, self.root)
+          self.root = node
        end
        self.current = node
     end
@@ -145,8 +145,8 @@ end
 function dom:decl(tag)
    if self.options.declNode then
       self.decl = { _type = "DECL",
-		    _name = tag.name,
-		    _attr = tag.attrs,
+                    _name = tag.name,
+                    _attr = tag.attrs,
       }
    end
 end
@@ -158,8 +158,8 @@ end
 function dom:dtd(tag)
    if self.options.dtdNode then
       self.dtd = { _type = "DTD",
-		   _name = tag.name,
-		   _text = tag.value
+                   _name = tag.name,
+                   _text = tag.value
       }
    end
 end
@@ -183,19 +183,19 @@ local function attrsToStr(tab)
    if type(tab) == 'table' then
       local s = ''
       for n,v in pairs(tab) do
-	 -- determine a safe quote character
-	 local val = tostring(v)
-	 local found_single_quote = string.find(val, "'")
-	 local found_double_quote = string.find(val, '"')
-	 local quot = '"'
-	 if found_single_quote and found_double_quote then
-	    -- XML escape both quote characters
-	    val = string.gsub(val, '"', '&quot;')
-	    val = string.gsub(val, "'", '&apos;')
-	 elseif found_double_quote then
-	    quot = "'"
-	 end
-	 s = ' ' .. tostring(n) .. '=' .. quot .. val .. quot
+         -- determine a safe quote character
+         local val = tostring(v)
+         local found_single_quote = string.find(val, "'")
+         local found_double_quote = string.find(val, '"')
+         local quot = '"'
+         if found_single_quote and found_double_quote then
+            -- XML escape both quote characters
+            val = string.gsub(val, '"', '&quot;')
+            val = string.gsub(val, "'", '&apos;')
+         elseif found_double_quote then
+            quot = "'"
+         end
+         s = ' ' .. tostring(n) .. '=' .. quot .. val .. quot
       end
       return s
    end
@@ -221,7 +221,7 @@ local function toXmlStr(node, indentLevel)
    if node._type == 'ROOT' then
       local s = ''
       for i, n in pairs(node._children) do
-	 s = s .. toXmlStr(n, indentLevel+2)
+         s = s .. toXmlStr(n, indentLevel+2)
       end
       return s
    elseif node._type == 'ELEMENT' then
@@ -229,19 +229,19 @@ local function toXmlStr(node, indentLevel)
 
       -- check if ELEMENT has no children
       if not node._children or
-	 #node._children == 0 then
-	 return s .. '/>\n'
+         #node._children == 0 then
+         return s .. '/>\n'
       end
 
       s = s .. '>\n'
 
       for i, n in pairs(node._children) do
-	 local xx = toXmlStr(n, indentLevel+2)
-	 if not xx then
-	    print('BUG:xx==nil')
-	 else
-	    s = s .. xx
-	 end
+         local xx = toXmlStr(n, indentLevel+2)
+         if not xx then
+            print('BUG:xx==nil')
+         else
+            s = s .. xx
+         end
       end
 
       return s .. indent .. '</' .. node._name .. '>\n'

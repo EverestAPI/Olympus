@@ -147,6 +147,12 @@ steps:
 
 
 # Build launcher-winforms.
+- task: UseDotNet@2
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Build: downgrade .NET to build launcher-winforms'
+  inputs:
+    version: 7.x # "Fixes" BinaryFormatter issues to circumvent a il-repack issue: https://github.com/gluck/il-repack/issues/327
+
 - task: DotNetCoreCLI@2
   condition: and(succeeded(), eq(variables.agentArch, 'windows'))
   displayName: 'Build: dotnet: restore launcher-winforms'
