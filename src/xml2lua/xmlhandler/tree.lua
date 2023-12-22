@@ -4,7 +4,7 @@ local function init()
         options = {noreduce = {}}
     }
 
-    obj._stack = {obj.root, n=1}
+    obj._stack = {obj.root}
     return obj
 end
 
@@ -82,9 +82,36 @@ function tree:reduce(node, key, parent)
     if #node == 1 and not self.options.noreduce[key] and
         node._attr == nil then
         parent[key] = node[1]
-    else
-        node.n = nil
     end
+end
+
+
+--- If an object is not an array,
+-- creates an empty array and insert that object as the 1st element.
+--
+-- It's a workaround for duplicated XML tags outside an inner tag. Check issue #55 for details.
+-- It checks if a given tag already exists on the parsing stack.
+-- In such a case, if that tag is represented as a single element,
+-- an array is created and that element is inserted on it.
+-- The existing tag is then replaced by the created array.
+-- For instance, if we have a tag x = {attr1=1, attr2=2}
+-- and another x tag is found, the previous entry will be changed to an array
+-- x = {{attr1=1, attr2=2}}. This way, the duplicated tag will be
+-- inserted into this array as x = {{attr1=1, attr2=2}, {attr1=3, attr2=4}}
+-- https://github.com/manoelcampos/xml2lua/issues/55
+--
+-- @param obj the object to try to convert to an array
+-- @return the same object if it's already an array or a new array with the object
+--         as the 1st element.
+local function convertObjectToArray(obj)
+    --#obj == 0 verifies if the field is not an array
+    if #obj == 0 then
+        local array = {}
+        table.insert(array, obj)
+        return array
+    end
+
+    return obj
 end
 
 ---Parses a start tag.
@@ -101,9 +128,11 @@ function tree:starttag(tag)
     local current = self._stack[#self._stack]
 
     if current[tag.name] then
-        table.insert(current[tag.name], node)
+        local array = convertObjectToArray(current[tag.name])
+        table.insert(array, node)
+        current[tag.name] = array
     else
-        current[tag.name] = {node; n=1}
+        current[tag.name] = {node}
     end
 
     table.insert(self._stack, node)

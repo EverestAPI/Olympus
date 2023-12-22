@@ -21,12 +21,12 @@
 --for that decimal value in the format &#code
 --@param code the decimal value to convert to its respective character
 local function decimalToHtmlChar(code)
-    local n = tonumber(code)
-    if n >= 0 and n < 256 then
-        return string.char(n)
-    else
-        return "&#"..code..";"
+    local num = tonumber(code)
+    if num >= 0 and num < 256 then
+        return string.char(num)
     end
+
+    return "&#"..code..";"
 end
 
 ---Converts the hexadecimal code of a character to its corresponding char
@@ -34,16 +34,16 @@ end
 --for that hexadecimal value in the format &#xCode
 --@param code the hexadecimal value to convert to its respective character
 local function hexadecimalToHtmlChar(code)
-    local n = tonumber(code, 16)
-    if n >= 0 and n < 256 then
-        return string.char(n)
-    else
-        return "&#x"..code..";"
+    local num = tonumber(code, 16)
+    if num >= 0 and num < 256 then
+        return string.char(num)
     end
+
+    return "&#x"..code..";"
 end
 
 local XmlParser = {
-    -- Private attribures/functions
+    -- Private attributes/functions
     _XML        = '^([^<]*)<(%/?)([^>]-)(%/?)>',
     _ATTR1      = '([%w-:_]+)%s*=%s*"(.-)"',
     _ATTR2      = '([%w-:_]+)%s*=%s*\'(.-)\'',
@@ -56,10 +56,10 @@ local XmlParser = {
     _WS         = '^%s*$',
     _DTD1       = '<!DOCTYPE%s+(.-)%s+(SYSTEM)%s+["\'](.-)["\']%s*(%b[])%s*>',
     _DTD2       = '<!DOCTYPE%s+(.-)%s+(PUBLIC)%s+["\'](.-)["\']%s+["\'](.-)["\']%s*(%b[])%s*>',
-    --_DTD3       = '<!DOCTYPE%s+(.-)%s*(%b[])%s*>',
-    _DTD3       = '<!DOCTYPE%s.->',
+    _DTD3       = '<!DOCTYPE%s+(.-)%s+%[%s+.-%]>', -- Inline DTD Schema
     _DTD4       = '<!DOCTYPE%s+(.-)%s+(SYSTEM)%s+["\'](.-)["\']%s*>',
     _DTD5       = '<!DOCTYPE%s+(.-)%s+(PUBLIC)%s+["\'](.-)["\']%s+["\'](.-)["\']%s*>',
+    _DTD6       = '<!DOCTYPE%s+(.-)%s+(PUBLIC)%s+["\'](.-)["\']%s*>',
 
     --Matches an attribute with non-closing double quotes (The equal sign is matched non-greedly by using =+?)
     _ATTRERR1   = '=+?%s*"[^"]*$',
@@ -157,7 +157,7 @@ end
 --@param s String containing tag text
 --@return a {name, attrs} table
 -- where name is the name of the tag and attrs
--- is a table containing the atributtes of the tag
+-- is a table containing the attributes of the tag
 local function parseTag(self, s)
     local tag = {
             name = string.gsub(s, self._TAG, '%1'),
@@ -246,7 +246,7 @@ end
 
 local function _parseDtd(self, xml, pos)
     -- match,endMatch,root,type,name,uri,internal
-    local dtdPatterns = {self._DTD1, self._DTD2, self._DTD3, self._DTD4, self._DTD5}
+    local dtdPatterns = {self._DTD1, self._DTD2, self._DTD3, self._DTD4, self._DTD5, self._DTD6}
 
     for _, dtd in pairs(dtdPatterns) do
         local m,e,r,t,n,u,i = string.find(xml, dtd, pos)
@@ -323,6 +323,7 @@ local function parseNormalTag(self, xml, f)
         end
     else
         table.insert(self._stack, tag.name)
+
         if fexists(self.handler, 'starttag') then
             self.handler:starttag(tag, f.match, f.endMatch)
         end

@@ -3,8 +3,5 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Linux: Updated the metainfo file to add version and content rating info
-∙ Do not display (!) over Lönn cogwheel icon if the update check failed
-∙ Tried fixing yet another Windows path encoding issue preventing settings from saving
-∙ Added a tag to indicate Core and Legacy Everest builds
-∙ Don't check for an installed runtime for versions with Piton support
+∙ Updated LÖVE to 11.5
+∙ Updated xml2lua to 1.6-1

@@ -9,7 +9,7 @@ strategy:
       artifactSuffix: ''
       netbuilder: 'core'
       lualibs: 'prebuilt'
-      loveURL: 'https://github.com/love2d/love/releases/download/11.4/love-11.4-win32.zip'
+      loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-win32.zip'
       loveZIP: 'love.zip'
       loveAppImage: ''
       loveBinaryDirectory: ''
@@ -26,7 +26,7 @@ strategy:
       lualibs: 'luarocks'
       luarocksPreArgs: '--lua-dir=/usr/local/opt/lua@5.1'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua@5.1/lib"'
-      loveURL: 'https://github.com/love2d/love/releases/download/11.4/love-11.4-macos.zip'
+      loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip'
       loveZIP: 'love.zip'
       loveAppImage: ''
       loveBinaryDirectory: 'love.app/Contents/MacOS/'
@@ -42,7 +42,7 @@ strategy:
       monokickURL: 'https://github.com/flibitijibibo/MonoKickstart.git'
       lualibs: 'luarocks'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
-      loveURL: 'https://github.com/love2d/love/releases/download/11.4/love-11.4-x86_64.AppImage'
+      loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-x86_64.AppImage'
       loveZIP: ''
       loveAppImage: 'love-raw/love'
       loveBinaryDirectory: ''
@@ -206,8 +206,8 @@ steps:
     targetType: 'inline'
     script: |
       Copy-Item -Path love-raw -Destination love -Recurse
-      if (Test-Path -Path love/love-11.4-win32 -PathType Container) {
-        Move-Item -Path love/love-11.4-win32 -Destination love-win
+      if (Test-Path -Path love/love-11.5-win32 -PathType Container) {
+        Move-Item -Path love/love-11.5-win32 -Destination love-win
         Remove-Item -Path love -Force -Recurse
         Move-Item -Path love-win -Destination love
         Invoke-WebRequest -Uri "https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe" -OutFile rcedit.exe
