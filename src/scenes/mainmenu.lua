@@ -466,7 +466,7 @@ local root = uie.row({
                 buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
                 uie.row({}):with(uiu.fillWidth):as("mapeditor"),
                 buttonBig("cogwheel", updater.available and "Options & Updates" or "Options", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
-                -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
+                button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
             }):with({
                 clip = false
             }):with(uiu.fillWidth(true)):with(uiu.fillHeight):as("mainlist"),
@@ -525,6 +525,7 @@ scene.launchrow = uie.row({
         modupdater.updateAllMods(nil, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
     buttonBig("mainmenu/celeste", "Celeste", function()
+        local opengl = config.useOpenGL == "enabled"
         utils.launch(nil, true, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(2.5 - 32 - 2, 0)),
     buttonBig("cogwheel", "", "everest"):with({

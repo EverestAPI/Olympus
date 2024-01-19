@@ -323,6 +323,7 @@ end
 
 local launching = {}
 
+--add opengl argument here ?
 function utils.launch(path, vanilla, notify, force)
     local key = string.format("%s | %s", path, vanilla and "vanilla" or "everest")
     if launching[key] then
@@ -333,8 +334,10 @@ function utils.launch(path, vanilla, notify, force)
     end
 
     launching[key] = threader.routine(function()
+
+        local config = require("config")
+
         if not path then
-            local config = require("config")
             if config then
                 path = config.installs[config.install].path
             end
@@ -348,7 +351,13 @@ function utils.launch(path, vanilla, notify, force)
         local alert = require("alert")
         notify = notify and require("notify") or alert
 
-        local launch = sharp.launch(path, vanilla and "--vanilla" or "", (force or not notify) and true or false)
+        local opengl = false
+        if config then 
+            opengl = config.useOpenGL == "enabled"
+        end
+
+        local flags = "--console " .. (vanilla and "--vanilla " or "") .. (opengl and "--graphics OpenGL " or "")
+        local launch = sharp.launch(path, flags, (force or not notify) and true or false)
         local container
 
         if vanilla then
