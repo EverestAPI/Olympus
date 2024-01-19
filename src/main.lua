@@ -37,7 +37,6 @@ local canvas
 
 local drawstats = {}
 
-
 local function logDump()
     while true do
         local logLine = logChannel:pop()

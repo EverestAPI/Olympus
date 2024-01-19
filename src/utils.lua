@@ -323,7 +323,7 @@ end
 
 local launching = {}
 
---add opengl argument here ?
+
 function utils.launch(path, vanilla, notify, force)
     local key = string.format("%s | %s", path, vanilla and "vanilla" or "everest")
     if launching[key] then
