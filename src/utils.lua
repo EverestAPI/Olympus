@@ -356,7 +356,7 @@ function utils.launch(path, vanilla, notify, force)
             opengl = config.useOpenGL == "enabled"
         end
 
-        local flags = "--console " .. (vanilla and "--vanilla " or "") .. (opengl and "--graphics OpenGL " or "")
+        local flags = (vanilla and "--vanilla " or "") .. (opengl and "--graphics OpenGL " or "")
         local launch = sharp.launch(path, flags, (force or not notify) and true or false)
         local container
 
