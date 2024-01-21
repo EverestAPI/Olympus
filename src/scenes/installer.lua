@@ -272,6 +272,7 @@ scene.timeDraw = 0
 scene.progress = 0
 scene.progressNext = 0
 scene.progressDraw = 0
+scene.autocloseDuration = 3 
 
 
 function scene.update(status, progress, shape, replace)
@@ -309,7 +310,7 @@ function scene.update(status, progress, shape, replace)
 end
 
 
-function scene.done(success, buttons)
+function scene.done(success, buttons, autoclose)
     if not buttons then
         buttons = success
         success = true
@@ -321,20 +322,47 @@ function scene.done(success, buttons)
         clip = false
     }):with(uiu.fillWidth)
 
-    local listcount = #buttons
-    for i = 1, #buttons do
-        local btn = buttons[i]
-        btn = uie.button(table.unpack(btn))
-        if listcount == 1 then
-            btn = btn:with(uiu.fillWidth)
-        else
-            btn = btn:with(uiu.fillWidth(1 / listcount + 4)):with(uiu.at((i == 1 and 0 or 4) + (i - 1) / listcount, 0))
+    if not autoclose then 
+        local listcount = #buttons
+        for i = 1, #buttons do
+            local btn = buttons[i]
+            btn = uie.button(table.unpack(btn))
+            if listcount == 1 then
+                btn = btn:with(uiu.fillWidth)
+            else
+                btn = btn:with(uiu.fillWidth(1 / listcount + 4)):with(uiu.at((i == 1 and 0 or 4) + (i - 1) / listcount, 0))
+            end
+            row:addChild(btn)
         end
-        row:addChild(btn)
+
+        scene.actionsholder:addChild(row:with(success and utils.importantCheck(24) or utils.important(24)))
+
+    else
+        -- place+start self destruct countdown
+        local countdown = uie.label(
+                                    string.format("Autoclosing in %d...", scene.autocloseDuration)
+                                   )
+       
+        
+        countdown = countdown:with(uiu.fillWidth):with(uiu.at(0))
+        row:addChild(countdown)
+
+        threader.routine(
+            function()
+                local totalDuration = scene.autocloseDuration
+                for i = 1, totalDuration do 
+                    threader.sleep(1)
+                    countdown:setText(string.format("Autoclosing in %d...", totalDuration - i) )
+                end 
+                love.event.quit()
+            end
+        )
+
+        scene.actionsholder:addChild(row)
     end
 
-    scene.actionsholder:addChild(row:with(success and utils.importantCheck(24) or utils.important(24)))
     scene.actionsrow = row
+
 end
 
 

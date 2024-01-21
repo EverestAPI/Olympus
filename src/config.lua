@@ -132,6 +132,8 @@ function config.load()
     default(data, "updateModsOnStartup", "none")
     default(data, "useOpenGL", "disabled")
 
+    default(data, "closeAfterOneClickInstall", "disabled")
+
     default(data, "extradata", {})
 end
 

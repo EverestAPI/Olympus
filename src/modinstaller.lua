@@ -60,7 +60,7 @@ install.sh can be found in your Olympus installation folder.]])
 end
 
 
-function modinstaller.install(modurl, cb)
+function modinstaller.install(modurl, cb, autoclose)
     local install = config.installs[config.install]
     install = install and install.path
 
@@ -103,7 +103,7 @@ function modinstaller.install(modurl, cb)
                     cb(false)
                 end
             }
-        })
+        }, nil, autoclose)
     end)
 
 end
