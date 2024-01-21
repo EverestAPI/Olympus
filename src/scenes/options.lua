@@ -360,7 +360,6 @@ local root = uie.column({
                     uie.column({
                         uie.label("Use OpenGL"),
                         uie.dropdown(useOpenGLOptions, function(self, value)
-                            print(value)
                             config.useOpenGL = value
                             config.save()
                         end):with({
