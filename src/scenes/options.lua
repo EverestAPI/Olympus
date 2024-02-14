@@ -86,6 +86,11 @@ local updateModsOnStartupOptions = {
     { text = "Disabled (Default)", data = "none" }
 }
 
+local useOpenGLOptions = {
+    { text = "Enabled", data = "enabled" },
+    { text = "Disabled (Default)", data = "disabled" }
+}
+
 local extradatas = {
     { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0a.de/olympus-extra/olympus-extra-cjk.zip" }
 }
@@ -297,6 +302,8 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
 
+    
+
                 }):with(uiu.fillWidth),
 
                 uie.group({}),
@@ -349,6 +356,18 @@ local root = uie.column({
                             selectedData = config.updateModsOnStartup
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
+
+                    uie.column({
+                        uie.label("Use OpenGL"),
+                        uie.dropdown(useOpenGLOptions, function(self, value)
+                            config.useOpenGL = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.useOpenGL
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
+
 
                 }):with(uiu.fillWidth),
 

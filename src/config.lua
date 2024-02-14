@@ -130,6 +130,7 @@ function config.load()
     default(data, "loennInstalledVersion", "")
 
     default(data, "updateModsOnStartup", "none")
+    default(data, "useOpenGL", "disabled")
 
     default(data, "extradata", {})
 end
