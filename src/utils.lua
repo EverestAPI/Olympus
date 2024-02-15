@@ -352,7 +352,7 @@ function utils.launch(path, vanilla, notify, force)
         notify = notify and require("notify") or alert
 
         local opengl = false
-        if config then 
+        if config then
             opengl = config.useOpenGL == "enabled"
         end
 

@@ -307,7 +307,7 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(4 / optioncount, 0)),
 
-    
+
 
                 }):with(uiu.fillWidth),
 

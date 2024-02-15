@@ -29,3 +29,12 @@
 - [OlympUI](https://github.com/EverestAPI/OlympUI)
 - Shared code between Olympus and [Lönn](https://github.com/CelestialCartographers/Loenn)
 
+## Local setup
+
+- Make sure you cloned the repository with `--recurse-submodules`: `src/luajit-request`, `src/moonshine` and `src/ui` should not be empty.
+- Create a `love` folder in the repository. (`love` is gitignored, so no worries about that :sweat_smile:)
+- Compile the C# part in the `sharp` folder: you can do this with Visual Studio or by running `dotnet build Olympus.Sharp.sln` in the `sharp` folder.
+- Make a symbolic link in `love/sharp` that leads to `sharp/bin/Debug/net452` (or copy-paste the folder :stuck_out_tongue: this is more tedious if you plan to make changes to the C# project, though.)
+- Download a built Olympus version ([Windows](https://maddie480.ovh/celeste/download-olympus?branch=stable&platform=windows), [Linux](https://maddie480.ovh/celeste/download-olympus?branch=stable&platform=linux)) and extract everything from it, except the `sharp` folder, into `love`.
+- If on Windows, install [LÖVE](https://www.love2d.org/): take the zipped version and extract it in the `love` folder. **Be sure to install the 32-bit version!**
+- Run Olympus by running `debug.bat` on Windows, or by going to the `src` folder and running `../love/love --console .` on Linux.
