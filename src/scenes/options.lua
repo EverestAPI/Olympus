@@ -91,6 +91,11 @@ local useOpenGLOptions = {
     { text = "Disabled (Default)", data = "disabled" }
 }
 
+local closeAfterOneClickInstallOptions = {
+    { text = "Enabled", data = "enabled" },
+    { text = "Disabled (Default)", data = "disabled" }
+}
+
 local extradatas = {
     { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0a.de/olympus-extra/olympus-extra-cjk.zip" }
 }
@@ -372,6 +377,24 @@ local root = uie.column({
                 }):with(uiu.fillWidth),
 
                 uie.group({}),
+
+
+                uie.row({
+                    uie.column({
+                        uie.label("Close after One-Click Install"),
+                        uie.dropdown(closeAfterOneClickInstallOptions, function(self, value)
+                            config.closeAfterOneClickInstall = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.closeAfterOneClickInstall
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+
+                }):with(uiu.fillWidth),
+
+                uie.group({}),
+
 
                 uie.row({
 

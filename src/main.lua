@@ -611,7 +611,7 @@ function love.load(args)
     require("dragndrop")
 
     if protocolArg then
-        require("updater").check(not require("protocol")(protocolArg))
+        require("updater").check(not require("protocol")(protocolArg, config.closeAfterOneClickInstall == "enabled"))
 
     else
         require("updater").check(true)
