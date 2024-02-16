@@ -272,7 +272,7 @@ scene.timeDraw = 0
 scene.progress = 0
 scene.progressNext = 0
 scene.progressDraw = 0
-scene.autocloseDuration = 3 
+scene.autocloseDuration = 3
 
 
 function scene.update(status, progress, shape, replace)
@@ -322,7 +322,7 @@ function scene.done(success, buttons, autoclose)
         clip = false
     }):with(uiu.fillWidth)
 
-    if not autoclose then 
+    if not autoclose then
         local listcount = #buttons
         for i = 1, #buttons do
             local btn = buttons[i]
@@ -340,20 +340,20 @@ function scene.done(success, buttons, autoclose)
     else
         -- place+start self destruct countdown
         local countdown = uie.label(
-                                    string.format("Autoclosing in %d...", scene.autocloseDuration)
-                                   )
-       
-        
+            string.format("Autoclosing in %d...", scene.autocloseDuration)
+        )
+
+
         countdown = countdown:with(uiu.fillWidth):with(uiu.at(0))
         row:addChild(countdown)
 
         threader.routine(
             function()
                 local totalDuration = scene.autocloseDuration
-                for i = 1, totalDuration do 
+                for i = 1, totalDuration do
                     threader.sleep(1)
                     countdown:setText(string.format("Autoclosing in %d...", totalDuration - i) )
-                end 
+                end
                 love.event.quit()
             end
         )
