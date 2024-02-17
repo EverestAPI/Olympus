@@ -203,7 +203,8 @@ namespace Olympus {
                     UseShellExecute = false,
                     RedirectStandardInput = true,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
                 }}) {
                     proc.OutputDataReceived += (o, e) => bridge.WriteLine(e.Data);
                     proc.ErrorDataReceived += (o, e) => bridge.WriteLine(e.Data);
