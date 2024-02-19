@@ -9,9 +9,7 @@
 	<key>CFBundleExecutable</key>
 	<string>olympus.sh</string>
 	<key>CFBundleIconFile</key>
-	<string>OS X AppIcon</string>
-	<key>CFBundleIconName</key>
-	<string>OS X AppIcon</string>
+	<string>OS X AppIcon.icns</string>
 	<key>CFBundleIdentifier</key>
 	<string>everest.olympus</string>
 	<key>CFBundleInfoDictionaryVersion</key>

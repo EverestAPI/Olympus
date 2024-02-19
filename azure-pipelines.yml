@@ -381,6 +381,12 @@ steps:
       PLIST=love/love.app/Contents/Info.plist
       rm $PLIST
       mv love/$LOVEBINARYDIRECTORY/Info.plist $PLIST
+      APPICON=love/love.app/Contents/Resources/OS\ X\ Appicon.icns
+      GAMEICON=love/love.app/Contents/Resources/GameIcon.icns
+      rm $APPICON
+      rm $GAMEICON
+      mv love/$LOVEBINARYDIRECTORY/AppIcon.icns $APPICON
+      cp $APPICON $GAMEICON
       plutil -replace CFBundleShortVersionString -string "$BUILD_BUILDNUMBER" $PLIST
       plutil -insert LSArchitecturePriority -array $PLIST
       plutil -insert LSArchitecturePriority -string x86_64 -append $PLIST
