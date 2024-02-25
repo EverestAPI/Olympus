@@ -74,6 +74,9 @@ steps:
   inputs:
     script: |
       export HOMEBREW_NO_INSTALL_CLEANUP=1
+      export HOMEBREW_NO_INSTALL_FROM_API=1
+      brew tap homebrew/core
+      sed -i.bak 's/disable/deprecate/' /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/l/lua@5.1.rb
       brew install lua lua@5.1 luarocks
 
 # Use apt on Ubuntu.
