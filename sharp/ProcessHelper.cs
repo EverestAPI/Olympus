@@ -44,12 +44,14 @@ namespace Olympus {
 
         public static string ReadTimeout(string name, string args, int timeout, out string err) {
             // FIXME: WaitForExit isn't brutal enough on macOS. Maybe use a separate thread?
+            // Test needed for macOS: The function was changed by a contributer that does not have a MacBook.
             try {
                 using (Process process = Wrap(name, args)) {
                     process.Start();
-                    process.WaitForExit(timeout);
+                    string result = process.StandardOutput.ReadToEnd().Trim();
                     err = process.StandardError.ReadToEnd().Trim();
-                    return process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit(timeout);
+                    return result;
                 }
             } catch (Exception e) {
                 Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
