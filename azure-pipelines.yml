@@ -393,11 +393,6 @@ steps:
       plutil -replace CFBundleShortVersionString -string "$BUILD_BUILDNUMBER" $PLIST
       plutil -insert LSArchitecturePriority -array $PLIST
       plutil -insert LSArchitecturePriority -string x86_64 -append $PLIST
-      curl https://www.libsdl.org/release/SDL2-2.0.14.dmg -o sdl2.dmg
-      hdiutil attach -mountpoint sdl2mount sdl2.dmg
-      rm -rf love/love.app/Contents/Frameworks/SDL2.framework
-      cp -rf sdl2mount/SDL2.framework love/love.app/Contents/Frameworks/SDL2.framework
-      hdiutil detach sdl2mount
       git clone https://luajit.org/git/luajit-2.0.git
       pushd luajit-2.0
       git checkout ec6edc5c39c25e4eb3fca51b753f9995e97215da
