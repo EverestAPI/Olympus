@@ -35,6 +35,7 @@ namespace Olympus {
                 // === mod directories
 
                 string[] files = Directory.GetDirectories(root);
+                Array.Sort(files, (a, b) => string.Compare(a, b, ignoreCase: true));
                 for (int i = 0; i < files.Length; i++) {
                     string file = files[i];
                     string name = Path.GetFileName(file);
@@ -69,6 +70,7 @@ namespace Olympus {
             {
                 // === mod zips
                 string[] files = Directory.GetFiles(root);
+                Array.Sort(files, (a, b) => string.Compare(a, b, ignoreCase: true));
                 for (int i = 0; i < files.Length; i++) {
                     string file = files[i];
                     string name = Path.GetFileName(file);
@@ -108,6 +110,7 @@ namespace Olympus {
             if (!onlyUpdatable) {
                 // === bin files
                 string[] files = Directory.GetFiles(root);
+                Array.Sort(files, (a, b) => string.Compare(a, b, ignoreCase: true));
 
                 for (int i = 0; i < files.Length; i++) {
                     string file = files[i];
