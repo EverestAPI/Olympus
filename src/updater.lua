@@ -27,6 +27,11 @@ if userOS == "Linux" then
     else
         updater.available = false
     end
+    
+    -- Override: if it's the Olympus flatpak we let flatpak handle the updates
+    if fs.isFile("/.flatpak-info") then
+        updater.available = false
+    end
 
 else
     updater.available = true
