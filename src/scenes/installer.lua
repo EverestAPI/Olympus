@@ -400,7 +400,7 @@ function scene.sharpTask(id, ...)
 You can ask for help in the Celeste Discord server.
 An invite can be found on the Everest website.
 
-Please drag and drop your files into the #modding_help channel.
+Please drag and drop your log files into the #modding_help channel.
 Before uploading, check your logs for sensitive info (f.e. your username).]],
                             buttons = {
                                 { "Open log folder", function(container)
