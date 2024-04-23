@@ -456,12 +456,26 @@ local function addPreset(name)
     if names ~= nil then
         for i, n in ipairs(names) do
             if n == name then
-               displayErrorMessage("This preset already exists!")
-               return false
+                alert({
+                    body =   "This preset already exists! Do you wish to override it?",
+                    buttons = {
+                        {
+                            "Yes",
+                            function (container)
+                                deletePreset(name)
+                                addPreset(name)
+                                container:close("OK")
+                            end
+                        },
+                        {
+                            "No",
+                        },
+                    }
+               })
+               return
             end
         end
     end
-
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
     contents = contents .. "**" .. name .. "\n"
