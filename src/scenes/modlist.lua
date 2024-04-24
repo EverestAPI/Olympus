@@ -472,7 +472,7 @@ local function addPreset(name)
                         },
                     }
                })
-               return
+               return false
             end
         end
     end
@@ -490,15 +490,7 @@ local function addPreset(name)
     return true
 end
 
-local presetField = uie.field("", function(self, value, prev)
-    scene.preset = value
-end):with({
-    width = 200,
-    height = 24,
-    placeholder = "New preset name",
-    enabled = false
 
-})
 
 scene.modPresets = nil
 
@@ -512,7 +504,10 @@ local function displayPresetsUI()
             {
                 "Close"
             }
-        }
+        },
+        init = function (container)
+            container.popup = false
+        end
 
     }):as("modPresets")
 end
@@ -521,6 +516,15 @@ end
 local function updatePresetsUI()
     local presets = readPresetsList()
     local presetsRow = {}
+
+    local presetField = uie.field("", function(self, value, prev)
+        scene.preset = value
+    end):with({
+        width = 200,
+        height = 24,
+        placeholder = "New preset name",
+        enabled = true
+    }):as("presetField")
 
     for i = 1, #presets do
         if presets ~= nil then
@@ -649,8 +653,6 @@ function scene.reload()
     scene.search = ""
     scene.preset = ""
 
-
-
     return threader.routine(function()
         local loading = scene.root:findChild("loadingMods")
         if loading then
@@ -763,7 +765,6 @@ function scene.reload()
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
-        presetField:setEnabled(true)
         for i, mod in ipairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
         end
