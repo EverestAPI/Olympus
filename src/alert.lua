@@ -14,7 +14,6 @@ uie.add("alertBG", {
     interactive = 1,
     clip = false,
     cacheable = false,
-    popup = true,
     style = {
         patch = false,
         padding = 0,
@@ -112,7 +111,7 @@ function alert.show(data)
     }):hook({
         layoutLateLazy = function(orig, self)
             -- Always reflow this child whenever its parent gets reflowed.
-            self:layoutLate() -- D: center child
+            self:layoutLate()
             self:repaint()
         end,
 
