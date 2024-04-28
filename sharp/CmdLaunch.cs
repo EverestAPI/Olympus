@@ -62,6 +62,15 @@ namespace Olympus {
                 }
             }
 
+            // Steam flatpak detection
+            // Default game path: /home/USER/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/Celeste
+            if (Environment.OSVersion.Platform == PlatformID.Unix && game.StartInfo.FileName.Contains("com.valvesoftware.Steam")) {
+                game.StartInfo.FileName = "xdg-open";
+                args = "steam://run/504230";
+                game.StartInfo.UseShellExecute = true;
+                // args won't work but launch vanilla will work because it uses nextLaunchIsVanilla.txt
+            }
+
             if (!string.IsNullOrEmpty(args))
                 game.StartInfo.Arguments = args;
 
