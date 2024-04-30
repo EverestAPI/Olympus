@@ -14,7 +14,6 @@ uie.add("alertBG", {
     interactive = 1,
     clip = false,
     cacheable = false,
-
     style = {
         patch = false,
         padding = 0,
@@ -69,7 +68,8 @@ function alert.show(data)
         time = 0,
         force = data.force,
         clip = false,
-        cacheable = false
+        cacheable = false,
+        popup = true
     }):with(uiu.fill):as("container")
 
     local bg = uie.alertBG(container):hook({
@@ -174,10 +174,13 @@ function alert.show(data)
     container:hook({
         update = function(orig, self, dt)
             orig(self, dt)
-
             local time = container.time
             if container.closing then
                 time = time + dt
+                if not container.popup then
+                    time = 1
+                end
+
                 if time >= 0.2 then
                     self:removeSelf()
                     return
@@ -186,9 +189,13 @@ function alert.show(data)
 
             else
                 time = time + dt
-                if time > 1 then
+                if not container.popup then
                     time = 1
                 end
+
+                if time > 1 then
+                     time = 1
+                 end
                 box.fade = math.min(1, time * 7)
             end
 
