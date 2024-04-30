@@ -14,7 +14,7 @@ local scene = {
     modlist = {},
     onlyShowEnabledMods = false,
     search = "",
-    preset =  ""
+    preset = ""
 }
 
 scene.loadingID = 0
@@ -79,7 +79,7 @@ end
 -- creates alert with error message
 local function displayErrorMessage(text)
     alert({
-        body =   string.format(text),
+        body = string.format(text),
         buttons = {
             {
                 "Close",
@@ -394,7 +394,10 @@ local function applyPreset(name)
         if mod ~= nil then
             enableMod(mod.row, mod.info)
         else
-            missingMods = missingMods .. filename .. ", "
+            if missingMods ~= "" then
+                missingMods = missingMods .. ", "
+            end
+            missingMods = missingMods .. filename
         end
     end
     if missingMods ~= "" then
@@ -407,13 +410,13 @@ end
 local function deletePreset(name)
     if name == nil then
         displayErrorMessage("Something went wrong, deleted preset's name is nil!")
-        return 
+        return
     end
     if #name == 0 then
         displayErrorMessage("Something went wrong, deleted preset's name is empty!")
-        return 
+        return
     end
-    
+
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
     if contents ~= nil then
@@ -435,7 +438,7 @@ local function readPresetsList()
         end
         return names
     else -- create modpresets.txt if it doesnt exist
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), "# This is the mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
+        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
         return readPresetsList()
     end
 end
@@ -457,7 +460,7 @@ local function addPreset(name)
         for i, n in ipairs(names) do
             if n == name then
                 alert({
-                    body =   "This preset already exists! Do you wish to override it?",
+                    body = "This preset already exists! Do you wish to override it?",
                     buttons = {
                         {
                             "Yes",
@@ -479,7 +482,7 @@ local function addPreset(name)
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
     contents = contents .. "**" .. name .. "\n"
-    
+
     for i, mod in ipairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             contents = contents .. fs.filename(mod.info.Path) .. "\n"
@@ -495,10 +498,10 @@ end
 scene.modPresets = nil
 
 -- used to create Mod presets screen, use updatePresetsUI() before calling
-local function displayPresetsUI() 
+local function displayPresetsUI()
     alert({
         title = "Mod presets",
-        body =  scene.modPresets,
+        body = scene.modPresets,
         big = true,
         buttons = {
             {
@@ -512,7 +515,7 @@ local function displayPresetsUI()
     }):as("modPresets")
 end
 
--- Prepares scene.modPresets as body for Mod presets screen 
+-- Prepares scene.modPresets as body for Mod presets screen
 local function updatePresetsUI()
     local presets = readPresetsList()
     local presetsRow = {}
@@ -530,7 +533,7 @@ local function updatePresetsUI()
         if presets ~= nil then
             local presetRow = uie.paneled.row({
                 uie.label(presets[i]):with(verticalCenter),
-                uie.row({                                  
+                uie.row({
                     uie.button("Load", function(self)
                         applyPreset(presets[i])
                     end),
@@ -541,10 +544,10 @@ local function updatePresetsUI()
                             buttons = {
                                 {
                                     "Delete",
-                                    function(container) 
+                                    function(container)
                                         deletePreset(presets[i])
                                         container:close("OK")
-                                        self:getParent("modPresets"):close("OK") 
+                                        self:getParent("modPresets"):close("OK")
                                         updatePresetsUI()
                                         displayPresetsUI()
                                     end
@@ -556,10 +559,10 @@ local function updatePresetsUI()
                 }):with(uiu.rightbound)
         }):with(uiu.fillWidth)
             presetsRow[#presetsRow + 1] = presetRow
-            
+
         end
     end
-    
+
     scene.modPresets = uie.column({
         uie.paneled.row({
             uie.button("Edit modpresets.txt", function()
@@ -697,7 +700,7 @@ function scene.reload()
                 uie.button("Mod presets", function()
                     updatePresetsUI()
                     displayPresetsUI()
-                end), 
+                end),
                 uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
