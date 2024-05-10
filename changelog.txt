@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ [Linux] Support for launching Celeste using the Flatpak version of Steam
-∙ Added mod presets to the "Manage Installed Mods" menu
+∙ Use maddie480.ovh mirror instead of api.github.com for Lönn version listing, since GitHub has strict rate limits
