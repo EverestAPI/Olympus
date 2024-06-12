@@ -2,3 +2,6 @@ love/
 dist/
 tmp/
 dist.zip
+
+# JetBrains Rider
+sharp/.idea/
