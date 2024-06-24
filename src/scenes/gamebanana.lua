@@ -8,7 +8,8 @@ local modinstaller = require("modinstaller")
 local scene = {
     name = "GameBanana",
     sort = "latest",
-    itemtypeFilter = {}
+    itemtypeFilter = {},
+    subcategoryFilter = {}
 }
 
 local sortOptions = {
@@ -42,6 +43,79 @@ local function generateModColumns(self)
     end
 
     return lists
+end
+
+local function setGameBananaButtonVisible(visible)
+    local openGameBanana = scene.root:findChild("openGameBananaButton")
+    openGameBanana.visible = visible
+    openGameBanana.width = visible and -1 or 0
+    openGameBanana:reflow()
+end
+
+local function refreshSubcategories(itemtypeFilter)
+    -- Remove the old subcategory filter
+    scene.subcategoryFilter = {}
+    local oldSubcategoryFilter = scene.root:findChild("subcategoryFilter")
+    if oldSubcategoryFilter then
+        oldSubcategoryFilter:removeSelf()
+    end
+    setGameBananaButtonVisible(true)
+
+    -- If there is no category filter, we don't need a subcategory filter!
+    if not itemtypeFilter.itemtype then
+        return
+    end
+
+    threader.routine(function()
+        -- Fetch the subcategories of the category we are currently filtering on
+        local data, msg = threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-subcategories"
+            .. "?itemtype=" .. itemtypeFilter.itemtype
+            .. (itemtypeFilter.categoryid and "&categoryId=" .. itemtypeFilter.categoryid or "")
+        ):result()
+
+        if not data then
+            -- Error while calling the API
+            root:addChild(uie.paneled.row({
+                uie.label("Error downloading subcategories list: " .. tostring(msg)),
+            }):with({
+                clip = false,
+                cacheable = false
+            }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
+        else
+            -- If there is no subcategory (only 1 entry which is presumably "All"), don't show the filter!
+            if #data <= 1 then
+                return
+            end
+
+            -- Convert the list retrieved from the API to a dropdown option list
+            local allTypes = {}
+            for _, category in ipairs(data) do
+                local categoryData = {}
+                if category.id then
+                    categoryData["id"] = category.id
+                end
+
+                table.insert(allTypes, {
+                    text = category.name .. (category.id and " (" .. category.count .. ")" or ""),
+                    data = categoryData
+                })
+            end
+
+            -- Display the subcategory dropdown
+            local subcategoryFilter = uie.dropdown(
+                allTypes,
+                function(self, value)
+                    if value ~= scene.subcategoryFilter then
+                        scene.subcategoryFilter = value
+                        setGameBananaButtonVisible(not value.id)
+                        scene.loadPage(1)
+                    end
+                end
+            ):as("subcategoryFilter")
+
+            scene.root:findChild("subcategoryFilterZone"):addChild(subcategoryFilter)
+        end
+    end)
 end
 
 
@@ -139,10 +213,13 @@ local root = uie.column({
                     function(self, value)
                         if value ~= scene.itemtypeFilter then
                             scene.itemtypeFilter = value
+                            refreshSubcategories(value)
                             scene.loadPage(1)
                         end
                     end
                 ):as("itemtypeFilter"),
+
+                uie.row():as("subcategoryFilterZone"),
 
                 uie.field(
                     "",
@@ -210,7 +287,7 @@ function scene.loadPage(page)
     end
 
     scene.loadingPage = threader.routine(function()
-        local lists, pagePrev, pageLabel, pageNext, sortDropdown, itemtypeFilterDropdown = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext", "sort", "itemtypeFilter")
+        local lists, pagePrev, pageLabel, pageNext, sortDropdown, itemtypeFilterDropdown, subcategoryFilterDropdown = root:findChild("modColumns", "pagePrev", "pageLabel", "pageNext", "sort", "itemtypeFilter", "subcategoryFilter")
 
         local errorPrev = root:findChild("error")
         if errorPrev then
@@ -238,6 +315,12 @@ function scene.loadPage(page)
         pageNext:reflow()
         sortDropdown:reflow()
         itemtypeFilterDropdown:reflow()
+
+        if subcategoryFilterDropdown then
+            subcategoryFilterDropdown.enabled = false
+            scene.root:findChild("subcategoryFilterZone").visible = not isQuery
+            subcategoryFilterDropdown:reflow()
+        end
 
         if not isQuery then
             if page == 0 then
@@ -268,7 +351,7 @@ function scene.loadPage(page)
             if page == 0 then
                 entries, entriesError = scene.downloadFeaturedEntries()
             else
-                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter)
+                entries, entriesError = scene.downloadSortedEntries(page, scene.sort, scene.itemtypeFilter, scene.subcategoryFilter)
             end
         else
             entries, entriesError = scene.downloadSearchEntries(page)
@@ -296,6 +379,12 @@ function scene.loadPage(page)
             pageNext:reflow()
             sortDropdown:reflow()
             itemtypeFilterDropdown:reflow()
+
+            if subcategoryFilterDropdown then
+                subcategoryFilterDropdown.enabled = not isQuery
+                subcategoryFilterDropdown:reflow()
+            end
+
             return
         end
 
@@ -314,6 +403,11 @@ function scene.loadPage(page)
         pageNext:reflow()
         sortDropdown:reflow()
         itemtypeFilterDropdown:reflow()
+
+        if subcategoryFilterDropdown then
+            subcategoryFilterDropdown.enabled = not isQuery
+            subcategoryFilterDropdown:reflow()
+        end
     end)
     return scene.loadingPage
 end
@@ -398,7 +492,7 @@ function scene.downloadSearchEntries(query)
     return data, msg
 end
 
-function scene.downloadSortedEntries(page, sort, itemtypeFilter)
+function scene.downloadSortedEntries(page, sort, itemtypeFilter, subcategoryFilter)
     local url = string.format("https://maddie480.ovh/celeste/gamebanana-list?page=%s&sort=%s", page, sort)
 
     -- apply optional filters
@@ -407,6 +501,15 @@ function scene.downloadSortedEntries(page, sort, itemtypeFilter)
     end
     if itemtypeFilter.categoryid then
         url = url .. "&category=" .. itemtypeFilter.categoryid
+    end
+    if subcategoryFilter.id then
+        -- the hierarchy is itemtype > category > subcategory,
+        -- so the "subcategory" is actually the category if we are filtering on an itemtype
+        if itemtypeFilter.categoryid then
+            url = url .. "&subcategory=" .. subcategoryFilter.id
+        else
+            url = url .. "&category=" .. subcategoryFilter.id
+        end
     end
 
     local data = scene.cache[url]
