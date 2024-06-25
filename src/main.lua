@@ -249,6 +249,7 @@ function love.load(args)
     uiu = require("ui.utils")
     megacanvas = require("ui.megacanvas")
     require("elements")
+    require("dropdown_with_submenu")
 
     local fonts = {
         "data/fonts/Poppins-Regular.ttf",

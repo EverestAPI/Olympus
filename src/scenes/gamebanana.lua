@@ -134,7 +134,7 @@ local root = uie.column({
                     end
                 ):as("sort"),
 
-                uie.dropdown(
+                uie.dropdownWithSubmenu(
                     itemtypeOptionsTemp,
                     function(self, value)
                         if value ~= scene.itemtypeFilter then
@@ -319,6 +319,66 @@ function scene.loadPage(page)
 end
 
 
+local function refreshSubcategories(categoryData)
+    local categoryDataRequests = {}
+
+    for i, category in ipairs(categoryData) do
+        if category.data.itemtype then
+            -- Fetch the subcategories of each category
+            table.insert(
+                categoryDataRequests,
+                threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-subcategories"
+                    .. "?itemtype=" .. category.data.itemtype
+                    .. (category.data.categoryid and "&categoryId=" .. category.data.categoryid or "")
+                )
+            )
+        end
+    end
+
+    local index = 1
+    for _, category in ipairs(categoryData) do
+        if category.data.itemtype then
+            -- Fetch the subcategory list corresponding to the category
+            data, msg = categoryDataRequests[index]:result()
+            index = index + 1
+
+            if not data then
+                -- Error while calling the API
+                root:addChild(uie.paneled.row({
+                    uie.label("Error downloading subcategories list: " .. tostring(msg)),
+                }):with({
+                    clip = false,
+                    cacheable = false
+                }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
+
+                return false
+
+            elseif #data > 1 then
+                -- Convert the list retrieved from the API to a dropdown option list, and assign it to the category as a submenu
+                local allTypes = {}
+                for _, subcategory in ipairs(data) do
+                    table.insert(allTypes, {
+                        -- The text includes the count, except for the "All" option
+                        text = subcategory.name .. (subcategory.id and " (" .. subcategory.count .. ")" or ""),
+                        -- The subcategory id is used as a category filter instead if the parent category only filters on itemtype
+                        data = {
+                            itemtype = category.data.itemtype,
+                            categoryid = category.data.categoryid and category.data.categoryid or subcategory.id,
+                            subcategoryid = category.data.categoryid and subcategory.id
+                        },
+                        -- If selecting the "All" option, the dropdown should use the category's label instead
+                        dropdownText = not subcategory.id and category.text
+                    })
+                end
+
+                category.submenu = allTypes
+            end
+        end
+    end
+
+    return true
+end
+
 function scene.load()
     scene.loadPage(0)
 
@@ -338,24 +398,25 @@ function scene.load()
             -- Convert the list retrieved from the API to a dropdown option list
             local allTypes = {}
             for _, category in ipairs(data) do
-                categoryData = {}
-                if category.itemtype then
-                    categoryData["itemtype"] = category.itemtype
-                end
-                if category.categoryid then
-                    categoryData["categoryid"] = category.categoryid
-                end
-
                 table.insert(allTypes, {
                     text = category.formatted .. " (" .. category.count .. ")",
-                    data = categoryData
+                    data = {
+                        itemtype = category.itemtype,
+                        categoryid = category.categoryid
+                    }
                 })
+            end
+
+            if not refreshSubcategories(allTypes) then
+                -- An error occurred while fetching a subcategory!
+                return
             end
 
             -- Refresh the dropdown
             local itemtypeFilterDropdown = scene.root:findChild("itemtypeFilter")
+            itemtypeFilterDropdown._itemsCache = {}
             itemtypeFilterDropdown.data = allTypes
-            itemtypeFilterDropdown:setText(allTypes[1].text)
+            itemtypeFilterDropdown:setSelected(itemtypeFilterDropdown:getItem(1))
             itemtypeFilterDropdown:reflow()
         end
     end)
@@ -407,6 +468,9 @@ function scene.downloadSortedEntries(page, sort, itemtypeFilter)
     end
     if itemtypeFilter.categoryid then
         url = url .. "&category=" .. itemtypeFilter.categoryid
+    end
+    if itemtypeFilter.subcategoryid then
+        url = url .. "&subcategory=" .. itemtypeFilter.subcategoryid
     end
 
     local data = scene.cache[url]
