@@ -7,12 +7,12 @@ using System.Security.Cryptography;
 using YYProject.XXHash;
 
 namespace Olympus {
-    public class CmdUpdateAllMods : Cmd<string, bool, IEnumerator> {
+    public class CmdUpdateAllMods : Cmd<string, bool, string, IEnumerator> {
         public static HashAlgorithm Hasher = XXHash64.Create();
 
         public override bool Taskable => true;
 
-        public override IEnumerator Run(string root, bool onlyEnabled) {
+        public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences) {
             yield return "Downloading mod versions list...";
             Dictionary<string, ModUpdateInfo> modVersionList = downloadModUpdateList();
 
@@ -49,12 +49,9 @@ namespace Olympus {
 
                 // download from GameBanana, if that fails download from mirror
                 string tempZip = Path.Combine(root, "mod-update.zip");
-                foreach (string message in new EnumeratorEnumerator { Enumerator = tryDownloadWithMirror(update.Key, messagePrefix, tempZip) }) {
+                foreach (string message in new EnumeratorEnumerator { Enumerator = tryDownloadWithMirror(update.Key, messagePrefix, tempZip, mirrorPreferences) }) {
                     yield return message;
                 }
-
-                yield return messagePrefix + ": verifying checksum";
-                verifyChecksum(update.Key, tempZip);
 
                 yield return messagePrefix + ": installing update";
                 installModUpdate(update.Key, update.Value, tempZip);
@@ -65,54 +62,103 @@ namespace Olympus {
             yield return "Update check finished!";
         }
 
-        private static IEnumerator tryDownloadWithMirror(ModUpdateInfo info, string messagePrefix, string destination) {
-            bool success = true;
+        internal static IEnumerable GetAllMirrorUrls(string url, string mirrorPreferences) {
+            return new EnumeratorEnumerator { Enumerator = getAllMirrorUrls(url, mirrorPreferences) };
+        }
 
-            if (File.Exists(destination)) {
-                File.Delete(destination);
+        private static IEnumerator<string> getAllMirrorUrls(string url, string mirrorPreferences) {
+            uint gbid = 0;
+            if ((url.StartsWith("http://gamebanana.com/dl/") && !uint.TryParse(url.Substring("http://gamebanana.com/dl/".Length), out gbid)) ||
+                (url.StartsWith("https://gamebanana.com/dl/") && !uint.TryParse(url.Substring("https://gamebanana.com/dl/".Length), out gbid)) ||
+                (url.StartsWith("http://gamebanana.com/mmdl/") && !uint.TryParse(url.Substring("http://gamebanana.com/mmdl/".Length), out gbid)) ||
+                (url.StartsWith("https://gamebanana.com/mmdl/") && !uint.TryParse(url.Substring("https://gamebanana.com/mmdl/".Length), out gbid)))
+                gbid = 0;
+
+            if (gbid == 0) {
+                yield return url;
+                yield break;
             }
 
-            using (FileStream stream = new FileStream(destination, FileMode.OpenOrCreate, FileAccess.Write)) {
-                IEnumerator download = Download(info.URL, info.Size, stream);
-
-                while (true) {
-                    bool hasNext;
-
-                    try {
-                        hasNext = download.MoveNext();
-                    } catch (Exception e) {
-                        log("An uncaught exception happened while downloading from GameBanana! Falling back to mirror.\n" + e);
-                        success = false;
+            foreach (string mirrorId in mirrorPreferences.Split(',')) {
+                switch (mirrorId) {
+                    case "gb":
+                        yield return url;
                         break;
-                    }
 
-                    if (!hasNext) {
+                    case "jade":
+                        yield return $"https://celestemodupdater.0x0a.de/banana-mirror/{gbid}.zip";
                         break;
-                    }
 
-                    object message = ((object[]) download.Current)[0];
-                    if (message.ToString() != "") {
-                        yield return messagePrefix + ": " + message;
-                    }
+                    case "wegfan":
+                        yield return $"https://celeste.weg.fan/api/v2/download/gamebanana-files/{gbid}";
+                        break;
+
+                    case "otobot":
+                        yield return $"https://banana-mirror-mods.celestemods.com/{gbid}.zip";
+                        break;
                 }
             }
+        }
 
-            if (!success) {
-                // retry with mirror, this time let exceptions go through
+        private static IEnumerator tryDownloadWithMirror(ModUpdateInfo info, string messagePrefix, string destination, string mirrorPreferences) {
+            Exception lastException = null;
+
+            foreach (string url in GetAllMirrorUrls(info.URL, mirrorPreferences)) {
+                lastException = null;
+
+                // download the file from the selected mirror
                 using (FileStream stream = new FileStream(destination, FileMode.OpenOrCreate, FileAccess.Write)) {
-                    foreach (object[] message in new EnumeratorEnumerator { Enumerator = Download(info.MirrorURL, info.Size, stream) }) {
-                        if (message[0].ToString() != "") {
-                            yield return messagePrefix + ": " + message[0];
+                    IEnumerator download = Download(url, info.Size, stream);
+
+                    while (true) {
+                        bool hasNext;
+
+                        try {
+                            hasNext = download.MoveNext();
+                        } catch (Exception e) {
+                            log($"An uncaught exception happened while downloading from {url}! Falling back to next mirror.\n" + e);
+                            lastException = e;
+                            break; // out of the download loop
+                        }
+
+                        if (!hasNext) {
+                            break; // out of the download loop
+                        }
+
+                        object message = ((object[]) download.Current)[0];
+                        if (message.ToString() != "") {
+                            yield return messagePrefix + ": " + message;
                         }
                     }
                 }
+
+                if (lastException != null) continue; // to the next mirror
+
+                yield return messagePrefix + ": verifying checksum";
+
+                try {
+                    verifyChecksum(info, destination);
+                    yield break; // download successful!
+                } catch (Exception e) {
+                    log($"Error while checking integrity of file downloaded from {url}! Falling back to next mirror.\n" + e);
+                    lastException = e;
+                    continue; // to the next mirror
+                }
+            }
+
+            if (lastException != null) {
+                // we went through all mirrors, and nothing worked :despair:
+                if (File.Exists(destination)) {
+                    File.Delete(destination);
+                }
+
+                throw lastException;
             }
         }
 
         private class ModUpdateInfo {
             public virtual string Name { get; set; }
             public virtual string URL { get; set; }
-            public virtual string MirrorURL { get; set; }
             public virtual List<string> xxHash { get; set; }
             public virtual int Size { get; set; }
         }

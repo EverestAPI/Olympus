@@ -1,27 +1,13 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdInstallMod : Cmd<string, string, IEnumerator> {
+    public class CmdInstallMod : Cmd<string, string, string, IEnumerator> {
 
-        public static readonly string MirrorPattern = "https://celestemodupdater.0x0a.de/banana-mirror/{0}.zip";
-
-        public override IEnumerator Run(string root, string url) {
+        public override IEnumerator Run(string root, string url, string mirrorPreferences) {
             string mods = Path.Combine(root, "Mods");
             if (!Directory.Exists(mods))
                 Directory.CreateDirectory(mods);
@@ -44,55 +30,23 @@ namespace Olympus {
                     if (File.Exists(from))
                         File.Delete(from);
 
-                    uint gbid = 0;
-                    if ((url.StartsWith("http://gamebanana.com/dl/") && !uint.TryParse(url.Substring("http://gamebanana.com/dl/".Length), out gbid)) ||
-                        (url.StartsWith("https://gamebanana.com/dl/") && !uint.TryParse(url.Substring("https://gamebanana.com/dl/".Length), out gbid)) ||
-                        (url.StartsWith("http://gamebanana.com/mmdl/") && !uint.TryParse(url.Substring("http://gamebanana.com/mmdl/".Length), out gbid)) ||
-                        (url.StartsWith("https://gamebanana.com/mmdl/") && !uint.TryParse(url.Substring("https://gamebanana.com/mmdl/".Length), out gbid)))
-                        gbid = 0;
+                    Exception[] ea = new Exception[1];
 
-                    if (gbid != 0) {
-                        // At the time of writing this, GB download speeds go as low as 5 kilobytes per second.
-                        // At the time of writing this, GB download speeds have normalized again. 0x0a.de only hosts its files in Germany, no CDN, thus slower than GB for some.
-#if true
-                        yield return Status($"Downloading {gbid} from GameBanana", false, "download", false);
-                        Exception[] ea = new Exception[1];
+                    foreach (string mirroredUrl in CmdUpdateAllMods.GetAllMirrorUrls(url, mirrorPreferences)) {
+                        yield return Status($"Downloading mod from {mirroredUrl}", false, "download", false);
+                        ea = new Exception[1];
                         using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
                             yield return Try(Download(url, 0, zipStream), ea);
 
                         if (ea[0] != null) {
-                            yield return Status($"Downloading from GameBanana failed, trying mirror", false, "download", false);
-                            if (File.Exists(from))
-                                File.Delete(from);
-                            url = string.Format(MirrorPattern, gbid);
-                            yield return Status($"Downloading {url}", false, "download", false);
-                            using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
-                                yield return Download(url, 0, zipStream);
+                            yield return Status($"Downloading from {mirroredUrl} failed, trying another mirror", false, "download", false);
+                            continue; // to the next mirror
+                        } else {
+                            break; // out of the loop
                         }
-
-#else
-                        yield return Status($"Downloading {gbid} from 0x0a.de", false, "download", false);
-                        yield return Status("  If you want to know why GameBanana is slow or how to help with paying for 0x0a.de,", false, "download", false);
-                        yield return Status("  visit the Celeste Discord server and feel free to ask in the modding category.", false, "download", false);
-                        Exception[] ea = new Exception[1];
-                        string urlMirror = string.Format(MirrorPattern, gbid);
-                        using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
-                            yield return Try(Download(urlMirror, 0, zipStream), ea);
-
-                        if (ea[0] != null) {
-                            yield return Status($"Downloading from 0x0a.de failed, trying GameBanana", false, "download", false);
-                            if (File.Exists(from))
-                                File.Delete(from);
-                            using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
-                                yield return Download(url, 0, zipStream);
-                        }
-#endif
-
-                    } else {
-                        yield return Status($"Downloading {url}", false, "download", false);
-                        using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
-                            yield return Download(url, 0, zipStream);
                     }
+
+                    if (ea[0] != null) throw ea[0]; // we went through all mirrors and still have an error!
                 }
 
                 using (FileStream zipStream = File.Open(from, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {

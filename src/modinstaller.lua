@@ -84,7 +84,7 @@ function modinstaller.install(modurl, cb, autoclose)
     local installer = scener.push("installer")
     installer.update(string.format("Preparing installation of %s", modname), false, "")
 
-    installer.sharpTask("installMod", install, modurl):calls(function(task, last)
+    installer.sharpTask("installMod", install, modurl, config.mirrorPreferences):calls(function(task, last)
         if not last then
             return
         end
