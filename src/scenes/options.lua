@@ -96,6 +96,7 @@ local closeAfterOneClickInstallOptions = {
     { text = "Disabled (Default)", data = "disabled" }
 }
 
+-- Keep in sync with https://github.com/EverestAPI/Everest/blob/dev/Celeste.Mod.mm/Mod/Core/CoreModuleSettings.cs :: CreateMirrorPreferencesEntry
 local mirrorPreferences = {
     { text = "Disabled (Default)", data = "gb,jade,otobot,wegfan" },
     { text = "Germany (0x0a.de)", data = "jade,otobot,wegfan,gb" },

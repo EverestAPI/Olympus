@@ -66,6 +66,9 @@ namespace Olympus {
             return new EnumeratorEnumerator { Enumerator = getAllMirrorUrls(url, mirrorPreferences) };
         }
 
+        // Make sure to keep this in sync with
+        // - https://github.com/EverestAPI/Everest/blob/dev/Celeste.Mod.mm/Mod/Helpers/ModUpdaterHelper.cs :: getAllMirrorUrls
+        // - https://github.com/maddie480/RandomStuffWebsite/blob/main/front-vue/src/components/ModListItem.vue :: getMirrorLink
         private static IEnumerator<string> getAllMirrorUrls(string url, string mirrorPreferences) {
             uint gbid = 0;
             if ((url.StartsWith("http://gamebanana.com/dl/") && !uint.TryParse(url.Substring("http://gamebanana.com/dl/".Length), out gbid)) ||
