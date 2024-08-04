@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MonoMod.Utils;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -39,7 +40,7 @@ namespace Olympus {
                             yield return Try(Download(url, 0, zipStream), ea);
 
                         if (ea[0] != null) {
-                            yield return Status($"Downloading from {mirroredUrl} failed, trying another mirror", false, "download", false);
+                            yield return Status($"Downloading from {mirroredUrl} failed, trying another mirror.\n" + ea[0], false, "download", false);
                             continue; // to the next mirror
                         } else {
                             break; // out of the loop

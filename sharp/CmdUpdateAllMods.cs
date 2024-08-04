@@ -107,6 +107,7 @@ namespace Olympus {
             Exception lastException = null;
 
             foreach (string url in GetAllMirrorUrls(info.URL, mirrorPreferences)) {
+                log($"Downloading mod from {url}");
                 lastException = null;
 
                 // download the file from the selected mirror
