@@ -102,16 +102,25 @@ function finder.findSteamLibraries()
     end
 
     local config = fs.isFile(fs.joinpath(steam, "config", "config.vdf"))
-    if not config then
-        return libraries
+    finder.addSteamLibrariesFromVdf(libraries, config, [[BaseInstallFolder[^"]*"%s*("[^"]*")]])
+
+    local libraryFolders = fs.isFile(fs.joinpath(steam, "config", "libraryfolders.vdf"))
+    finder.addSteamLibrariesFromVdf(libraries, libraryFolders, [[path[^"]*"%s*("[^"]*")]])
+
+    return libraries
+end
+
+function finder.addSteamLibrariesFromVdf(libraries, vdfFile, pattern)
+    if not vdfFile then
+        return
     end
 
-    config = fs.read(config)
-    if not config then
-        return libraries
+    vdfFile = fs.read(vdfFile)
+    if not vdfFile then
+        return
     end
 
-    for path in config:gmatch([[BaseInstallFolder[^"]*"%s*("[^"]*")]]) do
+    for path in vdfFile:gmatch(pattern) do
         path = utils.fromJSON(path)
         path = finder.findSteamCommon(path)
         if path then
@@ -119,8 +128,6 @@ function finder.findSteamLibraries()
             libraries[#libraries + 1] = path
         end
     end
-
-    return libraries
 end
 
 function finder.findSteamShortcuts()
