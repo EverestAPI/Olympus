@@ -119,7 +119,8 @@ local function refreshVisibleMods()
             -- search terms
             (scene.search == ""
                 or string.find(string.lower(fs.filename(mod.info.Path)), scene.search, 1, true)
-                or (mod.info.Name and string.find(string.lower(mod.info.Name), scene.search, 1, true)))
+                or (mod.info.Name and string.find(string.lower(mod.info.Name), scene.search, 1, true))
+                or (mod.info.GameBananaTitle and string.find(string.lower(mod.info.GameBananaTitle), scene.search, 1, true)))
 
         if mod.visible and not newVisible then
             -- remove from list
@@ -157,7 +158,25 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    return { info.IsBlacklisted and { 1, 1, 1, 0.5 } or { 1, 1, 1, 1 }, fs.filename(info.Path) .. "\n" .. (info.Name or "?"), { 1, 1, 1, 0.5 }, " ∙ " .. (info.Version or "?.?.?.?") }
+    local labelText = { info.IsBlacklisted and { 1, 1, 1, 0.5 } or { 1, 1, 1, 1 }, fs.filename(info.Path) .. "\n" }
+
+    if info.Name then
+        if info.GameBananaTitle and info.Name ~= info.GameBananaTitle then
+            table.insert(labelText, info.GameBananaTitle)
+            table.insert(labelText, { 1, 1, 1, 0.5 })
+            table.insert(labelText, " ∙ " .. info.Name)
+        else
+            table.insert(labelText, info.Name)
+            table.insert(labelText, { 1, 1, 1, 0.5 })
+        end
+    else
+        table.insert(labelText, "?")
+        table.insert(labelText, { 1, 1, 1, 0.5 })
+    end
+
+    table.insert(labelText, " ∙ " .. (info.Version or "?.?.?.?"))
+
+    return labelText
 end
 
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
@@ -390,7 +409,7 @@ local function applyPreset(name)
 
     for filename in presetMods:gmatch("([^\n]*)\n") do -- splits the string after every newline into mod filenames
         local path = fs.joinpath(root, "Mods", filename)
-        local mod = findModByPath(path);
+        local mod = findModByPath(path)
         if mod ~= nil then
             enableMod(mod.row, mod.info)
         else
@@ -725,7 +744,7 @@ function scene.reload()
             scene.search = string.lower(value)
             refreshVisibleMods()
         end):with({
-            placeholder = "Search by file name or everest.yaml ID",
+            placeholder = "Search by file name, mod title or everest.yaml ID",
             enabled = false
         }):with(uiu.fillWidth)
         list:addChild(searchField)

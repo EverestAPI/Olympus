@@ -1,10 +1,13 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
+using System.Text;
 using YYProject.XXHash;
 
 namespace Olympus {
@@ -31,11 +34,14 @@ namespace Olympus {
             else
                 updaterBlacklist = new List<string>();
 
+            Dictionary<string, string> modIDsToNamesMap = null;
+            if (readYamls) modIDsToNamesMap = getModIDsToNamesMap();
+
             if (!onlyUpdatable) {
                 // === mod directories
 
                 string[] files = Directory.GetDirectories(root);
-                Array.Sort(files, (a, b) => string.Compare(a, b, ignoreCase: true));
+                Array.Sort(files, (a, b) => string.Compare(a, b, StringComparison.OrdinalIgnoreCase));
                 for (int i = 0; i < files.Length; i++) {
                     string file = files[i];
                     string name = Path.GetFileName(file);
@@ -58,7 +64,7 @@ namespace Olympus {
                             if (File.Exists(yamlPath)) {
                                 using (FileStream stream = File.Open(yamlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                                 using (StreamReader reader = new StreamReader(stream))
-                                    info.Parse(reader);
+                                    info.Parse(reader, modIDsToNamesMap);
                             }
                         } catch (UnauthorizedAccessException) { }
                     }
@@ -94,7 +100,7 @@ namespace Olympus {
                             using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
                             using (Stream stream = (zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml"))?.Open())
                             using (StreamReader reader = stream == null ? null : new StreamReader(stream))
-                                info.Parse(reader);
+                                info.Parse(reader, modIDsToNamesMap);
                         }
 
                         if (computeHashes && info.Name != null) {
@@ -130,12 +136,27 @@ namespace Olympus {
             }
         }
 
+        private static Dictionary<string, string> getModIDsToNamesMap() {
+            try {
+                using (HttpWebResponse res = Connect("https://maddie480.ovh/celeste/mod_ids_to_names.json"))
+                using (TextReader textReader = new StreamReader(res.GetResponseStream(), Encoding.UTF8))
+                using (JsonTextReader jsonTextReader = new JsonTextReader(textReader)) {
+                    return new JsonSerializer().Deserialize<Dictionary<string, string>>(jsonTextReader);
+                }
+            } catch (Exception e) {
+                Console.Error.WriteLine("Error loading mod IDs to names list");
+                Console.Error.WriteLine(e);
+                return new Dictionary<string, string>();
+            }
+        }
+
         public class ModInfo {
             public string Path;
             public string Hash;
             public bool IsFile;
             public bool IsBlacklisted;
             public bool IsUpdaterBlacklisted;
+            public string GameBananaTitle;
 
             public string Name;
             public string Version;
@@ -143,7 +164,7 @@ namespace Olympus {
             public string[] Dependencies;
             public bool IsValid;
 
-            public void Parse(TextReader reader) {
+            public void Parse(TextReader reader, Dictionary<string, string> modIDsToNamesMap) {
                 try {
                     if (reader != null) {
                         List<EverestModuleMetadata> yaml = YamlHelper.Deserializer.Deserialize<List<EverestModuleMetadata>>(reader);
@@ -152,6 +173,7 @@ namespace Olympus {
                             Version = yaml[0].Version;
                             DLL = yaml[0].DLL;
                             Dependencies = yaml[0].Dependencies.Select(dep => dep.Name).ToArray();
+                            GameBananaTitle = modIDsToNamesMap.TryGetValue(Name, out string o) ? o : null;
 
                             IsValid = Name != null && Version != null;
                         }

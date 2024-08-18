@@ -84,6 +84,23 @@ namespace Olympus {
         }
 
 
+        public static HttpWebResponse Connect(string url) {
+            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(url);
+            req.Timeout = 10000;
+            req.ReadWriteTimeout = 10000;
+            req.UserAgent = "Olympus";
+
+            // disable IPv6 for this request, as it is known to cause "the request has timed out" issues for some users
+            req.ServicePoint.BindIPEndPointDelegate = delegate(ServicePoint servicePoint, IPEndPoint remoteEndPoint, int retryCount) {
+                if (remoteEndPoint.AddressFamily != AddressFamily.InterNetwork) {
+                    throw new InvalidOperationException("no IPv4 address");
+                }
+                return new IPEndPoint(IPAddress.Any, 0);
+            };
+
+            return (HttpWebResponse) req.GetResponse();
+        }
+
         public static IEnumerator Download(string url, long length, Stream copy) {
             // The following blob of code mostly comes from the old Everest.Installer, which inherited it from the old ETGMod.Installer.
 
@@ -94,20 +111,7 @@ namespace Olympus {
             DateTime timeStart = DateTime.Now;
             int pos = 0;
 
-            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(url);
-            req.Timeout = 10000;
-            req.ReadWriteTimeout = 10000;
-            req.UserAgent = "Olympus";
-
-            // disable IPv6 for this request, as it is known to cause "the request has timed out" issues for some users
-            req.ServicePoint.BindIPEndPointDelegate = delegate (ServicePoint servicePoint, IPEndPoint remoteEndPoint, int retryCount) {
-                if (remoteEndPoint.AddressFamily != AddressFamily.InterNetwork) {
-                    throw new InvalidOperationException("no IPv4 address");
-                }
-                return new IPEndPoint(IPAddress.Any, 0);
-            };
-
-            using (HttpWebResponse res = (HttpWebResponse) req.GetResponse()) {
+            using (HttpWebResponse res = Connect(url)) {
                 using (Stream input = res.GetResponseStream()) {
                     if (length == 0) {
                         if (input.CanSeek) {
