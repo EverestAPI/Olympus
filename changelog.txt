@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Improved Celeste install detection to scan more Steam library folders
-∙ Added mod names from GameBanana in the "Manage Installed Mods" screen
+∙ Manage Installed Mods screen: download mod name list and cache it to disk so that it doesn't affect the screen's loading time

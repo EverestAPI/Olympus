@@ -1,13 +1,10 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
-using System.Text;
 using YYProject.XXHash;
 
 namespace Olympus {
@@ -35,7 +32,7 @@ namespace Olympus {
                 updaterBlacklist = new List<string>();
 
             Dictionary<string, string> modIDsToNamesMap = null;
-            if (readYamls) modIDsToNamesMap = getModIDsToNamesMap();
+            if (readYamls) modIDsToNamesMap = CmdGetModIdToNameMap.GetModIDsToNamesMap();
 
             if (!onlyUpdatable) {
                 // === mod directories
@@ -133,20 +130,6 @@ namespace Olympus {
 
                     yield return info;
                 }
-            }
-        }
-
-        private static Dictionary<string, string> getModIDsToNamesMap() {
-            try {
-                using (HttpWebResponse res = Connect("https://maddie480.ovh/celeste/mod_ids_to_names.json"))
-                using (TextReader textReader = new StreamReader(res.GetResponseStream(), Encoding.UTF8))
-                using (JsonTextReader jsonTextReader = new JsonTextReader(textReader)) {
-                    return new JsonSerializer().Deserialize<Dictionary<string, string>>(jsonTextReader);
-                }
-            } catch (Exception e) {
-                Console.Error.WriteLine("Error loading mod IDs to names list");
-                Console.Error.WriteLine(e);
-                return new Dictionary<string, string>();
             }
         }
 

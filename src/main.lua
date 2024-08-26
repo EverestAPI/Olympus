@@ -203,12 +203,7 @@ function love.load(args)
         love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
     else
         threader.routine(function()
-            for i = 1, 4 do
-                for j = 1, 10 do
-                    sharp.echo("warmup " .. tostring(i) .. " " .. tostring(j)):result()
-                end
-                threader.sleep(0.01)
-            end
+            sharp.getModIdToNameMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-names.json"))
         end)
     end
 
