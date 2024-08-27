@@ -74,12 +74,6 @@ local updatepaths = {
     { text = "Development", data = "stable,main" }
 }
 
-local mapeditors = {
-    { text = "Lönn (Default)", data = "loenn" },
-    { text = "Ahorn", data = "ahorn" },
-    { text = "Both", data = "both" }
-}
-
 local updateModsOnStartupOptions = {
     { text = "All Mods", data = "all" },
     { text = "Enabled Mods Only", data = "enabled" },
@@ -344,20 +338,6 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Map Editor"),
-                        uie.dropdown(mapeditors, function(self, value)
-                            config.mapeditor = value
-                            config.save()
-                        end):with({
-                            placeholder = "???",
-                            selectedData = config.mapeditor
-                        }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
-
-                }):with(uiu.fillWidth),
-
-                uie.row({
-                    uie.column({
                         uie.label("Update Mods on Startup"),
                         uie.dropdown(updateModsOnStartupOptions, function(self, value)
                             config.updateModsOnStartup = value
@@ -366,8 +346,11 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.updateModsOnStartup
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
+                }):with(uiu.fillWidth),
+
+                uie.row({
                     uie.column({
                         uie.label("Use OpenGL"),
                         uie.dropdown(useOpenGLOptions, function(self, value)
@@ -377,7 +360,7 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.useOpenGL
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Close after One-Click Install"),
@@ -388,7 +371,7 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.closeAfterOneClickInstall
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
                         uie.label("Use Mirror by Default"),
@@ -399,7 +382,7 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.mirrorPreferences
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                 }):with(uiu.fillWidth),
 

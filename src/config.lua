@@ -117,6 +117,9 @@ function config.load()
     default(data, "parallax", 1)
 
     default(data, "mapeditor", "loenn")
+    if data.mapeditor == "ahorn" then
+        data.mapeditor = "both"
+    end
 
     default(data, "ahorn", {})
 
