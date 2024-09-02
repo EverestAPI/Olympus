@@ -23,35 +23,40 @@ namespace Olympus {
         internal static Dictionary<string, string> GetModIDsToNamesMap(bool ignoreCache = false) {
             if (!ignoreCache && File.Exists(cacheLocation)) {
                 Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from {cacheLocation}");
-                lock (locker) {
+                Dictionary<string, string> map = tryRun(() => {
+                    lock (locker)
                     using (Stream inputStream = new FileStream(cacheLocation, FileMode.Open)) {
-                        Dictionary<string, string> map = getModIDsToNamesMap(inputStream);
-                        if (map.Count > 0) return map;
+                        return getModIDsToNamesMap(inputStream);
                     }
-                }
+                });
+                if (map.Count > 0) return map;
             }
 
-            using (HttpWebResponse res = Connect("https://maddie480.ovh/celeste/mod_ids_to_names.json"))
-            using (Stream inputStream = res.GetResponseStream()) {
-                Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from maddie480.ovh");
-                Dictionary<string, string> map = getModIDsToNamesMap(inputStream);
-                lock (locker) {
-                    if (map.Count > 0) File.WriteAllText(cacheLocation, JsonConvert.SerializeObject(map));
-                    return map;
+            Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from maddie480.ovh");
+            Dictionary<string, string> map = tryRun(() => {
+                using (HttpWebResponse res = Connect("https://maddie480.ovh/celeste/mod_ids_to_names.json"))
+                using (Stream inputStream = res.GetResponseStream()) {
+                    return getModIDsToNamesMap(inputStream);
                 }
-            }
+            });
+            if (map.Count > 0) lock (locker) File.WriteAllText(cacheLocation, JsonConvert.SerializeObject(map));
+            return map;
         }
 
-        private static Dictionary<string, string> getModIDsToNamesMap(Stream inputStream) {
+        private static Dictionary<string, string> tryRun(Func<Dictionary<string, string>> function) {
             try {
-                using (TextReader textReader = new StreamReader(inputStream, Encoding.UTF8))
-                using (JsonTextReader jsonTextReader = new JsonTextReader(textReader)) {
-                    return new JsonSerializer().Deserialize<Dictionary<string, string>>(jsonTextReader);
-                }
+                return function();
             } catch (Exception e) {
                 Console.Error.WriteLine("Error loading mod IDs to names list");
                 Console.Error.WriteLine(e);
                 return new Dictionary<string, string>();
+            }
+        }
+
+        private static Dictionary<string, string> getModIDsToNamesMap(Stream inputStream) {
+            using (TextReader textReader = new StreamReader(inputStream, Encoding.UTF8))
+            using (JsonTextReader jsonTextReader = new JsonTextReader(textReader)) {
+                return new JsonSerializer().Deserialize<Dictionary<string, string>>(jsonTextReader);
             }
         }
     }
