@@ -21,9 +21,11 @@ namespace Olympus {
         private static readonly object locker = new object();
 
         internal static Dictionary<string, string> GetModIDsToNamesMap(bool ignoreCache = false) {
+            Dictionary<string, string> map;
+
             if (!ignoreCache && File.Exists(cacheLocation)) {
                 Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from {cacheLocation}");
-                Dictionary<string, string> map = tryRun(() => {
+                map = tryRun(() => {
                     lock (locker)
                     using (Stream inputStream = new FileStream(cacheLocation, FileMode.Open)) {
                         return getModIDsToNamesMap(inputStream);
@@ -33,7 +35,7 @@ namespace Olympus {
             }
 
             Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from maddie480.ovh");
-            Dictionary<string, string> map = tryRun(() => {
+            map = tryRun(() => {
                 using (HttpWebResponse res = Connect("https://maddie480.ovh/celeste/mod_ids_to_names.json"))
                 using (Stream inputStream = res.GetResponseStream()) {
                     return getModIDsToNamesMap(inputStream);
