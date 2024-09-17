@@ -396,8 +396,10 @@ local function disableAllMods()
 end
 
 -- disables all mods then enables mods from preset
-local function applyPreset(name)
-    disableAllMods()
+local function applyPreset(name, disableAll)
+    if disableAll then
+        disableAllMods()
+    end
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
@@ -553,8 +555,11 @@ local function updatePresetsUI()
             local presetRow = uie.paneled.row({
                 uie.label(presets[i]):with(verticalCenter),
                 uie.row({
-                    uie.button("Load", function(self)
-                        applyPreset(presets[i])
+                    uie.button("Load mods", function(self)
+                        applyPreset(presets[i], false)
+                    end),
+                    uie.button("Override current mods", function(self)
+                        applyPreset(presets[i], true)
                     end),
                     uie.button("Delete", function(self)
                         alert({
