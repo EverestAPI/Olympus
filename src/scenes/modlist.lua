@@ -555,10 +555,10 @@ local function updatePresetsUI()
             local presetRow = uie.paneled.row({
                 uie.label(presets[i]):with(verticalCenter),
                 uie.row({
-                    uie.button("Load mods", function(self)
+                    uie.button("Add", function(self)
                         applyPreset(presets[i], false)
                     end),
-                    uie.button("Override current mods", function(self)
+                    uie.button("Replace", function(self)
                         applyPreset(presets[i], true)
                     end),
                     uie.button("Delete", function(self)
