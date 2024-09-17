@@ -217,6 +217,33 @@ local function contains(table, element)
     return false
 end
 
+-- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
+local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, message)
+    local modList = ''
+    for _, mod in ipairs(dependenciesToToggle) do
+        modList = modList
+            .. (modList == '' and '' or '\n')
+            .. '- ' ..
+            (
+                (mod.info.GameBananaTitle and mod.info.GameBananaTitle ~= mod.info.Name)
+                and (mod.info.GameBananaTitle .. ' ∙ ')
+                or ''
+            )
+            .. mod.info.Name
+    end
+
+    return uie.column({
+        uie.label(message),
+        uie.scrollbox(uie.label(modList))
+            :with(uiu.hook({
+                calcSize = function (orig, self, width, height)
+                    uie.group.calcSize(self)
+                end
+            }))
+            :with({ maxHeight = 300 })
+    })
+end
+
 -- recursively lists all dependencies of the given mod that should be enabled for this mod to work
 local function findDependenciesToEnableRecursively(info, dependenciesFoundSoFar)
     if not info.Dependencies then
@@ -254,12 +281,12 @@ local function checkDisabledDependenciesOfEnabledMod(info, row)
 
     if next(dependenciesToToggle) ~= nil then
         alert({
-            body = string.format(
+            body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
                 #dependenciesToToggle,
                 #dependenciesToToggle == 1 and "mod" or "mods",
                 #dependenciesToToggle == 1 and "it" or "them"
-            ),
+            )),
             buttons = {
                 {
                     "Yes",
@@ -313,12 +340,12 @@ local function checkEnabledModsDependingOnDisabledMod(info, row)
 
     if next(dependenciesToToggle) ~= nil then
         alert({
-            body = string.format(
+            body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "%s other %s on this mod.\nDo you want to disable %s as well?",
                 #dependenciesToToggle,
                 #dependenciesToToggle == 1 and "mod depends" or "mods depend",
                 #dependenciesToToggle == 1 and "it" or "them"
-            ),
+            )),
             buttons = {
                 {
                     "Yes",
