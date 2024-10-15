@@ -158,25 +158,36 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    local labelText = { info.IsBlacklisted and { 1, 1, 1, 0.5 } or { 1, 1, 1, 1 }, fs.filename(info.Path) .. "\n" }
+    local grey = { 1, 1, 1, 0.5 }
+    local white = { 1, 1, 1, 1 }
 
     if info.Name then
-        if info.GameBananaTitle and info.Name ~= info.GameBananaTitle then
-            table.insert(labelText, info.GameBananaTitle)
-            table.insert(labelText, { 1, 1, 1, 0.5 })
-            table.insert(labelText, " ∙ " .. info.Name)
+        if info.GameBananaTitle then
+            -- Maddie's Helping Hand
+            -- MaxHelpingHand 1.4.5 ∙ Filename.zip
+            return {
+                info.IsBlacklisted and grey or white,
+                info.GameBananaTitle .. "\n",
+                grey,
+                info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
+            }
         else
-            table.insert(labelText, info.Name)
-            table.insert(labelText, { 1, 1, 1, 0.5 })
+            -- MaxHelpingHand
+            -- 1.4.5 ∙ Filename.zip
+            return {
+                info.IsBlacklisted and grey or white,
+                info.Name .. "\n",
+                grey,
+                (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
+            }
         end
     else
-        table.insert(labelText, "?")
-        table.insert(labelText, { 1, 1, 1, 0.5 })
+        -- Filename.zip
+        return {
+            info.IsBlacklisted and grey or white,
+            fs.filename(info.Path)
+        }
     end
-
-    table.insert(labelText, " ∙ " .. (info.Version or "?.?.?.?"))
-
-    return labelText
 end
 
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
