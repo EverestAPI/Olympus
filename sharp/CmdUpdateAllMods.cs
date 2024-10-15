@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
 using YYProject.XXHash;
@@ -59,7 +60,13 @@ namespace Olympus {
                 updatingMod++;
             }
 
-            yield return "Update check finished!";
+            // The last yielded message might be displayed as a recap popup by Olympus when relevant.
+            if (updates.Count == 0) {
+                yield return "Update check finished.\nNo updates were found.";
+            } else {
+                yield return "Update successful!\nThe following mods were updated:"
+                    + updates.Values.Aggregate("", (a, b) => $"{a}\n- {b.Name}");
+            }
         }
 
         internal static IEnumerable GetAllMirrorUrls(string url, string mirrorPreferences) {

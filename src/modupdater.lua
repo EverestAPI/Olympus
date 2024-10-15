@@ -8,7 +8,7 @@ local fs = require("fs")
 
 local modupdater = {}
 
-function modupdater.updateAllMods(path, notify, mode, callback)
+function modupdater.updateAllMods(path, notify, mode, callback, showRecap)
     local willRunGame = callback == nil
 
     local origMode = mode
@@ -61,9 +61,10 @@ function modupdater.updateAllMods(path, notify, mode, callback)
 
     threader.routine(function()
         local status
+        local lastStatusLine
         repeat
             status = sharp.pollWait(task, true):result() or { "interrupted", "", "" }
-            local lastStatusLine = status[3]
+            lastStatusLine = status[3]
 
             if lastStatusLine then
                 alertMessage:findChild("loadingMessage"):setText(lastStatusLine)
@@ -74,6 +75,19 @@ function modupdater.updateAllMods(path, notify, mode, callback)
 
         if status[1] == "done" then
             callback()
+
+            if showRecap then
+                alert({
+                    body = uie.scrollbox(uie.label(lastStatusLine))
+                        :with(uiu.hook({
+                            calcSize = function (orig, self, width, height)
+                                uie.group.calcSize(self)
+                            end
+                        }))
+                        :with({ maxHeight = 300 }),
+                    buttons = {{ "OK" }}
+                })
+            end
         elseif status[1] ~= "interrupted" then
             local buttons = {
                 {

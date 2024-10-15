@@ -749,7 +749,7 @@ function scene.reload()
                     uie.label("This menu allows you to enable, disable or delete the mods you currently have installed."),
                 }),
                 uie.buttonGreen("Update All", function()
-                    modupdater.updateAllMods(root, nil, "all", scene.reload)
+                    modupdater.updateAllMods(root, nil, "all", scene.reload, true)
                 end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
             }):with(uiu.fillWidth),
             uie.row({
