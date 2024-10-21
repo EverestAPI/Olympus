@@ -37,7 +37,7 @@ namespace Olympus {
                         yield return Status($"Downloading mod from {mirroredUrl}", false, "download", false);
                         ea = new Exception[1];
                         using (FileStream zipStream = File.Open(from, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite | FileShare.Delete))
-                            yield return Try(Download(url, 0, zipStream), ea);
+                            yield return Try(Download(mirroredUrl, 0, zipStream), ea);
 
                         if (ea[0] != null) {
                             yield return Status($"Downloading from {mirroredUrl} failed, trying another mirror.\n" + ea[0], false, "download", false);
