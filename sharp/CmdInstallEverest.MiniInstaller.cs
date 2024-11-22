@@ -206,6 +206,8 @@ namespace Olympus {
                     RedirectStandardError = true,
                     CreateNoWindow = true,
                 }}) {
+                    proc.HandleLaunchWrapper("MINIINSTALLER");
+
                     proc.OutputDataReceived += (o, e) => bridge.WriteLine(e.Data);
                     proc.ErrorDataReceived += (o, e) => bridge.WriteLine(e.Data);
 

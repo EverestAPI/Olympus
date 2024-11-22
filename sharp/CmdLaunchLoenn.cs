@@ -31,6 +31,7 @@ namespace Olympus {
 
             Console.Error.WriteLine($"Starting Loenn process: {loenn.StartInfo.FileName} {loenn.StartInfo.Arguments} (in {root})");
 
+            loenn.HandleLaunchWrapper("LOENN");
             loenn.Start();
             return null;
         }

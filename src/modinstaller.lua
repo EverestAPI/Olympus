@@ -41,7 +41,7 @@ function modinstaller.register()
         return false
 
     elseif userOS == "Linux" then
-        if fs.isFile("/.flatpak-info") then
+        if fs.isFile("/.flatpak-info") or os.getEnv("OLYMPUS_SKIP_SCHEME_HANDLER_CHECK") == "1" then
             return false
         end
 

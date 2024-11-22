@@ -74,6 +74,8 @@ namespace Olympus {
             if (!string.IsNullOrEmpty(args))
                 game.StartInfo.Arguments = args;
 
+            game.HandleLaunchWrapper("CELESTE");
+
             // Flatpak detection
             // or string.Equals(Environment.GetEnvironmentVariable("container"), "flatpak");
             if (File.Exists("/.flatpak-info")) {
