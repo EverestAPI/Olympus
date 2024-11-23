@@ -178,5 +178,13 @@ function love.conf(t)
     t.window.highdpi = true
     t.console = false
 
+    -- Disable unused love2d modules
+    t.modules.audio = false
+    t.modules.joystick = false
+    t.modules.physics = false
+    t.modules.sound = false
+    t.modules.touch = false
+    t.modules.video = false
+
     print("pre-initialized")
 end
