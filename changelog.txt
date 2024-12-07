@@ -3,4 +3,5 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
+∙ Added some environment variables to control Olympus behavior, for use in the NixOS package
 ∙ Disable unused love2d features (audio, joystick, physics, touch, video), which should prevent Olympus from appearing in sound sources
