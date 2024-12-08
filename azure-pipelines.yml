@@ -10,6 +10,7 @@ strategy:
       netbuilder: 'core'
       lualibs: 'prebuilt'
       loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-win32.zip'
+      loveLuaURL: 'https://github.com/love2d/love/releases/download/11.3/love-11.3-win32.zip'
       loveZIP: 'love.zip'
       loveAppImage: ''
       loveBinaryDirectory: ''
@@ -27,6 +28,7 @@ strategy:
       luarocksPreArgs: '--lua-dir=/usr/local/opt/lua@5.1'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua@5.1/lib"'
       loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip'
+      loveLuaURL: ''
       loveZIP: 'love.zip'
       loveAppImage: ''
       loveBinaryDirectory: 'love.app/Contents/MacOS/'
@@ -43,6 +45,7 @@ strategy:
       lualibs: 'luarocks'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
       loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-x86_64.AppImage'
+      loveLuaURL: ''
       loveZIP: ''
       loveAppImage: 'love-raw/love'
       loveBinaryDirectory: ''
@@ -186,7 +189,7 @@ steps:
   condition: and(succeeded(), ne(variables.loveURL, ''))
   displayName: 'Dist: Grab cached LÖVE'
   inputs:
-    key: 'love-unpacked-11-4 | "$(Agent.OS)"'
+    key: 'love-unpacked | "$(Agent.OS)"'
     path: love-raw
     cacheHitVar: loveCached
 - task: PowerShell@2
@@ -206,6 +209,17 @@ steps:
     targetType: 'inline'
     script: |
       Expand-Archive -Path $env:LOVEZIP -DestinationPath love-raw
+# If we need to pull lua51.dll from another LÖVE package, download, unzip and grab lua51.dll.
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.loveLuaURL, ''), ne(variables.loveCached, 'true'))
+  displayName: 'Dist: Replace lua51.dll'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Invoke-WebRequest -Uri $env:LOVELUAURL -OutFile lovelua.zip
+      Expand-Archive -Path lovelua.zip -DestinationPath lovelua
+      Copy-Item -Path lovelua/love-11.3-win32/lua51.dll -Destination love-raw/love-11.5-win32/lua51.dll -Force
 # Copy cached unpacked LÖVE, fix it up if needed
 - task: PowerShell@2
   condition: and(succeeded(), ne(variables.loveURL, ''))
