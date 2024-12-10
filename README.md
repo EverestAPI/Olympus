@@ -38,3 +38,5 @@
 - Download a built Olympus version ([Windows](https://maddie480.ovh/celeste/download-olympus?branch=stable&platform=windows), [Linux](https://maddie480.ovh/celeste/download-olympus?branch=stable&platform=linux)) and extract everything from it, except the `sharp` folder, into `love`.
 - If on Windows, install [LÖVE](https://www.love2d.org/): take the zipped version and extract it in the `love` folder. **Be sure to install the 32-bit version!**
 - Run Olympus by running `debug.bat` on Windows, or by going to the `src` folder and running `../love/love --console .` on Linux.
+
+**Note:** for Linux, a `build-and-run.sh` script is present on this repository to set up the `love` directory, build Olympus.Sharp, and run Olympus.
