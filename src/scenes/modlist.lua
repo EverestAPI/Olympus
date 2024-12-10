@@ -13,8 +13,7 @@ local scene = {
     name = "Mod Manager",
     modlist = {},
     onlyShowEnabledMods = false,
-    search = "",
-    preset = ""
+    search = ""
 }
 
 scene.loadingID = 0
@@ -554,33 +553,14 @@ end
 
 
 
-scene.modPresets = nil
-
--- used to create Mod presets screen, use updatePresetsUI() before calling
-local function displayPresetsUI()
-    alert({
-        title = "Mod presets",
-        body = scene.modPresets,
-        big = true,
-        buttons = {
-            {
-                "Close"
-            }
-        },
-        init = function (container)
-            container.popup = false
-        end
-
-    }):as("modPresets")
-end
-
--- Prepares scene.modPresets as body for Mod presets screen
-local function updatePresetsUI()
+-- builds the Mod Presets screen and returns it, use scene.displayPresetsUI() to show it
+local function buildPresetsUI()
     local presets = readPresetsList()
     local presetsRow = {}
+    local preset = ""
 
     local presetField = uie.field("", function(self, value, prev)
-        scene.preset = value
+        preset = value
     end):with({
         width = 200,
         height = 24,
@@ -610,8 +590,7 @@ local function updatePresetsUI()
                                         deletePreset(presets[i])
                                         container:close("OK")
                                         self:getParent("modPresets"):close("OK")
-                                        updatePresetsUI()
-                                        displayPresetsUI()
+                                        scene.displayPresetsUI()
                                     end
                                 },
                                 { "Keep" }
@@ -625,7 +604,7 @@ local function updatePresetsUI()
         end
     end
 
-    scene.modPresets = uie.column({
+    return uie.column({
         uie.paneled.row({
             uie.button("Edit modpresets.txt", function()
                 local root = config.installs[config.install].path
@@ -634,11 +613,10 @@ local function updatePresetsUI()
             uie.row({
                 presetField,
                 uie.button("Add preset", function(self)
-                    local success = addPreset(scene.preset)
+                    local success = addPreset(preset)
                     if success then
                         self:getParent("modPresets"):close("OK")
-                        updatePresetsUI()
-                        displayPresetsUI()
+                        scene.displayPresetsUI()
                     end
                 end)
             }):with(uiu.rightbound)
@@ -651,6 +629,24 @@ local function updatePresetsUI()
         clip = false,
         cacheable = false
     }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+end
+
+-- shows the Mod Presets screen
+function scene.displayPresetsUI()
+    alert({
+        title = "Mod presets",
+        body = buildPresetsUI(),
+        big = true,
+        buttons = {
+            {
+                "Close"
+            }
+        },
+        init = function (container)
+            container.popup = false
+        end
+
+    }):as("modPresets")
 end
 
 function scene.item(info)
@@ -716,7 +712,6 @@ function scene.reload()
     scene.modlist = {}
     scene.onlyShowEnabledMods = false
     scene.search = ""
-    scene.preset = ""
 
     return threader.routine(function()
         local loading = scene.root:findChild("loadingMods")
@@ -760,8 +755,7 @@ function scene.reload()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
                 end),
                 uie.button("Mod presets", function()
-                    updatePresetsUI()
-                    displayPresetsUI()
+                    scene.displayPresetsUI()
                 end),
                 uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
