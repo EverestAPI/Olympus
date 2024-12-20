@@ -1,24 +1,7 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections;
 
 namespace Olympus {
-    public unsafe class CmdAhornInstallAhorn : Cmd<IEnumerator> {
+    public class CmdAhornInstallAhorn : Cmd<IEnumerator> {
         public override bool LogRun => false;
         public override IEnumerator Run() {
             return Cmds.Get<CmdAhornRunJuliaTask>().Run(@"

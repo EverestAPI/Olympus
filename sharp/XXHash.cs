@@ -25,9 +25,8 @@ SOFTWARE.
 */
 
 using System;
-using System.Security.Cryptography;
 using System.Runtime.CompilerServices;
-
+using System.Security.Cryptography;
 
 namespace YYProject.XXHash {
     // see details: https://github.com/Cyan4973/xxHash/blob/dev/doc/xxhash_spec.md

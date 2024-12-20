@@ -1,19 +1,8 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
-using System.Linq;
+﻿using System;
 using System.Net;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdWebGet : Cmd<string, byte[]> {
+    public class CmdWebGet : Cmd<string, byte[]> {
         public override bool LogRun => false;
         public override bool Taskable => true;
 

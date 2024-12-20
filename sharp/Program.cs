@@ -8,12 +8,10 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MonoMod.Utils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -22,15 +20,36 @@ namespace Olympus {
 
         public static string RootDirectory;
         public static string ConfigDirectory;
-        public static string SelfPath;
 
         public static readonly Encoding UTF8NoBOM = new UTF8Encoding(false);
 
         public static Dictionary<string, Message> Cache = new Dictionary<string, Message>();
 
+#if !WIN32
+        [DllImport("libc")]
+        private static extern void sigemptyset(IntPtr set);
+        [DllImport("libc")]
+        private static extern void sigprocmask(int how, IntPtr newSet, IntPtr oldSet);
+
+#if MACOS
+        private const int SIG_SETMASK = 3;
+#else
+        private const int SIG_SETMASK = 2;
+#endif
+#endif
+
         public static void Main(string[] args) {
             bool debug = false;
             bool verbose = false;
+
+#if !WIN32
+            // some things (notably love2d here: https://github.com/love2d/love/blob/main/src/modules/thread/threads.cpp#L163)
+            // might be turning off signals, which leads to zombie child processes because Olympus.Sharp never gets notified that they ended!
+            IntPtr set = Marshal.AllocHGlobal(64);
+            sigemptyset(set);
+            sigprocmask(SIG_SETMASK, set, IntPtr.Zero);
+            Marshal.FreeHGlobal(set);
+#endif
 
             for (int i = 1; i < args.Length; i++) {
                 string arg = args[i];
@@ -38,35 +57,21 @@ namespace Olympus {
                     debug = true;
                 } else if (arg == "--verbose") {
                     verbose = true;
+#if WIN32
                 } else if (arg == "--console") {
                     AllocConsole();
+#endif
                 }
             }
-
-            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
 
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
-            SelfPath = Assembly.GetExecutingAssembly().Location;
             RootDirectory = Path.GetDirectoryName(Environment.CurrentDirectory);
             ConfigDirectory = Environment.GetEnvironmentVariable("OLYMPUS_CONFIG");
             if (string.IsNullOrEmpty(ConfigDirectory) || !Directory.Exists(ConfigDirectory))
                 ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus");
             Console.Error.WriteLine(RootDirectory);
-
-            // .NET hates it when strong-named dependencies get updated.
-            AppDomain.CurrentDomain.AssemblyResolve += (asmSender, asmArgs) => {
-                AssemblyName asmName = new AssemblyName(asmArgs.Name);
-                if (!asmName.Name.StartsWith("Mono.Cecil"))
-                    return null;
-
-                Assembly asm = AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(other => other.GetName().Name == asmName.Name);
-                if (asm != null)
-                    return asm;
-
-                return Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(SelfPath), asmName.Name + ".dll"));
-            };
 
             if (Type.GetType("Mono.Runtime") != null) {
                 // Mono hates HTTPS.
@@ -77,11 +82,6 @@ namespace Olympus {
 
             // Enable TLS 1.2 to fix connecting to GitHub.
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-
-            if (args.Length >= 1 && args[0] == "--uninstall" && PlatformHelper.Is(Platform.Windows)) {
-                new CmdWin32AppUninstall().Run(args.Length >= 2 && args[1] == "--quiet");
-                return;
-            }
 
             Process parentProc = null;
             int parentProcID = 0;
@@ -204,12 +204,6 @@ namespace Olympus {
 
         }
 
-        private static void OnUnhandledException(object sender, UnhandledExceptionEventArgs e) {
-            Exception ex = e.ExceptionObject as Exception ?? new Exception("Unknown unhandled exception");
-            Console.Error.WriteLine(e.IsTerminating ? "FATAL ERROR" : "UNHANDLED ERROR");
-            Console.Error.WriteLine(ex.ToString());
-        }
-
         public static void WriteLoop(Process parentProc, MessageContext ctx, StreamWriter writer, bool verbose, char delimiter = '\0') {
             JsonSerializer jsonSerializer = new JsonSerializer() {
                 Formatting = Formatting.None,
@@ -297,7 +291,8 @@ namespace Olympus {
                     Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
 
                 // Payload
-                object input = JsonConvert.DeserializeObject(reader.ReadTerminatedString(delimiter), cmd.InputType);
+                string inputJson = reader.ReadTerminatedString(delimiter);
+                object input = cmd.InputType == null ? null : cmd.ParseInputTuple(JObject.Parse(inputJson));
                 object output;
                 try {
                     if (verbose || cmd.LogRun)
@@ -340,8 +335,10 @@ namespace Olympus {
             }
         }
 
+#if WIN32
         [DllImport("kernel32")]
         public static extern bool AllocConsole();
+#endif
 
         public static string ReadTerminatedString(this TextReader reader, char delimiter) {
             StringBuilder sb = new StringBuilder();
@@ -375,7 +372,8 @@ namespace Olympus {
 
                 try {
                     Event.Set();
-                } catch {
+                }
+                catch {
                 }
             }
 
@@ -422,6 +420,5 @@ namespace Olympus {
             public string Error;
             public long? RawSize;
         }
-
     }
 }

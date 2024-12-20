@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Olympus {
     public static class AhornHelper {
@@ -109,9 +107,7 @@ redirect_stdout(stdoutPrev)
 
                 return _VHDMountPath = VHDPath + ".mount";
             }
-            set {
-                _VHDMountPath = value;
-            }
+            set => _VHDMountPath = value;
         }
 
         private static string _AhornGlobalEnvPath;
@@ -374,7 +370,7 @@ end
                 using (FileStream stream = File.Open(head, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                 using (StreamReader reader = new StreamReader(stream)) {
                     head = reader.ReadLine()?.Trim() ?? "";
-                    int split = head.IndexOf("\t");
+                    int split = head.IndexOf("\t", StringComparison.InvariantCulture);
                     if (split >= 0)
                         head = head.Substring(0, split);
                     if (string.IsNullOrEmpty(head))

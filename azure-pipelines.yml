@@ -7,7 +7,7 @@ strategy:
       agentArch: 'windows'
       artifactPrefix: 'windows.'
       artifactSuffix: ''
-      netbuilder: 'core'
+      netBuildOS: 'win-x86'
       lualibs: 'prebuilt'
       loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-win32.zip'
       loveLuaURL: 'https://github.com/love2d/love/releases/download/11.3/love-11.3-win32.zip'
@@ -22,8 +22,7 @@ strategy:
       agentArch: 'macOS'
       artifactPrefix: 'macos.'
       artifactSuffix: ''
-      netbuilder: 'mono'
-      monokickURL: 'https://github.com/flibitijibibo/MonoKickstart.git'
+      netBuildOS: 'osx-x64'
       lualibs: 'luarocks'
       luarocksPreArgs: '--lua-dir=/usr/local/opt/lua@5.1'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua@5.1/lib"'
@@ -40,8 +39,7 @@ strategy:
       agentArch: 'linux'
       artifactPrefix: 'linux.'
       artifactSuffix: ''
-      netbuilder: 'mono'
-      monokickURL: 'https://github.com/flibitijibibo/MonoKickstart.git'
+      netBuildOS: 'linux-x64'
       lualibs: 'luarocks'
       luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
       loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-x86_64.AppImage'
@@ -51,10 +49,6 @@ strategy:
       loveBinaryDirectory: ''
       loveResourcesDirectory: ''
       launcher: ''
-
-variables:
-  netBuildPlatform: 'Any CPU'
-  netBuildConfiguration: 'Release'
 
 name: '$(Date:yy.MM.dd)$(Rev:.rr)'
 
@@ -128,31 +122,23 @@ steps:
 
 
 # Build sharp.
-# Use dotnet to restore NuGet packages even when building with mono.
 - task: DotNetCoreCLI@2
   displayName: 'Build: dotnet: restore sharp'
   inputs:
     command: 'restore'
     projects: 'sharp/*.csproj'
 
-# Build using core.
 - task: DotNetCoreCLI@2
-  condition: and(succeeded(), eq(variables.netbuilder, 'core'))
   displayName: 'Build: dotnet: build sharp'
   inputs:
-    command: 'build'
+    command: 'publish'
     projects: 'sharp/*.csproj'
-    arguments: '--configuration $(netBuildConfiguration) "/p:Configuration=$(netBuildConfiguration)"'
-
-# Build using mono.
-- task: CmdLine@2
-  condition: and(succeeded(), eq(variables.netbuilder, 'mono'))
-  displayName: 'Build: mono: build sharp'
-  inputs:
-    script: 'msbuild sharp/*.sln "/p:Configuration=$(netBuildConfiguration)" "/p:Platform=$(netBuildPlatform)"'
+    publishWebProjects: false
+    zipAfterPublish: false
+    arguments: '--runtime $(netBuildOS) --self-contained'
 
 
-# Build launcher-winforms.
+  # Build launcher-winforms.
 - task: UseDotNet@2
   condition: and(succeeded(), eq(variables.agentArch, 'windows'))
   displayName: 'Build: downgrade .NET to build launcher-winforms'
@@ -172,7 +158,24 @@ steps:
   inputs:
     command: 'build'
     projects: 'launcher-winforms/*.csproj'
-    arguments: '--configuration $(netBuildConfiguration) "/p:Configuration=$(netBuildConfiguration)"'
+    arguments: '--configuration Release'
+
+
+  # Build uninstaller-winforms.
+- task: DotNetCoreCLI@2
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Build: dotnet: restore uninstaller-winforms'
+  inputs:
+    command: 'restore'
+    projects: 'uninstaller-winforms/*.csproj'
+
+- task: DotNetCoreCLI@2
+  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
+  displayName: 'Build: dotnet: build uninstaller-winforms'
+  inputs:
+    command: 'build'
+    projects: 'uninstaller-winforms/*.csproj'
+    arguments: '--configuration Release'
 
 # Create a dummy dir for platforms which don't use prebuilt LÖVE.
 - task: CmdLine@2
@@ -314,57 +317,13 @@ steps:
   displayName: 'Dist: Copy sharp'
   continueOnError: true
   inputs:
-    sourceFolder: '$(Build.SourcesDirectory)/sharp/bin'
-    contents: '**/!(xunit.*|System.*|Microsoft.*|*.Tests.dll|*.pdb)'
+    sourceFolder: '$(Build.SourcesDirectory)/sharp/bin/Release/net8.0/$(netBuildOS)/publish'
+    contents: '**/*'
     targetFolder: 'love/$(loveBinaryDirectory)/sharp'
     cleanTargetFolder: false
     overWrite: true
     flattenFolders: true
 
-# If needed, grab MonoKickstart and shove the prebuilts into the sharp dir.
-# Clone.
-- task: CmdLine@2
-  condition: and(succeeded(), ne(variables.monokickURL, ''))
-  displayName: 'Dist: Clone MonoKickstart'
-  continueOnError: true
-  inputs:
-    script: |
-      git clone $MONOKICKURL
-# Fix Kick filename and bash script.
-- task: PowerShell@2
-  condition: and(succeeded(), ne(variables.monokickURL, ''))
-  displayName: 'Dist: Fix MonoKickstart'
-  continueOnError: true
-  inputs:
-    targetType: 'inline'
-    script: |
-      Move-Item -Path MonoKickstart/precompiled/kick.bin.osx -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.osx
-      Move-Item -Path MonoKickstart/precompiled/kick.bin.x86_64 -Destination MonoKickstart/precompiled/Olympus.Sharp.bin.x86_64
-      Remove-Item -Path MonoKickstart/precompiled/kick.bin.x86_64.debug -Force
-# Copy the precompiled folder into the sharp folder.
-- task: CopyFiles@2
-  condition: and(succeeded(), ne(variables.monokickURL, ''))
-  displayName: 'Dist: Copy MonoKickstart'
-  continueOnError: true
-  inputs:
-    sourceFolder: '$(Build.SourcesDirectory)/MonoKickstart/precompiled'
-    contents: '**/*'
-    targetFolder: 'love/$(loveBinaryDirectory)/sharp'
-    cleanTargetFolder: false
-    overWrite: true
-    flattenFolders: false
-# Copy special additional mono dependencies.
-# Those usually come from Ubuntu Mono packages with a version close to the MonoKickstart version.
-- task: CopyFiles@2
-  displayName: 'Dist: Copy prebuilt mono libs'
-  continueOnError: true
-  inputs:
-    sourceFolder: '$(Build.SourcesDirectory)/lib-mono'
-    contents: '**/*'
-    targetFolder: 'love/$(loveBinaryDirectory)/sharp'
-    cleanTargetFolder: false
-    overWrite: true
-    flattenFolders: true
 
 # Per-platform bundling steps.
 # Windows
@@ -381,6 +340,7 @@ steps:
       Remove-Item -Path love/lovec.exe -Force
       Move-Item -Path love/love.exe -Destination love/main.exe
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
+      Copy-Item -Path uninstaller-winforms/bin/Release/net452/Olympus.exe -Destination love/uninstall.exe
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       Copy-Item -Path olympus.love -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/olympus.love
@@ -418,7 +378,7 @@ steps:
       cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
-      chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp.bin*
+      chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp
       codesign --remove-signature love/$LOVEBINARYDIRECTORY/love
       mv love/love.app love/Olympus.app
       pushd love
@@ -440,7 +400,7 @@ steps:
       chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       chmod a+rx love/$LOVEBINARYDIRECTORY/install.sh
-      chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp.bin*
+      chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp
       sed -i -e "s/BUILD_VERSION/$(Build.BuildNumber)/g" love/$LOVEBINARYDIRECTORY/io.github.everestapi.Olympus.metainfo.xml
       sed -i -e "s/BUILD_DATE/$(date '+%Y-%m-%d')/g" love/$LOVEBINARYDIRECTORY/io.github.everestapi.Olympus.metainfo.xml
       cp src/data/icon.png love/$LOVEBINARYDIRECTORY/olympus.png

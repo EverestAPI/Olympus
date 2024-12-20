@@ -1,13 +1,11 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Collections.Generic;
 using MonoMod.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Olympus {
     public class CmdGetVersionString : Cmd<string, string> {
@@ -59,7 +57,7 @@ namespace Olympus {
                         t_Celeste.FindMethod("System.Void .ctor()");
 
                     if (c_Celeste != null && c_Celeste.HasBody) {
-                        Mono.Collections.Generic.Collection<Instruction> instrs = c_Celeste.Body.Instructions;
+                        Collection<Instruction> instrs = c_Celeste.Body.Instructions;
                         for (int instri = 0; instri < instrs.Count; instri++) {
                             Instruction instr = instrs[instri];
                             MethodReference c_Version = instr.Operand as MethodReference;

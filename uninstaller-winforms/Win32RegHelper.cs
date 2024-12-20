@@ -1,5 +1,5 @@
-﻿#if WIN32
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
+
 
 namespace Olympus {
     public static class Win32RegHelper {
@@ -49,4 +49,3 @@ namespace Olympus {
 
     }
 }
-#endif

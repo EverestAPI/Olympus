@@ -167,11 +167,11 @@ namespace Olympus {
             }
         }
 
-        private class ModUpdateInfo {
-            public virtual string Name { get; set; }
-            public virtual string URL { get; set; }
-            public virtual List<string> xxHash { get; set; }
-            public virtual int Size { get; set; }
+        private struct ModUpdateInfo {
+            public string Name { get; set; }
+            public string URL { get; set; }
+            public List<string> xxHash { get; set; }
+            public int Size { get; set; }
         }
 
         // Why do you need to tell C# how to get an enumerator from an enumerator
@@ -200,7 +200,12 @@ namespace Olympus {
                     string yamlData = wc.DownloadString(modUpdaterDatabaseUrl);
                     updateCatalog = YamlHelper.Deserializer.Deserialize<Dictionary<string, ModUpdateInfo>>(yamlData);
                     foreach (string name in updateCatalog.Keys) {
-                        updateCatalog[name].Name = name;
+                        updateCatalog[name] = new ModUpdateInfo {
+                            Name = name,
+                            URL = updateCatalog[name].URL,
+                            Size = updateCatalog[name].Size,
+                            xxHash = updateCatalog[name].xxHash
+                        };
                     }
                     log($"Downloaded {updateCatalog.Count} item(s)");
                 }

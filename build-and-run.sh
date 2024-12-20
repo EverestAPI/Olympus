@@ -15,13 +15,13 @@ wget -O linux.main.zip 'https://maddie480.ovh/celeste/download-olympus?branch=ma
 unzip linux.main.zip
 mv -v linux.main/dist.zip dist.zip
 unzip dist.zip
-rm -rfv linux.main dist.zip linux.main.zip olympus.love
+rm -rfv linux.main dist.zip linux.main.zip olympus.love sharp
 cd ..
 
 # Build Olympus.Sharp and copy it to love
 cd sharp
-dotnet build --configuration Release Olympus.Sharp.sln
-cp -vf bin/Release/net452/* ../love/sharp
+dotnet publish --self-contained Olympus.Sharp.sln
+cp -rv bin/Release/net8.0/linux-x64/publish ../love/sharp
 cd ..
 
 # Run our fresh build!

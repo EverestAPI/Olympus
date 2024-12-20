@@ -1,23 +1,11 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
-using System;
+﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
+    public partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
 
         public override IEnumerator Run(string root, string mainDownload, string olympusMetaDownload, string olympusBuildDownload) {
             // MiniInstaller reads orig/Celeste.exe and copies Celeste.exe into it but only if missing.

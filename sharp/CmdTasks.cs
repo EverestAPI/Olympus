@@ -1,14 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public static partial class CmdTasks {
+    public static class CmdTasks {
         public static readonly Dictionary<string, CmdTask> All = new Dictionary<string, CmdTask>();
 
         public static void Add(CmdTask task) {

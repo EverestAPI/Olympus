@@ -23,7 +23,7 @@ namespace Olympus {
                     return new Tuple<string, string>((string) latestVersion["tag_name"], GetDownloadLink((JArray) latestVersion["assets"]));
                 }
             } catch (Exception ex) {
-                Console.Error.WriteLine("Error while checking Loenn version: " + ex.ToString());
+                Console.Error.WriteLine("Error while checking Loenn version: " + ex);
                 return new Tuple<string, string>("unknown", "");
             }
         }
