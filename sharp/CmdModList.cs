@@ -5,13 +5,9 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
-using YYProject.XXHash;
 
 namespace Olympus {
     public class CmdModList : Cmd<string, bool, bool, bool, bool, IEnumerator> {
-
-        private static readonly HashAlgorithm Hasher = XXHash64.Create();
-
         public override IEnumerator Run(string root, bool readYamls, bool computeHashes, bool onlyUpdatable, bool excludeDisabled) {
             root = Path.Combine(root, "Mods");
             if (!Directory.Exists(root))
@@ -101,8 +97,9 @@ namespace Olympus {
                         }
 
                         if (computeHashes && info.Name != null) {
+                            using (HashAlgorithm hasher = XXHash64.Create())
                             using (FileStream stream = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-                                info.Hash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+                                info.Hash = BitConverter.ToString(hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
                         }
                     }
 

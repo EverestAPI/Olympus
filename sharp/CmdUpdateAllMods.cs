@@ -5,12 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography;
-using YYProject.XXHash;
 
 namespace Olympus {
     public class CmdUpdateAllMods : Cmd<string, bool, string, IEnumerator> {
-        public static HashAlgorithm Hasher = XXHash64.Create();
-
         public override bool Taskable => true;
 
         public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences) {
@@ -223,8 +220,9 @@ namespace Olympus {
         /// <param name="filePath">The path to the file to check</param>
         private static void verifyChecksum(ModUpdateInfo update, string filePath) {
             string actualHash;
+            using (HashAlgorithm hasher = XXHash64.Create())
             using (FileStream stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
-                actualHash = BitConverter.ToString(Hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
+                actualHash = BitConverter.ToString(hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
 
             string expectedHash = update.xxHash[0];
             log($"Verifying checksum: actual hash is {actualHash}, expected hash is {expectedHash}");
