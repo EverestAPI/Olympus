@@ -319,16 +319,6 @@ function native.prepareWindow()
     end
 end
 
-function native.setProgress(state, progress)
-    local sdlWindow = native.getCurrentWindow()
-    local sdlWMinfo = ffi.new("SDL_SysWMinfo[1]")
-    sdl.SDL_GetWindowWMInfo(sdlWindow, sdlWMinfo)
-
-    if ffi.os == "Windows" then
-        sharp.win32SetProgress(tostring(sdlWMinfo[0].info.win.window):sub(#"cdata<void *>: 0x" + 1), state, progress)
-    end
-end
-
 function native.flashWindow()
     local sdlWindow = native.getCurrentWindow()
     local sdlWMinfo = ffi.new("SDL_SysWMinfo[1]")

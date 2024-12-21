@@ -1,13 +1,8 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
+﻿using MonoMod.Utils;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Olympus {
     public class CmdGetRunningPath : Cmd<string, string, string> {
@@ -33,7 +28,7 @@ namespace Olympus {
                 if (string.IsNullOrEmpty(path))
                     return null;
 
-                int indexOfCeleste = path.ToLowerInvariant().IndexOf(procname);
+                int indexOfCeleste = path.ToLowerInvariant().IndexOf(procname, StringComparison.InvariantCulture);
                 int indexOfEnd = path.LastIndexOf(Path.DirectorySeparatorChar, indexOfCeleste);
                 if (indexOfEnd < 0)
                     indexOfEnd = path.Length;

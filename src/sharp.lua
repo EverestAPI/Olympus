@@ -62,20 +62,9 @@ local function sharpthread()
             pid = tostring(ffi.C.getpid())
         end
 
-        local exename = nil
+        local exename = "Olympus.Sharp"
         if ffi.os == "Windows" then
             exename = "Olympus.Sharp.exe"
-
-        elseif ffi.os == "Linux" then
-            if ffi.arch == "x86" then
-                -- Note: MonoKickstart no longer ships with x86 prebuilts.
-                exename = "Olympus.Sharp.bin.x86"
-            elseif ffi.arch == "x64" then
-                exename = "Olympus.Sharp.bin.x86_64"
-            end
-
-        elseif ffi.os == "OSX" then
-            exename = "Olympus.Sharp.bin.osx"
         end
 
         local exe = fs.joinpath(cwd, exename)

@@ -10,7 +10,7 @@ using YYProject.XXHash;
 namespace Olympus {
     public class CmdModList : Cmd<string, bool, bool, bool, bool, IEnumerator> {
 
-        public static HashAlgorithm Hasher = XXHash64.Create();
+        private static readonly HashAlgorithm Hasher = XXHash64.Create();
 
         public override IEnumerator Run(string root, bool readYamls, bool computeHashes, bool onlyUpdatable, bool excludeDisabled) {
             root = Path.Combine(root, "Mods");
@@ -167,7 +167,7 @@ namespace Olympus {
             }
         }
 
-        public class EverestModuleMetadata {
+        public struct EverestModuleMetadata {
             public string Name;
             public string Version;
             public string DLL;

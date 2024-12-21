@@ -1,16 +1,5 @@
-﻿using Microsoft.Win32;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
+﻿#if WIN32
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Olympus {
     public class CmdWin32RegGet : Cmd<string, object> {
@@ -30,3 +19,4 @@ namespace Olympus {
         }
     }
 }
+#endif

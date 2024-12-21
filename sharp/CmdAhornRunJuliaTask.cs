@@ -1,25 +1,12 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
-using System;
+﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
-using System.Globalization;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Net;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Olympus {
-    public unsafe class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
+    public class CmdAhornRunJuliaTask : Cmd<string, bool?, IEnumerator> {
 
         public static readonly Regex EscapeCmdRegex = new Regex("\u001B....|\\^\\[\\[.25.||?\\[.25.|\\^\\[\\[2K|?\\[2K|\\^M");
         public static readonly Regex EscapeDashRegex = new Regex(@"─+");

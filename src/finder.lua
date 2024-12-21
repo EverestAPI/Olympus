@@ -546,7 +546,7 @@ end
 
 
 function finder.findUWPInstalls(package)
-    if not sharpStatus then
+    if not sharpStatus or love.system.getOS() ~= "Windows" then
         return {}
     end
 

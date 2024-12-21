@@ -293,7 +293,6 @@ function scene.update(status, progress, shape, replace)
     end
 
     if progress ~= nil then
-        native.setProgress(shape == "error" and "error" or not progress and "indeterminate" or "normal", progress or 0)
         scene.progressNext = progress
     end
 
@@ -458,7 +457,6 @@ end
 
 function scene.leave()
     scener.unlock()
-    native.setProgress("none", 0)
     if scene.onLeave then
         scene.onLeave()
     end

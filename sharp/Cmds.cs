@@ -1,3 +1,4 @@
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,23 +8,64 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Olympus {
-    public static partial class Cmds {
+    public static class Cmds {
         public static readonly Dictionary<string, Cmd> All = new Dictionary<string, Cmd>();
         public static readonly Dictionary<Type, Cmd> AllByType = new Dictionary<Type, Cmd>();
 
         public static void Init() {
-            foreach (Type type in typeof(Cmd).Assembly.GetTypes()) {
-                if (!typeof(Cmd).IsAssignableFrom(type) || type.IsAbstract)
-                    continue;
+            // find -name 'Cmd*.cs' | sed 's,./,new ,' | sed 's/.cs/(),/' | sort
+            // then delete all red lines (such as new Cmds())
+            Cmd[] cmds = {
+                new CmdAhornGetInfo(),
+                new CmdAhornInstallAhorn(),
+                new CmdAhornInstallAhornVHD(),
+                new CmdAhornInstallJulia(),
+                new CmdAhornLaunch(),
+                new CmdAhornMountAhornVHD(),
+                new CmdAhornPrepare(),
+                new CmdAhornRunJulia(),
+                new CmdAhornRunJuliaTask(),
+                new CmdAhornUnmountAhornVHD(),
+                new CmdCrash(),
+                new CmdDummyTask(),
+                new CmdEcho(),
+                new CmdFree(),
+                new CmdGetEnv(),
+                new CmdGetLoennLatestVersion(),
+                new CmdGetModIdToNameMap(),
+                new CmdGetRunningPath(),
+                new CmdGetVersionString(),
+                new CmdInstallEverest(),
+                new CmdInstallExtraData(),
+                new CmdInstallLoenn(),
+                new CmdInstallMod(),
+                new CmdInstallOlympus(),
+                new CmdLaunch(),
+                new CmdLaunchLoenn(),
+                new CmdModList(),
+                new CmdPoll(),
+                new CmdPollWait(),
+                new CmdPollWaitBatch(),
+                new CmdRestart(),
+                new CmdScanDragAndDrop(),
+                new CmdStatus(),
+                new CmdUninstallEverest(),
+                new CmdUninstallLoenn(),
+                new CmdUpdateAllMods(),
+                new CmdWebGet(),
+#if WIN32
+                new CmdGetUWPPackagePath(),
+                new CmdWin32AppAdd(),
+                new CmdWin32RegGet(),
+                new CmdWin32RegSet(),
+#endif
+            };
 
-                Cmd cmd = (Cmd) Activator.CreateInstance(type);
+            foreach (Cmd cmd in cmds) {
                 All[cmd.ID.ToLowerInvariant()] = cmd;
-                AllByType[type] = cmd;
+                AllByType[cmd.GetType()] = cmd;
             }
         }
 
@@ -212,11 +254,21 @@ namespace Olympus {
             yield return Status($"Unzipped {count} files", 1f, "download", true);
         }
 
+        public abstract object ParseInputTuple(JObject tuple);
+
+        protected static T GetValue<T>(JObject tuple, string key) {
+            if (!tuple.TryGetValue(key, out JToken value)) return default;
+            if (value.Type == JTokenType.Null) return default;
+            return value.Value<T>();
+        }
     }
 
     public abstract class Cmd<TOutput> : Cmd {
         public override Type InputType => null;
         public override Type OutputType => typeof(TOutput);
+        public override object ParseInputTuple(JObject tuple) {
+            return null;
+        }
         public override object Run(object input) {
             return Run();
         }
@@ -226,6 +278,11 @@ namespace Olympus {
     public abstract class Cmd<TInput, TOutput> : Cmd {
         public override Type InputType => typeof(Tuple<TInput>);
         public override Type OutputType => typeof(TOutput);
+        public override object ParseInputTuple(JObject tuple) {
+            return new Tuple<TInput>(
+                GetValue<TInput>(tuple, "Item1")
+            );
+        }
         public override object Run(object input) {
             var t = (Tuple<TInput>) input;
             return Run(t.Item1);
@@ -236,6 +293,12 @@ namespace Olympus {
     public abstract class Cmd<TInput1, TInput2, TOutput> : Cmd {
         public override Type InputType => typeof(Tuple<TInput1, TInput2>);
         public override Type OutputType => typeof(TOutput);
+        public override object ParseInputTuple(JObject tuple) {
+            return new Tuple<TInput1, TInput2>(
+                GetValue<TInput1>(tuple, "Item1"),
+                GetValue<TInput2>(tuple, "Item2")
+            );
+        }
         public override object Run(object input) {
             var t = (Tuple<TInput1, TInput2>) input;
             return Run(t.Item1, t.Item2);
@@ -246,6 +309,13 @@ namespace Olympus {
     public abstract class Cmd<TInput1, TInput2, TInput3, TOutput> : Cmd {
         public override Type InputType => typeof(Tuple<TInput1, TInput2, TInput3>);
         public override Type OutputType => typeof(TOutput);
+        public override object ParseInputTuple(JObject tuple) {
+            return new Tuple<TInput1, TInput2, TInput3>(
+                GetValue<TInput1>(tuple, "Item1"),
+                GetValue<TInput2>(tuple, "Item2"),
+                GetValue<TInput3>(tuple, "Item3")
+            );
+        }
         public override object Run(object input) {
             var t = (Tuple<TInput1, TInput2, TInput3>) input;
             return Run(t.Item1, t.Item2, t.Item3);
@@ -256,6 +326,14 @@ namespace Olympus {
     public abstract class Cmd<TInput1, TInput2, TInput3, TInput4, TOutput> : Cmd {
         public override Type InputType => typeof(Tuple<TInput1, TInput2, TInput3, TInput4>);
         public override Type OutputType => typeof(TOutput);
+        public override object ParseInputTuple(JObject tuple) {
+            return new Tuple<TInput1, TInput2, TInput3, TInput4>(
+                GetValue<TInput1>(tuple, "Item1"),
+                GetValue<TInput2>(tuple, "Item2"),
+                GetValue<TInput3>(tuple, "Item3"),
+                GetValue<TInput4>(tuple, "Item4")
+            );
+        }
         public override object Run(object input) {
             var t = (Tuple<TInput1, TInput2, TInput3, TInput4>) input;
             return Run(t.Item1, t.Item2, t.Item3, t.Item4);
@@ -266,40 +344,19 @@ namespace Olympus {
     public abstract class Cmd<TInput1, TInput2, TInput3, TInput4, TInput5, TOutput> : Cmd {
         public override Type InputType => typeof(Tuple<TInput1, TInput2, TInput3, TInput4, TInput5>);
         public override Type OutputType => typeof(TOutput);
+        public override object ParseInputTuple(JObject tuple) {
+            return new Tuple<TInput1, TInput2, TInput3, TInput4, TInput5>(
+                GetValue<TInput1>(tuple, "Item1"),
+                GetValue<TInput2>(tuple, "Item2"),
+                GetValue<TInput3>(tuple, "Item3"),
+                GetValue<TInput4>(tuple, "Item4"),
+                GetValue<TInput5>(tuple, "Item5")
+            );
+        }
         public override object Run(object input) {
             var t = (Tuple<TInput1, TInput2, TInput3, TInput4, TInput5>) input;
             return Run(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5);
         }
         public abstract TOutput Run(TInput1 input1, TInput2 input2, TInput3 input3, TInput4 input4, TInput5 input5);
-    }
-
-    public abstract class Cmd<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TOutput> : Cmd {
-        public override Type InputType => typeof(Tuple<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6>);
-        public override Type OutputType => typeof(TOutput);
-        public override object Run(object input) {
-            var t = (Tuple<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6>) input;
-            return Run(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6);
-        }
-        public abstract TOutput Run(TInput1 input1, TInput2 input2, TInput3 input3, TInput4 input4, TInput5 input5, TInput6 input6);
-    }
-
-    public abstract class Cmd<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TInput7, TOutput> : Cmd {
-        public override Type InputType => typeof(Tuple<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TInput7>);
-        public override Type OutputType => typeof(TOutput);
-        public override object Run(object input) {
-            var t = (Tuple<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TInput7>) input;
-            return Run(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7);
-        }
-        public abstract TOutput Run(TInput1 input1, TInput2 input2, TInput3 input3, TInput4 input4, TInput5 input5, TInput6 input6, TInput7 input7);
-    }
-
-    public abstract class Cmd<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TInput7, TInput8, TOutput> : Cmd {
-        public override Type InputType => typeof(Tuple<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TInput7, TInput8>);
-        public override Type OutputType => typeof(TOutput);
-        public override object Run(object input) {
-            var t = (Tuple<TInput1, TInput2, TInput3, TInput4, TInput5, TInput6, TInput7, TInput8>) input;
-            return Run(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5, t.Item6, t.Item7, t.Rest);
-        }
-        public abstract TOutput Run(TInput1 input1, TInput2 input2, TInput3 input3, TInput4 input4, TInput5 input5, TInput6 input6, TInput7 input7, TInput8 input8);
     }
 }

@@ -1,22 +1,14 @@
 ﻿using Microsoft.Win32;
-using Mono.Cecil;
-using Mono.Cecil.Cil;
-using MonoMod.Utils;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.InteropServices.ComTypes;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Windows.Forms;
 
+
 namespace Olympus {
-    public class CmdWin32AppUninstall : Cmd<bool, string> {
-        public override string Run(bool quiet) {
+    public class CmdWin32AppUninstall {
+        public string Run(bool quiet) {
             if (!quiet) {
                 try {
                     Application.EnableVisualStyles();
@@ -24,11 +16,13 @@ namespace Olympus {
                 }
             }
 
+            string selfPath = Assembly.GetExecutingAssembly().Location;
+
             string root = Environment.GetEnvironmentVariable("OLYMPUS_ROOT");
             if (string.IsNullOrEmpty(root))
                 root = Win32RegHelper.OpenOrCreateKey(@"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Olympus", false)?.GetValue("InstallLocation") as string;
             if (string.IsNullOrEmpty(root))
-                root = Path.GetDirectoryName(Path.GetDirectoryName(Program.SelfPath));
+                root = Path.GetDirectoryName(Path.GetDirectoryName(selfPath));
 
             if (!File.Exists(Path.Combine(root, "main.exe")) ||
                 !File.Exists(Path.Combine(root, "love.dll")) ||
@@ -38,19 +32,15 @@ namespace Olympus {
                 return null;
             }
 
-            if (Program.SelfPath.StartsWith(root)) {
+            if (selfPath.StartsWith(root)) {
                 string tmpDir = Path.Combine(Path.GetTempPath(), "Olympus.Uninstall");
-                string tmp = Path.Combine(tmpDir, "Olympus.Sharp.exe");
+                string tmp = Path.Combine(tmpDir, "uninstall.exe");
                 try {
                     if (!Directory.Exists(tmpDir))
                         Directory.CreateDirectory(tmpDir);
-                    string tmpDep = Path.Combine(tmpDir, "MonoMod.Utils.dll");
-                    if (File.Exists(tmpDep))
-                        File.Delete(tmpDep);
-                    File.Copy(Path.Combine(Path.GetDirectoryName(Program.SelfPath), "MonoMod.Utils.dll"), tmpDep);
                     if (File.Exists(tmp))
                         File.Delete(tmp);
-                    File.Copy(Program.SelfPath, tmp);
+                    File.Copy(selfPath, tmp);
                 } catch {
                     if (!quiet)
                         MessageBox.Show("The Olympus uninstaller has encountered an error:\nCan't copy the uninstaller into %TMP%.\n\nPlease delete %AppData%/Olympus manually.", "Olympus", MessageBoxButtons.OK);
@@ -61,7 +51,7 @@ namespace Olympus {
 
                 Process process = new Process();
                 process.StartInfo.FileName = tmp;
-                process.StartInfo.Arguments = "--uninstall" + (quiet ? " --quiet" : "");
+                process.StartInfo.Arguments = quiet ? " --quiet" : "";
                 Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = tmpDir;
                 process.Start();
                 return null;
