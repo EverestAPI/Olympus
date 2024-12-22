@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Fixed checksum computing (which led to false flags for mod updates, and checksum failures)
+∙ Fixed game freezing during startup when ran through Olympus on Windows

@@ -14,6 +14,7 @@ namespace Olympus {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
 
             Process game = new Process();
+            game.StartInfo.UseShellExecute = true;
 
             // Unix-likes use a MonoKickstart wrapper script / launch binary.
             if (Environment.OSVersion.Platform == PlatformID.Unix ||
@@ -52,7 +53,6 @@ namespace Olympus {
             if (Environment.OSVersion.Platform == PlatformID.Unix && game.StartInfo.FileName.Contains("com.valvesoftware.Steam")) {
                 game.StartInfo.FileName = "xdg-open";
                 args = "steam://run/504230";
-                game.StartInfo.UseShellExecute = true;
                 // args won't work but launch vanilla will work because it uses nextLaunchIsVanilla.txt
             }
 
@@ -69,7 +69,6 @@ namespace Olympus {
                 else
                     game.StartInfo.Arguments = game.StartInfo.FileName;
                 game.StartInfo.FileName = Path.Combine(Program.RootDirectory, "flatpak-wrapper");
-                game.StartInfo.UseShellExecute = true;
             }
 
             Console.Error.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
