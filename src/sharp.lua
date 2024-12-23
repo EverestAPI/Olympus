@@ -79,6 +79,10 @@ local function sharpthread()
             fs.mkdir(fs.dirname(logpath))
         end
 
+        if ffi.os ~= "Windows" then
+            subprocess.call({"chmod", "-v", "u+x", exe})
+        end
+
         print("[sharp init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
         print("[sharp init]", "logging to", logpath)
 

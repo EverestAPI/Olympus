@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Make platform-specific upgrade packages instead of giving Olympus.Sharp for Windows to all platforms
+∙ Make sure Olympus.Sharp is executable before running it on macOS and Linux
