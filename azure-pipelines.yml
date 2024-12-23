@@ -343,8 +343,9 @@ steps:
       Copy-Item -Path uninstaller-winforms/bin/Release/net452/Olympus.exe -Destination love/uninstall.exe
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
+      New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update -ItemType Directory
       Copy-Item -Path olympus.love -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/olympus.love
-      Compress-Archive -Path love/sharp/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update/sharp.zip -Force
+      Compress-Archive -Path love/sharp/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update/sharp.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/launcher-winforms -ItemType Directory
       Copy-Item -Path launcher-winforms/bin/Release/net452/Olympus.exe -Destination $env:BUILD_ARTIFACTSTAGINGDIRECTORY/launcher-winforms/Olympus.exe
 
@@ -380,6 +381,10 @@ steps:
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp
       codesign --remove-signature love/$LOVEBINARYDIRECTORY/love
+      mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update
+      pushd love/$LOVEBINARYDIRECTORY/sharp
+      zip -r $BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update/sharp.zip *
+      popd
       mv love/love.app love/Olympus.app
       pushd love
       mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/main
@@ -413,6 +418,10 @@ steps:
       mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/main
       zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip *
       popd
+      mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update
+      pushd love/sharp
+      zip -r $BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update/sharp.zip *
+      popd
 
 # Publish.
 - task: PublishBuildArtifacts@1
@@ -425,11 +434,18 @@ steps:
     publishLocation: 'Container'
 - task: PublishBuildArtifacts@1
   condition: and(succeeded(), eq(variables.agentArch, 'windows'))
-  displayName: 'Dist: Publish update'
+  displayName: 'Dist: Publish update (common)'
   continueOnError: true
   inputs:
     pathtoPublish: '$(Build.ArtifactStagingDirectory)/update'
     artifactName: 'update'
+    publishLocation: 'Container'
+- task: PublishBuildArtifacts@1
+  displayName: 'Dist: Publish update (platform-specific)'
+  continueOnError: true
+  inputs:
+    pathtoPublish: '$(Build.ArtifactStagingDirectory)/platform-update'
+    artifactName: '$(artifactPrefix)update$(artifactSuffix)'
     publishLocation: 'Container'
 - task: PublishBuildArtifacts@1
   condition: and(succeeded(), eq(variables.agentArch, 'windows'))
