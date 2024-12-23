@@ -175,6 +175,7 @@ function utils.download(url, headers)
             if not redirect then
                 return false, code, body
             end
+            headers = headers or {}
             headers["Referer"] = url
             url = redirect
             goto retry
