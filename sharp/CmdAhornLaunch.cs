@@ -103,13 +103,6 @@ Ahorn.displayMainWindow()
 "
                 )) {
 
-                    /*/
-                    process.StartInfo.UseShellExecute = true;
-                    process.StartInfo.CreateNoWindow = false;
-                    process.StartInfo.RedirectStandardOutput = false;
-                    process.StartInfo.RedirectStandardError = false;
-                    /**/
-
                     process.Start();
                     for (string line; (line = process.StandardOutput.ReadLine()) != null;)
                         yield return CmdAhornRunJuliaTask.Escape(line, out _);

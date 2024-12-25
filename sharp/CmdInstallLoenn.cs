@@ -16,16 +16,11 @@ namespace Olympus {
                     yield return Unpack(wrap, installPath);
                 }
 
-                if (PlatformHelper.Is(Platform.MacOS)) {
-                    // make Lönn actually executable
-                    Process chmod = new Process();
-                    chmod.StartInfo.FileName = "chmod";
-                    chmod.StartInfo.Arguments = "+x love Lönn.sh";
-                    chmod.StartInfo.UseShellExecute = true;
-                    chmod.StartInfo.WorkingDirectory = installPath + "/Lönn.app/Contents/MacOS";
-                    chmod.Start();
-                    chmod.WaitForExit();
-                }
+#if MACOS
+                // make Lönn actually executable
+                ProcessHelper.MakeExecutable(installPath + "/Lönn.app/Contents/MacOS/love");
+                ProcessHelper.MakeExecutable(installPath + "/Lönn.app/Contents/MacOS/Lönn.sh");
+#endif
             }
         }
     }

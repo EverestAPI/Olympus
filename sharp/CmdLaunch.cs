@@ -14,7 +14,9 @@ namespace Olympus {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
 
             Process game = new Process();
+#if WIN32
             game.StartInfo.UseShellExecute = true;
+#endif
 
             // Unix-likes use a MonoKickstart wrapper script / launch binary.
             if (Environment.OSVersion.Platform == PlatformID.Unix ||
@@ -63,7 +65,8 @@ namespace Olympus {
 
             // Flatpak detection
             // or string.Equals(Environment.GetEnvironmentVariable("container"), "flatpak");
-            if (File.Exists("/.flatpak-info")) {
+            bool isFlatpak = File.Exists("./flatpak-info");
+            if (isFlatpak) {
                 if (!string.IsNullOrEmpty(args))
                     game.StartInfo.Arguments = string.Join(" ", "\"" + game.StartInfo.FileName + "\"", args);
                 else
@@ -72,6 +75,13 @@ namespace Olympus {
             }
 
             Console.Error.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
+
+#if !WIN32
+            if (!isFlatpak) {
+                game.StartInfo.Arguments = $"\"{game.StartInfo.FileName}\" {game.StartInfo.Arguments}";
+                game.StartInfo.FileName = ProcessHelper.CreateNoOutputWrapper(game.StartInfo.Arguments);
+            }
+#endif
 
             game.Start();
             return null;
