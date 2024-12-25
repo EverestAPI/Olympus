@@ -13,6 +13,7 @@
   <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('win'))">
     <OutputType>WinExe</OutputType>
     <DefineConstants>WIN32</DefineConstants>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('osx'))">

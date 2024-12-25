@@ -60,6 +60,7 @@ namespace Olympus {
                 new CmdWin32AppAdd(),
                 new CmdWin32RegGet(),
                 new CmdWin32RegSet(),
+                new CmdWin32SetProgress(),
 #endif
             };
 
