@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 
 namespace Olympus {
     public static class ProcessHelper {
@@ -67,5 +68,24 @@ namespace Olympus {
             return process.ExitCode;
         }
 
+#if !WIN32
+        public static string CreateNoOutputWrapper(string commandLine) {
+            string path = Path.Combine(Path.GetTempPath(), "olympus_" + Path.GetRandomFileName() + ".sh");
+            File.WriteAllText(path,
+                "#!/bin/sh\n"
+                + commandLine + " > /dev/null 2>&1\n"
+                + $"rm \"{path}\"");
+            MakeExecutable(path);
+            return path;
+        }
+
+        public static void MakeExecutable(string fullPath) {
+            Process chmod = new Process();
+            chmod.StartInfo.FileName = "chmod";
+            chmod.StartInfo.Arguments = "+x \"" + fullPath + "\"";
+            chmod.Start();
+            chmod.WaitForExit();
+        }
+#endif
     }
 }

@@ -16,7 +16,7 @@ namespace Olympus {
             // Handle launch wrappers
             string wrapper = Environment.GetEnvironmentVariable($"OLYMPUS_{wrapperName}_WRAPPER");
             if (!string.IsNullOrEmpty(wrapper)) {
-                proc.StartInfo.Arguments = $"{proc.StartInfo.FileName} {proc.StartInfo.Arguments}";
+                proc.StartInfo.Arguments = $"\"{proc.StartInfo.FileName}\" {proc.StartInfo.Arguments}";
                 proc.StartInfo.FileName = wrapper;
             }
         }

@@ -10,9 +10,9 @@ namespace Olympus {
 
         public override string Run(string root) {
             Process loenn = new Process();
-            loenn.StartInfo.UseShellExecute = true;
 
             if (PlatformHelper.Is(Platform.Windows)) {
+                loenn.StartInfo.UseShellExecute = true;
                 loenn.StartInfo.FileName = Path.Combine(root, "Lönn.exe");
                 loenn.StartInfo.WorkingDirectory = root;
             } else if (PlatformHelper.Is(Platform.Linux)) {
@@ -31,6 +31,12 @@ namespace Olympus {
             Console.Error.WriteLine($"Starting Loenn process: {loenn.StartInfo.FileName} {loenn.StartInfo.Arguments} (in {root})");
 
             loenn.HandleLaunchWrapper("LOENN");
+
+#if !WIN32
+            loenn.StartInfo.Arguments = $"\"{loenn.StartInfo.FileName}\" {loenn.StartInfo.Arguments}";
+            loenn.StartInfo.FileName = ProcessHelper.CreateNoOutputWrapper(loenn.StartInfo.Arguments);
+#endif
+
             loenn.Start();
             return null;
         }
