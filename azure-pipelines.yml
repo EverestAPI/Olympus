@@ -102,7 +102,7 @@ steps:
   displayName: 'Build: luarocks: install subprocess'
   inputs:
     script: |
-      luarocks $LUAROCKSPREARGS install --tree=luarocks https://raw.githubusercontent.com/0x0ade/lua-subprocess/master/subprocess-scm-1.rockspec $LUAROCKSARGS
+      luarocks $LUAROCKSPREARGS install --tree=luarocks https://raw.githubusercontent.com/maddie480/lua-subprocess/master/subprocess-scm-1.rockspec $LUAROCKSARGS
 
 # Install nfd.
 - task: CmdLine@2
