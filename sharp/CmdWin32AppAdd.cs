@@ -1,6 +1,7 @@
 ﻿#if WIN32
 using Microsoft.Win32;
 using System.IO;
+using System.Reflection;
 
 namespace Olympus {
     public class CmdWin32AppAdd : Cmd<string, string, string> {
@@ -11,7 +12,7 @@ namespace Olympus {
                     return null;
 
                 DirectoryInfo dir = new DirectoryInfo(Path.GetDirectoryName(exepath));
-                string uninstallerPath = Path.GetDirectoryName(exepath) + @"\uninstall.exe";
+                string selfPath = Assembly.GetExecutingAssembly().Location;
 
                 key.SetValue("DisplayName", "Olympus");
                 key.SetValue("Publisher", "Everest Team");
@@ -21,8 +22,8 @@ namespace Olympus {
                 key.SetValue("InstallLocation", dir);
                 key.SetValue("InstallDate", dir.CreationTime.ToString("yyyyMMdd"));
                 key.SetValue("EstimatedSize", (int) (GetDirectorySize(dir) / 1024));
-                key.SetValue("UninstallString", $"\"{uninstallerPath}\"");
-                key.SetValue("QuietUninstallString", $"\"{uninstallerPath}\" --quiet");
+                key.SetValue("UninstallString", $"\"{selfPath}\" --uninstall");
+                key.SetValue("QuietUninstallString", $"\"{selfPath}\" --uninstall --quiet");
                 key.SetValue("NoModify", 1);
                 key.SetValue("NoRepair", 1);
 
