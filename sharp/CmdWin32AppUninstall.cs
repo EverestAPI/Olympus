@@ -8,16 +8,12 @@ using System.Runtime.InteropServices;
 
 namespace Olympus {
     public class CmdWin32AppUninstall : Cmd<bool, string> {
-        [DllImport("user32", ExactSpelling = true)]
-        private static extern int MessageBoxW(
-            IntPtr hWnd,
-            [MarshalAs(UnmanagedType.LPWStr)] string text,
-            [MarshalAs(UnmanagedType.LPWStr)] string caption,
-            uint type
-        );
+        [DllImport("user32", ExactSpelling = true, SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern int MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
 
         private static void showMessage(string message) {
             MessageBoxW(IntPtr.Zero, message, "Olympus", 0 /* MB_OK */);
+            Console.WriteLine("retcode " + Marshal.GetLastPInvokeError());
         }
         private static bool askForConfirmation(string message) {
             return MessageBoxW(IntPtr.Zero, message, "Olympus", 4 /* MB_YESNO */) == 6 /* IDYES */;
