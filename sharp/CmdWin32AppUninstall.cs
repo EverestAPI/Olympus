@@ -9,7 +9,12 @@ using System.Runtime.InteropServices;
 namespace Olympus {
     public class CmdWin32AppUninstall : Cmd<bool, string> {
         [DllImport("user32.dll")]
-        private static extern uint MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
+        private static extern uint MessageBoxW(
+            IntPtr hWnd,
+            [MarshalAs(UnmanagedType.LPWStr)] string text,
+            [MarshalAs(UnmanagedType.LPWStr)] string caption,
+            uint type
+        );
 
         private static void showMessage(string message) {
             MessageBoxW(IntPtr.Zero, message, "Olympus", 0 /* MB_OK */);
