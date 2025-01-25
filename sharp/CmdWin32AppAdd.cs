@@ -13,6 +13,7 @@ namespace Olympus {
 
                 DirectoryInfo dir = new DirectoryInfo(Path.GetDirectoryName(exepath));
                 string selfPath = Assembly.GetExecutingAssembly().Location;
+                selfPath = Path.Combine(Path.GetDirectoryName(selfPath), "Olympus.Sharp.exe");
 
                 key.SetValue("DisplayName", "Olympus");
                 key.SetValue("Publisher", "Everest Team");
