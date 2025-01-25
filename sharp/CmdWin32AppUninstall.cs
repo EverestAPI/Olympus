@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 
 namespace Olympus {
     public class CmdWin32AppUninstall : Cmd<bool, string> {
-        [DllImport("user32.dll", ExactSpelling = true)]
+        [DllImport("user32", ExactSpelling = true)]
         private static extern int MessageBoxW(
             IntPtr hWnd,
             [MarshalAs(UnmanagedType.LPWStr)] string text,
