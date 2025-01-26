@@ -83,6 +83,13 @@ namespace Olympus {
             // Enable TLS 1.2 to fix connecting to GitHub.
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
+#if WIN32
+            if (args.Length >= 1 && args[0] == "--uninstall") {
+                new CmdWin32AppUninstall().Run(args.Length >= 2 && args[1] == "--quiet");
+                return;
+            }
+#endif
+
             Process parentProc = null;
             int parentProcID = 0;
 

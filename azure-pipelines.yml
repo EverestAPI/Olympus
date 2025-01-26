@@ -161,22 +161,6 @@ steps:
     arguments: '--configuration Release'
 
 
-  # Build uninstaller-winforms.
-- task: DotNetCoreCLI@2
-  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
-  displayName: 'Build: dotnet: restore uninstaller-winforms'
-  inputs:
-    command: 'restore'
-    projects: 'uninstaller-winforms/*.csproj'
-
-- task: DotNetCoreCLI@2
-  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
-  displayName: 'Build: dotnet: build uninstaller-winforms'
-  inputs:
-    command: 'build'
-    projects: 'uninstaller-winforms/*.csproj'
-    arguments: '--configuration Release'
-
 # Create a dummy dir for platforms which don't use prebuilt LÖVE.
 - task: CmdLine@2
   condition: and(succeeded(), eq(variables.loveZIP, ''))
@@ -340,7 +324,6 @@ steps:
       Remove-Item -Path love/lovec.exe -Force
       Move-Item -Path love/love.exe -Destination love/main.exe
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
-      Copy-Item -Path uninstaller-winforms/bin/Release/net452/Olympus.exe -Destination love/uninstall.exe
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update -ItemType Directory
