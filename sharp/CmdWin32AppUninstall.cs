@@ -29,8 +29,9 @@ namespace Olympus {
             string root = Environment.GetEnvironmentVariable("OLYMPUS_ROOT");
             if (string.IsNullOrEmpty(root))
                 root = Win32RegHelper.OpenOrCreateKey(@"HKCU\Software\Microsoft\Windows\CurrentVersion\Uninstall\Olympus", false)?.GetValue("InstallLocation") as string;
-            if (string.IsNullOrEmpty(root))
-                root = Path.GetDirectoryName(Path.GetDirectoryName(selfPath));
+
+            string selfDirectory = Path.GetDirectoryName(selfPath);
+            if (string.IsNullOrEmpty(root)) root = Path.GetDirectoryName(selfDirectory);
 
             if (!File.Exists(Path.Combine(root, "main.exe")) ||
                 !File.Exists(Path.Combine(root, "love.dll")) ||
@@ -42,17 +43,16 @@ namespace Olympus {
 
             if (selfPath.StartsWith(root)) {
                 string tmpDir = Path.Combine(Path.GetTempPath(), "Olympus.Uninstall");
-                string tmp = Path.Combine(tmpDir, "Olympus.Sharp.exe");
                 try {
                     if (!Directory.Exists(tmpDir))
                         Directory.CreateDirectory(tmpDir);
-                    string tmpDep = Path.Combine(tmpDir, "MonoMod.Utils.dll");
-                    if (File.Exists(tmpDep))
-                        File.Delete(tmpDep);
-                    File.Copy(Path.Combine(Path.GetDirectoryName(selfPath), "MonoMod.Utils.dll"), tmpDep);
-                    if (File.Exists(tmp))
-                        File.Delete(tmp);
-                    File.Copy(selfPath, tmp);
+
+                    foreach (string f in Directory.GetFiles(selfDirectory)) {
+                        string file = Path.GetFileName(f);
+                        string tmpDep = Path.Combine(tmpDir, file);
+                        if (File.Exists(tmpDep)) File.Delete(tmpDep);
+                        File.Copy(Path.Combine(selfDirectory, file), tmpDep);
+                    }
                 }
                 catch {
                     if (!quiet)
@@ -63,7 +63,7 @@ namespace Olympus {
                 Environment.SetEnvironmentVariable("OLYMPUS_ROOT", root);
 
                 Process process = new Process();
-                process.StartInfo.FileName = tmp;
+                process.StartInfo.FileName = Path.Combine(tmpDir, "Olympus.Sharp.exe");
                 process.StartInfo.Arguments = "--uninstall" + (quiet ? " --quiet" : "");
                 Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = tmpDir;
                 process.Start();

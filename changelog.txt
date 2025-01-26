@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Reintegrate the Windows uninstaller in Olympus.Sharp instead of having a separate uninstall.exe
+∙ Fixed the Windows uninstaller by copying the entire "sharp" folder in the temp directory
