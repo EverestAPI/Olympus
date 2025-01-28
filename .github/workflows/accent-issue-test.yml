@@ -1,0 +1,51 @@
+name: Test Olympus.Sharp with accented characters
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 2
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Kickstart Olympus install
+      run: |
+        Invoke-WebRequest -Uri 'https://maddie480.ovh/celeste/download-olympus?branch=main&platform=windows' -OutFile temp.zip
+        Expand-Archive -Path temp.zip -DestinationPath .
+        Expand-Archive -Path windows.main\dist.zip -DestinationPath olympus-install
+        Remove-Item -Path temp.zip,windows.main,olympus-install\main.exe -Force -Recurse
+
+    - name: Install love2d
+      run: |
+        Invoke-WebRequest -Uri 'https://github.com/love2d/love/releases/download/11.5/love-11.5-win32.zip' -OutFile temp.zip
+        Expand-Archive -Path temp.zip -DestinationPath .
+        Move-Item -Path love-11.5-win32\* -Destination olympus-install\ -Force
+        Remove-Item -Path temp.zip,love-11.5-win32 -Force -Recurse
+
+    - name: Build source code zip
+      run: |
+        cd src
+        Get-Content conf.lua | ForEach-Object { $_ -replace 't.modules.video', 't.window' } | ForEach-Object { $_ -replace 't.modules.touch', 't.modules.graphics' } | Set-Content conf_.lua
+        Move-Item -Path conf_.lua -Destination conf.lua -Force
+        Compress-Archive -Path * -DestinationPath ..\olympus-install\olympus.love
+
+    - name: Run Olympus
+      run: |
+        Move-Item -Path olympus-install -Destination 'Olympus est cassé'
+        New-Item -Name "Ça marche pas" -ItemType "directory" | Out-Null
+        $env:LocalAppData = "$pwd\Ça marche pas"
+        & 'Olympus est cassé\lovec' 'Olympus est cassé\olympus.love'
+        Write-Output 'Done.'
+        exit 0
+
+    - name: Check output
+      run: |
+        Write-Output '== log.txt:'
+        Get-Content 'Ça marche pas\Olympus\log.txt'
+        Write-Output '== log-sharp.txt:'
+        Get-Content 'Ça marche pas\Olympus\log-sharp.txt'
+        $count = (Select-String -Path 'Ça marche pas\Olympus\log.txt' -Pattern 'Connection with Olympus.Sharp is OK' | Measure-Object -Line).Lines
+        if ($count -lt 1) { exit 1 }

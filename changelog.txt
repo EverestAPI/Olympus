@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Fixed the Windows uninstaller by copying the entire "sharp" folder in the temp directory
+∙ Fixed log.txt file not getting written on Windows if the username contains non-Latin characters

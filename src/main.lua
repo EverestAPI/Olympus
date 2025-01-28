@@ -207,6 +207,8 @@ function love.load(args)
         end)
     end
 
+    print("Connection with Olympus.Sharp is " .. sharp.echo("OK!"):result())
+
     config = require("config")
     config.load()
 
@@ -221,7 +223,7 @@ function love.load(args)
     end
 
     logChannel = love.thread.getChannel("olympusLog")
-    logFile = io.open(fs.joinpath(fs.getStorageDir(), "log.txt"), "w+")
+    logFile = io.open(fs.joinpath(fs.getStorageDir(false), "log.txt"), "w+")
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
