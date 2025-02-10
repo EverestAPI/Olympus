@@ -124,14 +124,12 @@ steps:
 # Build sharp.
 - task: DotNetCoreCLI@2
   displayName: 'Build: dotnet: restore sharp'
-  condition: and(succeeded(), ne(variables.agentArch, 'windows'))
   inputs:
     command: 'restore'
     projects: 'sharp/*.csproj'
 
 - task: DotNetCoreCLI@2
   displayName: 'Build: dotnet: build sharp'
-  condition: and(succeeded(), ne(variables.agentArch, 'windows'))
   inputs:
     command: 'publish'
     projects: 'sharp/*.csproj'
@@ -139,13 +137,6 @@ steps:
     zipAfterPublish: false
     arguments: '--runtime $(netBuildOS) --self-contained'
 
-- task: CmdLine@2
-  displayName: 'Build: dotnet: build sharp with partial trimming'
-  condition: and(succeeded(), eq(variables.agentArch, 'windows'))
-  inputs:
-    script: |
-      javac SemiTrimmedOlympusBuild.java
-      java SemiTrimmedOlympusBuild
 
   # Build launcher-winforms.
 - task: UseDotNet@2
