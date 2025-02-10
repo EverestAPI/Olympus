@@ -58,8 +58,10 @@ namespace Olympus {
 #if WIN32
                 new CmdGetUWPPackagePath(),
                 new CmdWin32AppAdd(),
+                new CmdWin32CreateShortcuts(),
                 new CmdWin32RegGet(),
                 new CmdWin32RegSet(),
+                new CmdWin32SetProgress(),
 #endif
             };
 
