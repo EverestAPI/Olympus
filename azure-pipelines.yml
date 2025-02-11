@@ -360,7 +360,9 @@ steps:
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
+      cp suppress-output.sh love/$LOVEBINARYDIRECTORY/suppress-output
       chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
+      chmod a+rx love/$LOVEBINARYDIRECTORY/suppress-output
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp
       codesign --remove-signature love/$LOVEBINARYDIRECTORY/love
@@ -385,7 +387,9 @@ steps:
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus
       chmod a+rx love/$LOVEBINARYDIRECTORY/flatpak-wrapper
       cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
+      cp suppress-output.sh love/$LOVEBINARYDIRECTORY/suppress-output
       chmod a+rx love/$LOVEBINARYDIRECTORY/find-love
+      chmod a+rx love/$LOVEBINARYDIRECTORY/suppress-output
       chmod a+rx love/$LOVEBINARYDIRECTORY/love
       chmod a+rx love/$LOVEBINARYDIRECTORY/install.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/sharp/Olympus.Sharp

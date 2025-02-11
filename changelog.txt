@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Disabled trimming on Windows to attempt appeasing antiviruses and bring back minor features (desktop shortcut, progress in taskbar)
+∙ Do not create scripts on-the-fly and run them on Mac and Linux to suppress output, as this causes "permission denied" issues on some distributions

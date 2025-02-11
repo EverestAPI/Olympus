@@ -44,7 +44,8 @@ namespace Olympus {
                         File.WriteAllText(Path.Combine(root, "nextLaunchIsVanilla.txt"), "This file was created by Olympus and will be deleted automatically.");
                         args = "";
                         Console.Error.WriteLine("nextLaunchIsVanilla.txt created");
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e) {
                         Console.Error.WriteLine($"Failed to create nextLaunchIsVanilla.txt: {e}");
                     }
                 }
@@ -78,8 +79,7 @@ namespace Olympus {
 
 #if !WIN32
             if (!isFlatpak) {
-                game.StartInfo.Arguments = $"\"{game.StartInfo.FileName}\" {game.StartInfo.Arguments}";
-                game.StartInfo.FileName = ProcessHelper.CreateNoOutputWrapper(game.StartInfo.Arguments);
+                ProcessHelper.SuppressOutput(game);
             }
 #endif
 

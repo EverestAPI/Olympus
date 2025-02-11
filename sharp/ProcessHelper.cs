@@ -29,7 +29,8 @@ namespace Olympus {
                     err = process.StandardError.ReadToEnd().Trim();
                     return process.StandardOutput.ReadToEnd().Trim();
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
                 Console.Error.WriteLine(e);
                 err = "";
@@ -48,7 +49,8 @@ namespace Olympus {
                     process.WaitForExit(timeout);
                     return result;
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
                 Console.Error.WriteLine(e);
                 err = "";
@@ -69,14 +71,11 @@ namespace Olympus {
         }
 
 #if !WIN32
-        public static string CreateNoOutputWrapper(string commandLine) {
-            string path = Path.Combine(Path.GetTempPath(), "olympus_" + Path.GetRandomFileName() + ".sh");
-            File.WriteAllText(path,
-                "#!/bin/sh\n"
-                + commandLine + " > /dev/null 2>&1\n"
-                + $"rm \"{path}\"");
-            MakeExecutable(path);
-            return path;
+        public static void SuppressOutput(Process process) {
+            string outputSuppresserPath = Path.Combine(Program.RootDirectory, "suppress-output");
+            MakeExecutable(outputSuppresserPath);
+            process.StartInfo.Arguments = $"\"{process.StartInfo.FileName}\" {process.StartInfo.Arguments}";
+            process.StartInfo.FileName = outputSuppresserPath;
         }
 
         public static void MakeExecutable(string fullPath) {

@@ -33,8 +33,7 @@ namespace Olympus {
             loenn.HandleLaunchWrapper("LOENN");
 
 #if !WIN32
-            loenn.StartInfo.Arguments = $"\"{loenn.StartInfo.FileName}\" {loenn.StartInfo.Arguments}";
-            loenn.StartInfo.FileName = ProcessHelper.CreateNoOutputWrapper(loenn.StartInfo.Arguments);
+            ProcessHelper.SuppressOutput(loenn);
 #endif
 
             loenn.Start();
