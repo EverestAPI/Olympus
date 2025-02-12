@@ -33,7 +33,7 @@ namespace Olympus {
             string selfDirectory = Path.GetDirectoryName(selfPath);
             if (string.IsNullOrEmpty(root)) root = Path.GetDirectoryName(selfDirectory);
 
-            if (!File.Exists(Path.Combine(root, "main.exe")) ||
+            if (!File.Exists(Path.Combine(root, "love.exe")) ||
                 !File.Exists(Path.Combine(root, "love.dll")) ||
                 !Directory.Exists(Path.Combine(root, "sharp"))) {
                 if (!quiet)

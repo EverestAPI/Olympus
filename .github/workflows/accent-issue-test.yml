@@ -16,7 +16,7 @@ jobs:
         Invoke-WebRequest -Uri 'https://maddie480.ovh/celeste/download-olympus?branch=main&platform=windows' -OutFile temp.zip
         Expand-Archive -Path temp.zip -DestinationPath .
         Expand-Archive -Path windows.main\dist.zip -DestinationPath olympus-install
-        Remove-Item -Path temp.zip,windows.main,olympus-install\main.exe -Force -Recurse
+        Remove-Item -Path temp.zip,windows.main -Force -Recurse
 
     - name: Install love2d
       run: |
