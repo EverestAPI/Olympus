@@ -296,6 +296,7 @@ steps:
       Remove-Item -Path love/lovec.exe -Force
       Copy-Item -Path icon.ico -Destination love/icon.ico
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
+      echo "love.exe olympus.love" > love/run.bat
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update -ItemType Directory
