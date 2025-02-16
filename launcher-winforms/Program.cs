@@ -13,18 +13,14 @@ namespace Olympus {
     static class Program {
 
         public static string InstallDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Olympus");
-        public static string MainPath = Path.Combine(InstallDir, "main.exe");
+        public static string MainPath = Path.Combine(InstallDir, "love.exe");
         public static string ConfigDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus");
         public static string LogPath = Path.Combine(ConfigDir, "log-launcher.txt");
 
-        public static string[] Args;
-
         [STAThread]
-        static void Main(string[] args) {
+        static void Main() {
             CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
             CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
-
-            Args = args;
 
             if (!Directory.Exists(InstallDir))
                 Directory.CreateDirectory(InstallDir);
@@ -90,11 +86,7 @@ namespace Olympus {
             Process process = new Process();
             process.StartInfo.FileName = MainPath;
             process.StartInfo.WorkingDirectory = InstallDir;
-            process.StartInfo.Arguments = string.Join(" ", Args.Select(arg => {
-                arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1\$0");
-                arg = Regex.Replace(arg, @"^(.*\s.*?)(\\*)$", "\"$1$2$2\"");
-                return arg;
-            }));
+            process.StartInfo.Arguments = "\"" + Path.Combine(Path.GetDirectoryName(MainPath), "olympus.love") + "\"";
             process.Start();
             return true;
         }

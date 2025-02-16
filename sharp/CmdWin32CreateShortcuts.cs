@@ -17,7 +17,9 @@ namespace Olympus {
         public static void CreateShortcut(string exepath, string lnkpath) {
             IShellLink link = (IShellLink) new ShellLink();
             link.SetDescription("Launch Olympus");
-            link.SetPath(exepath);
+            link.SetPath(Path.Combine(Path.GetDirectoryName(exepath), "love.exe"));
+            link.SetArguments("\"" + Path.Combine(Path.GetDirectoryName(exepath), "olympus.love") + "\"");
+            link.SetIconLocation(Path.Combine(Path.GetDirectoryName(exepath), "icon.ico"), 0);
             link.SetWorkingDirectory(Directory.GetParent(exepath).FullName);
             ((IPersistFile) link).Save(lnkpath, false);
         }
