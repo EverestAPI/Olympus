@@ -15,7 +15,20 @@ strategy:
       loveAppImage: ''
       loveBinaryDirectory: ''
       loveResourcesDirectory: ''
-      loveBinary: 'love.exe'
+    windows-split:
+      jobArchName: 'Windows Split'
+      imageName: 'windows-latest'
+      agentArch: 'windows'
+      artifactPrefix: 'windows-split.'
+      artifactSuffix: ''
+      netBuildOS: 'win-x86'
+      lualibs: 'prebuilt'
+      loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-win32.zip'
+      loveLuaURL: 'https://github.com/love2d/love/releases/download/11.3/love-11.3-win32.zip'
+      loveZIP: 'love.zip'
+      loveAppImage: ''
+      loveBinaryDirectory: ''
+      loveResourcesDirectory: ''
     macos:
       jobArchName: 'macOS'
       imageName: 'macOS-latest'
@@ -120,6 +133,14 @@ steps:
     script: |
       luarocks $LUAROCKSPREARGS install --tree=luarocks lsqlite3complete $LUAROCKSARGS
 
+- task: PowerShell@2
+  condition: and(succeeded(), eq(variables.jobArchName, 'Windows Split'), eq(variables.agentArch, 'windows'))
+  displayName: 'Build: Windows Split: Apply patch'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      git apply windows-split.patch
 
 # Build sharp.
 - task: DotNetCoreCLI@2
@@ -209,7 +230,7 @@ steps:
       Copy-Item -Path lovelua/love-11.3-win32/lua51.dll -Destination love-raw/love-11.5-win32/lua51.dll -Force
 # Copy cached unpacked LÖVE, fix it up if needed
 - task: PowerShell@2
-  condition: and(succeeded(), ne(variables.loveURL, ''))
+  condition: and(succeeded(), ne(variables.jobArchName, 'Windows Split'), ne(variables.loveURL, ''))
   displayName: 'Dist: Copy and fix cached LÖVE'
   continueOnError: true
   inputs:
@@ -231,6 +252,20 @@ steps:
           --set-version-string OriginalFilename main.exe `
           --set-version-string ProductName Olympus `
           --set-version-string ProductVersion $env:BUILD_BUILDNUMBER
+      }
+
+- task: PowerShell@2
+  condition: and(succeeded(), eq(variables.jobArchName, 'Windows Split'), ne(variables.loveURL, ''))
+  displayName: 'Dist: Copy cached LÖVE'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Copy-Item -Path love-raw -Destination love -Recurse
+      if (Test-Path -Path love/love-11.5-win32 -PathType Container) {
+        Move-Item -Path love/love-11.5-win32 -Destination love-win
+        Remove-Item -Path love -Force -Recurse
+        Move-Item -Path love-win -Destination love
       }
 
 # Update the version.txt in the src dir based on the build number.
@@ -255,7 +290,7 @@ steps:
       Copy-Item -Path olympus.love -Destination love/$env:LOVEBINARYDIRECTORY/olympus.love
 # Glue it onto the love binary.
 - task: PowerShell@2
-  condition: and(succeeded(), ne(variables.loveBinary, ''))
+  condition: and(succeeded(), ne(variables.jobArchName, 'Windows Split'), ne(variables.loveBinary, ''))
   displayName: 'Dist: Glue olympus.love onto LÖVE'
   continueOnError: true
   inputs:
@@ -307,10 +342,29 @@ steps:
     cleanTargetFolder: false
     overWrite: true
     flattenFolders: true
-
-
+  
+  
 # Per-platform bundling steps.
 # Windows
+- task: PowerShell@2
+  condition: and(succeeded(), eq(variables.jobArchName, 'Windows Split'), eq(variables.agentArch, 'windows'))
+  displayName: 'Dist: Windows Split: Finish'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Copy-Item -Path icon.ico -Destination love/icon.ico
+      echo "love.exe olympus.love" > love/run.bat
+
+- task: PowerShell@2
+  condition: and(succeeded(), ne(variables.jobArchName, 'Windows Split'), eq(variables.agentArch, 'windows'))
+  displayName: 'Dist: Regular Windows: Finish'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      Move-Item -Path love/love.exe -Destination love/main.exe
+      
 - task: PowerShell@2
   condition: and(succeeded(), eq(variables.agentArch, 'windows'))
   displayName: 'Dist: Windows: Finish'
@@ -322,7 +376,6 @@ steps:
       Remove-Item -Path love/game.ico -Force
       Remove-Item -Path love/love.ico -Force
       Remove-Item -Path love/lovec.exe -Force
-      Move-Item -Path love/love.exe -Destination love/main.exe
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory

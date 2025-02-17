@@ -1,0 +1,119 @@
+diff --git a/sharp/CmdRestart.cs b/sharp/CmdRestart.cs
+index bba4774..7fc1bb8 100644
+--- a/sharp/CmdRestart.cs
++++ b/sharp/CmdRestart.cs
+@@ -11,6 +11,10 @@ namespace Olympus {
+ 
+             Process process = new Process();
+ 
++#if WIN32
++            process.StartInfo.Arguments = "\"" + exe + "\"";
++            process.StartInfo.FileName = Path.Combine(Path.GetDirectoryName(exe), "love.exe");
++#else
+             if (Path.GetExtension(exe) == ".love") {
+                 if (File.Exists(Path.ChangeExtension(exe, ".sh")))
+                     exe = Path.ChangeExtension(exe, ".sh");
+@@ -19,6 +23,8 @@ namespace Olympus {
+             }
+ 
+             process.StartInfo.FileName = exe;
++#endif
++
+             Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
+ 
+             Console.Error.WriteLine($"Starting Olympus process: {exe}");
+diff --git a/sharp/CmdWin32AppUninstall.cs b/sharp/CmdWin32AppUninstall.cs
+index fad1788..d7e16fb 100644
+--- a/sharp/CmdWin32AppUninstall.cs
++++ b/sharp/CmdWin32AppUninstall.cs
+@@ -33,7 +33,7 @@ namespace Olympus {
+             string selfDirectory = Path.GetDirectoryName(selfPath);
+             if (string.IsNullOrEmpty(root)) root = Path.GetDirectoryName(selfDirectory);
+ 
+-            if (!File.Exists(Path.Combine(root, "main.exe")) ||
++            if (!File.Exists(Path.Combine(root, "love.exe")) ||
+                 !File.Exists(Path.Combine(root, "love.dll")) ||
+                 !Directory.Exists(Path.Combine(root, "sharp"))) {
+                 if (!quiet)
+diff --git a/sharp/CmdWin32CreateShortcuts.cs b/sharp/CmdWin32CreateShortcuts.cs
+index 7a8eead..0f9d212 100644
+--- a/sharp/CmdWin32CreateShortcuts.cs
++++ b/sharp/CmdWin32CreateShortcuts.cs
+@@ -17,7 +17,9 @@ namespace Olympus {
+         public static void CreateShortcut(string exepath, string lnkpath) {
+             IShellLink link = (IShellLink) new ShellLink();
+             link.SetDescription("Launch Olympus");
+-            link.SetPath(exepath);
++            link.SetPath(Path.Combine(Path.GetDirectoryName(exepath), "love.exe"));
++            link.SetArguments("\"" + Path.Combine(Path.GetDirectoryName(exepath), "olympus.love") + "\"");
++            link.SetIconLocation(Path.Combine(Path.GetDirectoryName(exepath), "icon.ico"), 0);
+             link.SetWorkingDirectory(Directory.GetParent(exepath).FullName);
+             ((IPersistFile) link).Save(lnkpath, false);
+         }
+@@ -53,4 +55,4 @@ namespace Olympus {
+ 
+     }
+ }
+-#endif
+\ No newline at end of file
++#endif
+diff --git a/src/modinstaller.lua b/src/modinstaller.lua
+index 75a14fe..9753279 100644
+--- a/src/modinstaller.lua
++++ b/src/modinstaller.lua
+@@ -16,27 +16,32 @@ function modinstaller.register()
+     local userOS = love.system.getOS()
+ 
+     if userOS == "Windows" then
++        local retval = false
++
+         local exepath = love.filesystem.getSource()
+-        if (exepath:match(".exe$") and
++        if (exepath:match(".love$") and
+             registry.setKey([[HKCU\Software\Classes\Everest\]], "URL:Everest") and
+             registry.setKey([[HKCU\Software\Classes\Everest\URL Protocol]], "") and
+-            registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]], string.format([["%s" "%%1"]], exepath)))
++            registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]],
++                string.format([["%s" "%s" "%%1"]], exepath:gsub("olympus.love$", "love.exe"), exepath)))
+             then
+ 
+             -- While we're here, might as well register the application properly.
+             print("updating installed application listing")
+             sharp.win32AppAdd(exepath, utils.trim(utils.load("version.txt") or "?"))
++            retval = true
++        end
+ 
+-            -- While we're here, might as well create some helpful .lnks
+-            -- INTRODUCED AFTER BUILD 1531
+-            if config.lastrun < 0 or config.lastrun <= 1531 then
+-                print("creating shortcuts", exepath)
+-                sharp.win32CreateShortcuts(exepath)
+-            end
+-
+-            return true
++        -- While we're here, might as well create some helpful .lnks
++        -- Updated on build 4650
++        if config.lastrun <= 4650 then
++            print("creating shortcuts", exepath)
++            sharp.win32CreateShortcuts(exepath)
++            retval = true
+         end
+ 
++        return retval
++
+     elseif userOS == "OS X" then
+         return false
+ 
+diff --git a/src/registry.lua b/src/registry.lua
+index 2b91c83..6749062 100644
+--- a/src/registry.lua
++++ b/src/registry.lua
+@@ -13,7 +13,7 @@ end
+ registry.setKey = registry.setKeySharp
+ 
+ 
+--- Fuck LuaCOM. Besides the fact that it likes to not work at random, it also keeps main.exe alive.
++-- Fuck LuaCOM. Besides the fact that it likes to not work at random, it also keeps love.exe alive.
+ --[[
+ local luacomStatus, luacom = pcall(require, "luacom")
+ if luacomStatus and luacom then
