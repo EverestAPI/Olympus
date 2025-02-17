@@ -11,10 +11,6 @@ namespace Olympus {
 
             Process process = new Process();
 
-#if WIN32
-            process.StartInfo.Arguments = "\"" + exe + "\"";
-            process.StartInfo.FileName = Path.Combine(Path.GetDirectoryName(exe), "love.exe");
-#else
             if (Path.GetExtension(exe) == ".love") {
                 if (File.Exists(Path.ChangeExtension(exe, ".sh")))
                     exe = Path.ChangeExtension(exe, ".sh");
@@ -23,8 +19,6 @@ namespace Olympus {
             }
 
             process.StartInfo.FileName = exe;
-#endif
-
             Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
 
             Console.Error.WriteLine($"Starting Olympus process: {exe}");
