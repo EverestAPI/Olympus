@@ -16,26 +16,31 @@ function modinstaller.register()
     local userOS = love.system.getOS()
 
     if userOS == "Windows" then
+        local retval = false
+
         local exepath = love.filesystem.getSource()
-        if (exepath:match(".exe$") and
+        if (exepath:match(".love$") and
             registry.setKey([[HKCU\Software\Classes\Everest\]], "URL:Everest") and
             registry.setKey([[HKCU\Software\Classes\Everest\URL Protocol]], "") and
-            registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]], string.format([["%s" "%%1"]], exepath)))
+            registry.setKey([[HKCU\Software\Classes\Everest\shell\open\command\]],
+                string.format([["%s" "%s" "%%1"]], exepath:gsub("olympus.love$", "love.exe"), exepath)))
             then
 
             -- While we're here, might as well register the application properly.
             print("updating installed application listing")
             sharp.win32AppAdd(exepath, utils.trim(utils.load("version.txt") or "?"))
-
-            -- While we're here, might as well create some helpful .lnks
-            -- INTRODUCED AFTER BUILD 1531
-            if config.lastrun < 0 or config.lastrun <= 1531 then
-                print("creating shortcuts", exepath)
-                sharp.win32CreateShortcuts(exepath)
-            end
-
-            return true
+            retval = true
         end
+
+        -- While we're here, might as well create some helpful .lnks
+        -- Updated on build 4650
+        if config.lastrun <= 4650 then
+            print("creating shortcuts", exepath)
+            sharp.win32CreateShortcuts(exepath)
+            retval = true
+        end
+
+        return retval
 
     elseif userOS == "OS X" then
         return false

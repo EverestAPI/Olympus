@@ -15,40 +15,6 @@ strategy:
       loveAppImage: ''
       loveBinaryDirectory: ''
       loveResourcesDirectory: ''
-      loveBinary: 'love.exe'
-    macos:
-      jobArchName: 'macOS'
-      imageName: 'macOS-latest'
-      agentArch: 'macOS'
-      artifactPrefix: 'macos.'
-      artifactSuffix: ''
-      netBuildOS: 'osx-x64'
-      lualibs: 'luarocks'
-      luarocksPreArgs: '--lua-dir=/usr/local/opt/lua@5.1'
-      luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua@5.1/lib"'
-      loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-macos.zip'
-      loveLuaURL: ''
-      loveZIP: 'love.zip'
-      loveAppImage: ''
-      loveBinaryDirectory: 'love.app/Contents/MacOS/'
-      loveResourcesDirectory: 'love.app/Contents/Resources/'
-      launcher: ''
-    linux:
-      jobArchName: 'linux'
-      imageName: 'ubuntu-20.04'
-      agentArch: 'linux'
-      artifactPrefix: 'linux.'
-      artifactSuffix: ''
-      netBuildOS: 'linux-x64'
-      lualibs: 'luarocks'
-      luarocksArgs: 'LUA_LIBDIR="/usr/local/opt/lua/lib"'
-      loveURL: 'https://github.com/love2d/love/releases/download/11.5/love-11.5-x86_64.AppImage'
-      loveLuaURL: ''
-      loveZIP: ''
-      loveAppImage: 'love-raw/love'
-      loveBinaryDirectory: ''
-      loveResourcesDirectory: ''
-      launcher: ''
 
 name: '$(Date:yy.MM.dd)$(Rev:.rr)'
 
@@ -207,10 +173,10 @@ steps:
       Invoke-WebRequest -Uri $env:LOVELUAURL -OutFile lovelua.zip
       Expand-Archive -Path lovelua.zip -DestinationPath lovelua
       Copy-Item -Path lovelua/love-11.3-win32/lua51.dll -Destination love-raw/love-11.5-win32/lua51.dll -Force
-# Copy cached unpacked LÖVE, fix it up if needed
+# Copy cached unpacked LÖVE
 - task: PowerShell@2
   condition: and(succeeded(), ne(variables.loveURL, ''))
-  displayName: 'Dist: Copy and fix cached LÖVE'
+  displayName: 'Dist: Copy cached LÖVE'
   continueOnError: true
   inputs:
     targetType: 'inline'
@@ -220,17 +186,6 @@ steps:
         Move-Item -Path love/love-11.5-win32 -Destination love-win
         Remove-Item -Path love -Force -Recurse
         Move-Item -Path love-win -Destination love
-        Invoke-WebRequest -Uri "https://github.com/electron/rcedit/releases/download/v1.1.1/rcedit-x64.exe" -OutFile rcedit.exe
-        ./rcedit.exe love/love.exe `
-          --set-icon icon.ico `
-          --set-version-string Comments $env:BUILD_SOURCEVERSION `
-          --set-version-string CompanyName "Everest Team" `
-          --set-version-string FileDescription Olympus `
-          --set-version-string FileVersion $env:BUILD_BUILDNUMBER `
-          --set-version-string LegalCopyright "See https://github.com/EverestAPI/Olympus/blob/main/LICENSE" `
-          --set-version-string OriginalFilename main.exe `
-          --set-version-string ProductName Olympus `
-          --set-version-string ProductVersion $env:BUILD_BUILDNUMBER
       }
 
 # Update the version.txt in the src dir based on the build number.
@@ -253,22 +208,6 @@ steps:
       Compress-Archive -Path src/* -DestinationPath olympus.zip
       Move-Item -Path olympus.zip -Destination olympus.love
       Copy-Item -Path olympus.love -Destination love/$env:LOVEBINARYDIRECTORY/olympus.love
-# Glue it onto the love binary.
-- task: PowerShell@2
-  condition: and(succeeded(), ne(variables.loveBinary, ''))
-  displayName: 'Dist: Glue olympus.love onto LÖVE'
-  continueOnError: true
-  inputs:
-    targetType: 'inline'
-    script: |
-      if ($PSVersionTable.PSVersion.Major -lt 6) {
-        Get-Content love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY,love/$env:LOVEBINARYDIRECTORY/olympus.love -Encoding Byte -ReadCount 512 | Set-Content love-glued -Encoding Byte
-      } else {
-        Get-Content love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY,love/$env:LOVEBINARYDIRECTORY/olympus.love -AsByteStream -ReadCount 0 | Set-Content love-glued -AsByteStream
-      }
-      Remove-Item -Path love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY -Force
-      Move-Item -Path love-glued -Destination love/$env:LOVEBINARYDIRECTORY/$env:LOVEBINARY
-      Remove-Item -Path love/$env:LOVEBINARYDIRECTORY/olympus.love -Force
 
 # Copy luarocks.
 - task: CopyFiles@2
@@ -322,8 +261,9 @@ steps:
       Remove-Item -Path love/game.ico -Force
       Remove-Item -Path love/love.ico -Force
       Remove-Item -Path love/lovec.exe -Force
-      Move-Item -Path love/love.exe -Destination love/main.exe
+      Copy-Item -Path icon.ico -Destination love/icon.ico
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
+      echo "love.exe olympus.love" > love/run.bat
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/platform-update -ItemType Directory
