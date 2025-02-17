@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Ship unaltered love2d on Windows instead of following the release procedure, since this seems to fix issues for some people
+∙ Revert separation of love.exe and olympus.love on Windows, as this causes issues with updating
