@@ -34,7 +34,11 @@
 - Make sure you cloned the repository with `--recurse-submodules`: `src/luajit-request`, `src/moonshine` and `src/ui` should not be empty.
 - Create a `love` folder in the repository. (`love` is gitignored, so no worries about that :sweat_smile:)
 - Compile the C# part in the `sharp` folder: you can do this with Visual Studio or by running `dotnet build Olympus.Sharp.sln` in the `sharp` folder.
-- Make a symbolic link in `love/sharp` that leads to `sharp/bin/Debug/net452` (or copy-paste the folder :stuck_out_tongue: this is more tedious if you plan to make changes to the C# project, though.)
+  - If on Windows, you may need to adjust the project settings slightly in order for it to run correctly. In Visual Studio, go to `Project > Olympus.Sharp Properties`. Open the Build tab, then in the "Debug Custom symbols" textbox, type `WIN32`, then click Add. Now rebuild the solution (Ctrl+Shift+B).
+  - You can tell if this worked by opening `Program.cs` and seeing that the sections labelled with `#if !WIN32` (note the exclamation mark) are grayed out, as if commented.
+- Make a symbolic link in `love/sharp` that leads to `sharp/bin/Debug/net8.0` (or copy-paste the folder :stuck_out_tongue: this is more tedious if you plan to make changes to the C# project, though.)
+  - If on Windows, you can make this symbolic link in PowerShell. First, run PowerShell as an administrator. Navigate to the `love` folder using `cd`. Run `New-Item -Path sharp -ItemType SymbolicLink -Value <path to net8.0 folder>`, replacing the brackets with the path to `sharp/bin/Debug/net8.0`. You can get this path by Shift+right-clicking on that folder in File Explorer and selecting "Copy as path".
+  - You can tell if this worked by opening the `love` folder in File Explorer, double-clicking on the new `sharp` folder, and seeing that it has the contents of the `net8.0` folder (`MonoMod.dll`, `Olympus.Sharp.exe`, etc.).
 - Download a built Olympus version ([Windows](https://maddie480.ovh/celeste/download-olympus?branch=stable&platform=windows), [Linux](https://maddie480.ovh/celeste/download-olympus?branch=stable&platform=linux)) and extract everything from it, except the `sharp` folder, into `love`.
 - If on Windows, install [LÖVE](https://www.love2d.org/): take the zipped version and extract it in the `love` folder. **Be sure to install the 32-bit version!**
 - Run Olympus by running `debug.bat` on Windows, or by going to the `src` folder and running `../love/love --console .` on Linux.
