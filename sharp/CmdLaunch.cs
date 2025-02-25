@@ -66,7 +66,7 @@ namespace Olympus {
 
             // Flatpak detection
             // or string.Equals(Environment.GetEnvironmentVariable("container"), "flatpak");
-            bool isFlatpak = File.Exists("./flatpak-info");
+            bool isFlatpak = File.Exists("/.flatpak-info");
             if (isFlatpak) {
                 if (!string.IsNullOrEmpty(args))
                     game.StartInfo.Arguments = string.Join(" ", "\"" + game.StartInfo.FileName + "\"", args);
