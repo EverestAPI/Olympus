@@ -30,6 +30,8 @@
   
   <releases>
     <release version="BUILD_VERSION" date="BUILD_DATE"/>
+      <description>BUILD_CHANGELOG</description>
+    </release>
   </releases>
 
   <screenshots>
