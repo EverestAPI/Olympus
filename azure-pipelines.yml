@@ -73,6 +73,7 @@ steps:
       export HOMEBREW_NO_INSTALL_CLEANUP=1
       export HOMEBREW_NO_INSTALL_FROM_API=1
       brew tap homebrew/core
+      curl -o /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/l/lua@5.1.rb https://raw.githubusercontent.com/Homebrew/homebrew-core/d77f96b6eb301c6abf4d5621524e0627e359f6f6/Formula/l/lua%405.1.rb
       sed -i.bak 's/disable/deprecate/' /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core/Formula/l/lua@5.1.rb
       brew install lua lua@5.1 luarocks
 
