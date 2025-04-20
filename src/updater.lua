@@ -29,7 +29,7 @@ if userOS == "Linux" then
     end
 
     -- If the app is flatpak'd then we disable by force the updater
-    if love.filesystem.exists("/.flatpak-info") then
+    if fs.isFile("/.flatpak-info") then
         updater.available = false
     end
 
