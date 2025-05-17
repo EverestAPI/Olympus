@@ -582,6 +582,32 @@ function finder.findRunningInstall(name)
     }
 end
 
+function finder.findEnvironmentInstall()
+    local hints = os.getenv("OLYMPUS_FINDER_HINTS")
+    if hints == nil then
+        return { }
+    end
+    local result = {}
+    for match in hints:gmatch("[^:]+") do
+        if fs.isFile(match) then
+            result[#result + 1] = {
+                type = "manual",
+                path = fs.dirname(match),
+            }
+            print("[finder]", "found " .. fs.dirname(match) .. " from hint")
+        elseif fs.isDirectory(match) then
+            result[#result + 1] = {
+                type = "manual",
+                path = match,
+            }
+            print("[finder]", "found " .. match .. " from hint")
+        else
+            print("[finder]", "warning: " .. match .. " hint entry does not exist")
+        end
+    end
+    return result
+end
+
 
 function finder.fixRoot(root, appname)
     if not root or #root == 0 then
@@ -670,6 +696,7 @@ function finder.findAll(uncached)
         finder.findLutrisInstalls(finder.defaultName),
         finder.findLegendaryInstalls(finder.defaultName),
         finder.findRunningInstall(finder.defaultName),
+        finder.findEnvironmentInstall(),
         finder.findUWPInstalls(finder.defaultUWPName)
     )
 
