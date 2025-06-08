@@ -320,40 +320,26 @@ end
 
 
 local function refreshSubcategories(categoryData)
-    local categoryDataRequests = {}
+    local fullData, msg = threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-subcategories"):result()
 
-    for i, category in ipairs(categoryData) do
-        if category.data.itemtype then
-            -- Fetch the subcategories of each category
-            table.insert(
-                categoryDataRequests,
-                threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-subcategories"
-                    .. "?itemtype=" .. category.data.itemtype
-                    .. (category.data.categoryid and "&categoryId=" .. category.data.categoryid or "")
-                )
-            )
-        end
+    if not fullData then
+        -- Error while calling the API
+        root:addChild(uie.paneled.row({
+            uie.label("Error downloading subcategories list: " .. tostring(msg)),
+        }):with({
+            clip = false,
+            cacheable = false
+        }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
+
+        return false
     end
 
-    local index = 1
     for _, category in ipairs(categoryData) do
         if category.data.itemtype then
-            -- Fetch the subcategory list corresponding to the category
-            data, msg = categoryDataRequests[index]:result()
-            index = index + 1
+            -- the API has subcategories for all categories, by itemtype and categoryid
+            local data = fullData[category.data.itemtype]["" .. (category.data.categoryid or 0)]
 
-            if not data then
-                -- Error while calling the API
-                root:addChild(uie.paneled.row({
-                    uie.label("Error downloading subcategories list: " .. tostring(msg)),
-                }):with({
-                    clip = false,
-                    cacheable = false
-                }):with(uiu.bottombound(16)):with(uiu.rightbound(16)):as("error"))
-
-                return false
-
-            elseif #data > 1 then
+            if #data > 1 then
                 -- Convert the list retrieved from the API to a dropdown option list, and assign it to the category as a submenu
                 local allTypes = {}
                 for _, subcategory in ipairs(data) do

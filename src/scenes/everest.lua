@@ -433,9 +433,6 @@ function scene.load()
 
         if url then
             url = utils.trim(url)
-            if string.match(url, "?") then url = url .. "&" else url = url .. "?" end
-            url = url .. "supportsNativeBuilds=true"
-
             buildsTask = utilsAsync.downloadJSON(url)
         end
 
