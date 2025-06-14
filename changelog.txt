@@ -3,4 +3,6 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
+∙ Linux: fixed Flatpak detection, self-updates should now be disabled properly
+∙ Added possibility to "hint" Olympus on the location of Celeste through an environment variable (OLYMPUS_FINDER_HINTS)
 ∙ Reduced the amount of API calls to maddie480.ovh when loading the GameBanana categories list
