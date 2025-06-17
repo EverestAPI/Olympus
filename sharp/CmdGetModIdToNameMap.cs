@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net;
+using System.Net.Http;
 using System.Text;
 
 namespace Olympus {
@@ -36,8 +36,8 @@ namespace Olympus {
 
             Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from maddie480.ovh");
             map = tryRun(() => {
-                using (HttpWebResponse res = Connect("https://maddie480.ovh/celeste/mod_ids_to_names.json"))
-                using (Stream inputStream = res.GetResponseStream()) {
+                using (HttpClient wc = new HttpClientWithCompressionSupport())
+                using (Stream inputStream = wc.GetAsync("https://maddie480.ovh/celeste/mod_ids_to_names.json").Result.Content.ReadAsStream()) {
                     return getModIDsToNamesMap(inputStream);
                 }
             });

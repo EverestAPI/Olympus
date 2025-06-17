@@ -6,8 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
-using System.Net.Sockets;
+using System.Net.Http;
 
 namespace Olympus {
     public static class Cmds {
@@ -50,6 +49,7 @@ namespace Olympus {
                 new CmdPollWaitBatch(),
                 new CmdRestart(),
                 new CmdScanDragAndDrop(),
+                new CmdSetOlympusVersion(),
                 new CmdStatus(),
                 new CmdUninstallEverest(),
                 new CmdUninstallLoenn(),
@@ -127,50 +127,30 @@ namespace Olympus {
             } while (true);
         }
 
-
-        public static HttpWebResponse Connect(string url) {
-            HttpWebRequest req = (HttpWebRequest) WebRequest.Create(url);
-            req.Timeout = 10000;
-            req.ReadWriteTimeout = 10000;
-            req.UserAgent = "Olympus";
-
-            // disable IPv6 for this request, as it is known to cause "the request has timed out" issues for some users
-            req.ServicePoint.BindIPEndPointDelegate = delegate(ServicePoint servicePoint, IPEndPoint remoteEndPoint, int retryCount) {
-                if (remoteEndPoint.AddressFamily != AddressFamily.InterNetwork) {
-                    throw new InvalidOperationException("no IPv4 address");
-                }
-                return new IPEndPoint(IPAddress.Any, 0);
-            };
-
-            return (HttpWebResponse) req.GetResponse();
-        }
-
         public static IEnumerator Download(string url, long length, Stream copy) {
-            // The following blob of code mostly comes from the old Everest.Installer, which inherited it from the old ETGMod.Installer.
-
             yield return Status($"Downloading {Path.GetFileName(url)}", false, "download", false);
-
             yield return Status("", false, "download", false);
 
             DateTime timeStart = DateTime.Now;
             int pos = 0;
 
-            using (HttpWebResponse res = Connect(url)) {
-                using (Stream input = res.GetResponseStream()) {
+            using (HttpClient client = new HttpClientWithCompressionSupport(enableCompression: false)) {
+                HttpResponseMessage response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
+
+                using (Stream input = response.Content.ReadAsStream()) {
+                    if (length == 0 && response.Content.Headers.TryGetValues("Content-Length", out IEnumerable<string> headers)) {
+                        length = long.Parse(headers.First());
+                    }
+
                     if (length == 0) {
-                        if (input.CanSeek) {
-                            // Mono
-                            length = input.Length;
-                        } else {
-                            // .NET
-                            try {
-                                HttpWebRequest reqHEAD = (HttpWebRequest) WebRequest.Create(url);
-                                reqHEAD.Method = "HEAD";
-                                using (HttpWebResponse resHEAD = (HttpWebResponse) reqHEAD.GetResponse())
-                                    length = resHEAD.ContentLength;
-                            } catch (Exception) {
-                                length = 0;
+                        try {
+                            HttpResponseMessage head = client.Send(new HttpRequestMessage(HttpMethod.Head, url));
+                            if (head.Content.Headers.TryGetValues("Content-Length", out headers)) {
+                                length = long.Parse(headers.First());
                             }
+                        }
+                        catch (Exception) {
+                            length = 0;
                         }
                     }
 

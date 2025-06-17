@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Security.Cryptography;
 
 namespace Olympus {
@@ -193,8 +194,8 @@ namespace Olympus {
 
                 log($"Downloading last versions list from {modUpdaterDatabaseUrl}");
 
-                using (WebClient wc = new WebClient()) {
-                    string yamlData = wc.DownloadString(modUpdaterDatabaseUrl);
+                using (HttpClient wc = new HttpClientWithCompressionSupport()) {
+                    string yamlData = wc.GetStringAsync(modUpdaterDatabaseUrl).Result;
                     updateCatalog = YamlHelper.Deserializer.Deserialize<Dictionary<string, ModUpdateInfo>>(yamlData);
                     foreach (string name in updateCatalog.Keys) {
                         updateCatalog[name] = new ModUpdateInfo {
@@ -252,9 +253,9 @@ namespace Olympus {
         /// This should point to a running instance of https://github.com/maddie480/EverestUpdateCheckerServer.
         /// </summary>
         private static string getModUpdaterDatabaseUrl() {
-            using (WebClient wc = new WebClient()) {
+            using (HttpClient wc = new HttpClientWithCompressionSupport()) {
                 log("Fetching mod updater database URL");
-                return wc.DownloadString("https://everestapi.github.io/modupdater.txt").Trim();
+                return wc.GetStringAsync("https://everestapi.github.io/modupdater.txt").Result.Trim();
             }
         }
     }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.IO;
 using System.IO.Compression;
 using System.Net;
+using System.Net.Http;
 
 namespace Olympus {
     public partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
@@ -58,8 +59,8 @@ namespace Olympus {
 
                 try {
                     byte[] zipData;
-                    using (WebClient wc = new WebClient())
-                        zipData = wc.DownloadData(olympusMetaDownload);
+                    using (HttpClient wc = new HttpClientWithCompressionSupport())
+                        zipData = wc.GetByteArrayAsync(olympusMetaDownload).Result;
                     using (MemoryStream zipStream = new MemoryStream(zipData))
                     using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read)) {
                         using (Stream sizeStream = zip.GetEntry("olympus-meta/size.txt").Open())
