@@ -1,9 +1,7 @@
 ﻿using MonoMod.Utils;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
-using System.IO;
-using System.Net;
+using System.Net.Http;
 
 namespace Olympus {
     public class CmdGetLoennLatestVersion : Cmd<Tuple<string, string>> {
@@ -12,14 +10,9 @@ namespace Olympus {
 
         public override Tuple<string, string> Run() {
             try {
-                HttpWebRequest req = (HttpWebRequest) WebRequest.Create("https://maddie480.ovh/celeste/loenn-versions");
-                req.UserAgent = "Olympus";
-                req.Timeout = 10000;
-                req.ReadWriteTimeout = 10000;
-                using (HttpWebResponse res = (HttpWebResponse) req.GetResponse())
-                using (StreamReader reader = new StreamReader(res.GetResponseStream()))
-                using (JsonTextReader json = new JsonTextReader(reader)) {
-                    JObject latestVersion = (JObject) JToken.ReadFrom(json);
+                using (HttpClient client = new HttpClientWithCompressionSupport()) {
+                    string json = client.GetStringAsync("https://maddie480.ovh/celeste/loenn-versions").Result;
+                    JObject latestVersion = (JObject) JToken.Parse(json);
                     return new Tuple<string, string>((string) latestVersion["tag_name"], GetDownloadLink((JArray) latestVersion["assets"]));
                 }
             } catch (Exception ex) {
