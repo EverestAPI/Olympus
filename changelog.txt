@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Enabled compression and disabled IPv6 on API calls, hopefully fixing connection issues for some users
+∙ Make sure an install is selected if any exists, which should fix the "no Everest button in main menu" bug

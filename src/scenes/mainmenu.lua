@@ -239,6 +239,11 @@ function scene.reloadInstalls(scene, cb)
         threader.wrap("finder").findAll():calls(handleFound)
     end
 
+    if #installs > 0 and config.install > #installs then
+        print("[mainmenu]", "Install is out of bounds (" .. config.install .. " > " .. #installs .. "), resetting to 1!")
+        config.install = 1
+    end
+
     for i = 1, #installs do
         local entry = installs[i]
         local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { index = i, entry = entry, version = "???" })
