@@ -181,7 +181,7 @@ function threadWrap:__update()
             end
 
             self.error = error or rv[2]
-            return nil
+            return rv
         end
     end
 

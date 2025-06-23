@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Make sure an install is selected if any exists, which should fix the "no Everest button in main menu" bug
+∙ Better error reporting instead of "xxx not running!" errors
