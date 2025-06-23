@@ -47,7 +47,7 @@ namespace Olympus {
         };
 
         public HttpClientWithCompressionSupport(bool enableCompression = true) : base(enableCompression ? compressedHandler : regularHandler, disposeHandler: false) {
-            DefaultRequestHeaders.Add("User-Agent", $"Olympus/{Version}");
+            DefaultRequestHeaders.Add("User-Agent", $"Olympus-Sharp/{Version} (+https://github.com/EverestAPI/Olympus)");
         }
     }
 }

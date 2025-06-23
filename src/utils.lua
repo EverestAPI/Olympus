@@ -130,6 +130,8 @@ function utils.load(path)
     return love.filesystem.read(path)
 end
 
+local version = "ERROR"
+
 function utils.download(url, headers)
     ::retry::
     if not request then
@@ -148,7 +150,7 @@ function utils.download(url, headers)
     end
 
     local headersToUse = headers or {
-        ["User-Agent"] = "curl/7.64.1",
+        ["User-Agent"] = "Olympus-Lua/" .. version .. " (+https://github.com/EverestAPI/Olympus)",
         ["Accept"] = "*/*"
     }
 
@@ -281,6 +283,8 @@ end
 function utils.trim(s)
     return s and (s:match("^()%s*$") and "" or s:match("^%s*(.*%S)"))
 end
+
+version = utils.trim(utils.load("version.txt") or "ERROR")
 
 function utils.dateToTimestamp(dateString)
     local pattern = "(%d+)%-(%d+)%-(%d+)T(%d+):(%d+):(%d+.?%d*)Z"

@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added a hidden "Great Firewall Test" screen, to check that all sites used by Olympus are reachable
+∙ Give Olympus (both Sharp and Lua) distinctive user agents for easier identification
