@@ -1,14 +1,12 @@
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
-local scener = require("scener")
 local fs = require("fs")
-local config = require("config")
-local ui, uiu, uie = require("ui").quick()
 local sharp = require("sharp")
 
 local scene = {
-    name = "Great Firewall Test"
+    -- name = "Great Firewall Test"
+    name = "Connectivity Test"
 }
 
 local function buildRow(label, url)
@@ -43,11 +41,11 @@ end
 
 local function loadRows()
     scene.root:findChild("rows").children = {
-        buildRow('Everest website', 'https://everestapi.github.io/everestupdater.txt'),
+        buildRow("Maddie's Random Stuff", 'https://maddie480.ovh/celeste/everest-versions'),
         buildRow('GitHub', 'https://github.com/EverestAPI/Everest/releases'),
         buildRow('Azure Pipelines', 'https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds'),
-        buildRow("Maddie's Random Stuff", 'https://maddie480.ovh/celeste/everest-versions'),
-        buildRow("GameBanana", 'https://gamebanana.com/bitpit/check.txt'),
+        buildRow('Everest Website', 'https://everestapi.github.io/olympusnews/index.txt'),
+        buildRow("GameBanana Files", 'https://files.gamebanana.com/bitpit/check.txt'),
     }
     scene.root:findChild("rows"):layoutChildren()
 end
@@ -56,7 +54,16 @@ function scene.enter()
     local root = uie.column({
         uie.column({
             uie.panel({
-                uie.label("Great Firewall Test", ui.fontBig)
+                uie.column({
+                    uie.label("Connectivity Test", ui.fontBig),
+                    uie.label([[You can use this page to check your connectivity to the various web services Olympus uses.
+If one of the tests fail, the corresponding features in Olympus will probably be unavailable.
+Some of the possible reasons why this might be happening:
+- Your antivirus / firewall is blocking Olympus from accessing the Internet.
+- The service is down or there is a networking issue, try again later.
+- Network filtering is blocking the website, try again on another connection or toggle your VPN.]] ..
+                        (love.system.getOS() == "Windows" and ("\nIf Lua is KO but Sharp is OK, deleting " .. fs.getsrc() .. "\\libcurl.dll might help.") or ""))
+                })
             }):with(uiu.fillWidth),
             uie.row({
                 uie.panel({
@@ -72,11 +79,11 @@ function scene.enter()
                 }),
                 uie.panel({
                     uie.column({
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Everest website:', { 1, 1, 1, 1 }, ' Used for listing Everest versions, and displaying news' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GitHub:', { 1, 1, 1, 1 }, ' Used for downloading stable versions of Everest' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Azure Pipelines:', { 1, 1, 1, 1 }, ' Used for updating Olympus, and downloading non-stable versions of Everest' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, "Maddie's Random Stuff:", { 1, 1, 1, 1 }, ' Used for listing Everest versions, checking for mod updates, and listing mods\nin the \"Download Mods\" section' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GameBanana:', { 1, 1, 1, 1 }, ' Used by default to download mods' })
+                        uie.label({ { 0.5, 0.8, 0.5, 1 }, "Maddie's Random Stuff", { 1, 1, 1, 1 }, ' (maddie480.ovh)\nProvides the Everest versions list, the mod updater, and the "Download Mods" section' }),
+                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GitHub', { 1, 1, 1, 1 }, ' (github.com)\nHosts stable versions of Everest' }),
+                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Azure Pipelines', { 1, 1, 1, 1 }, ' (dev.azure.com)\nHosts Olympus updates, and non-stable versions of Everest' }),
+                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Everest Website', { 1, 1, 1, 1 }, ' (everestapi.github.io)\nProvides Olympus News, displayed on the right side of the main menu' }),
+                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GameBanana Files', { 1, 1, 1, 1 }, ' (files.gamebanana.com)\nHosts all Celeste mods, select a mirror in Options & Updates in case of trouble' })
                     })
                 }):with(uiu.fillWidth(true)),
             }):with(uiu.fillWidth)

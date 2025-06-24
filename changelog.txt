@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Do not load URL to maddie480.ovh from everestapi.github.io for the Everest versions list,
-to help out people that can access the former but not the latter (they do exist)
+∙ Renamed "Great Firewall Test" to "Connectivity Test" and made it accessible from Options & Updates

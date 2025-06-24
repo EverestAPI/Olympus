@@ -393,11 +393,11 @@ local root = uie.column({
 
                     uie.button("Open installation folder", function()
                         utils.openFile(fs.getsrc())
-                    end):with(uiu.fillWidth(4 + 1 / 3)),
+                    end):with(uiu.fillWidth(8 + 1 / 4)),
 
                     uie.button("Open log and config folder", function()
                         utils.openFile(fs.getStorageDir())
-                    end):with(uiu.fillWidth(8 + 1 / 3)):with(uiu.at(4 + 1 / 3)),
+                    end):with(uiu.fillWidth(8 + 1 / 4)):with(uiu.at(1 / 4)),
 
                     uie.button("Download extra data", function()
                         local btns = {}
@@ -470,7 +470,11 @@ local root = uie.column({
                                 })
                             end
                         })
-                    end):with(uiu.fillWidth(4 + 1 / 3)):with(uiu.at(4 + 2 / 3)),
+                    end):with(uiu.fillWidth(8 + 1 / 4)):with(uiu.at(2 / 4)),
+
+                    uie.button("Connectivity Test", function()
+                        scener.push("gfwtest")
+                    end):with(uiu.fillWidth(8 + 1 / 4)):with(uiu.at(3 / 4)),
 
 
                 }):with(uiu.fillWidth),
