@@ -207,7 +207,7 @@ steps:
     script: |
       Invoke-WebRequest -Uri $env:LOVELUAURL -OutFile lovelua.zip
       Expand-Archive -Path lovelua.zip -DestinationPath lovelua
-      Copy-Item -Path lovelua/love-11.3-win32/lua51.dll -Destination love-raw/love-11.5-win32/lua51.dll -Force
+      Copy-Item -Path lovelua/love-11.3-win32/lua51.dll -Destination love-raw/love-11.5-win32/lua51-love11-3.dll -Force
 # Copy cached unpacked LÖVE, fix it up if needed
 - task: PowerShell@2
   condition: and(succeeded(), ne(variables.loveURL, ''))

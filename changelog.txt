@@ -3,8 +3,5 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added a "Connectivity Test" screen, accessible from Options & Updates
-∙ Better error reporting instead of "xxx not running!" errors
-∙ Enabled compression and disabled IPv6 on API calls, hopefully fixing connection issues for some users
-∙ Do not load URL to maddie480.ovh from everestapi.github.io for the Everest versions list
-∙ Make sure an install is selected if any exists, which should fix the "no Everest button in main menu" bug
+∙ Stop force-downgrading lua51.dll to make Olympus *somehow* work for some people on Windows
+(the downgraded DLL will be separately in the package instead if it is needed)
