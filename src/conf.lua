@@ -167,7 +167,9 @@ function love.conf(t)
     config.load()
 
     t.window.title = "Olympus"
-    t.window.icon = "data/icon.png"
+    if love.system.getOS() ~= "OS X" then
+        t.window.icon = "data/icon.png"
+    end
     t.window.width = 1100
     t.window.minwidth = 1100
     t.window.height = 600
