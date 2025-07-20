@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Linux Flatpak: (Hopefully) fix executing Celeste or Everest when their paths has spaces in them
+∙ macOS: Resized app icon to match other Mac apps
