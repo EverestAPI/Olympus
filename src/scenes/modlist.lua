@@ -13,6 +13,7 @@ local scene = {
     name = "Mod Manager",
     modlist = {},
     onlyShowEnabledMods = false,
+    onlyShowIndependentMods = false,
     search = ""
 }
 
@@ -102,6 +103,33 @@ local function writeBlacklist()
     fs.write(fs.joinpath(root, "Mods", "blacklist.txt"), contents)
 end
 
+-- simple "table contains element" function
+local function contains(table, element)
+    for _, value in pairs(table) do
+        if value == element then
+            return true
+        end
+    end
+    return false
+end
+
+-- recursively lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency
+local function findDependenciesToDisableRecursively(info, dependenciesFoundSoFar)
+    for i, mod in ipairs(scene.modlist) do
+        if not mod.info.IsBlacklisted and mod.info.Dependencies then
+            for j, dep in ipairs(mod.info.Dependencies) do
+                if info.Name == dep and not contains(dependenciesFoundSoFar, mod) then
+                    -- add this dependency to the list of mods to disable, and check if we should disable any of the mods depending on it as well
+                    table.insert(dependenciesFoundSoFar, mod)
+                    dependenciesFoundSoFar = findDependenciesToDisableRecursively(mod.info, dependenciesFoundSoFar)
+                end
+            end
+        end
+    end
+
+    return dependenciesFoundSoFar
+end
+
 -- shows or hides mods depending on search and "only show enabled mods" checkbox
 local function refreshVisibleMods()
     local list = root:findChild("mods")
@@ -120,6 +148,13 @@ local function refreshVisibleMods()
                 or string.find(string.lower(fs.filename(mod.info.Path)), scene.search, 1, true)
                 or (mod.info.Name and string.find(string.lower(mod.info.Name), scene.search, 1, true))
                 or (mod.info.GameBananaTitle and string.find(string.lower(mod.info.GameBananaTitle), scene.search, 1, true)))
+
+        if scene.onlyShowIndependentMods then
+            local dependents = findDependenciesToDisableRecursively(mod.info, {})
+            -- a mod is a independent mod if no other mod depends on it
+            local isIndependent = (next(dependents) == nil)
+            newVisible = (newVisible and isIndependent)
+        end
 
         if mod.visible and not newVisible then
             -- remove from list
@@ -197,7 +232,7 @@ local function enableMod(row, info)
         row:findChild("title"):setText(getLabelTextFor(info))
         updateEnabledModCountLabel()
 
-        if scene.onlyShowEnabledMods then
+        if scene.onlyShowEnabledMods or scene.onlyShowIndependentMods then
             refreshVisibleMods()
         end
     end
@@ -211,20 +246,10 @@ local function disableMod(row, info)
         row:findChild("title"):setText(getLabelTextFor(info))
         updateEnabledModCountLabel()
 
-        if scene.onlyShowEnabledMods then
+        if scene.onlyShowEnabledMods or scene.onlyShowIndependentMods then
             refreshVisibleMods()
         end
     end
-end
-
--- simple "table contains element" function
-local function contains(table, element)
-    for _, value in pairs(table) do
-        if value == element then
-            return true
-        end
-    end
-    return false
 end
 
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
@@ -325,23 +350,6 @@ local function checkDisabledDependenciesOfEnabledMod(info, row)
             }
         })
     end
-end
-
--- recursively lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency
-local function findDependenciesToDisableRecursively(info, dependenciesFoundSoFar)
-    for i, mod in ipairs(scene.modlist) do
-        if not mod.info.IsBlacklisted and mod.info.Dependencies then
-            for j, dep in ipairs(mod.info.Dependencies) do
-                if info.Name == dep and not contains(dependenciesFoundSoFar, mod) then
-                    -- add this dependency to the list of mods to disable, and check if we should disable any of the mods depending on it as well
-                    table.insert(dependenciesFoundSoFar, mod)
-                    dependenciesFoundSoFar = findDependenciesToDisableRecursively(mod.info, dependenciesFoundSoFar)
-                end
-            end
-        end
-    end
-
-    return dependenciesFoundSoFar
 end
 
 -- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
@@ -711,6 +719,7 @@ function scene.reload()
 
     scene.modlist = {}
     scene.onlyShowEnabledMods = false
+    scene.onlyShowIndependentMods = false
     scene.search = ""
 
     return threader.routine(function()
@@ -748,19 +757,36 @@ function scene.reload()
                 end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
             }):with(uiu.fillWidth),
             uie.row({
-                uie.button("Open mods folder", function()
-                    utils.openFile(fs.joinpath(root, "Mods"))
-                end),
-                uie.button("Edit blacklist.txt", function()
-                    utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
-                end),
-                uie.button("Mod presets", function()
-                    scene.displayPresetsUI()
-                end),
-                uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
-                    scene.onlyShowEnabledMods = newState
-                    refreshVisibleMods()
-                end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
+                uie.column({
+                    uie.row({
+                        uie.button("Open mods folder", function()
+                            utils.openFile(fs.joinpath(root, "Mods"))
+                        end),
+                        uie.button("Edit blacklist.txt", function()
+                            utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
+                        end),
+                        uie.button("Mod presets", function()
+                            scene.displayPresetsUI()
+                        end)
+                    }),
+                    uie.row({
+                        uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
+                            scene.onlyShowEnabledMods = newState
+                            indepCheckbox = scene.root:findChild("onlyShowIndependentModsCheckbox")
+                            -- if "only show enabled mods" is off, then there is no point in keeping "only show independent mods" on
+                            if newState == false then
+                                scene.onlyShowIndependentMods = false
+                                indepCheckbox:setValue(false)
+                            end
+                            indepCheckbox:setEnabled(newState)
+                            refreshVisibleMods()
+                        end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
+                        uie.checkbox("Only show independent mods", false, function(checkbox, newState)
+                            scene.onlyShowIndependentMods = newState
+                            refreshVisibleMods()
+                        end):with({ enabled = false }):with(verticalCenter):as("onlyShowIndependentModsCheckbox"),
+                    })
+                }),
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button("Enable All", function()
@@ -773,7 +799,7 @@ function scene.reload()
                         disableAllMods()
                         writeBlacklist()
                     end):with({ enabled = false }):as("disableAllButton"),
-                }):with(uiu.rightbound)
+                }):with(uiu.rightbound):with(uiu.bottombound)
             }):with(uiu.fillWidth)
         }):with(uiu.fillWidth))
 
@@ -823,6 +849,7 @@ function scene.reload()
         scene.root:findChild("disableAllButton"):setEnabled(true)
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
+        scene.root:findChild("onlyShowIndependentModsCheckbox"):setEnabled(false)
         searchField:setEnabled(true)
         for i, mod in ipairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
