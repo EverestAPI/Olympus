@@ -34,10 +34,10 @@ namespace Olympus {
                 if (map.Count > 0) return map;
             }
 
-            Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from maddie480.ovh");
+            Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from everestapi.github.io/#");
             map = tryRun(() => {
                 using (HttpClient wc = new HttpClientWithCompressionSupport())
-                using (Stream inputStream = wc.GetAsync("https://maddie480.ovh/celeste/mod_ids_to_names.json").Result.Content.ReadAsStream()) {
+                using (Stream inputStream = wc.GetAsync("https://everestapi.github.io/#/celeste/mod_ids_to_names.json").Result.Content.ReadAsStream()) {
                     return getModIDsToNamesMap(inputStream);
                 }
             });

@@ -41,7 +41,7 @@ end
 
 local function loadRows()
     scene.root:findChild("rows").children = {
-        buildRow("Maddie's Random Stuff", 'https://maddie480.ovh/celeste/everest-versions'),
+        buildRow("Maddie's Random Stuff", 'https://everestapi.github.io/#/celeste/everest-versions'),
         buildRow('GitHub', 'https://github.com/EverestAPI/Everest/releases'),
         buildRow('Azure Pipelines', 'https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds'),
         buildRow('Everest Website', 'https://everestapi.github.io/olympusnews/index.txt'),
@@ -79,7 +79,7 @@ Some of the possible reasons why this might be happening:
                 }),
                 uie.panel({
                     uie.column({
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, "Maddie's Random Stuff", { 1, 1, 1, 1 }, ' (maddie480.ovh)\nProvides the Everest versions list, the mod updater, and the "Download Mods" section' }),
+                        uie.label({ { 0.5, 0.8, 0.5, 1 }, "Maddie's Random Stuff", { 1, 1, 1, 1 }, ' (everestapi.github.io/#)\nProvides the Everest versions list, the mod updater, and the "Download Mods" section' }),
                         uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GitHub', { 1, 1, 1, 1 }, ' (github.com)\nHosts stable versions of Everest' }),
                         uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Azure Pipelines', { 1, 1, 1, 1 }, ' (dev.azure.com)\nHosts Olympus updates, and non-stable versions of Everest' }),
                         uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Everest Website', { 1, 1, 1, 1 }, ' (everestapi.github.io)\nProvides Olympus News, displayed on the right side of the main menu' }),

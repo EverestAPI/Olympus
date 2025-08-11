@@ -11,7 +11,7 @@ namespace Olympus {
         public override Tuple<string, string> Run() {
             try {
                 using (HttpClient client = new HttpClientWithCompressionSupport()) {
-                    string json = client.GetStringAsync("https://maddie480.ovh/celeste/loenn-versions").Result;
+                    string json = client.GetStringAsync("https://everestapi.github.io/#/celeste/loenn-versions").Result;
                     JObject latestVersion = (JObject) JToken.Parse(json);
                     return new Tuple<string, string>((string) latestVersion["tag_name"], GetDownloadLink((JArray) latestVersion["assets"]));
                 }

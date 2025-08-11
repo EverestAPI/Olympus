@@ -320,7 +320,7 @@ end
 
 
 local function refreshSubcategories(categoryData)
-    local fullData, msg = threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-subcategories"):result()
+    local fullData, msg = threader.wrap("utils").downloadYAML("https://everestapi.github.io/#/celeste/gamebanana-subcategories"):result()
 
     if not fullData then
         -- Error while calling the API
@@ -370,7 +370,7 @@ function scene.load()
 
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-categories"):result()
+        local data, msg = threader.wrap("utils").downloadYAML("https://everestapi.github.io/#/celeste/gamebanana-categories"):result()
 
         if not data then
             -- Error while calling the API
@@ -416,7 +416,7 @@ function scene.enter()
 end
 
 function scene.downloadFeaturedEntries()
-    local url = "https://maddie480.ovh/celeste/gamebanana-featured"
+    local url = "https://everestapi.github.io/#/celeste/gamebanana-featured"
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -431,7 +431,7 @@ function scene.downloadFeaturedEntries()
 end
 
 function scene.downloadSearchEntries(query)
-    local url = "https://maddie480.ovh/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
+    local url = "https://everestapi.github.io/#/celeste/gamebanana-search?q=" .. utils.toURLComponent(query)
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -446,7 +446,7 @@ function scene.downloadSearchEntries(query)
 end
 
 function scene.downloadSortedEntries(page, sort, itemtypeFilter)
-    local url = string.format("https://maddie480.ovh/celeste/gamebanana-list?page=%s&sort=%s", page, sort)
+    local url = string.format("https://everestapi.github.io/#/celeste/gamebanana-list?page=%s&sort=%s", page, sort)
 
     -- apply optional filters
     if itemtypeFilter.itemtype then
