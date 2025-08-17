@@ -3,7 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Windows: Stop force-downgrading lua51.dll to make Olympus *somehow* work for some people
-  (the downgraded DLL will be separately in the package instead if it is needed)
-∙ Linux Flatpak: (Hopefully) fix executing Celeste or Everest when their paths has spaces in them
-∙ macOS: Resized app icon to match other Mac apps
+∙ Fixed the Olympus build pipeline on Linux and macOS
