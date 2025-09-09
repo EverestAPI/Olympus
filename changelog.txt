@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Fixed the Olympus build pipeline on Linux and macOS
+∙ Added linux changelog to the metainfo file
