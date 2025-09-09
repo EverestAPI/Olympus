@@ -386,6 +386,7 @@ steps:
     versionSpec: '3.12'
 
 - script: python love/$LOVEBINARYDIRECTORY/generate-changelog.py "love/$LOVEBINARYDIRECTORY/io.github.everestapi.Olympus.metainfo.xml"
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
 
 # Linux
 - task: CmdLine@2
