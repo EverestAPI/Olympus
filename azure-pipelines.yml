@@ -377,6 +377,19 @@ steps:
       zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip *
       popd
 
+# Prepare linux changelog
+- task: UsePythonVersion@0
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
+  displayName: 'Linux: python changelog'
+  continueOnError: true
+  inputs:
+    versionSpec: '3.12'
+
+- script: |
+    python love/$LOVEBINARYDIRECTORY/generate-changelog.py "love/$LOVEBINARYDIRECTORY/io.github.everestapi.Olympus.metainfo.xml"
+    rm love/$LOVEBINARYDIRECTORY/generate-changelog.py
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
+
 # Linux
 - task: CmdLine@2
   condition: and(succeeded(), eq(variables.agentArch, 'linux'))

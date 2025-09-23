@@ -29,7 +29,9 @@
   <launchable type="desktop-id">io.github.everestapi.Olympus.desktop</launchable>
   
   <releases>
-    <release version="BUILD_VERSION" date="BUILD_DATE"/>
+    <release version="BUILD_VERSION" date="BUILD_DATE">
+      <description>BUILD_CHANGELOG</description>
+    </release>
   </releases>
 
   <screenshots>
