@@ -77,6 +77,10 @@ function updater.check(auto)
             return false
         end
         builds = builds.value
+        if not builds then
+            notify("Error downloading builds list: Invalid olympus builds json (missing value property)")
+            return false
+        end
 
         for bi = 1, #builds do
             local build = builds[bi]
