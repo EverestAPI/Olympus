@@ -234,10 +234,10 @@ end
 
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
 local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, message)
-    local modlist = ''
+    local modList = ''
     for _, mod in pairs(dependenciesToToggle) do
-        modlist = modlist
-            .. (modlist == '' and '' or '\n')
+        modList = modList
+            .. (modList == '' and '' or '\n')
             .. '- ' ..
             (
                 (mod.info.GameBananaTitle and mod.info.GameBananaTitle ~= mod.info.Name)
@@ -249,7 +249,7 @@ local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, me
 
     return uie.column({
         uie.label(message),
-        uie.scrollbox(uie.label(modlist))
+        uie.scrollbox(uie.label(modList))
             :with(uiu.hook({
                 calcSize = function (orig, self, width, height)
                     uie.group.calcSize(self)
