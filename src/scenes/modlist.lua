@@ -12,7 +12,7 @@ local modupdater = require("modupdater")
 local scene = {
     name = "Mod Manager",
     -- mod name -> mod object { info = modinfo, row = uirow, visible = bool }
-    modList = {},
+    modlist = {},
     -- mod name -> list of mod names that this mod depends on
     modDependencies = {},
     -- mod name -> list of mod names that depend on this mod
@@ -72,7 +72,7 @@ scene.root = root
 
 -- finds a mod from modlist by its path
 local function findModByPath(path)
-    for modName, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         if mod.info.Path == path then
             return mod
         end
@@ -96,7 +96,7 @@ end
 local function writeBlacklist()
     local contents = "# This is the blacklist. Lines starting with # are ignored.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n"
 
-    for modName, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             contents = contents .. "# "
         end
@@ -113,7 +113,7 @@ local function refreshVisibleMods()
 
     local modIndex = 3 -- the 2 first elements are the header, and the search field
 
-    for modName, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
         local newVisible =
             -- only show enabled mods
@@ -147,7 +147,7 @@ end
 local function updateEnabledModCountLabel()
     local enabledModCount = 0
 
-    for modName, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             enabledModCount = enabledModCount + 1
         end
@@ -234,10 +234,10 @@ end
 
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
 local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, message)
-    local modList = ''
+    local modlist = ''
     for _, mod in pairs(dependenciesToToggle) do
-        modList = modList
-            .. (modList == '' and '' or '\n')
+        modlist = modlist
+            .. (modlist == '' and '' or '\n')
             .. '- ' ..
             (
                 (mod.info.GameBananaTitle and mod.info.GameBananaTitle ~= mod.info.Name)
@@ -249,7 +249,7 @@ local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, me
 
     return uie.column({
         uie.label(message),
-        uie.scrollbox(uie.label(modList))
+        uie.scrollbox(uie.label(modlist))
             :with(uiu.hook({
                 calcSize = function (orig, self, width, height)
                     uie.group.calcSize(self)
@@ -275,7 +275,7 @@ local function findDependenciesToEnable(mod)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modList[depName]
+        local dep = scene.modlist[depName]
         if dep ~= nil then
             if dep.info.IsBlacklisted and dependenciesToEnable[depName] == nil then
                 dependenciesToEnable[depName] = dep
@@ -359,7 +359,7 @@ local function findDependentsToDisable(mod)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modList[depName]
+        local dep = scene.modlist[depName]
         if not dep.info.IsBlacklisted and dependentsToDisable[depName] == nil then
             dependentsToDisable[depName] = dep
         end
@@ -391,7 +391,7 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modList[depName]
+        local dep = scene.modlist[depName]
         if dep ~= nil and not dep.info.IsBlacklisted and dependenciesThatCanBeDisabled[depName] == nil then
             local enabledDependents = findDependentsToDisable(dep)
             if next(enabledDependents) == nil then
@@ -497,7 +497,7 @@ end
 
 -- called whenever a mod is enabled or disabled
 local function toggleMod(info, newState)
-    local mod = scene.modList[info.Name]
+    local mod = scene.modlist[info.Name]
     if newState then
         enableMod(mod)
         writeBlacklist()
@@ -528,14 +528,14 @@ end
 
 -- loops through modlist and calls enableMod() on every mod
 local function enableAllMods()
-    for _, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         enableMod(mod)
     end
 end
 
 -- loops through modlist and calls disableMod() on every mod
 local function disableAllMods()
-    for _, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         disableMod(mod)
     end
 end
@@ -650,7 +650,7 @@ local function addPreset(name)
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
     contents = contents .. "**" .. name .. "\n"
 
-    for _, mod in pairs(scene.modList) do
+    for _, mod in pairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             contents = contents .. fs.filename(mod.info.Path) .. "\n"
         end
@@ -818,7 +818,7 @@ function scene.reload()
     local loadingID = scene.loadingID + 1
     scene.loadingID = loadingID
 
-    scene.modList = {}
+    scene.modlist = {}
     scene.modDependencies = {}
     scene.modDependents = {}
     scene.onlyShowEnabledMods = false
@@ -913,7 +913,7 @@ function scene.reload()
                     end
                     local row = scene.item(info)
                     list:addChild(row)
-                    scene.modList[info.Name] = { info = info, row = row, visible = true }
+                    scene.modlist[info.Name] = { info = info, row = row, visible = true }
                     if scene.modDependencies[info.Name] == nil then
                         scene.modDependencies[info.Name] = {}
                     end
@@ -943,7 +943,7 @@ function scene.reload()
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
-        for _, mod in pairs(scene.modList) do
+        for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
         end
 
