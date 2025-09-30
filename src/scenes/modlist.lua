@@ -262,16 +262,22 @@ end
 -- lists all dependencies of the given mod that should be enabled for this mod to work
 -- returns a table of dependency name -> mod object
 local function findDependenciesToEnable(mod)
-    local modName = mod.info.Name
-    local queue = {mod.info.Name}
-    local tried = {[mod.info.Name] = true}
+    local queue = {}
+    local tried = {}
     local dependenciesToEnable = {}
+
+    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
+        if not tried[depName] then
+            tried[depName] = true
+            table.insert(queue, depName)
+        end
+    end
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modList[depName]
         if dep ~= nil then
-            if dep.info.IsBlacklisted and depName ~= modName and dependenciesToEnable[depName] == nil then
+            if dep.info.IsBlacklisted and dependenciesToEnable[depName] == nil then
                 dependenciesToEnable[depName] = dep
             end
             for _, subdep in ipairs(scene.modDependencies[dep.info.Name] or {}) do
@@ -340,22 +346,101 @@ end
 -- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency
 -- returns a table of dependent name -> mod object
 local function findDependentsToDisable(mod)
-    local modName = mod.info.Name
-    local queue = {mod.info.Name}
+    local queue = {}
+    local tried = {}
     local dependentsToDisable = {}
+
+    for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
+        if not tried[depName] then
+            tried[depName] = true
+            table.insert(queue, depName)
+        end
+    end
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modList[depName]
-        if not dep.info.IsBlacklisted and depName ~= modName and dependentsToDisable[depName] == nil then
+        if not dep.info.IsBlacklisted and dependentsToDisable[depName] == nil then
             dependentsToDisable[depName] = dep
         end
         for _, subdep in ipairs(scene.modDependents[dep.info.Name] or {}) do
-            table.insert(queue, subdep)
+            if not tried[subdep] then
+                tried[subdep] = true
+                table.insert(queue, subdep)
+            end
         end
     end
     
     return dependentsToDisable
+end
+
+-- lists all dependencies of the given mods that can be disabled because no enabled mod depends on them anymore
+local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
+    local queue = {}
+    local tried = {}
+    local dependenciesThatCanBeDisabled = {}
+
+    for modName, _ in pairs(newlyDisabledMods) do
+        for _, subdep in ipairs(scene.modDependencies[modName] or {}) do
+            if not tried[subdep] then
+                tried[subdep] = true
+                table.insert(queue, subdep)
+            end
+        end
+    end
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local dep = scene.modList[depName]
+        if dep ~= nil and not dep.info.IsBlacklisted and dependenciesThatCanBeDisabled[depName] == nil then
+            local enabledDependents = findDependentsToDisable(dep)
+            if next(enabledDependents) == nil then
+                dependenciesThatCanBeDisabled[depName] = dep
+                for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
+                    if not tried[subdep] then
+                        tried[subdep] = true
+                        table.insert(queue, subdep)
+                    end
+                end
+            end
+        end
+    end
+
+    return dependenciesThatCanBeDisabled
+end
+
+-- checks whether enabled mods that were dependencies of now-disabled mods can be disabled as well, and prompts to disable them if so
+local function checkEnabledModsDependingOnDisabledMods(newlyDisabledMods)
+    local dependenciesThatCanBeDisabled = findDependenciesThatCanBeDisabled(newlyDisabledMods)
+    local numDependencies = dictLength(dependenciesThatCanBeDisabled)
+
+    if next(dependenciesThatCanBeDisabled) ~= nil then
+        alert({
+            body = getConfirmationMessageBodyForModToggling(dependenciesThatCanBeDisabled, string.format(
+                "%s other %s no longer required for any enabled mod.\nDo you want to disable %s as well?",
+                numDependencies,
+                numDependencies == 1 and "mod is" or "mods are",
+                numDependencies == 1 and "it" or "them"
+            )),
+            buttons = {
+                {
+                    "Yes",
+                    function(container)
+                        -- disable them all!
+                        for _, depToToggle in pairs(dependenciesThatCanBeDisabled) do
+                            disableMod(depToToggle)
+                        end
+
+                        writeBlacklist()
+                        container:close()
+                    end
+                },
+                {
+                    "No"
+                }
+            }
+        })
+    end
 end
 
 -- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
@@ -382,10 +467,17 @@ local function checkEnabledModsDependingOnDisabledMod(mod)
 
                         writeBlacklist()
                         container:close()
+
+                        dependenciesToToggle[mod.info.Name] = mod
+                        checkEnabledModsDependingOnDisabledMods(dependenciesToToggle)
                     end
                 },
                 {
-                    "No"
+                    "No",
+                    function(container)
+                        container:close()
+                        checkEnabledModsDependingOnDisabledMods({[mod.info.Name] = mod})
+                    end
                 },
                 {
                     "Cancel",
@@ -398,6 +490,8 @@ local function checkEnabledModsDependingOnDisabledMod(mod)
                 }
             }
         })
+    else
+        checkEnabledModsDependingOnDisabledMods({[mod.info.Name] = mod})
     end
 end
 
@@ -464,7 +558,7 @@ local function applyPreset(name, disableAll)
         local path = fs.joinpath(root, "Mods", filename)
         local mod = findModByPath(path)
         if mod ~= nil then
-            enableMod(mod.row, mod.info)
+            enableMod(mod)
         else
             if missingMods ~= "" then
                 missingMods = missingMods .. ", "
