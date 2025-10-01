@@ -17,6 +17,8 @@ local scene = {
     modDependencies = {},
     -- mod name -> list of mod names that depend on this mod
     modDependents = {},
+    -- mod path -> mod name
+    modPathToName = {},
     onlyShowEnabledMods = false,
     search = ""
 }
@@ -72,10 +74,9 @@ scene.root = root
 
 -- finds a mod from modlist by its path
 local function findModByPath(path)
-    for _, mod in pairs(scene.modlist) do
-        if mod.info.Path == path then
-            return mod
-        end
+    local modName = scene.modPathToName[path]
+    if modName then
+        return scene.modlist[modName]
     end
     return nil
 end
@@ -758,6 +759,121 @@ function scene.displayPresetsUI()
     }):as("modPresets")
 end
 
+
+-- reads olympusfavorites.txt and returns a list of all favorite mod names
+-- if olympusfavorites.txt doesn't exist, it creates it and returns an empty list
+local function readFavoritesList()
+    local root = config.installs[config.install].path
+    local contents = fs.read(fs.joinpath(root, "Mods", "olympusfavorites.txt"))
+
+    if contents ~= nil then
+        local modNames = {}
+        for line in contents:gmatch("[^\r\n]+") do
+            if line ~= "" and not line:find("^#") then
+                table.insert(modNames, line)
+            end
+        end
+        return modNames
+    else -- create olympusfavorites.txt if it doesnt exist
+        local content = [[
+# This is the file used to save favorite mods in Olympus (NOT Everest). Edit at your own risk.
+# File generated through the "Manage Installed Mods" > "Favorites" screen in Olympus
+
+]]
+        fs.write(fs.joinpath(root, "Mods", "olympusfavorites.txt"), content)
+        return {}
+    end
+end
+
+
+-- builds the Favorites screen and returns it, use scene.displayFavoritesUI() to show it
+local function buildFavoritesUI()
+    -- TODO: complete
+    local favorites = readFavoritesList()
+    local favoritesRow = {}
+    local favorite = ""
+
+    for i = 1, #favorites do
+        if favorites ~= nil then
+            local presetRow = uie.paneled.row({
+                uie.label(favorites[i]):with(verticalCenter),
+                uie.row({
+                    uie.button("Add", function(self)
+                        applyPreset(favorites[i], false)
+                    end),
+                    uie.button("Replace", function(self)
+                        applyPreset(favorites[i], true)
+                    end),
+                    uie.button("Delete", function(self)
+                        alert({
+                            body = [[
+    Are you sure that you want to delete ]] .. favorites[i] .. [[?]],
+                            buttons = {
+                                {
+                                    "Delete",
+                                    function(container)
+                                        deletePreset(favorites[i])
+                                        container:close("OK")
+                                        self:getParent("favorites"):close("OK")
+                                        scene.displayPresetsUI()
+                                    end
+                                },
+                                { "Keep" }
+                            }
+                        })
+                    end)
+                }):with(uiu.rightbound)
+        }):with(uiu.fillWidth)
+            presetsRow[#presetsRow + 1] = presetRow
+
+        end
+    end
+
+    return uie.column({
+        uie.paneled.row({
+            uie.button("Edit olympusfavorites.txt", function()
+                local root = config.installs[config.install].path
+                utils.openFile(fs.joinpath(root, "Mods", "olympusfavorites.txt"))
+            end),
+            uie.row({
+                presetField,
+                uie.button("Add preset", function(self)
+                    local success = addPreset(preset)
+                    if success then
+                        self:getParent("favorites"):close("OK")
+                        scene.displayPresetsUI()
+                    end
+                end)
+            }):with(uiu.rightbound)
+        }):with(uiu.fillWidth),
+        uie.scrollbox(
+            uie.column(presetsRow):with(uiu.fillWidth)
+        ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+
+    }):with({
+        clip = false,
+        cacheable = false
+    }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+end
+
+-- shows the Favorites screen
+function scene.displayFavoritesUI()
+    alert({
+        title = "Favorites",
+        body = buildFavoritesUI(),
+        big = true,
+        buttons = {
+            {
+                "Close"
+            }
+        },
+        init = function (container)
+            container.popup = false
+        end
+
+    }):as("favorites")
+end
+
 function scene.item(info)
     if not info then
         return nil
@@ -821,6 +937,7 @@ function scene.reload()
     scene.modlist = {}
     scene.modDependencies = {}
     scene.modDependents = {}
+    scene.modPathToName = {}
     scene.onlyShowEnabledMods = false
     scene.search = ""
 
@@ -868,6 +985,9 @@ function scene.reload()
                 uie.button("Mod presets", function()
                     scene.displayPresetsUI()
                 end),
+                uie.button("Favorites", function()
+                    scene.displayFavoritesUI()
+                end),
                 uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
@@ -914,6 +1034,7 @@ function scene.reload()
                     local row = scene.item(info)
                     list:addChild(row)
                     scene.modlist[info.Name] = { info = info, row = row, visible = true }
+                    scene.modPathToName[info.Path] = info.Name
                     if scene.modDependencies[info.Name] == nil then
                         scene.modDependencies[info.Name] = {}
                     end
