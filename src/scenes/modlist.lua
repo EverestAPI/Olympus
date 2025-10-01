@@ -17,7 +17,10 @@ local scene = {
     modDependencies = {},
     -- mod name -> list of mod names that depend on this mod
     modDependents = {},
+    -- mod path -> mod name
+    modPathToName = {},
     onlyShowEnabledMods = false,
+    onlyShowFavoriteMods = false,
     search = ""
 }
 
@@ -72,10 +75,9 @@ scene.root = root
 
 -- finds a mod from modlist by its path
 local function findModByPath(path)
-    for _, mod in pairs(scene.modlist) do
-        if mod.info.Path == path then
-            return mod
-        end
+    local modName = scene.modPathToName[path]
+    if modName then
+        return scene.modlist[modName]
     end
     return nil
 end
@@ -107,6 +109,20 @@ local function writeBlacklist()
     fs.write(fs.joinpath(root, "Mods", "blacklist.txt"), contents)
 end
 
+-- writes the favorites to disk
+local function writeFavorites()
+    local contents = "# This is the favorite list. Lines starting with # are ignored.\n\n"
+
+    for _, mod in pairs(scene.modlist) do
+        if mod.isFavorite then
+            contents = contents .. fs.filename(mod.info.Path) .. "\n"
+        end
+    end
+
+    local root = config.installs[config.install].path
+    fs.write(fs.joinpath(root, "Mods", "favorites.txt"), contents)
+end
+
 -- shows or hides mods depending on search and "only show enabled mods" checkbox
 local function refreshVisibleMods()
     local list = root:findChild("mods")
@@ -119,6 +135,10 @@ local function refreshVisibleMods()
             -- only show enabled mods
             (not scene.onlyShowEnabledMods
                 or not mod.info.IsBlacklisted)
+            and
+            -- only show favorite mods
+            (not scene.onlyShowFavoriteMods
+                or mod.isFavorite)
             and
             -- search terms
             (scene.search == ""
@@ -509,6 +529,17 @@ local function toggleMod(info, newState)
     end
 end
 
+local function toggleFavorite(info, newState)
+    local mod = scene.modlist[info.Name]
+    if mod.isFavorite ~= newState then
+        mod.isFavorite = newState
+        writeFavorites()
+        if scene.onlyShowFavoriteMods then
+            refreshVisibleMods()
+        end
+    end
+end
+
 -- method to be used in :with(...) in order to center an item vertically
 local function verticalCenter(el)
     return uiu.hook(el, {
@@ -758,7 +789,32 @@ function scene.displayPresetsUI()
     }):as("modPresets")
 end
 
-function scene.item(info)
+
+-- reads favorites.txt and returns a list of all favorite mod paths
+-- if favorites.txt doesn't exist, it creates it and returns an empty list
+local function readFavoritesList()
+    local root = config.installs[config.install].path
+    local contents = fs.read(fs.joinpath(root, "Mods", "favorites.txt"))
+
+    if contents ~= nil then
+        local modPaths = {}
+        for line in contents:gmatch("[^\r\n]+") do
+            local trimmed = line:match("^%s*(.-)%s*$") -- trim whitespace
+            if trimmed ~= "" and not trimmed:find("^#") then
+                local path = fs.joinpath(root, "Mods", trimmed)
+                modPaths[path] = true
+            end
+        end
+        return modPaths
+    else -- create favorites.txt if it doesnt exist
+        local content = "# This is the favorite list. Lines starting with # are ignored.\n\n"
+        fs.write(fs.joinpath(root, "Mods", "favorites.txt"), content)
+        return {}
+    end
+end
+
+
+function scene.item(info, isFavorite)
     if not info then
         return nil
     end
@@ -767,6 +823,18 @@ function scene.item(info)
         uie.label(getLabelTextFor(info)):as("title"),
 
         uie.row({
+            uie.checkbox("Favorite", isFavorite, function(checkbox, newState)
+                toggleFavorite(info, newState)
+            end)
+                :with(verticalCenter)
+                :with({
+                    enabled = false,
+                    style = {
+                        padding = 8
+                    }
+                })
+                :as("favoriteCheckbox"),
+
             uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox, newState)
                 toggleMod(info, newState)
             end)
@@ -821,7 +889,9 @@ function scene.reload()
     scene.modlist = {}
     scene.modDependencies = {}
     scene.modDependents = {}
+    scene.modPathToName = {}
     scene.onlyShowEnabledMods = false
+    scene.onlyShowFavoriteMods = false
     scene.search = ""
 
     return threader.routine(function()
@@ -872,6 +942,10 @@ function scene.reload()
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
+                uie.checkbox("Only show favorite mods", false, function(checkbox, newState)
+                    scene.onlyShowFavoriteMods = newState
+                    refreshVisibleMods()
+                end):with({ enabled = false }):with(verticalCenter):as("onlyShowFavoriteModsCheckbox"),
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button("Enable All", function()
@@ -895,6 +969,8 @@ function scene.reload()
         }):with(uiu.fillWidth)
         list:addChild(searchField)
 
+        local favoritePaths = readFavoritesList()
+
         -- parameters: string root, bool readYamls, bool computeHashes, bool onlyUpdatable, bool excludeDisabled
         local task = sharp.modlist(root, true, false, false, false):result()
 
@@ -911,9 +987,19 @@ function scene.reload()
                     if scene.loadingID ~= loadingID then
                         break
                     end
-                    local row = scene.item(info)
+                    
+                    local isFavorite = false
+                    -- print("|", info.Path, "|")
+                    if favoritePaths[info.Path] then
+                        print("favorite found in load!", info.Path)
+                        isFavorite = true
+                    end
+
+                    local row = scene.item(info, isFavorite)
                     list:addChild(row)
-                    scene.modlist[info.Name] = { info = info, row = row, visible = true }
+
+                    scene.modlist[info.Name] = { info = info, row = row, visible = true, isFavorite = isFavorite }
+                    scene.modPathToName[info.Path] = info.Name
                     if scene.modDependencies[info.Name] == nil then
                         scene.modDependencies[info.Name] = {}
                     end
@@ -942,9 +1028,11 @@ function scene.reload()
         scene.root:findChild("disableAllButton"):setEnabled(true)
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
+        scene.root:findChild("onlyShowFavoriteModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
         for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
+            mod.row:findChild("favoriteCheckbox"):setEnabled(true)
         end
 
         updateEnabledModCountLabel()
