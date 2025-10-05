@@ -79,7 +79,6 @@ local function findModByPath(path)
     if modName then
         return scene.modlist[modName]
     end
-    end
     return nil
 end
 
@@ -364,7 +363,7 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
     end
 end
 
--- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency
+-- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency, excluding favorites
 -- returns a table of dependent name -> mod object
 local function findDependentsToDisable(mod)
     local queue = {}
@@ -381,7 +380,7 @@ local function findDependentsToDisable(mod)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if not dep.info.IsBlacklisted and dependentsToDisable[depName] == nil then
+        if not dep.info.IsBlacklisted and not dep.isFavorite and dependentsToDisable[depName] == nil then
             dependentsToDisable[depName] = dep
         end
         for _, subdep in ipairs(scene.modDependents[dep.info.Name] or {}) do
@@ -395,7 +394,7 @@ local function findDependentsToDisable(mod)
     return dependentsToDisable
 end
 
--- lists all dependencies of the given mods that can be disabled because no enabled mod depends on them anymore
+-- lists all dependencies of the given mods that can be disabled because no enabled mod depends on them anymore, excluding favorites
 local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
     local queue = {}
     local tried = {}
@@ -413,7 +412,7 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if dep ~= nil and not dep.info.IsBlacklisted and dependenciesThatCanBeDisabled[depName] == nil then
+        if dep ~= nil and not dep.info.IsBlacklisted and not dep.isFavorite and dependenciesThatCanBeDisabled[depName] == nil then
             local enabledDependents = findDependentsToDisable(dep)
             if next(enabledDependents) == nil then
                 dependenciesThatCanBeDisabled[depName] = dep
@@ -431,7 +430,7 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
 end
 
 -- checks whether enabled mods that were dependencies of now-disabled mods can be disabled as well, and prompts to disable them if so
-local function checkEnabledModsDependingOnDisabledMods(newlyDisabledMods)
+local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
     local dependenciesThatCanBeDisabled = findDependenciesThatCanBeDisabled(newlyDisabledMods)
     local numDependencies = dictLength(dependenciesThatCanBeDisabled)
 
@@ -490,14 +489,14 @@ local function checkEnabledModsDependingOnDisabledMod(mod)
                         container:close()
 
                         dependenciesToToggle[mod.info.Name] = mod
-                        checkEnabledModsDependingOnDisabledMods(dependenciesToToggle)
+                        checkEnabledDependenciesOfDisabledMods(dependenciesToToggle)
                     end
                 },
                 {
                     "No",
                     function(container)
                         container:close()
-                        checkEnabledModsDependingOnDisabledMods({[mod.info.Name] = mod})
+                        checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
                     end
                 },
                 {
@@ -512,7 +511,7 @@ local function checkEnabledModsDependingOnDisabledMod(mod)
             }
         })
     else
-        checkEnabledModsDependingOnDisabledMods({[mod.info.Name] = mod})
+        checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
     end
 end
 
@@ -810,7 +809,7 @@ local function readFavoritesList()
         return {}
     end
 end
-function scene.item(info)
+
 function scene.item(info)
     if not info then
         return nil
@@ -934,9 +933,6 @@ function scene.reload()
                 end),
                 uie.button("Mod presets", function()
                     scene.displayPresetsUI()
-                end),
-                uie.button("Favorites", function()
-                    scene.displayFavoritesUI()
                 end),
                 uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
