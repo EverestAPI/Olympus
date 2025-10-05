@@ -679,39 +679,36 @@ local function buildPresetsUI()
     }):as("presetField")
 
     for i = 1, #presets do
-        if presets ~= nil then
-            local presetRow = uie.paneled.row({
-                uie.label(presets[i]):with(verticalCenter),
-                uie.row({
-                    uie.button("Add", function(self)
-                        applyPreset(presets[i], false)
-                    end),
-                    uie.button("Replace", function(self)
-                        applyPreset(presets[i], true)
-                    end),
-                    uie.button("Delete", function(self)
-                        alert({
-                            body = [[
-    Are you sure that you want to delete ]] .. presets[i] .. [[?]],
-                            buttons = {
-                                {
-                                    "Delete",
-                                    function(container)
-                                        deletePreset(presets[i])
-                                        container:close("OK")
-                                        self:getParent("modPresets"):close("OK")
-                                        scene.displayPresetsUI()
-                                    end
-                                },
-                                { "Keep" }
-                            }
-                        })
-                    end)
-                }):with(uiu.rightbound)
+        local presetRow = uie.paneled.row({
+            uie.label(presets[i]):with(verticalCenter),
+            uie.row({
+                uie.button("Add", function(self)
+                    applyPreset(presets[i], false)
+                end),
+                uie.button("Replace", function(self)
+                    applyPreset(presets[i], true)
+                end),
+                uie.button("Delete", function(self)
+                    alert({
+                        body = [[
+Are you sure that you want to delete ]] .. presets[i] .. [[?]],
+                        buttons = {
+                            {
+                                "Delete",
+                                function(container)
+                                    deletePreset(presets[i])
+                                    container:close("OK")
+                                    self:getParent("modPresets"):close("OK")
+                                    scene.displayPresetsUI()
+                                end
+                            },
+                            { "Keep" }
+                        }
+                    })
+                end)
+            }):with(uiu.rightbound)
         }):with(uiu.fillWidth)
-            presetsRow[#presetsRow + 1] = presetRow
-
-        end
+        presetsRow[#presetsRow + 1] = presetRow
     end
 
     return uie.column({

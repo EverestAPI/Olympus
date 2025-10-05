@@ -3,4 +3,7 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ macOS: Resized app icon to match other Mac apps
+∙ Handle invalid server responses from Azure when checking for Olympus updates
+∙ Support the arm64 architecture (alias of arm)
+∙ Linux: Added changelog to the Flatpak metadata file
+∙ Minor tweak in the code for mod presets
