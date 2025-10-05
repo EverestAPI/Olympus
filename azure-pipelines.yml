@@ -119,7 +119,7 @@ steps:
   displayName: 'Build: luarocks: install lsqlite3complete'
   inputs:
     script: |
-      luarocks $LUAROCKSPREARGS install --tree=luarocks lsqlite3complete $LUAROCKSARGS
+      luarocks $LUAROCKSPREARGS install --tree=luarocks https://raw.githubusercontent.com/EverestAPI/Olympus/refs/heads/main/luarocks/lsqlite3/lsqlite3complete-0.9.6-1.rockspec $LUAROCKSARGS
 
 
 # Build sharp.
@@ -376,6 +376,19 @@ steps:
       mkdir $BUILD_ARTIFACTSTAGINGDIRECTORY/main
       zip --symlinks -r $BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip *
       popd
+
+# Prepare linux changelog
+- task: UsePythonVersion@0
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
+  displayName: 'Linux: python changelog'
+  continueOnError: true
+  inputs:
+    versionSpec: '3.12'
+
+- script: |
+    python love/$LOVEBINARYDIRECTORY/generate-changelog.py "love/$LOVEBINARYDIRECTORY/io.github.everestapi.Olympus.metainfo.xml"
+    rm love/$LOVEBINARYDIRECTORY/generate-changelog.py
+  condition: and(succeeded(), eq(variables.agentArch, 'linux'))
 
 # Linux
 - task: CmdLine@2
