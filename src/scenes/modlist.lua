@@ -114,7 +114,7 @@ local function writeFavorites()
     local contents = "# This is the favorite list. Lines starting with # are ignored.\n\n"
 
     for _, mod in pairs(scene.modlist) do
-        if mod.info.IsFavorite then
+        if mod.row:findChild("favoriteCheckbox"):getValue() then
             contents = contents .. fs.filename(mod.info.Path) .. "\n"
         end
     end
@@ -182,16 +182,32 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    local disabledColor = { 1, 1, 1, 0.5 }
-    local enabledColor = { 1, 1, 1, 1 }
-    local favoriteColor = { 1, 0.08, 0.6, 1 }
-    local disabledFavoriteColor = { 1, 0.08, 0.6, 0.5 }
+    -- colors calculated from http://www.flounder.com/csharp_color_table.htm
+    local normalColor = { 1, 1, 1, 1 } -- white
+    local disabledColor = { 1, 1, 1, 0.5 } -- white but half-transparent
+    local favoriteColor = { 1, 0.0784313725, 0.5764705882, 1 } -- deep pink
+    local dependencyColor = { 0.8549019608, 0.6470588235, 0.1254901961, 1 } -- goldenrod
+    local dependencyOfFavoriteColor = { 1, 0.7137254902, 0.7568627451, 1 } -- light pink
 
-    local color
-    if info.IsBlacklisted then
-        color = info.IsFavorite and disabledFavoriteColor or disabledColor
+    local color = normalColor
+
+    if info.IsFavorite then
+        color = favoriteColor
     else
-        color = info.IsFavorite and favoriteColor or enabledColor
+        for _, dep in ipairs(scene.modDependents[info.Name] or {}) do
+            if scene.modlist[dep] then
+                if scene.modlist[dep].info.IsFavorite then
+                    color = dependencyOfFavoriteColor
+                    break
+                elseif not scene.modlist[dep].info.IsBlacklisted then
+                    color = dependencyColor
+                end
+            end
+        end
+    end
+
+    if info.IsBlacklisted then
+        color[4] = 0.5
     end
 
     if info.Name then
@@ -199,7 +215,7 @@ local function getLabelTextFor(info)
             -- Maddie's Helping Hand
             -- MaxHelpingHand 1.4.5 ∙ Filename.zip
             return {
-                info.IsBlacklisted and disabledColor or enabledColor,
+                color,
                 info.GameBananaTitle .. "\n",
                 disabledColor,
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
@@ -208,7 +224,7 @@ local function getLabelTextFor(info)
             -- MaxHelpingHand
             -- 1.4.5 ∙ Filename.zip
             return {
-                info.IsBlacklisted and disabledColor or enabledColor,
+                color,
                 info.Name .. "\n",
                 disabledColor,
                 (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
@@ -217,9 +233,22 @@ local function getLabelTextFor(info)
     else
         -- Filename.zip
         return {
-            info.IsBlacklisted and disabledColor or enabledColor,
+            color,
             fs.filename(info.Path)
         }
+    end
+end
+
+local function updateLabelTextForMod(mod)
+    mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
+end
+
+local function updateLabelTextForDependencies(mod)
+    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
+        local dep = scene.modlist[depName]
+        if dep ~= nil then
+            updateLabelTextForMod(dep)
+        end
     end
 end
 
@@ -228,7 +257,8 @@ local function enableMod(mod)
     if mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(true)
         mod.info.IsBlacklisted = false
-        mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
+        updateLabelTextForMod(mod)
+        updateLabelTextForDependencies(mod)
         updateEnabledModCountLabel()
 
         if scene.onlyShowEnabledMods then
@@ -242,7 +272,8 @@ local function disableMod(mod)
     if not mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(false)
         mod.info.IsBlacklisted = true
-        mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
+        updateLabelTextForMod(mod)
+        updateLabelTextForDependencies(mod)
         updateEnabledModCountLabel()
 
         if scene.onlyShowEnabledMods then
@@ -542,8 +573,9 @@ local function toggleFavorite(info, newState)
     local mod = scene.modlist[info.Name]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
-        mod.row:findChild("toggleCheckbox"):setValue(newState)
-        mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
+        mod.row:findChild("favoriteCheckbox"):setValue(newState)
+        updateLabelTextForMod(mod)
+        updateLabelTextForDependencies(mod)
         writeFavorites()
         if scene.onlyShowFavoriteMods then
             refreshVisibleMods()
@@ -797,7 +829,6 @@ function scene.displayPresetsUI()
     }):as("modPresets")
 end
 
-
 function scene.item(info)
     if not info then
         return nil
@@ -969,9 +1000,8 @@ function scene.reload()
                     if scene.loadingID ~= loadingID then
                         break
                     end
-
                     local row = scene.item(info)
-
+                    list:addChild(row)
                     scene.modPathToName[info.Path] = info.Name
                     scene.modlist[info.Name] = { info = info, row = row, visible = true }
                     if scene.modDependencies[info.Name] == nil then
@@ -1007,6 +1037,7 @@ function scene.reload()
         for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
             mod.row:findChild("favoriteCheckbox"):setEnabled(true)
+            updateLabelTextForMod(mod)
         end
 
         updateEnabledModCountLabel()
