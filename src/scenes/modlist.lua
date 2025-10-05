@@ -114,7 +114,7 @@ local function writeFavorites()
     local contents = "# This is the favorite list. Lines starting with # are ignored.\n\n"
 
     for _, mod in pairs(scene.modlist) do
-        if mod.isFavorite then
+        if mod.info.IsFavorite then
             contents = contents .. fs.filename(mod.info.Path) .. "\n"
         end
     end
@@ -138,7 +138,7 @@ local function refreshVisibleMods()
             and
             -- only show favorite mods
             (not scene.onlyShowFavoriteMods
-                or mod.isFavorite)
+                or mod.info.IsFavorite)
             and
             -- search terms
             (scene.search == ""
@@ -182,33 +182,42 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    local grey = { 1, 1, 1, 0.5 }
-    local white = { 1, 1, 1, 1 }
+    local disabledColor = { 1, 1, 1, 0.5 }
+    local enabledColor = { 1, 1, 1, 1 }
+    local favoriteColor = { 1, 0.08, 0.6, 1 }
+    local disabledFavoriteColor = { 1, 0.08, 0.6, 0.5 }
+
+    local color
+    if info.IsBlacklisted then
+        color = info.IsFavorite and disabledFavoriteColor or disabledColor
+    else
+        color = info.IsFavorite and favoriteColor or enabledColor
+    end
 
     if info.Name then
         if info.GameBananaTitle then
             -- Maddie's Helping Hand
             -- MaxHelpingHand 1.4.5 ∙ Filename.zip
             return {
-                info.IsBlacklisted and grey or white,
+                info.IsBlacklisted and disabledColor or enabledColor,
                 info.GameBananaTitle .. "\n",
-                grey,
+                disabledColor,
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }
         else
             -- MaxHelpingHand
             -- 1.4.5 ∙ Filename.zip
             return {
-                info.IsBlacklisted and grey or white,
+                info.IsBlacklisted and disabledColor or enabledColor,
                 info.Name .. "\n",
-                grey,
+                disabledColor,
                 (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }
         end
     else
         -- Filename.zip
         return {
-            info.IsBlacklisted and grey or white,
+            info.IsBlacklisted and disabledColor or enabledColor,
             fs.filename(info.Path)
         }
     end
@@ -380,7 +389,7 @@ local function findDependentsToDisable(mod)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if not dep.info.IsBlacklisted and not dep.isFavorite and dependentsToDisable[depName] == nil then
+        if not dep.info.IsBlacklisted and not dep.info.IsFavorite and dependentsToDisable[depName] == nil then
             dependentsToDisable[depName] = dep
         end
         for _, subdep in ipairs(scene.modDependents[dep.info.Name] or {}) do
@@ -412,7 +421,7 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if dep ~= nil and not dep.info.IsBlacklisted and not dep.isFavorite and dependenciesThatCanBeDisabled[depName] == nil then
+        if dep ~= nil and not dep.info.IsBlacklisted and not dep.info.IsFavorite and dependenciesThatCanBeDisabled[depName] == nil then
             local enabledDependents = findDependentsToDisable(dep)
             if next(enabledDependents) == nil then
                 dependenciesThatCanBeDisabled[depName] = dep
@@ -531,8 +540,10 @@ end
 
 local function toggleFavorite(info, newState)
     local mod = scene.modlist[info.Name]
-    if mod.isFavorite ~= newState then
-        mod.isFavorite = newState
+    if mod.info.IsFavorite ~= newState then
+        mod.info.IsFavorite = newState
+        mod.row:findChild("toggleCheckbox"):setValue(newState)
+        mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
         writeFavorites()
         if scene.onlyShowFavoriteMods then
             refreshVisibleMods()
@@ -787,29 +798,6 @@ function scene.displayPresetsUI()
 end
 
 
--- reads favorites.txt and returns a list of all favorite mod paths
--- if favorites.txt doesn't exist, it creates it and returns an empty list
-local function readFavoritesList()
-    local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "favorites.txt"))
-
-    if contents ~= nil then
-        local modPaths = {}
-        for line in contents:gmatch("[^\r\n]+") do
-            local trimmed = line:match("^%s*(.-)%s*$") -- trim whitespace
-            if trimmed ~= "" and not trimmed:find("^#") then
-                local path = fs.joinpath(root, "Mods", trimmed)
-                modPaths[path] = true
-            end
-        end
-        return modPaths
-    else -- create favorites.txt if it doesnt exist
-        local content = "# This is the favorite list. Lines starting with # are ignored.\n\n"
-        fs.write(fs.joinpath(root, "Mods", "favorites.txt"), content)
-        return {}
-    end
-end
-
 function scene.item(info)
     if not info then
         return nil
@@ -819,7 +807,7 @@ function scene.item(info)
         uie.label(getLabelTextFor(info)):as("title"),
 
         uie.row({
-            uie.checkbox("Favorite", isFavorite, function(checkbox, newState)
+            uie.checkbox("Favorite", info.IsFavorite, function(checkbox, newState)
                 toggleFavorite(info, newState)
             end)
                 :with(verticalCenter)
@@ -965,8 +953,6 @@ function scene.reload()
         }):with(uiu.fillWidth)
         list:addChild(searchField)
 
-        local favoritePaths = readFavoritesList()
-
         -- parameters: string root, bool readYamls, bool computeHashes, bool onlyUpdatable, bool excludeDisabled
         local task = sharp.modlist(root, true, false, false, false):result()
 
@@ -983,17 +969,9 @@ function scene.reload()
                     if scene.loadingID ~= loadingID then
                         break
                     end
-                    
-                    local isFavorite = false
-                    -- print("|", info.Path, "|")
-                    if favoritePaths[info.Path] then
-                        print("favorite found in load!", info.Path)
-                        isFavorite = true
-                    end
 
-                    local row = scene.item(info, isFavorite)
+                    local row = scene.item(info)
 
-                    scene.modlist[info.Name] = { info = info, row = row, visible = true, isFavorite = isFavorite }
                     scene.modPathToName[info.Path] = info.Name
                     scene.modlist[info.Name] = { info = info, row = row, visible = true }
                     if scene.modDependencies[info.Name] == nil then

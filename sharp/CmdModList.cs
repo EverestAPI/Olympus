@@ -27,6 +27,13 @@ namespace Olympus {
             else
                 updaterBlacklist = new List<string>();
 
+            List<string> favoritesList;
+            string favoritesListPath = Path.Combine(root, "favorites.txt");
+            if (File.Exists(favoritesListPath))
+                favoritesList = File.ReadAllLines(favoritesListPath).Select(l => (l.StartsWith("#") ? "" : l).Trim()).ToList();
+            else
+                favoritesList = new List<string>();
+
             Dictionary<string, string> modIDsToNamesMap = null;
             if (readYamls) modIDsToNamesMap = CmdGetModIdToNameMap.GetModIDsToNamesMap();
 
@@ -45,7 +52,8 @@ namespace Olympus {
                         Path = file,
                         IsFile = false,
                         IsBlacklisted = blacklist.Contains(name),
-                        IsUpdaterBlacklisted = updaterBlacklist.Contains(name)
+                        IsUpdaterBlacklisted = updaterBlacklist.Contains(name),
+                        IsFavorite = favoritesList.Contains(name)
                     };
 
                     if (readYamls) {
@@ -80,7 +88,8 @@ namespace Olympus {
                         Path = file,
                         IsFile = true,
                         IsBlacklisted = blacklist.Contains(name),
-                        IsUpdaterBlacklisted = updaterBlacklist.Contains(name)
+                        IsUpdaterBlacklisted = updaterBlacklist.Contains(name),
+                        IsFavorite = favoritesList.Contains(name)
                     };
 
                     if ((onlyUpdatable && info.IsUpdaterBlacklisted) || (excludeDisabled && info.IsBlacklisted))
@@ -122,7 +131,8 @@ namespace Olympus {
                         Path = file,
                         IsFile = true,
                         IsBlacklisted = blacklist.Contains(name),
-                        IsUpdaterBlacklisted = updaterBlacklist.Contains(name)
+                        IsUpdaterBlacklisted = updaterBlacklist.Contains(name),
+                        IsFavorite = favoritesList.Contains(name)
                     };
 
                     yield return info;
@@ -136,6 +146,7 @@ namespace Olympus {
             public bool IsFile;
             public bool IsBlacklisted;
             public bool IsUpdaterBlacklisted;
+            public bool IsFavorite;
             public string GameBananaTitle;
 
             public string Name;
