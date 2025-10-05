@@ -799,7 +799,7 @@ if OS == 'Linux' then
         ]])
         stat_syscall_num = IS_64_BIT and 106 or 195
         lstat_syscall_num = IS_64_BIT and 107 or 196
-    elseif ARCH == 'arm' then
+    elseif ARCH == 'arm' or ARCH == 'arm64' then
         if IS_64_BIT then
             ffi.cdef([[
                 typedef struct {
@@ -919,7 +919,7 @@ if OS == 'Linux' then
         end
     else
         ffi.cdef('typedef struct {} stat;')
-        stat_func = function() error("TODO support other Linux architectures") end
+        stat_func = function() error('TODO: support other Linux architecture (' .. (IS_64_BIT and "64bit" or "32bit") .. " " .. tostring(ARCH) .. ')') end
         lstat_func = stat_func
     end
 elseif OS == 'Windows' then
@@ -977,7 +977,7 @@ elseif OS == 'OSX' then
     lstat_func = lib.lstat64
 else
     ffi.cdef('typedef struct {} stat;')
-    stat_func = function() error('TODO: support other posix system') end
+    stat_func = function() error('TODO: support other posix system (' .. (IS_64_BIT and "64bit" or "32bit") .. " " .. tostring(ARCH) .. ')') end
     lstat_func = stat_func
 end
 
