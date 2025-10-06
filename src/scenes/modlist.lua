@@ -263,8 +263,8 @@ local function findDependenciesToEnable(mod)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if dep ~= nil then
-            if dep.info.IsBlacklisted and dependenciesToEnable[depName] == nil then
+        if dep then
+            if dep.info.IsBlacklisted and not dependenciesToEnable[depName] then
                 dependenciesToEnable[depName] = dep
             end
             for _, subdep in ipairs(scene.modDependencies[dep.info.Name] or {}) do
@@ -286,7 +286,7 @@ end
 local function updateLabelTextForDependencies(mod)
     for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
         local dep = scene.modlist[depName]
-        if dep ~= nil then
+        if dep then
             updateLabelTextForMod(dep)
         end
     end
@@ -307,7 +307,7 @@ end
 local function updateWarningButtonForDependents(mod)
     for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
         local dep = scene.modlist[depName]
-        if dep ~= nil then
+        if dep then
             updateWarningButtonForMod(dep)
         end
     end
@@ -397,7 +397,7 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
     local dependenciesToToggle = findDependenciesToEnable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
-    if next(dependenciesToToggle) ~= nil then
+    if next(dependenciesToToggle) then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
@@ -456,7 +456,7 @@ local function findDependentsToDisable(mod)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if not dep.info.IsBlacklisted and not dep.info.IsFavorite and dependentsToDisable[depName] == nil then
+        if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependentsToDisable[depName] then
             dependentsToDisable[depName] = dep
         end
         for _, subdep in ipairs(scene.modDependents[dep.info.Name] or {}) do
@@ -488,9 +488,9 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
     while #queue > 0 do
         local depName = table.remove(queue, 1)
         local dep = scene.modlist[depName]
-        if dep ~= nil and not dep.info.IsBlacklisted and not dep.info.IsFavorite and dependenciesThatCanBeDisabled[depName] == nil then
+        if dep and not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependenciesThatCanBeDisabled[depName] then
             local enabledDependents = findDependentsToDisable(dep)
-            if next(enabledDependents) == nil then
+            if not next(enabledDependents) then
                 dependenciesThatCanBeDisabled[depName] = dep
                 for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
                     if not tried[subdep] then
@@ -510,7 +510,7 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
     local dependenciesThatCanBeDisabled = findDependenciesThatCanBeDisabled(newlyDisabledMods)
     local numDependencies = dictLength(dependenciesThatCanBeDisabled)
 
-    if next(dependenciesThatCanBeDisabled) ~= nil then
+    if next(dependenciesThatCanBeDisabled) then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesThatCanBeDisabled, string.format(
                 "%s other %s no longer required for any enabled mod.\nDo you want to disable %s as well?",
@@ -544,7 +544,7 @@ local function checkEnabledModsDependingOnDisabledMod(mod)
     local dependenciesToToggle = findDependentsToDisable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
-    if next(dependenciesToToggle) ~= nil then
+    if next(dependenciesToToggle) then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "%s other %s on this mod.\nDo you want to disable %s as well?",
@@ -658,7 +658,7 @@ local function applyPreset(name, disableAll)
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    if contents == nil then
+    if not contents then
         return
     end
     local presetMods = contents:match("%*%*" .. name .. "\n([^*]*)") -- gets a string with all preset .zip mod file names
@@ -667,7 +667,7 @@ local function applyPreset(name, disableAll)
     for filename in presetMods:gmatch("([^\n]*)\n") do -- splits the string after every newline into mod filenames
         local path = fs.joinpath(root, "Mods", filename)
         local mod = findModByPath(path)
-        if mod ~= nil then
+        if mod then
             enableMod(mod)
         else
             if missingMods ~= "" then
@@ -684,7 +684,7 @@ end
 
 -- deletes preset from modpresets.txt
 local function deletePreset(name)
-    if name == nil then
+    if not name then
         displayErrorMessage("Something went wrong, deleted preset's name is nil!")
         return
     end
@@ -695,7 +695,7 @@ local function deletePreset(name)
 
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    if contents ~= nil then
+    if contents then
         name = name:gsub("%p", "%%%1") -- escape special characters
         contents = contents:gsub("%*%*(" .. name .. "\n[^*]*)","", 1)
         fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), contents)
@@ -707,7 +707,7 @@ local function readPresetsList()
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
 
-    if contents ~= nil then
+    if contents then
         local names = {}
         for substring in contents:gmatch("%*%*(.-)%\n") do
             names[#names+1] = substring
@@ -721,7 +721,7 @@ end
 
 -- writes a new preset to a modpresets.txt, returns true if preset was created successfully and false if not
 local function addPreset(name)
-    if name == nil then
+    if not name then
         displayErrorMessage("Something went wrong, name is nil!")
         return false
     end
@@ -733,7 +733,7 @@ local function addPreset(name)
     -- check if name is already taken
     -- TODO: make this a table rather than scan
     local names = readPresetsList()
-    if names ~= nil then
+    if names then
         for i, n in ipairs(names) do
             if n == name then
                 alert({
@@ -1046,12 +1046,12 @@ function scene.reload()
                     list:addChild(row)
                     scene.modPathToName[info.Path] = info.Name
                     scene.modlist[info.Name] = { info = info, row = row, visible = true }
-                    if scene.modDependencies[info.Name] == nil then
+                    if not scene.modDependencies[info.Name] then
                         scene.modDependencies[info.Name] = {}
                     end
                     for _, depName in ipairs(info.Dependencies or {}) do
                         table.insert(scene.modDependencies[info.Name], depName)
-                        if scene.modDependents[depName] == nil then
+                        if not scene.modDependents[depName] then
                             scene.modDependents[depName] = {}
                         end
                         table.insert(scene.modDependents[depName], info.Name)
