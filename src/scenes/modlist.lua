@@ -206,6 +206,13 @@ local function getLabelTextFor(info)
         end
     end
 
+    local disabledOrMissingDependencies = {}
+    for _, dep in ipairs(scene.modDependencies[info.Name] or {}) do
+        if not scene.modlist[dep] or scene.modlist[dep].info.IsBlacklisted then
+            
+        end
+    end
+
     if info.IsBlacklisted then
         color[4] = 0.5
     end
@@ -239,6 +246,39 @@ local function getLabelTextFor(info)
     end
 end
 
+-- lists all dependencies of the given mod that should be enabled for this mod to work
+-- returns a table of dependency name -> mod object
+local function findDependenciesToEnable(mod)
+    local queue = {}
+    local tried = {}
+    local dependenciesToEnable = {}
+
+    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
+        if not tried[depName] then
+            tried[depName] = true
+            table.insert(queue, depName)
+        end
+    end
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local dep = scene.modlist[depName]
+        if dep ~= nil then
+            if dep.info.IsBlacklisted and dependenciesToEnable[depName] == nil then
+                dependenciesToEnable[depName] = dep
+            end
+            for _, subdep in ipairs(scene.modDependencies[dep.info.Name] or {}) do
+                if not tried[subdep] then
+                    tried[subdep] = true
+                    table.insert(queue, subdep)
+                end
+            end
+        end
+    end
+    
+    return dependenciesToEnable
+end
+
 local function updateLabelTextForMod(mod)
     mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
 end
@@ -252,6 +292,27 @@ local function updateLabelTextForDependencies(mod)
     end
 end
 
+local function updateWarningButtonForMod(mod)
+    if mod.info.IsBlacklisted then
+        mod.row:findChild("warningButton"):setValue(false)
+        mod.row:findChild("warningButton"):setEnabled(false)
+    else
+        local disabledDependencies = findDependenciesToEnable(mod)
+        local hasDisabledDependencies = next(disabledDependencies) ~= nil
+        mod.row:findChild("warningButton"):setValue(hasDisabledDependencies)
+        mod.row:findChild("warningButton"):setEnabled(hasDisabledDependencies)
+    end
+end
+
+local function updateWarningButtonForDependents(mod)
+    for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
+        local dep = scene.modlist[depName]
+        if dep ~= nil then
+            updateWarningButtonForMod(dep)
+        end
+    end
+end
+
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
 local function enableMod(mod)
     if mod.info.IsBlacklisted then
@@ -259,6 +320,8 @@ local function enableMod(mod)
         mod.info.IsBlacklisted = false
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
+        updateWarningButtonForMod(mod)
+        updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
 
         if scene.onlyShowEnabledMods then
@@ -274,6 +337,8 @@ local function disableMod(mod)
         mod.info.IsBlacklisted = true
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
+        updateWarningButtonForMod(mod)
+        updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
 
         if scene.onlyShowEnabledMods then
@@ -317,39 +382,6 @@ local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, me
             }))
             :with({ maxHeight = 300 })
     })
-end
-
--- lists all dependencies of the given mod that should be enabled for this mod to work
--- returns a table of dependency name -> mod object
-local function findDependenciesToEnable(mod)
-    local queue = {}
-    local tried = {}
-    local dependenciesToEnable = {}
-
-    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
-        if not tried[depName] then
-            tried[depName] = true
-            table.insert(queue, depName)
-        end
-    end
-
-    while #queue > 0 do
-        local depName = table.remove(queue, 1)
-        local dep = scene.modlist[depName]
-        if dep ~= nil then
-            if dep.info.IsBlacklisted and dependenciesToEnable[depName] == nil then
-                dependenciesToEnable[depName] = dep
-            end
-            for _, subdep in ipairs(scene.modDependencies[dep.info.Name] or {}) do
-                if not tried[subdep] then
-                    tried[subdep] = true
-                    table.insert(queue, subdep)
-                end
-            end
-        end
-    end
-    
-    return dependenciesToEnable
 end
 
 local function dictLength(dict)
@@ -401,6 +433,10 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
             }
         })
     end
+end
+
+local function checkDisabledDependenciesOfEnabledModInfo(info)
+    checkDisabledDependenciesOfEnabledMod(scene.modlist[info.Name])
 end
 
 -- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency, excluding favorites
@@ -838,15 +874,21 @@ function scene.item(info)
         uie.label(getLabelTextFor(info)):as("title"),
 
         uie.row({
-            uie.checkbox("Favorite", info.IsFavorite, function(checkbox, newState)
+            uie.warning(false, function(checkbox, newState)
+                checkDisabledDependenciesOfEnabledModInfo(info)
+            end)
+                :with(verticalCenter)
+                :with({
+                    enabled = false
+                })
+                :as("warningButton"),
+
+            uie.star(info.IsFavorite, function(checkbox, newState)
                 toggleFavorite(info, newState)
             end)
                 :with(verticalCenter)
                 :with({
-                    enabled = false,
-                    style = {
-                        padding = 8
-                    }
+                    enabled = false
                 })
                 :as("favoriteCheckbox"),
 
@@ -1038,6 +1080,7 @@ function scene.reload()
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
             mod.row:findChild("favoriteCheckbox"):setEnabled(true)
             updateLabelTextForMod(mod)
+            updateWarningButtonForMod(mod)
         end
 
         updateEnabledModCountLabel()
