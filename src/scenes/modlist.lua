@@ -11,8 +11,16 @@ local modupdater = require("modupdater")
 
 local scene = {
     name = "Mod Manager",
+    -- mod name -> mod object { info = modinfo, row = uirow, visible = bool }
     modlist = {},
+    -- mod name -> list of mod names that this mod depends on
+    modDependencies = {},
+    -- mod name -> list of mod names that depend on this mod
+    modDependents = {},
+    -- mod path -> mod name
+    modPathToName = {},
     onlyShowEnabledMods = false,
+    onlyShowFavoriteMods = false,
     search = ""
 }
 
@@ -67,10 +75,9 @@ scene.root = root
 
 -- finds a mod from modlist by its path
 local function findModByPath(path)
-    for i, mod in ipairs(scene.modlist) do
-        if mod.info.Path == path then
-            return mod
-        end
+    local modName = scene.modPathToName[path]
+    if modName then
+        return scene.modlist[modName]
     end
     return nil
 end
@@ -91,7 +98,7 @@ end
 local function writeBlacklist()
     local contents = "# This is the blacklist. Lines starting with # are ignored.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n"
 
-    for i, mod in ipairs(scene.modlist) do
+    for _, mod in pairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             contents = contents .. "# "
         end
@@ -102,18 +109,36 @@ local function writeBlacklist()
     fs.write(fs.joinpath(root, "Mods", "blacklist.txt"), contents)
 end
 
+-- writes the favorites to disk
+local function writeFavorites()
+    local contents = "# This is the favorite list. Lines starting with # are ignored.\n\n"
+
+    for _, mod in pairs(scene.modlist) do
+        if mod.row:findChild("favoriteCheckbox"):getValue() then
+            contents = contents .. fs.filename(mod.info.Path) .. "\n"
+        end
+    end
+
+    local root = config.installs[config.install].path
+    fs.write(fs.joinpath(root, "Mods", "favorites.txt"), contents)
+end
+
 -- shows or hides mods depending on search and "only show enabled mods" checkbox
 local function refreshVisibleMods()
     local list = root:findChild("mods")
 
     local modIndex = 3 -- the 2 first elements are the header, and the search field
 
-    for i, mod in ipairs(scene.modlist) do
+    for _, mod in pairs(scene.modlist) do
         -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
         local newVisible =
             -- only show enabled mods
             (not scene.onlyShowEnabledMods
                 or not mod.info.IsBlacklisted)
+            and
+            -- only show favorite mods
+            (not scene.onlyShowFavoriteMods
+                or mod.info.IsFavorite)
             and
             -- search terms
             (scene.search == ""
@@ -142,7 +167,7 @@ end
 local function updateEnabledModCountLabel()
     local enabledModCount = 0
 
-    for i, mod in ipairs(scene.modlist) do
+    for _, mod in pairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             enabledModCount = enabledModCount + 1
         end
@@ -157,61 +182,168 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    local grey = { 1, 1, 1, 0.5 }
-    local white = { 1, 1, 1, 1 }
+    -- colors calculated from http://www.flounder.com/csharp_color_table.htm
+    local normalColor = { 1, 1, 1, 1 } -- white
+    local disabledColor = { 1, 1, 1, 0.5 } -- white but half-transparent
+    local favoriteColor = { 1, 0.0784313725, 0.5764705882, 1 } -- deep pink
+    local dependencyColor = { 0.8549019608, 0.6470588235, 0.1254901961, 1 } -- goldenrod
+    local dependencyOfFavoriteColor = { 1, 0.7137254902, 0.7568627451, 1 } -- light pink
+
+    local color = normalColor
+
+    if info.IsFavorite then
+        color = favoriteColor
+    else
+        for _, dep in ipairs(scene.modDependents[info.Name] or {}) do
+            if scene.modlist[dep] then
+                if scene.modlist[dep].info.IsFavorite then
+                    color = dependencyOfFavoriteColor
+                    break
+                elseif not scene.modlist[dep].info.IsBlacklisted then
+                    color = dependencyColor
+                end
+            end
+        end
+    end
+
+    local disabledOrMissingDependencies = {}
+    for _, dep in ipairs(scene.modDependencies[info.Name] or {}) do
+        if not scene.modlist[dep] or scene.modlist[dep].info.IsBlacklisted then
+            
+        end
+    end
+
+    if info.IsBlacklisted then
+        color[4] = 0.5
+    end
 
     if info.Name then
         if info.GameBananaTitle then
             -- Maddie's Helping Hand
             -- MaxHelpingHand 1.4.5 ∙ Filename.zip
             return {
-                info.IsBlacklisted and grey or white,
+                color,
                 info.GameBananaTitle .. "\n",
-                grey,
+                disabledColor,
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }
         else
             -- MaxHelpingHand
             -- 1.4.5 ∙ Filename.zip
             return {
-                info.IsBlacklisted and grey or white,
+                color,
                 info.Name .. "\n",
-                grey,
+                disabledColor,
                 (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }
         end
     else
         -- Filename.zip
         return {
-            info.IsBlacklisted and grey or white,
+            color,
             fs.filename(info.Path)
         }
     end
 end
 
+-- lists all dependencies of the given mod that should be enabled for this mod to work
+-- returns a table of dependency name -> mod object
+local function findDependenciesToEnable(mod)
+    local queue = {}
+    local tried = {}
+    local dependenciesToEnable = {}
+
+    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
+        if not tried[depName] then
+            tried[depName] = true
+            table.insert(queue, depName)
+        end
+    end
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local dep = scene.modlist[depName]
+        if dep then
+            if dep.info.IsBlacklisted and not dependenciesToEnable[depName] then
+                dependenciesToEnable[depName] = dep
+            end
+            for _, subdep in ipairs(scene.modDependencies[dep.info.Name] or {}) do
+                if not tried[subdep] then
+                    tried[subdep] = true
+                    table.insert(queue, subdep)
+                end
+            end
+        end
+    end
+    
+    return dependenciesToEnable
+end
+
+local function updateLabelTextForMod(mod)
+    mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
+end
+
+local function updateLabelTextForDependencies(mod)
+    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
+        local dep = scene.modlist[depName]
+        if dep then
+            updateLabelTextForMod(dep)
+        end
+    end
+end
+
+local function updateWarningButtonForMod(mod)
+    if mod.info.IsBlacklisted then
+        mod.row:findChild("warningButton"):setValue(false)
+        mod.row:findChild("warningButton"):setEnabled(false)
+    else
+        local disabledDependencies = findDependenciesToEnable(mod)
+        local hasDisabledDependencies = next(disabledDependencies) ~= nil
+        mod.row:findChild("warningButton"):setValue(hasDisabledDependencies)
+        mod.row:findChild("warningButton"):setEnabled(hasDisabledDependencies)
+    end
+end
+
+local function updateWarningButtonForDependents(mod)
+    for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
+        local dep = scene.modlist[depName]
+        if dep then
+            updateWarningButtonForMod(dep)
+        end
+    end
+end
+
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
-local function enableMod(row, info)
-    if info.IsBlacklisted then
-        row:findChild("toggleCheckbox"):setValue(true)
-        info.IsBlacklisted = false
-        row:findChild("title"):setText(getLabelTextFor(info))
+-- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
+local function enableMod(mod, shouldRefreshVisibleMods)
+    if mod.info.IsBlacklisted then
+        mod.row:findChild("toggleCheckbox"):setValue(true)
+        mod.info.IsBlacklisted = false
+        updateLabelTextForMod(mod)
+        updateLabelTextForDependencies(mod)
+        updateWarningButtonForMod(mod)
+        updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
 
-        if scene.onlyShowEnabledMods then
+        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
             refreshVisibleMods()
         end
     end
 end
 
 -- disable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
-local function disableMod(row, info)
-    if not info.IsBlacklisted then
-        row:findChild("toggleCheckbox"):setValue(false)
-        info.IsBlacklisted = true
-        row:findChild("title"):setText(getLabelTextFor(info))
+-- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
+local function disableMod(mod, shouldRefreshVisibleMods)
+    if not mod.info.IsBlacklisted then
+        mod.row:findChild("toggleCheckbox"):setValue(false)
+        mod.info.IsBlacklisted = true
+        updateLabelTextForMod(mod)
+        updateLabelTextForDependencies(mod)
+        updateWarningButtonForMod(mod)
+        updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
 
-        if scene.onlyShowEnabledMods then
+        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
             refreshVisibleMods()
         end
     end
@@ -230,7 +362,7 @@ end
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
 local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, message)
     local modList = ''
-    for _, mod in ipairs(dependenciesToToggle) do
+    for _, mod in pairs(dependenciesToToggle) do
         modList = modList
             .. (modList == '' and '' or '\n')
             .. '- ' ..
@@ -254,56 +386,34 @@ local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, me
     })
 end
 
--- recursively lists all dependencies of the given mod that should be enabled for this mod to work
-local function findDependenciesToEnableRecursively(info, dependenciesFoundSoFar)
-    if not info.Dependencies then
-        -- the mod has no dependencies to check (probably missing or corrupted everest.yaml)
-        return dependenciesFoundSoFar
+local function dictLength(dict)
+    local count = 0
+    for _, _ in pairs(dict) do
+        count = count + 1
     end
-
-    for i, dep in ipairs(info.Dependencies) do
-        local foundDependency = nil
-
-        for j, mod in ipairs(scene.modlist) do
-            if mod.info.Name == dep and (foundDependency == nil or not mod.info.IsBlacklisted) then
-                foundDependency = mod
-
-                if not mod.info.IsBlacklisted then
-                    -- stop looking, we found an enabled mod that has the right mod ID
-                    break
-                end
-            end
-        end
-
-        if foundDependency ~= nil and foundDependency.info.IsBlacklisted and not contains(dependenciesFoundSoFar, foundDependency) then
-            -- add this dependency to the list of mods to enable, and check if we should enable any of its dependencies as well
-            table.insert(dependenciesFoundSoFar, foundDependency)
-            dependenciesFoundSoFar = findDependenciesToEnableRecursively(foundDependency.info, dependenciesFoundSoFar)
-        end
-    end
-
-    return dependenciesFoundSoFar
+    return count
 end
 
 -- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
-local function checkDisabledDependenciesOfEnabledMod(info, row)
-    local dependenciesToToggle = findDependenciesToEnableRecursively(info, {})
+local function checkDisabledDependenciesOfEnabledMod(mod)
+    local dependenciesToToggle = findDependenciesToEnable(mod)
+    local numDependencies = dictLength(dependenciesToToggle)
 
-    if next(dependenciesToToggle) ~= nil then
+    if next(dependenciesToToggle) then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
-                #dependenciesToToggle,
-                #dependenciesToToggle == 1 and "mod" or "mods",
-                #dependenciesToToggle == 1 and "it" or "them"
+                numDependencies,
+                numDependencies == 1 and "mod" or "mods",
+                numDependencies == 1 and "it" or "them"
             )),
             buttons = {
                 {
                     "Yes",
                     function(container)
                         -- enable all the dependencies!
-                        for k, depToToggle in ipairs(dependenciesToToggle) do
-                            enableMod(depToToggle.row, depToToggle.info)
+                        for _, depToToggle in pairs(dependenciesToToggle) do
+                            enableMod(depToToggle)
                         end
 
                         writeBlacklist()
@@ -317,7 +427,7 @@ local function checkDisabledDependenciesOfEnabledMod(info, row)
                     "Cancel",
                     function(container)
                         -- re-disable the mod
-                        disableMod(row, info)
+                        disableMod(mod)
                         writeBlacklist()
                         container:close()
                     end
@@ -327,42 +437,96 @@ local function checkDisabledDependenciesOfEnabledMod(info, row)
     end
 end
 
--- recursively lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency
-local function findDependenciesToDisableRecursively(info, dependenciesFoundSoFar)
-    for i, mod in ipairs(scene.modlist) do
-        if not mod.info.IsBlacklisted and mod.info.Dependencies then
-            for j, dep in ipairs(mod.info.Dependencies) do
-                if info.Name == dep and not contains(dependenciesFoundSoFar, mod) then
-                    -- add this dependency to the list of mods to disable, and check if we should disable any of the mods depending on it as well
-                    table.insert(dependenciesFoundSoFar, mod)
-                    dependenciesFoundSoFar = findDependenciesToDisableRecursively(mod.info, dependenciesFoundSoFar)
+local function checkDisabledDependenciesOfEnabledModInfo(info)
+    checkDisabledDependenciesOfEnabledMod(scene.modlist[info.Name])
+end
+
+-- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency, excluding favorites
+-- returns a table of dependent name -> mod object
+local function findDependentsToDisable(mod)
+    local queue = {}
+    local tried = {}
+    local dependentsToDisable = {}
+
+    for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
+        if not tried[depName] then
+            tried[depName] = true
+            table.insert(queue, depName)
+        end
+    end
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local dep = scene.modlist[depName]
+        if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependentsToDisable[depName] then
+            dependentsToDisable[depName] = dep
+        end
+        for _, subdep in ipairs(scene.modDependents[dep.info.Name] or {}) do
+            if not tried[subdep] then
+                tried[subdep] = true
+                table.insert(queue, subdep)
+            end
+        end
+    end
+    
+    return dependentsToDisable
+end
+
+-- lists all dependencies of the given mods that can be disabled because no enabled mod depends on them anymore, excluding favorites
+local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
+    local queue = {}
+    local tried = {}
+    local dependenciesThatCanBeDisabled = {}
+
+    for modName, _ in pairs(newlyDisabledMods) do
+        for _, subdep in ipairs(scene.modDependencies[modName] or {}) do
+            if not tried[subdep] then
+                tried[subdep] = true
+                table.insert(queue, subdep)
+            end
+        end
+    end
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local dep = scene.modlist[depName]
+        if dep and not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependenciesThatCanBeDisabled[depName] then
+            local enabledDependents = findDependentsToDisable(dep)
+            if not next(enabledDependents) then
+                dependenciesThatCanBeDisabled[depName] = dep
+                for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
+                    if not tried[subdep] then
+                        tried[subdep] = true
+                        table.insert(queue, subdep)
+                    end
                 end
             end
         end
     end
 
-    return dependenciesFoundSoFar
+    return dependenciesThatCanBeDisabled
 end
 
--- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
-local function checkEnabledModsDependingOnDisabledMod(info, row)
-    local dependenciesToToggle = findDependenciesToDisableRecursively(info, {})
+-- checks whether enabled mods that were dependencies of now-disabled mods can be disabled as well, and prompts to disable them if so
+local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
+    local dependenciesThatCanBeDisabled = findDependenciesThatCanBeDisabled(newlyDisabledMods)
+    local numDependencies = dictLength(dependenciesThatCanBeDisabled)
 
-    if next(dependenciesToToggle) ~= nil then
+    if next(dependenciesThatCanBeDisabled) then
         alert({
-            body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
-                "%s other %s on this mod.\nDo you want to disable %s as well?",
-                #dependenciesToToggle,
-                #dependenciesToToggle == 1 and "mod depends" or "mods depend",
-                #dependenciesToToggle == 1 and "it" or "them"
+            body = getConfirmationMessageBodyForModToggling(dependenciesThatCanBeDisabled, string.format(
+                "%s other %s no longer required for any enabled mod.\nDo you want to disable %s as well?",
+                numDependencies,
+                numDependencies == 1 and "mod is" or "mods are",
+                numDependencies == 1 and "it" or "them"
             )),
             buttons = {
                 {
                     "Yes",
                     function(container)
                         -- disable them all!
-                        for k, depToToggle in ipairs(dependenciesToToggle) do
-                            disableMod(depToToggle.row, depToToggle.info)
+                        for _, depToToggle in pairs(dependenciesThatCanBeDisabled) do
+                            disableMod(depToToggle)
                         end
 
                         writeBlacklist()
@@ -371,40 +535,91 @@ local function checkEnabledModsDependingOnDisabledMod(info, row)
                 },
                 {
                     "No"
-                },
-                {
-                    "Cancel",
-                    function(container)
-                        -- re-enable the mod
-                        enableMod(row, info)
-                        writeBlacklist()
-                        container:close()
-                    end
                 }
             }
         })
     end
 end
 
+-- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
+local function checkEnabledDependentsOfDisabledMod(mod)
+    local dependenciesToToggle = findDependentsToDisable(mod)
+    local numDependencies = dictLength(dependenciesToToggle)
+
+    if next(dependenciesToToggle) then
+        alert({
+            body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
+                "%s other %s on this mod.\nDo you want to disable %s as well?",
+                numDependencies,
+                numDependencies == 1 and "mod depends" or "mods depend",
+                numDependencies == 1 and "it" or "them"
+            )),
+            buttons = {
+                {
+                    "Yes",
+                    function(container)
+                        -- disable them all!
+                        for _, depToToggle in pairs(dependenciesToToggle) do
+                            disableMod(depToToggle)
+                        end
+
+                        writeBlacklist()
+                        container:close()
+
+                        dependenciesToToggle[mod.info.Name] = mod
+                        checkEnabledDependenciesOfDisabledMods(dependenciesToToggle)
+                    end
+                },
+                {
+                    "No",
+                    function(container)
+                        container:close()
+                        checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
+                    end
+                },
+                {
+                    "Cancel",
+                    function(container)
+                        -- re-enable the mod
+                        enableMod(mod)
+                        writeBlacklist()
+                        container:close()
+                    end
+                }
+            }
+        })
+    else
+        checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
+    end
+end
+
 -- called whenever a mod is enabled or disabled
 local function toggleMod(info, newState)
-    -- find the UI row associated to this mod info
-    local row
-    for i, mod in ipairs(scene.modlist) do
-        if info == mod.info then
-            row = mod.row
-            break
-        end
-    end
-
+    local mod = scene.modlist[info.Name]
     if newState then
-        enableMod(row, info)
+        enableMod(mod)
         writeBlacklist()
-        checkDisabledDependenciesOfEnabledMod(info, row)
+        checkDisabledDependenciesOfEnabledMod(mod)
     else
-        disableMod(row, info)
+        disableMod(mod)
         writeBlacklist()
-        checkEnabledModsDependingOnDisabledMod(info, row)
+        checkEnabledDependentsOfDisabledMod(mod)
+    end
+end
+
+-- called whenever a mod is favorited or unfavorited
+-- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
+local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
+    local mod = scene.modlist[info.Name]
+    if mod.info.IsFavorite ~= newState then
+        mod.info.IsFavorite = newState
+        mod.row:findChild("favoriteCheckbox"):setValue(newState)
+        updateLabelTextForMod(mod)
+        updateLabelTextForDependencies(mod)
+        writeFavorites()
+        if shouldRefreshVisibleMods and scene.onlyShowFavoriteMods then
+            refreshVisibleMods()
+        end
     end
 end
 
@@ -425,10 +640,17 @@ local function verticalCenter(el)
     })
 end
 
--- loops thorugh modlist and calls disableMod() on every
+-- loops through modlist and calls enableMod() on every mod
+local function enableAllMods()
+    for _, mod in pairs(scene.modlist) do
+        enableMod(mod)
+    end
+end
+
+-- loops through modlist and calls disableMod() on every mod
 local function disableAllMods()
-    for i, mod in ipairs(scene.modlist) do
-        disableMod(mod.row, mod.info)
+    for _, mod in pairs(scene.modlist) do
+        disableMod(mod)
     end
 end
 
@@ -440,7 +662,7 @@ local function applyPreset(name, disableAll)
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    if contents == nil then
+    if not contents then
         return
     end
     local presetMods = contents:match("%*%*" .. name .. "\n([^*]*)") -- gets a string with all preset .zip mod file names
@@ -449,8 +671,8 @@ local function applyPreset(name, disableAll)
     for filename in presetMods:gmatch("([^\n]*)\n") do -- splits the string after every newline into mod filenames
         local path = fs.joinpath(root, "Mods", filename)
         local mod = findModByPath(path)
-        if mod ~= nil then
-            enableMod(mod.row, mod.info)
+        if mod then
+            enableMod(mod)
         else
             if missingMods ~= "" then
                 missingMods = missingMods .. ", "
@@ -466,7 +688,7 @@ end
 
 -- deletes preset from modpresets.txt
 local function deletePreset(name)
-    if name == nil then
+    if not name then
         displayErrorMessage("Something went wrong, deleted preset's name is nil!")
         return
     end
@@ -477,7 +699,7 @@ local function deletePreset(name)
 
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    if contents ~= nil then
+    if contents then
         name = name:gsub("%p", "%%%1") -- escape special characters
         contents = contents:gsub("%*%*(" .. name .. "\n[^*]*)","", 1)
         fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), contents)
@@ -489,7 +711,7 @@ local function readPresetsList()
     local root = config.installs[config.install].path
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
 
-    if contents ~= nil then
+    if contents then
         local names = {}
         for substring in contents:gmatch("%*%*(.-)%\n") do
             names[#names+1] = substring
@@ -503,7 +725,7 @@ end
 
 -- writes a new preset to a modpresets.txt, returns true if preset was created successfully and false if not
 local function addPreset(name)
-    if name == nil then
+    if not name then
         displayErrorMessage("Something went wrong, name is nil!")
         return false
     end
@@ -512,9 +734,10 @@ local function addPreset(name)
         return false
     end
 
-    --check if name is already taken
+    -- check if name is already taken
+    -- TODO: make this a table rather than scan
     local names = readPresetsList()
-    if names ~= nil then
+    if names then
         for i, n in ipairs(names) do
             if n == name then
                 alert({
@@ -541,7 +764,7 @@ local function addPreset(name)
     local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
     contents = contents .. "**" .. name .. "\n"
 
-    for i, mod in ipairs(scene.modlist) do
+    for _, mod in pairs(scene.modlist) do
         if mod.row:findChild("toggleCheckbox"):getValue() then
             contents = contents .. fs.filename(mod.info.Path) .. "\n"
         end
@@ -655,6 +878,24 @@ function scene.item(info)
         uie.label(getLabelTextFor(info)):as("title"),
 
         uie.row({
+            uie.warning(false, function(checkbox, newState)
+                checkDisabledDependenciesOfEnabledModInfo(info)
+            end)
+                :with(verticalCenter)
+                :with({
+                    enabled = false
+                })
+                :as("warningButton"),
+
+            uie.star(info.IsFavorite, function(checkbox, newState)
+                toggleFavorite(info, newState)
+            end)
+                :with(verticalCenter)
+                :with({
+                    enabled = false
+                })
+                :as("favoriteCheckbox"),
+
             uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox, newState)
                 toggleMod(info, newState)
             end)
@@ -707,7 +948,11 @@ function scene.reload()
     scene.loadingID = loadingID
 
     scene.modlist = {}
+    scene.modDependencies = {}
+    scene.modDependents = {}
+    scene.modPathToName = {}
     scene.onlyShowEnabledMods = false
+    scene.onlyShowFavoriteMods = false
     scene.search = ""
 
     return threader.routine(function()
@@ -758,12 +1003,14 @@ function scene.reload()
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
+                uie.checkbox("Only show favorite mods", false, function(checkbox, newState)
+                    scene.onlyShowFavoriteMods = newState
+                    refreshVisibleMods()
+                end):with({ enabled = false }):with(verticalCenter):as("onlyShowFavoriteModsCheckbox"),
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button("Enable All", function()
-                        for i, mod in ipairs(scene.modlist) do
-                            enableMod(mod.row, mod.info)
-                        end
+                        enableAllMods()
                         writeBlacklist()
                     end):with({ enabled = false }):as("enableAllButton"),
                     uie.button("Disable All", function()
@@ -801,7 +1048,18 @@ function scene.reload()
                     end
                     local row = scene.item(info)
                     list:addChild(row)
-                    table.insert(scene.modlist, { info = info, row = row, visible = true })
+                    scene.modPathToName[info.Path] = info.Name
+                    scene.modlist[info.Name] = { info = info, row = row, visible = true }
+                    if not scene.modDependencies[info.Name] then
+                        scene.modDependencies[info.Name] = {}
+                    end
+                    for _, depName in ipairs(info.Dependencies or {}) do
+                        table.insert(scene.modDependencies[info.Name], depName)
+                        if not scene.modDependents[depName] then
+                            scene.modDependents[depName] = {}
+                        end
+                        table.insert(scene.modDependents[depName], info.Name)
+                    end
                 else
                     print("modlist.reload encountered nil on poll", task)
                 end
@@ -820,9 +1078,13 @@ function scene.reload()
         scene.root:findChild("disableAllButton"):setEnabled(true)
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
+        scene.root:findChild("onlyShowFavoriteModsCheckbox"):setEnabled(true)
         searchField:setEnabled(true)
-        for i, mod in ipairs(scene.modlist) do
+        for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
+            mod.row:findChild("favoriteCheckbox"):setEnabled(true)
+            updateLabelTextForMod(mod)
+            updateWarningButtonForMod(mod)
         end
 
         updateEnabledModCountLabel()
