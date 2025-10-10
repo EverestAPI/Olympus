@@ -314,7 +314,8 @@ local function updateWarningButtonForDependents(mod)
 end
 
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
-local function enableMod(mod)
+-- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
+local function enableMod(mod, shouldRefreshVisibleMods)
     if mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(true)
         mod.info.IsBlacklisted = false
@@ -324,14 +325,15 @@ local function enableMod(mod)
         updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
 
-        if scene.onlyShowEnabledMods then
+        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
             refreshVisibleMods()
         end
     end
 end
 
 -- disable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
-local function disableMod(mod)
+-- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
+local function disableMod(mod, shouldRefreshVisibleMods)
     if not mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(false)
         mod.info.IsBlacklisted = true
@@ -341,7 +343,7 @@ local function disableMod(mod)
         updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
 
-        if scene.onlyShowEnabledMods then
+        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
             refreshVisibleMods()
         end
     end
@@ -540,7 +542,7 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
 end
 
 -- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
-local function checkEnabledModsDependingOnDisabledMod(mod)
+local function checkEnabledDependentsOfDisabledMod(mod)
     local dependenciesToToggle = findDependentsToDisable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
@@ -601,11 +603,13 @@ local function toggleMod(info, newState)
     else
         disableMod(mod)
         writeBlacklist()
-        checkEnabledModsDependingOnDisabledMod(mod)
+        checkEnabledDependentsOfDisabledMod(mod)
     end
 end
 
-local function toggleFavorite(info, newState)
+-- called whenever a mod is favorited or unfavorited
+-- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
+local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
     local mod = scene.modlist[info.Name]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
@@ -613,7 +617,7 @@ local function toggleFavorite(info, newState)
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
         writeFavorites()
-        if scene.onlyShowFavoriteMods then
+        if shouldRefreshVisibleMods and scene.onlyShowFavoriteMods then
             refreshVisibleMods()
         end
     end
