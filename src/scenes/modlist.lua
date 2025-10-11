@@ -114,7 +114,7 @@ local function writeFavorites()
     local contents = "# This is the favorite list. Lines starting with # are ignored.\n\n"
 
     for _, mod in pairs(scene.modlist) do
-        if mod.row:findChild("favoriteCheckbox"):getValue() then
+        if mod.row:findChild("favoriteHeart"):getValue() then
             contents = contents .. fs.filename(mod.info.Path) .. "\n"
         end
     end
@@ -294,13 +294,17 @@ end
 
 local function updateWarningButtonForMod(mod)
     if mod.info.IsBlacklisted then
-        mod.row:findChild("warningButton"):setValue(false)
+        mod.row:findChild("warningButton"):setVisible(false)
         mod.row:findChild("warningButton"):setEnabled(false)
+        --mod.row:findChild("warningButtonOld"):setValue(false)
+        --mod.row:findChild("warningButtonOld"):setEnabled(false)
     else
         local disabledDependencies = findDependenciesToEnable(mod)
         local hasDisabledDependencies = next(disabledDependencies) ~= nil
-        mod.row:findChild("warningButton"):setValue(hasDisabledDependencies)
+        mod.row:findChild("warningButton"):setVisible(hasDisabledDependencies)
         mod.row:findChild("warningButton"):setEnabled(hasDisabledDependencies)
+        --mod.row:findChild("warningButtonOld"):setValue(hasDisabledDependencies)
+        --mod.row:findChild("warningButtonOld"):setEnabled(hasDisabledDependencies)
     end
 end
 
@@ -399,7 +403,7 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
     local dependenciesToToggle = findDependenciesToEnable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
-    if next(dependenciesToToggle) then
+    if numDependencies > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
@@ -437,8 +441,39 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
     end
 end
 
-local function checkDisabledDependenciesOfEnabledModInfo(info)
-    checkDisabledDependenciesOfEnabledMod(scene.modlist[info.Name])
+-- similar to the above checkDisabledDependenciesOfEnabledMod, but has no "Cancel" button and is meant to be called from the warning button
+local function checkDisabledDependenciesOfEnabledModFromWarning(info)
+    local mod = scene.modlist[info.Name]
+    local dependenciesToToggle = findDependenciesToEnable(mod)
+    local numDependencies = dictLength(dependenciesToToggle)
+
+    if numDependencies > 0 then
+        alert({
+            body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
+                "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
+                numDependencies,
+                numDependencies == 1 and "mod" or "mods",
+                numDependencies == 1 and "it" or "them"
+            )),
+            buttons = {
+                {
+                    "Yes",
+                    function(container)
+                        -- enable all the dependencies!
+                        for _, depToToggle in pairs(dependenciesToToggle) do
+                            enableMod(depToToggle)
+                        end
+
+                        writeBlacklist()
+                        container:close()
+                    end
+                },
+                {
+                    "No"
+                }
+            }
+        })
+    end
 end
 
 -- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency, excluding favorites
@@ -512,7 +547,7 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
     local dependenciesThatCanBeDisabled = findDependenciesThatCanBeDisabled(newlyDisabledMods)
     local numDependencies = dictLength(dependenciesThatCanBeDisabled)
 
-    if next(dependenciesThatCanBeDisabled) then
+    if numDependencies > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesThatCanBeDisabled, string.format(
                 "%s other %s no longer required for any enabled mod.\nDo you want to disable %s as well?",
@@ -546,7 +581,7 @@ local function checkEnabledDependentsOfDisabledMod(mod)
     local dependenciesToToggle = findDependentsToDisable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
-    if next(dependenciesToToggle) then
+    if numDependencies > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
                 "%s other %s on this mod.\nDo you want to disable %s as well?",
@@ -613,7 +648,7 @@ local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
     local mod = scene.modlist[info.Name]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
-        mod.row:findChild("favoriteCheckbox"):setValue(newState)
+        mod.row:findChild("favoriteHeart"):setValue(newState)
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
         writeFavorites()
@@ -878,23 +913,43 @@ function scene.item(info)
         uie.label(getLabelTextFor(info)):as("title"),
 
         uie.row({
-            uie.warning(false, function(checkbox, newState)
-                checkDisabledDependenciesOfEnabledModInfo(info)
+            uie.warning(false, function(warning, newState)
+                checkDisabledDependenciesOfEnabledModFromWarning(info)
             end)
                 :with(verticalCenter)
                 :with({
                     enabled = false
                 })
                 :as("warningButton"),
+            --uie.warning_old(false, function(checkbox, newState)
+            --    checkDisabledDependenciesOfEnabledModFromWarning(info)
+            --end)
+            --    :with(verticalCenter)
+            --    :with({
+            --        enabled = false
+            --    })
+            --    :as("warningButtonOld"),
 
-            uie.star(info.IsFavorite, function(checkbox, newState)
+            uie.heart(info.IsFavorite, function(heart, newState)
                 toggleFavorite(info, newState)
             end)
                 :with(verticalCenter)
                 :with({
                     enabled = false
                 })
-                :as("favoriteCheckbox"),
+                :as("favoriteHeart"),
+
+            --uie.star(info.IsFavorite, function(checkbox, newState)
+            --    toggleFavorite(info, newState)
+            --end)
+            --    :with(verticalCenter)
+            --    :with({
+            --        enabled = false,
+            --        style = {
+            --            padding = 8
+            --        }
+            --    })
+            --    :as("favoriteCheckbox"),
 
             uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox, newState)
                 toggleMod(info, newState)
@@ -1082,7 +1137,8 @@ function scene.reload()
         searchField:setEnabled(true)
         for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
-            mod.row:findChild("favoriteCheckbox"):setEnabled(true)
+            mod.row:findChild("favoriteHeart"):setEnabled(true)
+            --mod.row:findChild("favoriteCheckbox"):setEnabled(true)
             updateLabelTextForMod(mod)
             updateWarningButtonForMod(mod)
         end
