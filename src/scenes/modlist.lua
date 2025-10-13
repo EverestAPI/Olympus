@@ -1046,11 +1046,11 @@ function scene.reload()
                 uie.button("Mod presets", function()
                     scene.displayPresetsUI()
                 end),
-                uie.checkbox("Only show enabled mods", false, function(checkbox, newState)
+                uie.checkbox("Only show enabled", false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
-                uie.checkbox("Only show favorite mods", false, function(checkbox, newState)
+                uie.checkbox("Only show favorites", false, function(checkbox, newState)
                     scene.onlyShowFavoriteMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowFavoriteModsCheckbox"),
