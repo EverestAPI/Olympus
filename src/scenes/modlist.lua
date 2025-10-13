@@ -642,6 +642,27 @@ local function toggleMod(info, newState)
     end
 end
 
+-- called when a mod is to be deleted, prompting the user for confirmation
+local function deleteMod()
+    alert({
+        body = [[
+Are you sure that you want to delete ]] .. fs.filename(info.Path) .. [[?
+You will need to redownload the mod to use it again.
+Tip: Disabling the mod prevents Everest from loading it, and is as efficient as deleting it to reduce lag.]],
+        buttons = {
+            {
+                "Delete",
+                function(container)
+                    fs.remove(info.Path)
+                    scene.reload()
+                    container:close("OK")
+                end
+            },
+            { "Keep" }
+        }
+    })
+end
+
 -- called whenever a mod is favorited or unfavorited
 -- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
 local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
@@ -918,38 +939,24 @@ function scene.item(info)
             end)
                 :with(verticalCenter)
                 :with({
-                    enabled = false
+                    enabled = false,
+                    style = {
+                        --spacing = 30
+                    }
                 })
                 :as("warningButton"),
-            --uie.warning_old(false, function(checkbox, newState)
-            --    checkDisabledDependenciesOfEnabledModFromWarning(info)
-            --end)
-            --    :with(verticalCenter)
-            --    :with({
-            --        enabled = false
-            --    })
-            --    :as("warningButtonOld"),
 
             uie.heart(info.IsFavorite, function(heart, newState)
                 toggleFavorite(info, newState)
             end)
                 :with(verticalCenter)
                 :with({
-                    enabled = false
+                    enabled = false,
+                    style = {
+                        --spacing = 30
+                    }
                 })
                 :as("favoriteHeart"),
-
-            --uie.star(info.IsFavorite, function(checkbox, newState)
-            --    toggleFavorite(info, newState)
-            --end)
-            --    :with(verticalCenter)
-            --    :with({
-            --        enabled = false,
-            --        style = {
-            --            padding = 8
-            --        }
-            --    })
-            --    :as("favoriteCheckbox"),
 
             uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox, newState)
                 toggleMod(info, newState)
@@ -958,39 +965,24 @@ function scene.item(info)
                 :with({
                     enabled = false,
                     style = {
-                        padding = 8
+                        --padding = 8
                     }
                 })
                 :as("toggleCheckbox"),
 
-            uie.button(
-                "Delete",
-                function()
-                    alert({
-                        body = [[
-Are you sure that you want to delete ]] .. fs.filename(info.Path) .. [[?
-You will need to redownload the mod to use it again.
-Tip: Disabling the mod prevents Everest from loading it, and is as efficient as deleting it to reduce lag.]],
-                        buttons = {
-                            {
-                                "Delete",
-                                function(container)
-                                    fs.remove(info.Path)
-                                    scene.reload()
-                                    container:close("OK")
-                                end
-                            },
-                            { "Keep" }
-                        }
-                    })
-                end
-            ):with({
-                enabled = info.IsFile
-            })
+            uie.button("Delete", function()
+                deleteMod()
+            end)
+                :with({
+                    enabled = info.IsFile
+                })
 
         }):with({
             clip = false,
-            cacheable = false
+            cacheable = false,
+            style = {
+                spacing = 13
+            }
         }):with(uiu.rightbound)
 
     }):with(uiu.fillWidth)
