@@ -294,17 +294,13 @@ end
 
 local function updateWarningButtonForMod(mod)
     if mod.info.IsBlacklisted then
-        mod.row:findChild("warningButton"):setVisible(false)
+        mod.row:findChild("warningButton"):setValue(false)
         mod.row:findChild("warningButton"):setEnabled(false)
-        --mod.row:findChild("warningButtonOld"):setValue(false)
-        --mod.row:findChild("warningButtonOld"):setEnabled(false)
     else
         local disabledDependencies = findDependenciesToEnable(mod)
         local hasDisabledDependencies = next(disabledDependencies) ~= nil
-        mod.row:findChild("warningButton"):setVisible(hasDisabledDependencies)
+        mod.row:findChild("warningButton"):setValue(hasDisabledDependencies)
         mod.row:findChild("warningButton"):setEnabled(hasDisabledDependencies)
-        --mod.row:findChild("warningButtonOld"):setValue(hasDisabledDependencies)
-        --mod.row:findChild("warningButtonOld"):setEnabled(hasDisabledDependencies)
     end
 end
 
@@ -939,10 +935,7 @@ function scene.item(info)
             end)
                 :with(verticalCenter)
                 :with({
-                    enabled = false,
-                    style = {
-                        --spacing = 30
-                    }
+                    enabled = false
                 })
                 :as("warningButton"),
 
@@ -951,10 +944,7 @@ function scene.item(info)
             end)
                 :with(verticalCenter)
                 :with({
-                    enabled = false,
-                    style = {
-                        --spacing = 30
-                    }
+                    enabled = false
                 })
                 :as("favoriteHeart"),
 
@@ -963,10 +953,7 @@ function scene.item(info)
             end)
                 :with(verticalCenter)
                 :with({
-                    enabled = false,
-                    style = {
-                        --padding = 8
-                    }
+                    enabled = false
                 })
                 :as("toggleCheckbox"),
 
@@ -976,14 +963,16 @@ function scene.item(info)
                 :with({
                     enabled = info.IsFile
                 })
+                :with(verticalCenter)
 
         }):with({
             clip = false,
             cacheable = false,
             style = {
-                spacing = 13
+                spacing = 16
             }
         }):with(uiu.rightbound)
+        :with(uiu.fillHeight)
 
     }):with(uiu.fillWidth)
 
