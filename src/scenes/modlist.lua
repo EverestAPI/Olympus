@@ -11,6 +11,8 @@ local modupdater = require("modupdater")
 
 local scene = {
     name = "Mod Manager",
+    -- list of mod names in the order they were added to modlist. required for refreshVisibleMods to keep the order consistent
+    orderedModlist = {},
     -- mod name -> mod object { info = modinfo, row = uirow, visible = bool }
     modlist = {},
     -- mod name -> list of mod names that this mod depends on
@@ -129,7 +131,8 @@ local function refreshVisibleMods()
 
     local modIndex = 3 -- the 2 first elements are the header, and the search field
 
-    for _, mod in pairs(scene.modlist) do
+    for i, modName in pairs(scene.orderedModlist) do
+        local mod = scene.modlist[modName]
         -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
         local newVisible =
             -- only show enabled mods
@@ -182,7 +185,7 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    -- colors calculated from http://www.flounder.com/csharp_color_table.htm
+    -- colors calculated from https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.colors
     local normalColor = { 1, 1, 1, 1 } -- white
     local disabledColor = { 1, 1, 1, 0.5 } -- white but half-transparent
     local favoriteColor = { 1, 0.0784313725, 0.5764705882, 1 } -- deep pink
@@ -203,13 +206,6 @@ local function getLabelTextFor(info)
                     color = dependencyColor
                 end
             end
-        end
-    end
-
-    local disabledOrMissingDependencies = {}
-    for _, dep in ipairs(scene.modDependencies[info.Name] or {}) do
-        if not scene.modlist[dep] or scene.modlist[dep].info.IsBlacklisted then
-            
         end
     end
 
@@ -983,6 +979,7 @@ function scene.reload()
     local loadingID = scene.loadingID + 1
     scene.loadingID = loadingID
 
+    scene.orderedModlist = {}
     scene.modlist = {}
     scene.modDependencies = {}
     scene.modDependents = {}
@@ -1085,6 +1082,7 @@ function scene.reload()
                     local row = scene.item(info)
                     list:addChild(row)
                     scene.modPathToName[info.Path] = info.Name
+                    table.insert(scene.orderedModlist, info.Name)
                     scene.modlist[info.Name] = { info = info, row = row, visible = true }
                     if not scene.modDependencies[info.Name] then
                         scene.modDependencies[info.Name] = {}
@@ -1119,7 +1117,6 @@ function scene.reload()
         for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
             mod.row:findChild("favoriteHeart"):setEnabled(true)
-            --mod.row:findChild("favoriteCheckbox"):setEnabled(true)
             updateLabelTextForMod(mod)
             updateWarningButtonForMod(mod)
         end
