@@ -661,7 +661,6 @@ local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
     local mod = scene.modlist[info.Name]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
-        --mod.row:findChild("favoriteHeart"):setValue(newState)
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
         writeFavorites()
