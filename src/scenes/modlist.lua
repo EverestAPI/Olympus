@@ -263,7 +263,7 @@ local function findDependenciesToEnable(mod)
             end
         end
     end
-    
+
     return dependenciesToEnable
 end
 
@@ -487,7 +487,7 @@ local function findDependentsToDisable(mod)
             end
         end
     end
-    
+
     return dependentsToDisable
 end
 
