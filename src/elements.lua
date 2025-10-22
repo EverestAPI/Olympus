@@ -30,6 +30,18 @@ uie.add("listItemYellow", {
     }
 })
 
+uie.add("modNameLabelColors", {
+    -- this dummy UI element makes the mod name label colors in Manage Installed Mods themable.
+    -- colors calculated from https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.colors
+    style = {
+        normalColor = { 1, 1, 1, 1 }, -- white
+        disabledColor = { 1, 1, 1, 0.5 }, -- white but half-transparent
+        favoriteColor = { 1, 0.0784313725, 0.5764705882, 1 }, -- deep pink
+        dependencyColor = { 0.8549019608, 0.6470588235, 0.1254901961, 1 }, -- goldenrod
+        dependencyOfFavoriteColor = { 1, 0.7137254902, 0.7568627451, 1 }, -- light pink
+    }
+})
+
 -- A simple clickable icon that can be toggled on and off. Child classes should override getColor()
 -- The fading mechanic is the same as in uie.button
 uie.add("clickableIcon", {

@@ -93,6 +93,11 @@
 	"menuItemSubmenu": {
 		"bg": [0.08, 0.08, 0.08, 0.8]
 	},
+	"modNameLabelColors": {
+		"dependencyColor": [0.722, 0.525, 0.043, 1, "/* dark goldenrod */"],
+		"favoriteColor": [0.580, 0, 0.827, 1, "/* dark violet */"],
+		"dependencyOfFavoriteColor": [0.78, 0.082, 0.522, 1, "/* medium violet red */"]
+	},
 	"panel": {
 		"bg": [0.95, 0.95, 0.95, 0.9],
 		"border": [0, 0, 0, 0],

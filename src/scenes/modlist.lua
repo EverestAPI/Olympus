@@ -185,33 +185,25 @@ end
 
 -- gives the text for a given mod
 local function getLabelTextFor(info)
-    -- colors calculated from https://learn.microsoft.com/en-us/dotnet/api/system.windows.media.colors
-    local normalColor = { 1, 1, 1, 1 } -- white
-    local disabledColor = { 1, 1, 1, 0.5 } -- white but half-transparent
-    local favoriteColor = { 1, 0.0784313725, 0.5764705882, 1 } -- deep pink
-    local dependencyColor = { 0.8549019608, 0.6470588235, 0.1254901961, 1 } -- goldenrod
-    local dependencyOfFavoriteColor = { 1, 0.7137254902, 0.7568627451, 1 } -- light pink
-
-    local color = normalColor
+    local themeColors = uie.modNameLabelColors().style
+    local color = themeColors.normalColor
 
     if info.IsFavorite then
-        color = favoriteColor
+        color = themeColors.favoriteColor
     else
         for _, dep in ipairs(scene.modDependents[info.Name] or {}) do
             if scene.modlist[dep] then
                 if scene.modlist[dep].info.IsFavorite then
-                    color = dependencyOfFavoriteColor
+                    color = themeColors.dependencyOfFavoriteColor
                     break
                 elseif not scene.modlist[dep].info.IsBlacklisted then
-                    color = dependencyColor
+                    color = themeColors.dependencyColor
                 end
             end
         end
     end
 
-    if info.IsBlacklisted then
-        color[4] = 0.5
-    end
+    color = {color[1], color[2], color[3], info.IsBlacklisted and 0.5 or 1}
 
     if info.Name then
         if info.GameBananaTitle then
@@ -220,7 +212,7 @@ local function getLabelTextFor(info)
             return {
                 color,
                 info.GameBananaTitle .. "\n",
-                disabledColor,
+                themeColors.disabledColor,
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }
         else
@@ -229,7 +221,7 @@ local function getLabelTextFor(info)
             return {
                 color,
                 info.Name .. "\n",
-                disabledColor,
+                themeColors.disabledColor,
                 (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }
         end
