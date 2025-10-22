@@ -635,7 +635,7 @@ local function toggleMod(info, newState)
 end
 
 -- called when a mod is to be deleted, prompting the user for confirmation
-local function deleteMod()
+local function deleteMod(info)
     alert({
         body = [[
 Are you sure that you want to delete ]] .. fs.filename(info.Path) .. [[?
@@ -953,7 +953,7 @@ function scene.item(info)
                 :as("toggleCheckbox"),
 
             uie.button("Delete", function()
-                deleteMod()
+                deleteMod(info)
             end)
                 :with({
                     enabled = info.IsFile
