@@ -4,4 +4,3 @@ Its purpose is to be shown in Olympus when updating.
 
 #changelog#
 ∙ Fixed crash of Manage Installed Mods when a mod with no everest.yaml is present
-∙ Refresh the mod list when it is filtered on enabled/favorite mods and a mod is enabled/favorited
