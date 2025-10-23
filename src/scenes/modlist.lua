@@ -296,8 +296,7 @@ local function updateWarningButtonForDependents(mod)
 end
 
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
--- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
-local function enableMod(mod, shouldRefreshVisibleMods)
+local function enableMod(mod)
     if mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(true)
         mod.info.IsBlacklisted = false
@@ -306,16 +305,11 @@ local function enableMod(mod, shouldRefreshVisibleMods)
         updateWarningButtonForMod(mod)
         updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
-
-        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
-            refreshVisibleMods()
-        end
     end
 end
 
 -- disable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
--- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
-local function disableMod(mod, shouldRefreshVisibleMods)
+local function disableMod(mod)
     if not mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(false)
         mod.info.IsBlacklisted = true
@@ -324,10 +318,6 @@ local function disableMod(mod, shouldRefreshVisibleMods)
         updateWarningButtonForMod(mod)
         updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
-
-        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
-            refreshVisibleMods()
-        end
     end
 end
 
@@ -646,17 +636,13 @@ Tip: Disabling the mod prevents Everest from loading it, and is as efficient as 
 end
 
 -- called whenever a mod is favorited or unfavorited
--- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
-local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
+local function toggleFavorite(info, newState)
     local mod = scene.modsByPath[info.Path]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
         writeFavorites()
-        if shouldRefreshVisibleMods and scene.onlyShowFavoriteMods then
-            refreshVisibleMods()
-        end
     end
 end
 
