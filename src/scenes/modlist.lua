@@ -13,7 +13,7 @@ local scene = {
     name = "Mod Manager",
     -- the list of displayed mods, in the order they are displayed (mod object = { info = modinfo, row = uirow, visible = bool })
     modlist = {},
-    -- mod name -> mod object
+    -- mod name -> list[mod object]
     modsByName = {},
     -- mod path -> mod object
     modsByPath = {},
@@ -183,15 +183,25 @@ local function getLabelTextFor(info)
     if info.IsFavorite then
         color = themeColors.favoriteColor
     else
+        local isDependencyOfFavorite = false
+        local isDependency = false
+
         for _, dep in ipairs(scene.modDependents[info.Name] or {}) do
             if scene.modsByName[dep] then
-                if scene.modsByName[dep].info.IsFavorite then
-                    color = themeColors.dependencyOfFavoriteColor
-                    break
-                elseif not scene.modsByName[dep].info.IsBlacklisted then
-                    color = themeColors.dependencyColor
+                for _, mod in pairs(scene.modsByName[dep]) do
+                    if mod.info.IsFavorite then
+                        isDependencyOfFavorite = true
+                    elseif not mod.info.IsBlacklisted then
+                        isDependency = true
+                    end
                 end
             end
+        end
+
+        if isDependencyOfFavorite then
+            color = themeColors.dependencyOfFavoriteColor
+        elseif isDependency then
+            color = themeColors.dependencyColor
         end
     end
 
@@ -244,12 +254,18 @@ local function findDependenciesToEnable(mod)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modsByName[depName]
-        if dep then
-            if dep.info.IsBlacklisted and not dependenciesToEnable[depName] then
-                dependenciesToEnable[depName] = dep
+        local depOptions = scene.modsByName[depName]
+        if depOptions then
+            local disabled = true
+            for _, dep in pairs(depOptions) do
+                if not dep.info.IsBlacklisted then
+                    disabled = false
+                end
             end
-            for _, subdep in ipairs(scene.modDependencies[dep.info.Name] or {}) do
+            if disabled and not dependenciesToEnable[depName] then
+                dependenciesToEnable[depName] = depOptions[1] -- can't really take an informed decision there...
+            end
+            for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
                 if not tried[subdep] then
                     tried[subdep] = true
                     table.insert(queue, subdep)
@@ -267,9 +283,11 @@ end
 
 local function updateLabelTextForDependencies(mod)
     for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
-        local dep = scene.modsByName[depName]
-        if dep then
-            updateLabelTextForMod(dep)
+        local depOptions = scene.modsByName[depName]
+        if depOptions then
+            for _, dep in pairs(depOptions) do
+                updateLabelTextForMod(dep)
+            end
         end
     end
 end
@@ -288,9 +306,11 @@ end
 
 local function updateWarningButtonForDependents(mod)
     for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
-        local dep = scene.modsByName[depName]
-        if dep then
-            updateWarningButtonForMod(dep)
+        local depOptions = scene.modsByName[depName]
+        if depOptions then
+            for _, dep in pairs(depOptions) do
+                updateWarningButtonForMod(dep)
+            end
         end
     end
 end
@@ -411,7 +431,7 @@ end
 
 -- similar to the above checkDisabledDependenciesOfEnabledMod, but has no "Cancel" button and is meant to be called from the warning button
 local function checkDisabledDependenciesOfEnabledModFromWarning(info)
-    local mod = scene.modsByName[info.Name]
+    local mod = scene.modsByPath[info.Path]
     local dependenciesToToggle = findDependenciesToEnable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
@@ -460,11 +480,13 @@ local function findDependentsToDisable(mod)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modsByName[depName]
-        if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependentsToDisable[depName] then
-            dependentsToDisable[depName] = dep
+        local depOptions = scene.modsByName[depName] or {}
+        for _, dep in pairs(depOptions) do
+            if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependentsToDisable[depName] then
+                dependentsToDisable[depName] = dep
+            end
         end
-        for _, subdep in ipairs(scene.modDependents[dep.info.Name] or {}) do
+        for _, subdep in ipairs(scene.modDependents[depName] or {}) do
             if not tried[subdep] then
                 tried[subdep] = true
                 table.insert(queue, subdep)
@@ -492,15 +514,17 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modsByName[depName]
-        if dep and not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependenciesThatCanBeDisabled[depName] then
-            local enabledDependents = findDependentsToDisable(dep)
-            if not next(enabledDependents) then
-                dependenciesThatCanBeDisabled[depName] = dep
-                for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
-                    if not tried[subdep] then
-                        tried[subdep] = true
-                        table.insert(queue, subdep)
+        local depOptions = scene.modsByName[depName] or {}
+        for _, dep in pairs(depOptions) do
+            if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependenciesThatCanBeDisabled[depName] then
+                local enabledDependents = findDependentsToDisable(dep)
+                if not next(enabledDependents) then
+                    dependenciesThatCanBeDisabled[depName] = dep
+                    for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
+                        if not tried[subdep] then
+                            tried[subdep] = true
+                            table.insert(queue, subdep)
+                        end
                     end
                 end
             end
@@ -1063,7 +1087,10 @@ function scene.reload()
                     scene.modsByPath[info.Path] = mod
 
                     if info.Name then
-                        scene.modsByName[info.Name] = mod
+                        if not scene.modsByName[info.Name] then
+                            scene.modsByName[info.Name] = {}
+                        end
+                        table.insert(scene.modsByName[info.Name], mod)
                         if not scene.modDependencies[info.Name] then
                             scene.modDependencies[info.Name] = {}
                         end
