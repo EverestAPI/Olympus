@@ -296,8 +296,7 @@ local function updateWarningButtonForDependents(mod)
 end
 
 -- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
--- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
-local function enableMod(mod, shouldRefreshVisibleMods)
+local function enableMod(mod)
     if mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(true)
         mod.info.IsBlacklisted = false
@@ -306,16 +305,11 @@ local function enableMod(mod, shouldRefreshVisibleMods)
         updateWarningButtonForMod(mod)
         updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
-
-        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
-            refreshVisibleMods()
-        end
     end
 end
 
 -- disable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
--- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
-local function disableMod(mod, shouldRefreshVisibleMods)
+local function disableMod(mod)
     if not mod.info.IsBlacklisted then
         mod.row:findChild("toggleCheckbox"):setValue(false)
         mod.info.IsBlacklisted = true
@@ -324,10 +318,6 @@ local function disableMod(mod, shouldRefreshVisibleMods)
         updateWarningButtonForMod(mod)
         updateWarningButtonForDependents(mod)
         updateEnabledModCountLabel()
-
-        if shouldRefreshVisibleMods and scene.onlyShowEnabledMods then
-            refreshVisibleMods()
-        end
     end
 end
 
@@ -399,6 +389,9 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
                         end
 
                         writeBlacklist()
+                        if scene.onlyShowEnabledMods then
+                            refreshVisibleMods()
+                        end
                         container:close()
                     end
                 },
@@ -411,6 +404,9 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
                         -- re-disable the mod
                         disableMod(mod)
                         writeBlacklist()
+                        if scene.onlyShowEnabledMods then
+                            refreshVisibleMods()
+                        end
                         container:close()
                     end
                 }
@@ -443,6 +439,9 @@ local function checkDisabledDependenciesOfEnabledModFromWarning(info)
                         end
 
                         writeBlacklist()
+                        if scene.onlyShowEnabledMods then
+                            refreshVisibleMods()
+                        end
                         container:close()
                     end
                 },
@@ -543,6 +542,9 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
                         end
 
                         writeBlacklist()
+                        if scene.onlyShowEnabledMods then
+                            refreshVisibleMods()
+                        end
                         container:close()
                     end
                 },
@@ -577,6 +579,9 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                         end
 
                         writeBlacklist()
+                        if scene.onlyShowEnabledMods then
+                            refreshVisibleMods()
+                        end
                         container:close()
 
                         dependenciesToToggle[mod.info.Name] = mod
@@ -596,6 +601,9 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                         -- re-enable the mod
                         enableMod(mod)
                         writeBlacklist()
+                        if scene.onlyShowEnabledMods then
+                            refreshVisibleMods()
+                        end
                         container:close()
                     end
                 }
@@ -612,12 +620,18 @@ local function toggleMod(info, newState)
     if newState then
         enableMod(mod)
         writeBlacklist()
+        if scene.onlyShowEnabledMods then
+            refreshVisibleMods()
+        end
         if info.Name then
             checkDisabledDependenciesOfEnabledMod(mod)
         end
     else
         disableMod(mod)
         writeBlacklist()
+        if scene.onlyShowEnabledMods then
+            refreshVisibleMods()
+        end
         if info.Name then
             checkEnabledDependentsOfDisabledMod(mod)
         end
@@ -646,17 +660,13 @@ Tip: Disabling the mod prevents Everest from loading it, and is as efficient as 
 end
 
 -- called whenever a mod is favorited or unfavorited
--- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
-local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
+local function toggleFavorite(info, newState)
     local mod = scene.modsByPath[info.Path]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
         updateLabelTextForMod(mod)
         updateLabelTextForDependencies(mod)
         writeFavorites()
-        if shouldRefreshVisibleMods and scene.onlyShowFavoriteMods then
-            refreshVisibleMods()
-        end
     end
 end
 
@@ -682,12 +692,18 @@ local function enableAllMods()
     for _, mod in pairs(scene.modlist) do
         enableMod(mod)
     end
+    if scene.onlyShowEnabledMods then
+        refreshVisibleMods()
+    end
 end
 
 -- loops through modlist and calls disableMod() on every mod
 local function disableAllMods()
     for _, mod in pairs(scene.modlist) do
         disableMod(mod)
+    end
+    if scene.onlyShowEnabledMods then
+        refreshVisibleMods()
     end
 end
 
@@ -721,6 +737,9 @@ local function applyPreset(name, disableAll)
         displayErrorMessage("Some mods couldn't be loaded, make sure they are installed: \n" .. missingMods)
     end
     writeBlacklist()
+    if scene.onlyShowEnabledMods then
+        refreshVisibleMods()
+    end
 end
 
 -- deletes preset from modpresets.txt
@@ -926,6 +945,9 @@ function scene.item(info)
 
             uie.heart(info.IsFavorite, function(heart, newState)
                 toggleFavorite(info, newState)
+                if scene.onlyShowFavoriteMods then
+                    refreshVisibleMods()
+                end
             end)
                 :with(verticalCenter)
                 :with({
@@ -1016,7 +1038,7 @@ function scene.reload()
                 uie.button("Open mods folder", function()
                     utils.openFile(fs.joinpath(root, "Mods"))
                 end),
-                uie.button("Edit blacklist.txt", function()
+                uie.button("Edit blacklist", function()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
                 end),
                 uie.button("Mod presets", function()
