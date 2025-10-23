@@ -3,7 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added favorites to "Manage Installed Mods", with a dedicated filter
-∙ Suggest disabling dependencies when disabling a mod
-∙ Display warning symbol if an enabled mod has disabled dependencies
-∙ Different text colors for dependencies of enabled mods, favorites and their dependencies
+∙ Fixed crash of Manage Installed Mods when a mod with no everest.yaml is present

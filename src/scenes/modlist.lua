@@ -11,10 +11,12 @@ local modupdater = require("modupdater")
 
 local scene = {
     name = "Mod Manager",
-    -- list of mod names in the order they were added to modlist. required for refreshVisibleMods to keep the order consistent
-    orderedModlist = {},
-    -- mod name -> mod object { info = modinfo, row = uirow, visible = bool }
+    -- the list of displayed mods, in the order they are displayed (mod object = { info = modinfo, row = uirow, visible = bool })
     modlist = {},
+    -- mod name -> mod object
+    modsByName = {},
+    -- mod path -> mod object
+    modsByPath = {},
     -- mod name -> list of mod names that this mod depends on
     modDependencies = {},
     -- mod name -> list of mod names that depend on this mod
@@ -75,15 +77,6 @@ root:findChild("scrollbox").handleY:hook({
 scene.root = root
 
 
--- finds a mod from modlist by its path
-local function findModByPath(path)
-    local modName = scene.modPathToName[path]
-    if modName then
-        return scene.modlist[modName]
-    end
-    return nil
-end
-
 -- creates alert with error message
 local function displayErrorMessage(text)
     alert({
@@ -131,8 +124,7 @@ local function refreshVisibleMods()
 
     local modIndex = 3 -- the 2 first elements are the header, and the search field
 
-    for i, modName in pairs(scene.orderedModlist) do
-        local mod = scene.modlist[modName]
+    for _, mod in pairs(scene.modlist) do
         -- a mod is visible if the search is part of the filename or mod ID (case-insensitive) or if there is no search at all
         local newVisible =
             -- only show enabled mods
@@ -192,11 +184,11 @@ local function getLabelTextFor(info)
         color = themeColors.favoriteColor
     else
         for _, dep in ipairs(scene.modDependents[info.Name] or {}) do
-            if scene.modlist[dep] then
-                if scene.modlist[dep].info.IsFavorite then
+            if scene.modsByName[dep] then
+                if scene.modsByName[dep].info.IsFavorite then
                     color = themeColors.dependencyOfFavoriteColor
                     break
-                elseif not scene.modlist[dep].info.IsBlacklisted then
+                elseif not scene.modsByName[dep].info.IsBlacklisted then
                     color = themeColors.dependencyColor
                 end
             end
@@ -229,7 +221,9 @@ local function getLabelTextFor(info)
         -- Filename.zip
         return {
             color,
-            fs.filename(info.Path)
+            fs.filename(info.Path) .. "\n",
+            themeColors.disabledColor,
+            "[No mod info available]"
         }
     end
 end
@@ -250,7 +244,7 @@ local function findDependenciesToEnable(mod)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modlist[depName]
+        local dep = scene.modsByName[depName]
         if dep then
             if dep.info.IsBlacklisted and not dependenciesToEnable[depName] then
                 dependenciesToEnable[depName] = dep
@@ -273,7 +267,7 @@ end
 
 local function updateLabelTextForDependencies(mod)
     for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
-        local dep = scene.modlist[depName]
+        local dep = scene.modsByName[depName]
         if dep then
             updateLabelTextForMod(dep)
         end
@@ -294,7 +288,7 @@ end
 
 local function updateWarningButtonForDependents(mod)
     for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
-        local dep = scene.modlist[depName]
+        local dep = scene.modsByName[depName]
         if dep then
             updateWarningButtonForMod(dep)
         end
@@ -427,7 +421,7 @@ end
 
 -- similar to the above checkDisabledDependenciesOfEnabledMod, but has no "Cancel" button and is meant to be called from the warning button
 local function checkDisabledDependenciesOfEnabledModFromWarning(info)
-    local mod = scene.modlist[info.Name]
+    local mod = scene.modsByName[info.Name]
     local dependenciesToToggle = findDependenciesToEnable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
@@ -476,7 +470,7 @@ local function findDependentsToDisable(mod)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modlist[depName]
+        local dep = scene.modsByName[depName]
         if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependentsToDisable[depName] then
             dependentsToDisable[depName] = dep
         end
@@ -508,7 +502,7 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
 
     while #queue > 0 do
         local depName = table.remove(queue, 1)
-        local dep = scene.modlist[depName]
+        local dep = scene.modsByName[depName]
         if dep and not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependenciesThatCanBeDisabled[depName] then
             local enabledDependents = findDependentsToDisable(dep)
             if not next(enabledDependents) then
@@ -614,15 +608,19 @@ end
 
 -- called whenever a mod is enabled or disabled
 local function toggleMod(info, newState)
-    local mod = scene.modlist[info.Name]
+    local mod = scene.modsByPath[info.Path]
     if newState then
         enableMod(mod)
         writeBlacklist()
-        checkDisabledDependenciesOfEnabledMod(mod)
+        if info.Name then
+            checkDisabledDependenciesOfEnabledMod(mod)
+        end
     else
         disableMod(mod)
         writeBlacklist()
-        checkEnabledDependentsOfDisabledMod(mod)
+        if info.Name then
+            checkEnabledDependentsOfDisabledMod(mod)
+        end
     end
 end
 
@@ -650,7 +648,7 @@ end
 -- called whenever a mod is favorited or unfavorited
 -- usages of this function may omit the shouldRefreshVisibleMods parameter, defaulting to nil
 local function toggleFavorite(info, newState, shouldRefreshVisibleMods)
-    local mod = scene.modlist[info.Name]
+    local mod = scene.modsByPath[info.Path]
     if mod.info.IsFavorite ~= newState then
         mod.info.IsFavorite = newState
         updateLabelTextForMod(mod)
@@ -709,7 +707,7 @@ local function applyPreset(name, disableAll)
 
     for filename in presetMods:gmatch("([^\n]*)\n") do -- splits the string after every newline into mod filenames
         local path = fs.joinpath(root, "Mods", filename)
-        local mod = findModByPath(path)
+        local mod = scene.modsByPath[path]
         if mod then
             enableMod(mod)
         else
@@ -970,8 +968,9 @@ function scene.reload()
     local loadingID = scene.loadingID + 1
     scene.loadingID = loadingID
 
-    scene.orderedModlist = {}
     scene.modlist = {}
+    scene.modsByName = {}
+    scene.modsByPath = {}
     scene.modDependencies = {}
     scene.modDependents = {}
     scene.modPathToName = {}
@@ -1072,18 +1071,23 @@ function scene.reload()
                     end
                     local row = scene.item(info)
                     list:addChild(row)
-                    scene.modPathToName[info.Path] = info.Name
-                    table.insert(scene.orderedModlist, info.Name)
-                    scene.modlist[info.Name] = { info = info, row = row, visible = true }
-                    if not scene.modDependencies[info.Name] then
-                        scene.modDependencies[info.Name] = {}
-                    end
-                    for _, depName in ipairs(info.Dependencies or {}) do
-                        table.insert(scene.modDependencies[info.Name], depName)
-                        if not scene.modDependents[depName] then
-                            scene.modDependents[depName] = {}
+
+                    local mod = { info = info, row = row, visible = true }
+                    table.insert(scene.modlist, mod)
+                    scene.modsByPath[info.Path] = mod
+
+                    if info.Name then
+                        scene.modsByName[info.Name] = mod
+                        if not scene.modDependencies[info.Name] then
+                            scene.modDependencies[info.Name] = {}
                         end
-                        table.insert(scene.modDependents[depName], info.Name)
+                        for _, depName in ipairs(info.Dependencies or {}) do
+                            table.insert(scene.modDependencies[info.Name], depName)
+                            if not scene.modDependents[depName] then
+                                scene.modDependents[depName] = {}
+                            end
+                            table.insert(scene.modDependents[depName], info.Name)
+                        end
                     end
                 else
                     print("modlist.reload encountered nil on poll", task)
