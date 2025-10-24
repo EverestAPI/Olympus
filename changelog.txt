@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Better handling of the "multiple versions of the same mod are installed" case
+∙ Auto-disable logic fixes + some cleanup
