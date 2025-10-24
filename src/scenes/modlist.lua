@@ -357,6 +357,7 @@ end
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
 local function getConfirmationMessageBodyForModToggling(dependenciesToToggle, message)
     local modList = ''
+    -- TODO: this isn't alphabetized anymore (not sure if it was before?)
     for _, mod in pairs(dependenciesToToggle) do
         modList = modList
             .. (modList == '' and '' or '\n')
@@ -392,7 +393,7 @@ end
 -- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
 -- returns nothing if the mod has no name
 local function checkDisabledDependenciesOfEnabledMod(mod)
-    if not mod.info.Name
+    if not mod.info.Name then
         return
     end
 
@@ -435,7 +436,7 @@ end
 -- similar to the above checkDisabledDependenciesOfEnabledMod, but has no "Cancel" button and is meant to be called from the warning button
 -- returns nothing if the mod has no name
 local function checkDisabledDependenciesOfEnabledModFromWarning(info)
-    if not mod.info.Name
+    if not info.Name then
         return
     end
 
@@ -571,32 +572,32 @@ end
 -- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
 -- returns nothing if the mod has no name
 local function checkEnabledDependentsOfDisabledMod(mod)
-    if not mod.info.Name
+    if not mod.info.Name then
         return
     end
 
-    local dependenciesToToggle = findDependentsToDisable(mod)
-    local numDependencies = dictLength(dependenciesToToggle)
+    local dependentsToToggle = findDependentsToDisable(mod)
+    local numDependents = dictLength(dependentsToToggle)
 
-    if numDependencies > 0 then
+    if numDependents > 0 then
         alert({
-            body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
+            body = getConfirmationMessageBodyForModToggling(dependentsToToggle, string.format(
                 "%s other %s on this mod.\nDo you want to disable %s as well?",
-                numDependencies,
-                numDependencies == 1 and "mod depends" or "mods depend",
-                numDependencies == 1 and "it" or "them"
+                numDependents,
+                numDependents == 1 and "mod depends" or "mods depend",
+                numDependents == 1 and "it" or "them"
             )),
             buttons = {
                 {
                     "Yes",
                     function(container)
                         -- disable them all!
-                        disableMods(dependenciesToToggle)
+                        disableMods(dependentsToToggle)
                         container:close()
 
                         -- is this safe?
-                        dependenciesToToggle[mod.info.Name] = mod
-                        checkEnabledDependenciesOfDisabledMods(dependenciesToToggle)
+                        dependentsToToggle[mod.info.Name] = mod
+                        checkEnabledDependenciesOfDisabledMods(dependentsToToggle)
                     end
                 },
                 {
