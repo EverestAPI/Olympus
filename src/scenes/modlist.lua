@@ -469,9 +469,9 @@ local function checkDisabledDependenciesOfEnabledModFromWarning(info)
     end
 end
 
--- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency, excluding favorites
+-- lists all dependents of the given mod that should be disabled because they are going to miss it as a dependency, optionally excluding favorites
 -- returns a table of dependent name -> mod object
-local function findDependentsToDisable(mod)
+local function findDependentsToDisable(mod, excludeFavorites)
     local queue = {}
     local tried = {}
     local dependentsToDisable = {}
@@ -487,7 +487,7 @@ local function findDependentsToDisable(mod)
         local depName = table.remove(queue, 1)
         local depOptions = scene.modsByName[depName] or {}
         for _, dep in pairs(depOptions) do
-            if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependentsToDisable[depName] then
+            if not dep.info.IsBlacklisted and not (excludeFavorites and dep.info.IsFavorite) and not dependentsToDisable[depName] then
                 dependentsToDisable[depName] = dep
             end
         end
@@ -522,7 +522,8 @@ local function findDependenciesThatCanBeDisabled(newlyDisabledMods)
         local depOptions = scene.modsByName[depName] or {}
         for _, dep in pairs(depOptions) do
             if not dep.info.IsBlacklisted and not dep.info.IsFavorite and not dependenciesThatCanBeDisabled[depName] then
-                local enabledDependents = findDependentsToDisable(dep)
+                -- check if any mod requires this mod, including favorites
+                local enabledDependents = findDependentsToDisable(dep, false)
                 if not next(enabledDependents) then
                     dependenciesThatCanBeDisabled[depName] = dep
                     for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
@@ -576,7 +577,8 @@ local function checkEnabledDependentsOfDisabledMod(mod)
         return
     end
 
-    local dependentsToToggle = findDependentsToDisable(mod)
+    -- find dependents to disable, excluding favorites
+    local dependentsToToggle = findDependentsToDisable(mod, true)
     local numDependents = dictLength(dependentsToToggle)
 
     if numDependents > 0 then
@@ -595,7 +597,6 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                         disableMods(dependentsToToggle)
                         container:close()
 
-                        -- is this safe?
                         dependentsToToggle[mod.info.Name] = mod
                         checkEnabledDependenciesOfDisabledMods(dependentsToToggle)
                     end
@@ -604,7 +605,6 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                     "No",
                     function(container)
                         container:close()
-                        -- is this safe?
                         checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
                     end
                 },
