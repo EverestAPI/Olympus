@@ -14,6 +14,7 @@ local scene = {
     -- the list of displayed mods, in the order they are displayed (mod object = { info = modinfo, row = uirow, visible = bool })
     modlist = {},
     -- mod name -> list[mod object]
+    -- used to handle multiple versions of the same mod
     modsByName = {},
     -- mod path -> mod object
     modsByPath = {},
@@ -187,13 +188,11 @@ local function getLabelTextFor(info)
         local isDependency = false
 
         for _, dep in ipairs(scene.modDependents[info.Name] or {}) do
-            if scene.modsByName[dep] then
-                for _, mod in pairs(scene.modsByName[dep]) do
-                    if mod.info.IsFavorite then
-                        isDependencyOfFavorite = true
-                    elseif not mod.info.IsBlacklisted then
-                        isDependency = true
-                    end
+             for _, mod in pairs(scene.modsByName[dep] or {}) do
+                if mod.info.IsFavorite then
+                    isDependencyOfFavorite = true
+                elseif not mod.info.IsBlacklisted then
+                    isDependency = true
                 end
             end
         end
@@ -256,10 +255,12 @@ local function findDependenciesToEnable(mod)
         local depName = table.remove(queue, 1)
         local depOptions = scene.modsByName[depName]
         if depOptions then
+            -- if any of the options is enabled, we're good
             local disabled = true
             for _, dep in pairs(depOptions) do
                 if not dep.info.IsBlacklisted then
                     disabled = false
+                    break
                 end
             end
             if disabled and not dependenciesToEnable[depName] then
@@ -283,11 +284,9 @@ end
 
 local function updateLabelTextForDependencies(mod)
     for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
-        local depOptions = scene.modsByName[depName]
-        if depOptions then
-            for _, dep in pairs(depOptions) do
-                updateLabelTextForMod(dep)
-            end
+        local depOptions = scene.modsByName[depName] or {}
+        for _, dep in pairs(depOptions) do
+            updateLabelTextForMod(dep)
         end
     end
 end
@@ -306,11 +305,9 @@ end
 
 local function updateWarningButtonForDependents(mod)
     for _, depName in ipairs(scene.modDependents[mod.info.Name] or {}) do
-        local depOptions = scene.modsByName[depName]
-        if depOptions then
-            for _, dep in pairs(depOptions) do
-                updateWarningButtonForMod(dep)
-            end
+        local depOptions = scene.modsByName[depName] or {}
+        for _, dep in pairs(depOptions) do
+            updateWarningButtonForMod(dep)
         end
     end
 end
