@@ -328,7 +328,7 @@ local function enableMods(mods)
             handleModEnabledStateChange(mod, true)
         end
     end
-    
+
     updateEnabledModCountLabel()
     writeBlacklist()
 end
@@ -345,7 +345,7 @@ local function disableMods(mods)
             handleModEnabledStateChange(mod, false)
         end
     end
-    
+
     updateEnabledModCountLabel()
     writeBlacklist()
 end
