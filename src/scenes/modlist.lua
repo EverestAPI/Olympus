@@ -312,40 +312,46 @@ local function updateWarningButtonForDependents(mod)
     end
 end
 
--- enable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
-local function enableMod(mod)
-    if mod.info.IsBlacklisted then
-        mod.row:findChild("toggleCheckbox"):setValue(true)
-        mod.info.IsBlacklisted = false
-        updateLabelTextForMod(mod)
-        updateLabelTextForDependencies(mod)
-        updateWarningButtonForMod(mod)
-        updateWarningButtonForDependents(mod)
-        updateEnabledModCountLabel()
-    end
+local function handleModEnabledStateChange(mod, enabling)
+    mod.row:findChild("toggleCheckbox"):setValue(enabling)
+    mod.info.IsBlacklisted = not enabling
+    updateLabelTextForMod(mod)
+    updateLabelTextForDependencies(mod)
+    updateWarningButtonForMod(mod)
+    updateWarningButtonForDependents(mod)
+    updateEnabledModCountLabel()
 end
 
--- disable a mod on the UI (writeBlacklist needs to be called afterwards to write the change to disk)
-local function disableMod(mod)
-    if not mod.info.IsBlacklisted then
-        mod.row:findChild("toggleCheckbox"):setValue(false)
-        mod.info.IsBlacklisted = true
-        updateLabelTextForMod(mod)
-        updateLabelTextForDependencies(mod)
-        updateWarningButtonForMod(mod)
-        updateWarningButtonForDependents(mod)
-        updateEnabledModCountLabel()
-    end
-end
-
--- simple "table contains element" function
-local function contains(table, element)
-    for _, value in pairs(table) do
-        if value == element then
-            return true
+-- enable mods on the UI
+local function enableMods(mods)
+    for _, mod in pairs(mods) do
+        if mod.info.IsBlacklisted then
+            handleModEnabledStateChange(mod, true)
         end
     end
-    return false
+
+    writeBlacklist()
+end
+
+local function enableMod(mod)
+    -- we could use mod.info.Name, but that might be nil for mods without everest.yaml, and enableMods() doesn't care
+    enableMods({["name"] = mod})
+end
+
+-- disable mods on the UI
+local function disableMods(mods)
+    for _, mod in pairs(mods) do
+        if not mod.info.IsBlacklisted then
+            handleModEnabledStateChange(mod, false)
+        end
+    end
+
+    writeBlacklist()
+end
+
+local function disableMod(mod)
+    -- we could use mod.info.Name, but that might be nil for mods without everest.yaml, and disableMods() doesn't care
+    disableMods({["name"] = mod})
 end
 
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
@@ -384,7 +390,12 @@ local function dictLength(dict)
 end
 
 -- checks whether the mod that was just enabled has dependencies that are disabled, and prompts to enable them if so
+-- returns nothing if the mod has no name
 local function checkDisabledDependenciesOfEnabledMod(mod)
+    if not mod.info.Name
+        return
+    end
+
     local dependenciesToToggle = findDependenciesToEnable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
@@ -401,11 +412,7 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
                     "Yes",
                     function(container)
                         -- enable all the dependencies!
-                        for _, depToToggle in pairs(dependenciesToToggle) do
-                            enableMod(depToToggle)
-                        end
-
-                        writeBlacklist()
+                        enableMods(dependenciesToToggle)
                         container:close()
                     end
                 },
@@ -417,7 +424,6 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
                     function(container)
                         -- re-disable the mod
                         disableMod(mod)
-                        writeBlacklist()
                         container:close()
                     end
                 }
@@ -427,7 +433,12 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
 end
 
 -- similar to the above checkDisabledDependenciesOfEnabledMod, but has no "Cancel" button and is meant to be called from the warning button
+-- returns nothing if the mod has no name
 local function checkDisabledDependenciesOfEnabledModFromWarning(info)
+    if not mod.info.Name
+        return
+    end
+
     local mod = scene.modsByPath[info.Path]
     local dependenciesToToggle = findDependenciesToEnable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
@@ -445,11 +456,7 @@ local function checkDisabledDependenciesOfEnabledModFromWarning(info)
                     "Yes",
                     function(container)
                         -- enable all the dependencies!
-                        for _, depToToggle in pairs(dependenciesToToggle) do
-                            enableMod(depToToggle)
-                        end
-
-                        writeBlacklist()
+                        enableMods(dependenciesToToggle)
                         container:close()
                     end
                 },
@@ -549,11 +556,7 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
                     "Yes",
                     function(container)
                         -- disable them all!
-                        for _, depToToggle in pairs(dependenciesThatCanBeDisabled) do
-                            disableMod(depToToggle)
-                        end
-
-                        writeBlacklist()
+                        disableMods(dependenciesThatCanBeDisabled)
                         container:close()
                     end
                 },
@@ -566,7 +569,12 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
 end
 
 -- checks whether enabled mods depend on the mod that was just disabled, and prompts to disable them if so
+-- returns nothing if the mod has no name
 local function checkEnabledDependentsOfDisabledMod(mod)
+    if not mod.info.Name
+        return
+    end
+
     local dependenciesToToggle = findDependentsToDisable(mod)
     local numDependencies = dictLength(dependenciesToToggle)
 
@@ -583,13 +591,10 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                     "Yes",
                     function(container)
                         -- disable them all!
-                        for _, depToToggle in pairs(dependenciesToToggle) do
-                            disableMod(depToToggle)
-                        end
-
-                        writeBlacklist()
+                        disableMods(dependenciesToToggle)
                         container:close()
 
+                        -- is this safe?
                         dependenciesToToggle[mod.info.Name] = mod
                         checkEnabledDependenciesOfDisabledMods(dependenciesToToggle)
                     end
@@ -598,6 +603,7 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                     "No",
                     function(container)
                         container:close()
+                        -- is this safe?
                         checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
                     end
                 },
@@ -606,7 +612,6 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                     function(container)
                         -- re-enable the mod
                         enableMod(mod)
-                        writeBlacklist()
                         container:close()
                     end
                 }
@@ -622,16 +627,10 @@ local function toggleMod(info, newState)
     local mod = scene.modsByPath[info.Path]
     if newState then
         enableMod(mod)
-        writeBlacklist()
-        if info.Name then
-            checkDisabledDependenciesOfEnabledMod(mod)
-        end
+        checkDisabledDependenciesOfEnabledMod(mod)
     else
         disableMod(mod)
-        writeBlacklist()
-        if info.Name then
-            checkEnabledDependentsOfDisabledMod(mod)
-        end
+        checkEnabledDependentsOfDisabledMod(mod)
     end
 end
 
@@ -682,20 +681,6 @@ local function verticalCenter(el)
             orig(self)
         end
     })
-end
-
--- loops through modlist and calls enableMod() on every mod
-local function enableAllMods()
-    for _, mod in pairs(scene.modlist) do
-        enableMod(mod)
-    end
-end
-
--- loops through modlist and calls disableMod() on every mod
-local function disableAllMods()
-    for _, mod in pairs(scene.modlist) do
-        disableMod(mod)
-    end
 end
 
 -- disables all mods then enables mods from preset
@@ -1040,11 +1025,11 @@ function scene.reload()
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button("Enable All", function()
-                        enableAllMods()
+                        enableMods(scene.modsByPath)
                         writeBlacklist()
                     end):with({ enabled = false }):as("enableAllButton"),
                     uie.button("Disable All", function()
-                        disableAllMods()
+                        disableMods(scene.modsByPath)
                         writeBlacklist()
                     end):with({ enabled = false }):as("disableAllButton"),
                 }):with(uiu.rightbound)
