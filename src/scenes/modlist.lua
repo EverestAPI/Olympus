@@ -319,7 +319,6 @@ local function handleModEnabledStateChange(mod, enabling)
     updateLabelTextForDependencies(mod)
     updateWarningButtonForMod(mod)
     updateWarningButtonForDependents(mod)
-    updateEnabledModCountLabel()
 end
 
 -- enable mods on the UI
@@ -330,6 +329,7 @@ local function enableMods(mods)
         end
     end
 
+    updateEnabledModCountLabel()
     writeBlacklist()
 end
 
@@ -346,6 +346,7 @@ local function disableMods(mods)
         end
     end
 
+    updateEnabledModCountLabel()
     writeBlacklist()
 end
 
@@ -687,7 +688,7 @@ end
 -- disables all mods then enables mods from preset
 local function applyPreset(name, disableAll)
     if disableAll then
-        disableAllMods()
+        disableMods(scene.modsByPath)
     end
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
