@@ -136,6 +136,9 @@ namespace Olympus {
 
             using (HttpClient client = new HttpClientWithCompressionSupport(enableCompression: false)) {
                 HttpResponseMessage response = client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead).Result;
+                if ((int) response.StatusCode >= 400) {
+                    throw new IOException($"Server responded with status code: {(int) response.StatusCode}");
+                }
 
                 using (Stream input = response.Content.ReadAsStream()) {
                     if (length == 0 && response.Content.Headers.TryGetValues("Content-Length", out IEnumerable<string> headers)) {
