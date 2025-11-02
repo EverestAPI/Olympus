@@ -338,10 +338,10 @@ local function enableMod(mod)
     enableMods({["name"] = mod})
 end
 
--- disable mods on the UI
-local function disableMods(mods)
+-- disable mods on the UI, optionally including favorites
+local function disableMods(mods, alsoDisableFavorites)
     for _, mod in pairs(mods) do
-        if not mod.info.IsBlacklisted then
+        if not mod.info.IsBlacklisted and (alsoDisableFavorites or not mod.info.IsFavorite) then
             handleModEnabledStateChange(mod, false)
         end
     end
@@ -352,7 +352,8 @@ end
 
 local function disableMod(mod)
     -- we could use mod.info.Name, but that might be nil for mods without everest.yaml, and disableMods() doesn't care
-    disableMods({["name"] = mod})
+    -- this function should only be used for explicitly disabling one mod, so we should disable it even if it's a favorite
+    disableMods({["name"] = mod}, true)
 end
 
 -- builds the confirmation message body for toggling mods, including a potentially-long list of mods in a scrollbox
@@ -559,7 +560,7 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
                     "Yes",
                     function(container)
                         -- disable them all!
-                        disableMods(dependenciesThatCanBeDisabled)
+                        disableMods(dependenciesThatCanBeDisabled, false)
                         container:close()
                     end
                 },
@@ -595,7 +596,7 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                     "Yes",
                     function(container)
                         -- disable them all!
-                        disableMods(dependentsToToggle)
+                        disableMods(dependentsToToggle, false)
                         container:close()
 
                         dependentsToToggle[mod.info.Name] = mod
@@ -688,7 +689,8 @@ end
 -- disables all mods then enables mods from preset
 local function applyPreset(name, disableAll)
     if disableAll then
-        disableMods(scene.modsByPath)
+        -- still don't disable favorites
+        disableMods(scene.modsByPath, false)
     end
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
@@ -1031,7 +1033,8 @@ function scene.reload()
                         writeBlacklist()
                     end):with({ enabled = false }):as("enableAllButton"),
                     uie.button("Disable All", function()
-                        disableMods(scene.modsByPath)
+                        -- don't disable favorites
+                        disableMods(scene.modsByPath, false)
                         writeBlacklist()
                     end):with({ enabled = false }):as("disableAllButton"),
                 }):with(uiu.rightbound)
