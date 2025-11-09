@@ -8,12 +8,12 @@ using System.Net.Http;
 using System.Security.Cryptography;
 
 namespace Olympus {
-    public class CmdUpdateAllMods : Cmd<string, bool, string, IEnumerator> {
+    public class CmdUpdateAllMods : Cmd<string, bool, string, bool, IEnumerator> {
         public override bool Taskable => true;
 
-        public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences) {
+        public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences, bool apiMirror) {
             yield return "Downloading mod versions list...";
-            Dictionary<string, ModUpdateInfo> modVersionList = downloadModUpdateList();
+            Dictionary<string, ModUpdateInfo> modVersionList = downloadModUpdateList(apiMirror);
 
             yield return "Checking for outdated mods...";
 
@@ -186,11 +186,11 @@ namespace Olympus {
         /// Downloads the full update list from the update checker server.
         /// Returns null if the download fails for any reason.
         /// </summary>
-        private static Dictionary<string, ModUpdateInfo> downloadModUpdateList() {
+        private static Dictionary<string, ModUpdateInfo> downloadModUpdateList(bool apiMirror) {
             Dictionary<string, ModUpdateInfo> updateCatalog = null;
 
             try {
-                string modUpdaterDatabaseUrl = getModUpdaterDatabaseUrl();
+                string modUpdaterDatabaseUrl = getModUpdaterDatabaseUrl(apiMirror);
 
                 log($"Downloading last versions list from {modUpdaterDatabaseUrl}");
 
@@ -252,7 +252,9 @@ namespace Olympus {
         /// Retrieves the mod updater database location from everestapi.github.io.
         /// This should point to a running instance of https://github.com/maddie480/EverestUpdateCheckerServer.
         /// </summary>
-        private static string getModUpdaterDatabaseUrl() {
+        private static string getModUpdaterDatabaseUrl(bool apiMirror) {
+            if (apiMirror) return "https://everestapi.github.io/updatermirror/everest_update.yaml";
+
             using (HttpClient wc = new HttpClientWithCompressionSupport()) {
                 log("Fetching mod updater database URL");
                 return wc.GetStringAsync("https://everestapi.github.io/modupdater.txt").Result.Trim();

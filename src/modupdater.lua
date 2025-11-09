@@ -24,7 +24,7 @@ function modupdater.updateAllMods(path, notify, mode, callback, showRecap)
         return
     end
 
-    local task = sharp.updateAllMods(path or config.installs[config.install].path, mode == "enabled", config.mirrorPreferences):result()
+    local task = sharp.updateAllMods(path or config.installs[config.install].path, mode == "enabled", config.mirrorPreferences, config.apiMirror):result()
 
     local alertMessage = alert({
         title = mode == "enabled" and "Updating enabled mods" or "Updating all mods",
