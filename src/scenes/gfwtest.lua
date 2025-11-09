@@ -21,7 +21,7 @@ local function buildRow(label, url)
     threader.routine(function()
         local data, msg = threader.wrap("utils").download(url):result()
         lualabel.text = data and 'OK' or 'KO'
-        lualabel.style.color = data and { 0.5, 0.8, 0.5, 1 } or { 0.8, 0.5, 0.5, 1 }
+        lualabel.style.color = data and uie.greentext().style.color or { 0.8, 0.5, 0.5, 1 }
         if msg then
             print('[gfwtest] Error for ' .. label .. ' / Lua: ' .. msg)
         end
@@ -29,7 +29,7 @@ local function buildRow(label, url)
 
     sharp.webGet(url):calls(function(_, result)
         sharplabel.text = 'OK'
-        sharplabel.style.color = { 0.5, 0.8, 0.5, 1 }
+        sharplabel.style.color = uie.greentext().style.color
     end):falls(function(msg)
         print('[gfwtest] Error for ' .. label .. ' / Sharp, check log-sharp for more details', msg)
         sharplabel.text = 'KO'
@@ -79,11 +79,11 @@ Some of the possible reasons why this might be happening:
                 }),
                 uie.panel({
                     uie.column({
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, "Maddie's Random Stuff", { 1, 1, 1, 1 }, ' (maddie480.ovh)\nProvides the Everest versions list, the mod updater, and the "Download Mods" section' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GitHub', { 1, 1, 1, 1 }, ' (github.com)\nHosts stable versions of Everest' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Azure Pipelines', { 1, 1, 1, 1 }, ' (dev.azure.com)\nHosts Olympus updates, and non-stable versions of Everest' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'Everest Website', { 1, 1, 1, 1 }, ' (everestapi.github.io)\nProvides Olympus News, displayed on the right side of the main menu' }),
-                        uie.label({ { 0.5, 0.8, 0.5, 1 }, 'GameBanana Files', { 1, 1, 1, 1 }, ' (files.gamebanana.com)\nHosts all Celeste mods, select a mirror in Options & Updates in case of trouble' })
+                        uie.label({ uie.greentext().style.color, "Maddie's Random Stuff", { 1, 1, 1, 1 }, ' (maddie480.ovh)\nProvides the Everest versions list, the mod updater, and the "Download Mods" section' }),
+                        uie.label({ uie.greentext().style.color, 'GitHub', { 1, 1, 1, 1 }, ' (github.com)\nHosts stable versions of Everest' }),
+                        uie.label({ uie.greentext().style.color, 'Azure Pipelines', { 1, 1, 1, 1 }, ' (dev.azure.com)\nHosts Olympus updates, and non-stable versions of Everest' }),
+                        uie.label({ uie.greentext().style.color, 'Everest Website', { 1, 1, 1, 1 }, ' (everestapi.github.io)\nProvides Olympus News, displayed on the right side of the main menu' }),
+                        uie.label({ uie.greentext().style.color, 'GameBanana Files', { 1, 1, 1, 1 }, ' (files.gamebanana.com)\nHosts all Celeste mods, select a mirror in Options & Updates in case of trouble' })
                     })
                 }):with(uiu.fillWidth(true)),
             }):with(uiu.fillWidth)

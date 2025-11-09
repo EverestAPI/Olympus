@@ -4,6 +4,7 @@ local threader = require("threader")
 local config = require("config")
 local alert = require("alert")
 local modinstaller = require("modinstaller")
+local sharp = require("sharp")
 
 local scene = {
     name = "GameBanana",
@@ -320,7 +321,11 @@ end
 
 
 local function refreshSubcategories(categoryData)
-    local fullData, msg = threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-subcategories"):result()
+    local fullData, msg = threader.wrap("utils").downloadYAML(
+        config.apiMirror
+        and "https://everestapi.github.io/updatermirror/gamebanana_subcategories.yaml"
+        or "https://maddie480.ovh/celeste/gamebanana-subcategories"
+    ):result()
 
     if not fullData then
         -- Error while calling the API
@@ -370,7 +375,11 @@ function scene.load()
 
     -- Load the categories / item types list upon entering the GameBanana screen
     threader.routine(function()
-        local data, msg = threader.wrap("utils").downloadYAML("https://maddie480.ovh/celeste/gamebanana-categories"):result()
+        local data, msg = threader.wrap("utils").downloadYAML(
+            config.apiMirror
+            and "https://everestapi.github.io/updatermirror/gamebanana_categories.yaml"
+            or "https://maddie480.ovh/celeste/gamebanana-categories"
+        ):result()
 
         if not data then
             -- Error while calling the API
@@ -416,7 +425,11 @@ function scene.enter()
 end
 
 function scene.downloadFeaturedEntries()
-    local url = "https://maddie480.ovh/celeste/gamebanana-featured"
+    local url = (
+        config.apiMirror
+        and "https://everestapi.github.io/updatermirror/gamebanana_featured.json"
+        or "https://maddie480.ovh/celeste/gamebanana-featured"
+    )
     local data = scene.cache[url]
     if data ~= nil then
         return data
@@ -438,7 +451,13 @@ function scene.downloadSearchEntries(query)
     end
 
     local msg
-    data, msg = threader.wrap("utils").downloadJSON(url):result()
+
+    if config.apiMirror then
+        data = sharp.emulatedModSearch(query):result()
+        data, msg = utils.fromJSON(data)
+    else
+        data, msg = threader.wrap("utils").downloadJSON(url):result()
+    end
     if data then
         scene.cache[url] = data
     end
@@ -465,7 +484,13 @@ function scene.downloadSortedEntries(page, sort, itemtypeFilter)
     end
 
     local msg
-    data, msg = threader.wrap("utils").downloadJSON(url):result()
+
+    if config.apiMirror then
+        data = sharp.emulatedModList(sort, page, itemtypeFilter.itemtype, itemtypeFilter.categoryid, itemtypeFilter.subcategoryid):result()
+        data, msg = utils.fromJSON(data)
+    else
+        data, msg = threader.wrap("utils").downloadJSON(url):result()
+    end
     if data then
         scene.cache[url] = data
     end
@@ -481,7 +506,7 @@ function scene.item(info)
     local views = info.Views
     local likes = info.Likes
     local downloads = info.Downloads
-    local screenshots = info.MirroredScreenshots
+    local screenshots = config.imageMirror == "none" and info.Screenshots or info.MirroredScreenshots
     local files = info.Files
     local website = info.PageURL
 
@@ -735,7 +760,16 @@ function scene.item(info)
                 return status and rv
             end
 
-            img = utilsAsync.download(url):result()
+            -- if the URL is in the format we expect, we can rewrite it to use the otobot mirror if needed
+            local mirroredUrl = url
+            if config.imageMirror == "otobot" then
+                local baseStart, baseEnd = url:find("https://celestemodupdater.0x0a.de/banana-mirror-images/", 1, true)
+                if baseStart == 1 and baseEnd == 55 then
+                    mirroredUrl = "https://banana-mirror-images.celestemods.com/" .. url:sub(56)
+                end
+            end
+
+            img = utilsAsync.download(mirroredUrl):result()
             if not img then
                 return false
             end

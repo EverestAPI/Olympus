@@ -6,13 +6,15 @@ using System.Net.Http;
 using System.Text;
 
 namespace Olympus {
-    public class CmdGetModIdToNameMap : Cmd<string, bool> {
+    public class CmdGetModIdToNameMap : Cmd<string, bool, bool> {
         public override bool Taskable => true;
 
         private static string cacheLocation;
+        private static bool apiMirror;
 
-        public override bool Run(string cacheLocation) {
+        public override bool Run(string cacheLocation, bool apiMirror) {
             CmdGetModIdToNameMap.cacheLocation = cacheLocation;
+            CmdGetModIdToNameMap.apiMirror = apiMirror;
             Console.Error.WriteLine($"[CmdGetIdToNameMap] Cache location set to: {cacheLocation}");
             GetModIDsToNamesMap(ignoreCache: true);
             return true;
@@ -34,10 +36,12 @@ namespace Olympus {
                 if (map.Count > 0) return map;
             }
 
-            Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from maddie480.ovh");
+            Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from the Internet");
             map = tryRun(() => {
                 using (HttpClient wc = new HttpClientWithCompressionSupport())
-                using (Stream inputStream = wc.GetAsync("https://maddie480.ovh/celeste/mod_ids_to_names.json").Result.Content.ReadAsStream()) {
+                using (Stream inputStream = wc.GetAsync(
+                    apiMirror ? "https://everestapi.github.io/updatermirror/mod_ids_to_names.json" : "https://maddie480.ovh/celeste/mod_ids_to_names.json"
+                ).Result.Content.ReadAsStream()) {
                     return getModIDsToNamesMap(inputStream);
                 }
             });

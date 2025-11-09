@@ -427,7 +427,12 @@ function scene.load()
             }):with(uiu.bottombound):with(uiu.rightbound):as("loadingVersions")
         )
 
-        local buildsTask = threader.wrap("utils").downloadJSON("https://maddie480.ovh/celeste/everest-versions")
+        local buildsTask = threader.wrap("utils").downloadJSON(
+            config.apiMirror
+            and "https://everestapi.github.io/updatermirror/everest_versions.json"
+            or "https://maddie480.ovh/celeste/everest-versions"
+        )
+
         local list = root:findChild("versions")
 
         local manualItem = uie.listItem("Select .zip from disk", "manual"):with(uiu.fillWidth)

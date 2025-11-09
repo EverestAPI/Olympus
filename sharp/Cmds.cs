@@ -30,6 +30,8 @@ namespace Olympus {
                 new CmdCrash(),
                 new CmdDummyTask(),
                 new CmdEcho(),
+                new CmdEmulatedModList(),
+                new CmdEmulatedModSearch(),
                 new CmdFree(),
                 new CmdGetEnv(),
                 new CmdGetLoennLatestVersion(),

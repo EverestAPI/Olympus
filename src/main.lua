@@ -204,7 +204,7 @@ function love.load(args)
     else
         print("Olympus version was transmitted to sharp: " .. sharp.setOlympusVersion(utils.trim(utils.load("version.txt") or "ERROR")):result())
         threader.routine(function()
-            sharp.getModIdToNameMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-names.json"))
+            sharp.getModIdToNameMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-names.json"), config.apiMirror)
         end)
     end
 

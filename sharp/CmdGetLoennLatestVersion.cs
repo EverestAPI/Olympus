@@ -4,14 +4,16 @@ using System;
 using System.Net.Http;
 
 namespace Olympus {
-    public class CmdGetLoennLatestVersion : Cmd<Tuple<string, string>> {
+    public class CmdGetLoennLatestVersion : Cmd<bool, Tuple<string, string>> {
 
         public override bool Taskable => true;
 
-        public override Tuple<string, string> Run() {
+        public override Tuple<string, string> Run(bool apiMirror) {
             try {
                 using (HttpClient client = new HttpClientWithCompressionSupport()) {
-                    string json = client.GetStringAsync("https://maddie480.ovh/celeste/loenn-versions").Result;
+                    string json = client.GetStringAsync(
+                        apiMirror ? "https://everestapi.github.io/updatermirror/loenn_versions.json" : "https://maddie480.ovh/celeste/loenn-versions"
+                    ).Result;
                     JObject latestVersion = (JObject) JToken.Parse(json);
                     return new Tuple<string, string>((string) latestVersion["tag_name"], GetDownloadLink((JArray) latestVersion["assets"]));
                 }

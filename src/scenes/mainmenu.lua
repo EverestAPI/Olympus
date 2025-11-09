@@ -331,7 +331,7 @@ function scene.openLoennMenu()
         end
     })
 
-    sharp.getLoennLatestVersion():calls(function (t, data)
+    sharp.getLoennLatestVersion(config.apiMirror):calls(function (t, data)
         local latestVersion = data.Item1
         local downloadLink = data.Item2
 
@@ -706,7 +706,7 @@ function scene.enter()
             mapeditor:addChild(cogwheel)
 
             -- check for updates, and display a (!) if there is a new version available
-            sharp.getLoennLatestVersion():calls(function (t, data)
+            sharp.getLoennLatestVersion(config.apiMirror):calls(function (t, data)
                 local latestVersion = data.Item1
 
                 if latestVersion ~= "unknown" and latestVersion ~= config.loennInstalledVersion then

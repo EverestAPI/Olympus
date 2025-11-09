@@ -98,6 +98,17 @@ local mirrorPreferences = {
     { text = "N. America (celestemods.com)", data = "otobot,jade,wegfan,gb" }
 }
 
+local apiMirrors = {
+    { text = "Enabled", data = true },
+    { text = "Disabled (Default)", data = false }
+}
+
+local imageMirrors = {
+    { text = "0x0a.de (Default)", data = "jade" },
+    { text = "celestemods.com", data = "otobot" },
+    { text = "Disabled", data = "none" }
+}
+
 local extradatas = {
     { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0a.de/olympus-extra/olympus-extra-cjk.zip" }
 }
@@ -373,17 +384,6 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
-                    uie.column({
-                        uie.label("Use Mirror by Default"),
-                        uie.dropdown(mirrorPreferences, function(self, value)
-                            config.mirrorPreferences = value
-                            config.save()
-                        end):with({
-                            placeholder = "???",
-                            selectedData = config.mirrorPreferences
-                        }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
-
                 }):with(uiu.fillWidth),
 
                 uie.group({}),
@@ -480,6 +480,55 @@ local root = uie.column({
                 }):with(uiu.fillWidth),
 
             }):with(uiu.fillWidth),
+
+            uie.paneled.column({
+                uie.label("Mirrors", ui.fontBig),
+
+                uie.label({
+{ 1, 1, 1, 1 }, [[If you have difficulty downloading mods or getting some sections of Olympus to load, you can try these.
+- ]], uie.greentext().style.color, "Download Mirror", { 1, 1, 1, 1 }, [[ can help if mod downloads are slow, or GameBanana is having issues.
+- ]], uie.greentext().style.color, "API Mirror", { 1, 1, 1, 1 }, [[ can help if the "Install Everest" or "Download Mods" pages won't load. The mod browser will be slower and more resource-intensive, though!
+- ]], uie.greentext().style.color, "Image Mirror", { 1, 1, 1, 1 }, [[ changes where the mod images in the mod browser come from. You can choose to use no mirror, but older mods won't have images.]]
+                }),
+
+                uie.row({
+                    uie.column({
+                        uie.label("Download Mirror"),
+                        uie.dropdown(mirrorPreferences, function(self, value)
+                            config.mirrorPreferences = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.mirrorPreferences
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / 3)):with(uiu.at(0 / 3, 0)),
+
+                    uie.column({
+                        uie.label("API Mirror"),
+                        uie.dropdown(apiMirrors, function(self, value)
+                            config.apiMirror = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.apiMirror
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / 3)):with(uiu.at(1 / 3, 0)),
+
+                    uie.column({
+                        uie.label("Image Mirror"),
+                        uie.dropdown(imageMirrors, function(self, value)
+                            config.imageMirror = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.imageMirror
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / 3)):with(uiu.at(2 / 3, 0)),
+
+                }):with(uiu.fillWidth),
+
+            }):with(uiu.fillWidth),
+
 
             updater.available and uie.paneled.column({
                 uie.label("Updates", ui.fontBig),

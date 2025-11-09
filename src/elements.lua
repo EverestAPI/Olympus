@@ -42,6 +42,10 @@ uie.add("modNameLabelColors", {
     }
 })
 
+uie.add("greentext", {
+    style = { color = { 0.5, 0.8, 0.5, 1 } }
+})
+
 -- A simple clickable icon that can be toggled on and off. Child classes should override getColor()
 -- The fading mechanic is the same as in uie.button
 uie.add("clickableIcon", {
