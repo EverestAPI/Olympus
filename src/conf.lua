@@ -1,3 +1,5 @@
+local log = require('logger')('conf')
+
 -- DON'T EVER UPDATE THESE FILES.
 local physfs = require("physfs_core")
 local lfs = require("lfs_ffi")
@@ -97,12 +99,12 @@ local fs = require("fs")
 
 local storageDir = fs.getStorageDir()
 
-print("pre-initializing")
+log.debug("pre-initializing")
 local cwd = fs.getcwd()
-print("cwd:", cwd)
+log.debug("cwd:", cwd)
 local src = fs.getsrc()
-print("src:", src)
-print("storageDir:", storageDir)
+log.debug("src:", src)
+log.debug("storageDir:", storageDir)
 
 if love.system.getOS() == "Windows" and cwd ~= src then
     local ffi = require("ffi")
@@ -135,22 +137,22 @@ if love.system.getOS() == "Windows" and cwd ~= src then
     assert(C.SetCurrentDirectoryW(srcW) ~= 0)
 
     cwd = fs.getcwd()
-    print("cwd (new):", cwd)
+    log.debug("cwd (new):", cwd)
 end
 
 local storageDirAttrs = lfs.attributes(storageDir)
 
 if not storageDirAttrs then
-    print("storageDir is missing - creating")
-    print(fs.mkdir(storageDir))
+    log.info("storageDir is missing - creating")
+    log.debug(fs.mkdir(storageDir))
 
 elseif storageDirAttrs.mode == "file" then
-    print("storageDir is actually file - trying to delete")
-    print(os.remove(storageDir))
+    log.warning("storageDir is actually file - trying to delete")
+    log.debug(os.remove(storageDir))
 
 elseif not storageDirAttrs.permissions:match("rwx......") and (love.system.getOS() == "Linux" or love.system.getOS() == "OS X") then
-    print("storageDir permissions are broken - trying to fix")
-    print(os.execute([["chmod" "u+rwx" "]] .. storageDir .. [["]]))
+    log.warning("storageDir permissions are broken - trying to fix")
+    log.debug(os.execute([["chmod" "u+rwx" "]] .. storageDir .. [["]]))
 end
 
 love.filesystem.mountUnsandboxed(storageDir, "/", 0)
@@ -188,5 +190,5 @@ function love.conf(t)
     t.modules.touch = false
     t.modules.video = false
 
-    print("pre-initialized")
+    log.debug("pre-initialized")
 end

@@ -30,6 +30,7 @@ namespace Olympus {
     }
 
     public class CmdTask : IDisposable {
+        private static readonly Logger log = new Logger(nameof(CmdTask));
 
         [ThreadStatic]
         public static int Update;
@@ -94,7 +95,7 @@ namespace Olympus {
                     return false;
                 }
             } catch (Exception e) {
-                Console.Error.WriteLine($"[sharp] Task {ID} failed: {e}");
+                log.Error($"Task {ID} failed: {e}");
                 Status = "error";
                 return false;
             }
@@ -192,7 +193,7 @@ namespace Olympus {
 
         public void Dispose() {
             if (Alive) {
-                Console.Error.WriteLine($"[sharp] Task {ID} was interrupted while running");
+                log.Warning($"Task {ID} was interrupted while running");
                 Status = "interrupted";
                 Alive = false;
                 Event.Set();

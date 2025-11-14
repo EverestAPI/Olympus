@@ -4,6 +4,7 @@ using System.IO;
 
 namespace Olympus {
     public static class ProcessHelper {
+        private static readonly Logger log = new Logger(nameof(ProcessHelper));
 
         public static Process Wrap(string name, string args) {
             Process process = new Process();
@@ -31,8 +32,7 @@ namespace Olympus {
                 }
             }
             catch (Exception e) {
-                Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
-                Console.Error.WriteLine(e);
+                log.Error($"Reading from process \"{name}\" \"{args}\" failed:" + e);
                 err = "";
                 return "";
             }
@@ -51,8 +51,7 @@ namespace Olympus {
                 }
             }
             catch (Exception e) {
-                Console.Error.WriteLine($"Reading from process \"{name}\" \"{args}\" failed:");
-                Console.Error.WriteLine(e);
+                log.Error($"Reading from process \"{name}\" \"{args}\" failed: " + e);
                 err = "";
                 return "";
             }

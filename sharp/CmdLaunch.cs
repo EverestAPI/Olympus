@@ -4,6 +4,7 @@ using System.IO;
 
 namespace Olympus {
     public class CmdLaunch : Cmd<string, string, bool, string> {
+        private static readonly Logger log = new Logger(nameof(CmdLaunch));
 
         public override bool Taskable => true;
 
@@ -30,7 +31,7 @@ namespace Olympus {
             }
 
             if (!File.Exists(game.StartInfo.FileName)) {
-                Console.Error.WriteLine($"Can't start Celeste: {game.StartInfo.FileName} not found!");
+                log.Error($"Can't start Celeste: {game.StartInfo.FileName} not found!");
                 return "missing";
             }
 
@@ -43,10 +44,10 @@ namespace Olympus {
                     try {
                         File.WriteAllText(Path.Combine(root, "nextLaunchIsVanilla.txt"), "This file was created by Olympus and will be deleted automatically.");
                         args = "";
-                        Console.Error.WriteLine("nextLaunchIsVanilla.txt created");
+                        log.Debug("nextLaunchIsVanilla.txt created");
                     }
                     catch (Exception e) {
-                        Console.Error.WriteLine($"Failed to create nextLaunchIsVanilla.txt: {e}");
+                        log.Error($"Failed to create nextLaunchIsVanilla.txt: {e}");
                     }
                 }
             }
@@ -75,7 +76,7 @@ namespace Olympus {
                 game.StartInfo.FileName = Path.Combine(Program.RootDirectory, "flatpak-wrapper");
             }
 
-            Console.Error.WriteLine($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
+            log.Info($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
 
 #if !WIN32
             if (!isFlatpak) {

@@ -1,3 +1,5 @@
+local log = require('logger')('mainmenu')
+
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
@@ -240,7 +242,7 @@ function scene.reloadInstalls(scene, cb)
     end
 
     if #installs > 0 and config.install > #installs then
-        print("[mainmenu]", "Install is out of bounds (" .. config.install .. " > " .. #installs .. "), resetting to 1!")
+        log.warning("Install is out of bounds (" .. config.install .. " > " .. #installs .. "), resetting to 1!")
         config.install = 1
     end
 
@@ -588,10 +590,10 @@ function scene.load()
 
         local all = threader.run(function()
             local utils = require("utils")
+            local log = require("logger")("mainmenu.news")
             local list, err = utils.download("https://everestapi.github.io/olympusnews/index.txt")
             if not list then
-                print("failed fetching news index")
-                print(err)
+                log.warning("failed fetching news index", err)
                 return {
                     {
                         error = true,
@@ -617,8 +619,7 @@ function scene.load()
                 local entryName = all[i]
                 local data, err = utils.download("https://everestapi.github.io/olympusnews/" .. entryName)
                 if not data then
-                    print("failed fetching news entry", entryName)
-                    print(err)
+                    log.warning("failed fetching news entry", entryName, err)
                     all[i] = {
                         error = true,
                         preview = "Olympus failed fetching a news entry."
@@ -629,7 +630,7 @@ function scene.load()
                 local text
                 data, text = data:match("^%-%-%-\n(.-)\n%-%-%-\n(.*)$")
                 if not data or not text then
-                    print("news entry not in expected format", entryName)
+                    log.warning("news entry not in expected format", entryName)
                     all[i] = {
                         error = true,
                         preview = "A news entry was in an unexpected format."
@@ -640,8 +641,7 @@ function scene.load()
                 local status
                 status, data = pcall(utils.fromYAML, data)
                 if not status or not data then
-                    print("news entry contains malformed yaml", entryName)
-                    print(data)
+                    log.warning("news entry contains malformed yaml", entryName, data)
                     all[i] = {
                         error = true,
                         preview = "A news entry contained invalid metadata."

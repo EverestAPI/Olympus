@@ -129,6 +129,16 @@ steps:
     command: 'restore'
     projects: 'sharp/*.csproj'
 
+- task: PowerShell@2
+  condition: succeeded()
+  displayName: 'Build: dotnet: inject version number'
+  continueOnError: true
+  inputs:
+    targetType: 'inline'
+    script: |
+      (Get-Content -Path 'sharp/Program.cs') -Replace 'SECRET DEV VERSION', "${env:BUILD_BUILDNUMBER}-azure-${env:BUILD_BUILDID}-$(($env:BUILD_SOURCEVERSION).Substring(0, 5))" | Set-Content -Path 'sharp/Program.cs'
+      Get-Content -Path 'sharp/Program.cs'
+
 - task: DotNetCoreCLI@2
   displayName: 'Build: dotnet: build sharp'
   inputs:

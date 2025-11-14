@@ -1,3 +1,4 @@
+local log = require("logger")("sharp")
 local threader = require("threader")
 
 -- These must be named channels so that new threads requiring sharp can use them.
@@ -14,6 +15,8 @@ local tuid = 0
 
 -- The command queue thread.
 local function sharpthread()
+    local log = require("logger")("sharp.thread")
+
     local function channelSetCb(channel, value)
         channel:clear()
         channel:push(value)
@@ -29,7 +32,7 @@ local function sharpthread()
         local debuggingFlags = channelDebug:peek()
         local debugging, debuggingSharp = debuggingFlags[1], debuggingFlags[2]
 
-        print("[sharp init]", "starting thread")
+        log.debug("[init]", "starting thread")
 
         local threader = require("threader")
         local fs = require("fs")
@@ -83,8 +86,8 @@ local function sharpthread()
             subprocess.call({"chmod", "-v", "u+x", exe})
         end
 
-        print("[sharp init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
-        print("[sharp init]", "logging to", logpath)
+        log.debug("[init]", "starting subprocess", exe, pid, debuggingSharp and "--debug" or nil)
+        log.debug("[init]", "logging to", logpath)
 
         local pargs = {
             exe,
@@ -114,20 +117,20 @@ local function sharpthread()
 
         local function dprint(...)
             if debugging then
-                print("[sharp #" .. uid .. " queue]", ...)
+                log.debug("[#" .. uid .. " queue]", ...)
             end
         end
 
         local unpack = table.unpack or _G.unpack
 
         -- The child process immediately sends a status message.
-        print("[sharp init]", "reading init")
+        log.debug("[init]", "reading init")
         local initStatus = {
             UID = utils.fromJSON(assert(stdout:read("*l"))),
             Value = utils.fromJSON(assert(stdout:read("*l"))),
             Error = utils.fromJSON(assert(stdout:read("*l")))
         }
-        print("[sharp init]", "read init", initStatus)
+        log.debug("[init]", "read init", initStatus)
 
         local buffer = ""
 
@@ -146,7 +149,7 @@ local function sharpthread()
                     channelSet(channelStatus, "connect error " .. tostring(clientError))
                     error(clientError, 2)
                 end
-                print("[sharp init]", "failed to connect, retrying in 2s", clientError)
+                log.warning("[init]", "failed to connect, retrying in 2s", clientError)
                 threader.sleep(2)
                 goto retry
             end
@@ -162,7 +165,7 @@ local function sharpthread()
         }
 
         local lastSend = socket.gettime()
-        print("[sharp init]", "startime", lastSend)
+        log.debug("[init]", "startime", lastSend)
 
         local partLast
         local function read(pattern)
@@ -177,7 +180,7 @@ local function sharpthread()
             end
 
             if err ~= "timeout" and not stopping then
-                print("[sharp read]", "hard error reconnecting", err, channelStatus:peek())
+                log.warning("[read]", "hard error reconnecting", err, channelStatus:peek())
                 channelSet(channelStatus, "reread")
                 client:close()
                 client = connect()
@@ -231,7 +234,7 @@ local function sharpthread()
                     prev = index + 1
                     local data = utils.fromJSON(part)
                     if not data then
-                        print("[sharp rx]", "erroreous part", part)
+                        log.warning("[rx]", "erroreous part", part)
                         goto next
                     end
 
@@ -261,7 +264,7 @@ local function sharpthread()
 
                         if debugging then
                             data.DebugValue = dbgvalue
-                            print("[sharp rx]", data.UID, dbgvalue, data.Error)
+                            log.debug("[rx]", data.UID, dbgvalue, data.Error)
                         end
                         sendReturn(data.UID, data)
 
@@ -313,7 +316,7 @@ local function sharpthread()
                     sendReturn(uid, initStatus)
 
                 elseif cid == "_die" then
-                    print("[sharp queue]", "time to _die")
+                    log.info("[queue]", "time to _die")
                     sendReturn(uid, { UID = uid, Value = "ok" })
                     break
 
@@ -344,7 +347,7 @@ local function sharpthread()
                     end
 
                     if not rv then
-                        print("[sharp queue]", "hard error reconnecting", err, channelStatus:peek())
+                        log.warning("[queue]", "hard error reconnecting", err, channelStatus:peek())
                         channelSet(channelStatus, "reruncmd " .. uid .. " " .. cid)
                         client:close()
                         client = connect()
@@ -397,7 +400,7 @@ local function sharpthread()
     channelSet(channelStatus, "rip")
 
     if not status then
-        print("[sharpthread error]", err)
+        log.error("[error]", err)
     end
 end
 
@@ -422,6 +425,8 @@ end
 local sharp = setmetatable({}, mtSharp)
 
 function sharp._run(cid, ...)
+    local log = require("logger")("sharp.run")
+
     local debugging = channelDebug:peek()[1]
     local uid = string.format("(%s)(%s)#%d", cid, require("threader").id, tuid)
     tuid = tuid + 1
@@ -442,7 +447,7 @@ function sharp._run(cid, ...)
 
     local function dprint(...)
         if debugging then
-            print("[sharp #" .. uid .. " run]", ...)
+            log.debug("[#" .. uid .. " run]", ...)
         end
     end
 

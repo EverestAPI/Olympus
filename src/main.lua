@@ -1,3 +1,5 @@
+local log = require('logger')('main')
+
 local debugging
 local debuggingSharp
 local lldb
@@ -113,8 +115,7 @@ local _love_errhand = love.errhand
 function love.errhand(...)
     _love_runStep = nil
     logList = nil
-    print("ERROR")
-    print(...)
+    log.error("FATAL ERROR", ...)
     logDump()
 
     if logFile then
@@ -202,13 +203,13 @@ function love.load(args)
     if not sharpStatus then
         love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
     else
-        print("Olympus version was transmitted to sharp: " .. sharp.setOlympusVersion(utils.trim(utils.load("version.txt") or "ERROR")):result())
+        log.debug("Olympus version was transmitted to sharp: " .. sharp.setOlympusVersion(utils.trim(utils.load("version.txt") or "ERROR")):result())
         threader.routine(function()
             sharp.getModIdToNameMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-names.json"), config.apiMirror)
         end)
     end
 
-    print("Connection with Olympus.Sharp is " .. sharp.echo("OK!"):result())
+    log.info("Connection with Olympus.Sharp is " .. sharp.echo("OK!"):result())
 
     config = require("config")
     config.load()
@@ -228,7 +229,7 @@ function love.load(args)
 
     love.version = {love.getVersion()}
     love.versionStr = table.concat(love.version, ".")
-    print("love2d version", love.versionStr)
+    log.debug("love2d version", love.versionStr)
 
     require("spiker")(os.getenv("OLYMPUS_SPIKER") == "1")
 
@@ -237,10 +238,10 @@ function love.load(args)
     if native then
         love.versionSDL = native.getSDLVersion()
         love.versionSDLStr = table.concat(love.versionSDL, ".")
-        print("SDL2 version", love.versionSDLStr)
+        log.debug("SDL2 version", love.versionSDLStr)
     end
 
-    print("Olympus version", utils.trim(utils.load("version.txt") or "?"))
+    log.debug("Olympus version", utils.trim(utils.load("version.txt") or "?"))
 
     ui = require("ui")
     uie = require("ui.elements")

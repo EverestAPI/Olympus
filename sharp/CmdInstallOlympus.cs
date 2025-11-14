@@ -10,6 +10,7 @@ using System.Linq;
 
 namespace Olympus {
     public class CmdInstallOlympus : Cmd<string, IEnumerator> {
+        private static readonly Logger log = new Logger(nameof(CmdInstallOlympus));
 
         public override IEnumerator Run(string id) {
             yield return Status("Updating Olympus", false, "", false);
@@ -73,7 +74,7 @@ namespace Olympus {
                         yield return Status("Unpacking olympus.love", false, "download", false);
                         string to = Path.Combine(Program.RootDirectory, "olympus.new.love");
                         string toParent = Path.GetDirectoryName(to);
-                        Console.Error.WriteLine($"{name} -> {to}");
+                        log.Debug($"{name} -> {to}");
 
                         if (!Directory.Exists(toParent))
                             Directory.CreateDirectory(toParent);

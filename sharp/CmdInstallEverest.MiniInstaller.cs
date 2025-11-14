@@ -9,6 +9,8 @@ using System.Threading;
 
 namespace Olympus {
     public partial class CmdInstallEverest : Cmd<string, string, string, string, IEnumerator> {
+        private static readonly Logger log = new Logger(nameof(CmdInstallEverest));
+
         public static bool CheckNativeMiniInstaller(ZipArchive zip, string prefix = "")
             => zip.GetEntry($"{prefix}MiniInstaller.exe") == null;
 
@@ -36,7 +38,7 @@ namespace Olympus {
                         bridge.IsDone = true;
                         bridge.WriteLine("MiniInstaller died a brutal death");
 
-                        Console.Error.WriteLine(e);
+                        log.Error(e.ToString());
                     }
                 }) {
                     Name = "MiniInstaller"
@@ -156,7 +158,7 @@ namespace Olympus {
 
             public void Write(string value) => Console.Error.Write(value);
             public void WriteLine(string value) {
-                Console.Error.WriteLine(value);
+                log.Debug(value);
                 LastLogLine = value;
                 LogEvent?.Set();
             }

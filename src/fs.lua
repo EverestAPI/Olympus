@@ -1,3 +1,5 @@
+local log = require('logger')('fs')
+
 -- Based on filesystem.lua from Lönn
 -- TODO: Create a common repo for things shared between Lönn and Olympus?
 
@@ -169,7 +171,7 @@ function fs.normalize(path)
                 part = real or part
             end)
             if not status then
-                print("failed to normalize path", path, rv)
+                log.warning("failed to normalize path", path, rv)
             end
             goto add
         end

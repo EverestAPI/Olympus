@@ -5,6 +5,7 @@ using System.Net.Http;
 
 namespace Olympus {
     public class CmdGetLoennLatestVersion : Cmd<bool, Tuple<string, string>> {
+        private static readonly Logger log = new Logger(nameof(CmdGetLoennLatestVersion));
 
         public override bool Taskable => true;
 
@@ -18,7 +19,7 @@ namespace Olympus {
                     return new Tuple<string, string>((string) latestVersion["tag_name"], GetDownloadLink((JArray) latestVersion["assets"]));
                 }
             } catch (Exception ex) {
-                Console.Error.WriteLine("Error while checking Loenn version: " + ex);
+                log.Warning("Error while checking Loenn version: " + ex);
                 return new Tuple<string, string>("unknown", "");
             }
         }
@@ -32,7 +33,7 @@ namespace Olympus {
             } else if (PlatformHelper.Is(Platform.MacOS)) {
                 wantedSuffix = "-macos.app.zip";
             } else {
-                Console.Error.WriteLine($"Unsupported platform: {PlatformHelper.Current}");
+                log.Warning($"Unsupported platform: {PlatformHelper.Current}");
                 return "";
             }
 
@@ -43,7 +44,7 @@ namespace Olympus {
                 }
             }
 
-            Console.Error.WriteLine("Loenn artifact not found");
+            log.Warning("Loenn artifact not found");
             return "";
         }
     }

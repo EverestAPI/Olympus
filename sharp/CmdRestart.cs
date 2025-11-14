@@ -4,6 +4,7 @@ using System.IO;
 
 namespace Olympus {
     public class CmdRestart : Cmd<string, string> {
+        private static readonly Logger log = new Logger(nameof(CmdRestart));
 
         public override string Run(string exe) {
             Environment.SetEnvironmentVariable("LOCAL_LUA_DEBUGGER_VSCODE", "0");
@@ -21,7 +22,7 @@ namespace Olympus {
             process.StartInfo.FileName = exe;
             Environment.CurrentDirectory = process.StartInfo.WorkingDirectory = Path.GetDirectoryName(exe);
 
-            Console.Error.WriteLine($"Starting Olympus process: {exe}");
+            log.Info($"Starting Olympus process: {exe}");
             process.Start();
             return null;
         }

@@ -1,3 +1,5 @@
+local log = require('logger')('ahornsetup')
+
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local fs = require("fs")
@@ -482,7 +484,7 @@ You can close Olympus. Ahorn will continue running.]]))
                         loglist:addChild(uie.label(line):with({ wrap = true }):with(uiu.fillWidth))
                     end
                 else
-                    print("ahornsetup.launchAhorn encountered nil on poll", task)
+                    log.warning("ahornsetup.launchAhorn encountered nil on poll", task)
                 end
             end
         until batch[1] ~= "running" and batch[2] == 0

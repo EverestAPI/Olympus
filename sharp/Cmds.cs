@@ -84,6 +84,9 @@ namespace Olympus {
     }
 
     public abstract class Cmd {
+        private static readonly Logger logStatus = new Logger("Cmd.Status");
+        private static readonly Logger logUnpack = new Logger("Cmd.Unpack");
+
         public virtual string ID => GetType().Name.Substring(3);
         public abstract Type InputType { get; }
         public abstract Type OutputType { get; }
@@ -92,12 +95,12 @@ namespace Olympus {
         public abstract object Run(object input);
 
         public static object[] Status(string text, float progress, string shape, bool update) {
-            Console.Error.WriteLine(text);
+            logStatus.Debug(text);
             return StatusSilent(text, progress, shape, update);
         }
 
         public static object[] Status(string text, bool progress, string shape, bool update) {
-            Console.Error.WriteLine(text);
+            logStatus.Debug(text);
             return StatusSilent(text, progress, shape, update);
         }
 
@@ -225,7 +228,7 @@ namespace Olympus {
 
                 string to = Path.Combine(root, name);
                 string toParent = Path.GetDirectoryName(to);
-                Console.Error.WriteLine($"{name} -> {to}");
+                logUnpack.Debug($"{name} -> {to}");
 
                 if (!Directory.Exists(toParent))
                     Directory.CreateDirectory(toParent);

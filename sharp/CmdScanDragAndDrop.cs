@@ -4,6 +4,8 @@ using System.IO.Compression;
 
 namespace Olympus {
     public class CmdScanDragAndDrop : Cmd<string, string> {
+        private static readonly Logger log = new Logger(nameof(CmdScanDragAndDrop));
+
         public override string Run(string path) {
             if (path.EndsWith(".zip")) {
                 try {
@@ -16,8 +18,7 @@ namespace Olympus {
                             return "everest";
                     }
                 } catch (Exception e) {
-                    Console.Error.WriteLine($"ZIP cannot be scanned: {path}");
-                    Console.Error.WriteLine(e);
+                    log.Error($"ZIP cannot be scanned: {path}: " + e);
                 }
             }
 

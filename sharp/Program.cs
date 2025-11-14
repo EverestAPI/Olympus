@@ -17,6 +17,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Olympus {
     public static class Program {
+        private static readonly Logger log = new Logger(nameof(Program));
 
         public static string RootDirectory;
         public static string ConfigDirectory;
@@ -41,6 +42,14 @@ namespace Olympus {
         public static void Main(string[] args) {
             bool debug = false;
             bool verbose = false;
+
+            log.Info("Hey! This is Olympus.Sharp SECRET DEV VERSION, " + new[] {
+                "hope you're doing well!",
+                "let's get going!",
+                "sure hope you're not investigating some cursed bug again...",
+                "and I managed to boot up. That's a good start.",
+                "and if you're a modding helper, I'm sorry."
+            }[Random.Shared.Next(5)]);
 
 #if !WIN32
             // some things (notably love2d here: https://github.com/love2d/love/blob/main/src/modules/thread/threads.cpp#L163)
@@ -71,7 +80,7 @@ namespace Olympus {
             ConfigDirectory = Environment.GetEnvironmentVariable("OLYMPUS_CONFIG");
             if (string.IsNullOrEmpty(ConfigDirectory) || !Directory.Exists(ConfigDirectory))
                 ConfigDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Olympus");
-            Console.Error.WriteLine(RootDirectory);
+            log.Debug("root directory = " + RootDirectory);
 
             if (Type.GetType("Mono.Runtime") != null) {
                 // Mono hates HTTPS.
@@ -102,7 +111,7 @@ namespace Olympus {
             try {
                 parentProc = Process.GetProcessById(parentProcID = int.Parse(args.Last()));
             } catch {
-                Console.Error.WriteLine("[sharp] Invalid parent process ID");
+                log.Warning("Invalid parent process ID");
             }
 
             if (debug) {
@@ -141,7 +150,7 @@ namespace Olympus {
                     TcpClient client = listener.AcceptTcpClient();
                     try {
                         string ep = client.Client.RemoteEndPoint.ToString();
-                        Console.Error.WriteLine($"[sharp] New TCP connection: {ep}");
+                        log.Info($"New TCP connection: {ep}");
 
                         client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveTimeout, 1000);
                         Stream stream = client.GetStream();
@@ -158,9 +167,9 @@ namespace Olympus {
                                     WriteLoop(parentProc, ctx, writer, verbose);
                             } catch (Exception e) {
                                 if (e is ObjectDisposedException)
-                                    Console.Error.WriteLine($"[sharp] Failed writing to {ep}: {e.GetType()}: {e.Message}");
+                                    log.Error($"Failed writing to {ep}: {e.GetType()}: {e.Message}");
                                 else
-                                    Console.Error.WriteLine($"[sharp] Failed writing to {ep}: {e}");
+                                    log.Error($"[sharp] Failed writing to {ep}: {e}");
                                 client.Close();
                             } finally {
                                 ctx.Dispose();
@@ -176,9 +185,9 @@ namespace Olympus {
                                     ReadLoop(parentProc, ctx, reader, verbose);
                             } catch (Exception e) {
                                 if (e is ObjectDisposedException)
-                                    Console.Error.WriteLine($"[sharp] Failed reading from {ep}: {e.GetType()}: {e.Message}");
+                                    log.Error($"Failed reading from {ep}: {e.GetType()}: {e.Message}");
                                 else
-                                    Console.Error.WriteLine($"[sharp] Failed reading from {ep}: {e}");
+                                    log.Error($"Failed reading from {ep}: {e}");
                                 client.Close();
                             } finally {
                                 ctx.Dispose();
@@ -196,7 +205,7 @@ namespace Olympus {
                     } catch (ThreadAbortException) {
 
                     } catch (Exception e) {
-                        Console.Error.WriteLine($"[sharp] Failed listening for TCP connection:\n{e}");
+                        log.Error($"Failed listening for TCP connection: {e}");
                         client.Close();
                     }
                 }
@@ -204,10 +213,10 @@ namespace Olympus {
             } catch (ThreadAbortException) {
 
             } catch (Exception e) {
-                Console.Error.WriteLine($"[sharp] Failed listening for TCP connection:\n{e}");
+                log.Error($"Failed listening for TCP connection: {e}");
             }
 
-            Console.Error.WriteLine("[sharp] Goodbye");
+            log.Info("Goodbye");
 
         }
 
@@ -220,7 +229,7 @@ namespace Olympus {
             using (JsonTextWriter jsonWriter = new JsonTextWriter(writer)) {
                 for (Message msg = null; !(parentProc?.HasExited ?? false) && (msg = ctx.WaitForNext()) != null;) {
                     if (msg.Value is IEnumerator enumerator) {
-                        Console.Error.WriteLine($"[sharp] New CmdTask: {msg.UID}");
+                        log.Info($"New CmdTask: {msg.UID}");
                         CmdTasks.Add(new CmdTask(msg.UID, enumerator));
                         msg.Value = msg.UID;
                     }
@@ -252,24 +261,24 @@ namespace Olympus {
                 // Commands from Olympus come in pairs of two objects:
 
                 if (verbose)
-                    Console.Error.WriteLine("[sharp] Awaiting next command");
+                    log.Debug("waiting next command");
 
                 // Unique ID
                 string uid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter));
                 if (verbose)
-                    Console.Error.WriteLine($"[sharp] Receiving command {uid}");
+                    log.Debug($"Receiving command {uid}");
 
                 // Command ID
                 string cid = JsonConvert.DeserializeObject<string>(reader.ReadTerminatedString(delimiter)).ToLowerInvariant();
                 if (cid == "_ack") {
                     reader.ReadTerminatedString(delimiter);
                     if (verbose)
-                        Console.Error.WriteLine($"[sharp] Ack'd command {uid}");
+                        log.Debug($"Ack'd command {uid}");
                     lock (Cache)
                         if (Cache.ContainsKey(uid)) {
                             Cache.Remove(uid);
                         } else {
-                            Console.Error.WriteLine($"[sharp] Ack'd command that was already ack'd {uid}");
+                            log.Warning($"Ack'd command that was already ack'd {uid}");
                         }
                     continue;
                 }
@@ -288,14 +297,14 @@ namespace Olympus {
                 Cmd cmd = Cmds.Get(cid);
                 if (cmd == null) {
                     reader.ReadTerminatedString(delimiter);
-                    Console.Error.WriteLine($"[sharp] Unknown command {cid}");
+                    log.Error($"Unknown command {cid}");
                     msg.Error = "cmd failed running: not found: " + cid;
                     ctx.Reply(msg);
                     continue;
                 }
 
                 if (verbose)
-                    Console.Error.WriteLine($"[sharp] Parsing args for {cid}");
+                    log.Debug($"Parsing args for {cid}");
 
                 // Payload
                 string inputJson = reader.ReadTerminatedString(delimiter);
@@ -303,7 +312,7 @@ namespace Olympus {
                 object output;
                 try {
                     if (verbose || cmd.LogRun)
-                        Console.Error.WriteLine($"[sharp] Executing {cid}");
+                        log.Debug($"Executing {cid}");
                     if (cmd.Taskable) {
                         output = Task.Run(() => cmd.Run(input));
                     } else {
@@ -311,7 +320,7 @@ namespace Olympus {
                     }
 
                 } catch (Exception e) {
-                    Console.Error.WriteLine($"[sharp] Failed running {cid}: {e}");
+                    log.Warning($"Failed running {cid}: {e}");
                     msg.Error = "cmd failed running: " + e;
                     ctx.Reply(msg);
                     continue;
@@ -321,7 +330,7 @@ namespace Olympus {
                     task.ContinueWith(t => {
                         if (task.Exception != null) {
                             Exception e = task.Exception;
-                            Console.Error.WriteLine($"[sharp] Failed running task {cid}: {e}");
+                            log.Warning($"Failed running task {cid}: {e}");
                             msg.Error = "cmd task failed running: " + e;
                             ctx.Reply(msg);
                             return;

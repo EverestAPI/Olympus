@@ -8,6 +8,7 @@ using System.Linq;
 
 namespace Olympus {
     public class CmdAhornInstallJulia : Cmd<bool, IEnumerator> {
+        private static readonly Logger log = new Logger(nameof(CmdAhornInstallJulia));
 
         public static readonly string Version = "1.6.0";
         public static readonly string VersionBeta = "1.6.0";
@@ -212,8 +213,7 @@ export AHORN_ENV=""${ROOTDIR}/ahorn-env""
                                     throw new Exception("hdiutil detach encountered a fatal error:\n" + process.StandardError.ReadToEnd());
                             }
                         } catch (Exception e) {
-                            Console.Error.WriteLine("Error unmounting Julia dmg in installer finally clause");
-                            Console.Error.WriteLine(e);
+                            log.Error("Error unmounting Julia dmg in installer finally clause: " + e);
                         }
                     }
 

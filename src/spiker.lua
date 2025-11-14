@@ -1,3 +1,5 @@
+local log = require('logger')('spiker')
+
 require("love.timer")
 
 local pool = {}
@@ -59,14 +61,14 @@ function spike:stop(...)
     end
 
     local steps = self.steps
-    print("[SPIKE T ", self.tag)
+    log.debug("[SPIKE T ", self.tag)
     for i = 1, #steps do
         local step = steps[i]
         if step.delta >= self.thresholdPrint then
-            print("[SPIKE |" .. (step.delta > step.threshold and "*" or " "), step.delta, step.tag)
+            log.debug("[SPIKE |" .. (step.delta > step.threshold and "*" or " "), step.delta, step.tag)
         end
     end
-    print("[SPIKE >" .. (self.timeTotal > self.thresholdTotal and "*" or " "), self.timeTotal)
+    log.debug("[SPIKE >" .. (self.timeTotal > self.thresholdTotal and "*" or " "), self.timeTotal)
 
     return self, deltaEnd
 end

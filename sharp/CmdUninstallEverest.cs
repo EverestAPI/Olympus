@@ -5,6 +5,7 @@ using System.IO;
 
 namespace Olympus {
     public class CmdUninstallEverest : Cmd<string, string, IEnumerator> {
+        private static readonly Logger log = new Logger(nameof(CmdUninstallEverest));
 
         private static readonly string[] OldEverestFileNames = new string[] {
             "apphosts", "everest-lib",
@@ -102,7 +103,7 @@ namespace Olympus {
                 }
 
                 string toParent = Path.GetDirectoryName(to);
-                Console.Error.WriteLine($"{orig} -> {to}");
+                log.Debug($"{orig} -> {to}");
 
                 if (!Directory.Exists(toParent))
                     Directory.CreateDirectory(toParent);

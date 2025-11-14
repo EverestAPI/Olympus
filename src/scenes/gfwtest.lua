@@ -1,3 +1,5 @@
+local log = require('logger')('gfwtest')
+
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local threader = require("threader")
@@ -23,7 +25,7 @@ local function buildRow(label, url)
         lualabel.text = data and 'OK' or 'KO'
         lualabel.style.color = data and uie.greentext().style.color or { 0.8, 0.5, 0.5, 1 }
         if msg then
-            print('[gfwtest] Error for ' .. label .. ' / Lua: ' .. msg)
+            log.warning('Error for ' .. label .. ' / Lua: ' .. msg)
         end
     end)
 
@@ -31,7 +33,7 @@ local function buildRow(label, url)
         sharplabel.text = 'OK'
         sharplabel.style.color = uie.greentext().style.color
     end):falls(function(msg)
-        print('[gfwtest] Error for ' .. label .. ' / Sharp, check log-sharp for more details', msg)
+        log.warning('Error for ' .. label .. ' / Sharp, check log-sharp for more details', msg)
         sharplabel.text = 'KO'
         sharplabel.style.color = { 0.8, 0.5, 0.5, 1 }
         return true

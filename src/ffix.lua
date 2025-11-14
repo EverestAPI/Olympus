@@ -1,3 +1,5 @@
+local log = require('logger')('ffix')
+
 local ffi = require("ffi")
 local ffix = {}
 ffix.ffi = ffi
@@ -16,7 +18,7 @@ function ffix.cdef(def)
         local part = def:sub(current, next - 1)
         local status, rv = pcall(ffi.cdef, part)
         if not status then
-            print("Error in ffi.cdef[[\n" .. part .. "\n]]\nerror:\n" .. tostring(rv) .. "\ncontext:\n" .. debug.traceback())
+            log.error("Error in ffi.cdef[[\n" .. part .. "\n]]\nerror:\n" .. tostring(rv) .. "\ncontext:\n" .. debug.traceback())
         end
         all[#all + 1] = { part, status, rv }
 

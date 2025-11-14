@@ -7,6 +7,8 @@ using System.Text;
 
 namespace Olympus {
     public class CmdGetModIdToNameMap : Cmd<string, bool, bool> {
+        private static readonly Logger log = new Logger(nameof(CmdGetModIdToNameMap));
+
         public override bool Taskable => true;
 
         private static string cacheLocation;
@@ -15,7 +17,7 @@ namespace Olympus {
         public override bool Run(string cacheLocation, bool apiMirror) {
             CmdGetModIdToNameMap.cacheLocation = cacheLocation;
             CmdGetModIdToNameMap.apiMirror = apiMirror;
-            Console.Error.WriteLine($"[CmdGetIdToNameMap] Cache location set to: {cacheLocation}");
+            log.Debug($"Cache location set to: {cacheLocation}");
             GetModIDsToNamesMap(ignoreCache: true);
             return true;
         }
@@ -26,7 +28,7 @@ namespace Olympus {
             Dictionary<string, string> map;
 
             if (!ignoreCache && File.Exists(cacheLocation)) {
-                Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from {cacheLocation}");
+                log.Debug($"Loading mod IDs from {cacheLocation}");
                 map = tryRun(() => {
                     lock (locker)
                     using (Stream inputStream = new FileStream(cacheLocation, FileMode.Open)) {
@@ -36,7 +38,7 @@ namespace Olympus {
                 if (map.Count > 0) return map;
             }
 
-            Console.Error.WriteLine($"[CmdGetIdToNameMap] Loading mod IDs from the Internet");
+            log.Debug($"[CmdGetIdToNameMap] Loading mod IDs from the Internet (apiMirror = {apiMirror})");
             map = tryRun(() => {
                 using (HttpClient wc = new HttpClientWithCompressionSupport())
                 using (Stream inputStream = wc.GetAsync(
@@ -53,8 +55,7 @@ namespace Olympus {
             try {
                 return function();
             } catch (Exception e) {
-                Console.Error.WriteLine("Error loading mod IDs to names list");
-                Console.Error.WriteLine(e);
+                log.Warning("Error loading mod IDs to names list: " + e);
                 return new Dictionary<string, string>();
             }
         }

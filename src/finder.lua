@@ -1,3 +1,5 @@
+local log = require('logger')('finder')
+
 local fs = require("fs")
 local utils = require("utils")
 local registry = require("registry")
@@ -7,11 +9,11 @@ if not sqlite3status then
 end
 if not sqlite3status then
     sqlite3status, sqlite3 = pcall(require, "lsqlite3")
-    print("Failed loading lsqlite3")
-    print(sqlite3)
+    log.warning("Failed loading lsqlite3")
+    log.warning(sqlite3)
     sqlite3status, sqlite3 = pcall(require, "lsqlite3complete")
-    print("Failed loading lsqlite3complete")
-    print(sqlite3)
+    log.warning("Failed loading lsqlite3complete")
+    log.warning(sqlite3)
 end
 local sharpStatus, sharp = pcall(require, "sharp")
 require("love.system")
@@ -68,7 +70,7 @@ function finder.findSteamRoot()
 
     if root then
         local rootReal = fs.isDirectory(root)
-        print("[finder]", "steam root", root, root == rootReal and "<same>" or rootReal)
+        log.debug("steam root", root, root == rootReal and "<same>" or rootReal)
         return rootReal
     end
 end
@@ -82,7 +84,7 @@ function finder.findSteamCommon(root)
     for i = 1, #commons do
         local path = commons[i]
         if fs.isDirectory(path) then
-            print("[finder]", "steam common", path)
+            log.debug("steam common", path)
             return path
         end
     end
@@ -124,7 +126,7 @@ function finder.addSteamLibrariesFromVdf(libraries, vdfFile, pattern)
         path = utils.fromJSON(path)
         path = finder.findSteamCommon(path)
         if path then
-            print("[finder]", "steam additional library", path)
+            log.debug("steam additional library", path)
             libraries[#libraries + 1] = path
         end
     end
@@ -222,7 +224,7 @@ function finder.findSteamInstalls(id)
         local path = libraries[i]
         path = fs.joinpath(path, id)
         if fs.isDirectory(path) then
-            print("[finder]", "steam install", path)
+            log.debug("steam install", path)
             list[#list + 1] = {
                 type = "steam",
                 path = path
@@ -238,7 +240,7 @@ function finder.findSteamInstalls(id)
         local path = shortcut.exe
         path = path and fs.isDirectory(fs.dirname(path:match("^\"?([^\" ]*)") or path))
         if fs.isDirectory(path) then
-            -- print("[finder]", "steam shortcut", path)
+            log.debug("steam shortcut", path)
             list[#list + 1] = {
                 type = "steam_shortcut",
                 path = path
@@ -247,7 +249,7 @@ function finder.findSteamInstalls(id)
 
         path = shortcut.startdir
         if fs.isDirectory(path) then
-            -- print("[finder]", "steam shortcut", path)
+            log.debug("steam shortcut", path)
             list[#list + 1] = {
                 type = "steam_shortcut",
                 path = path
@@ -276,7 +278,7 @@ function finder.findEpicRoot()
 
     if root then
         local rootReal = fs.isDirectory(root)
-        print("[finder]", "epic root", root, root == rootReal and "<same>" or rootReal)
+        log.debug("epic root", root, root == rootReal and "<same>" or rootReal)
         return rootReal
     end
 end
@@ -300,7 +302,7 @@ function finder.findEpicInstalls(name)
         if data and data.DisplayName == name then
             local path = data.InstallLocation
             if fs.isDirectory(path) then
-                print("[finder]", "epic install", path)
+                log.debug("epic install", path)
                 list[#list + 1] = {
                     type = "epic",
                     path = path
@@ -327,7 +329,7 @@ function finder.findLegendaryRoot()
 
     if root then
         local rootReal = fs.isDirectory(root)
-        print("[finder]", "legendary root", root, root == rootReal and "<same>" or rootReal)
+        log.debug("legendary root", root, root == rootReal and "<same>" or rootReal)
         return rootReal
     end
 end
@@ -354,7 +356,7 @@ function finder.findLegendaryInstalls(name)
         if install and install.title == name then
             local path = install.install_path
             if fs.isDirectory(path) then
-                print("[finder]", "legendary install", path)
+                log.debug("legendary install", path)
                 list[#list + 1] = {
                     type = "legendary",
                     path = path
@@ -383,7 +385,7 @@ function finder.findItchDatabase()
 
     if db then
         local dbReal = fs.isFile(db)
-        print("[finder]", "itch db", db, db == dbReal and "<same>" or dbReal)
+        log.debug("itch db", db, db == dbReal and "<same>" or dbReal)
         return dbReal
     end
 end
@@ -418,7 +420,7 @@ function finder.findItchInstalls(name)
         local data = utils.fromJSON(body)
         local path = data.basePath
         if fs.isDirectory(path) then
-            print("[finder]", "itch install", path)
+            log.debug("itch install", path)
             list[#list + 1] = {
                 type = "itch",
                 path = path
@@ -442,7 +444,7 @@ function finder.findLutrisDatabase()
 
     if db then
         local dbReal = fs.isFile(db)
-        print("[finder]", "lutris db", db, db == dbReal and "<same>" or dbReal)
+        log.debug("lutris db", db, db == dbReal and "<same>" or dbReal)
         return dbReal
     end
 end
@@ -468,7 +470,7 @@ function finder.findLutrisDatabaseInstalls(name)
 
     for path in query:urows() do
         if fs.isDirectory(path) then
-            print("[finder]", "lutris db install", path)
+            log.debug("lutris db install", path)
             list[#list + 1] = {
                 type = "lutris",
                 path = path
@@ -491,7 +493,7 @@ function finder.findLutrisRoot()
 
     if root then
         local rootReal = fs.isDirectory(root)
-        print("[finder]", "lutris root", root, root == rootReal and "<same>" or rootReal)
+        log.debug("lutris root", root, root == rootReal and "<same>" or rootReal)
         return rootReal
     end
 end
@@ -516,7 +518,7 @@ function finder.findLutrisYamlInstalls(name)
             local path = data.game.exe
             if path and path:match(name .. ".exe$") and fs.isFile(path) then
                 path = fs.dirname(path)
-                print("[finder]", "lutris yml install", path)
+                log.debug("lutris yml install", path)
                 list[#list + 1] = {
                     type = "lutris",
                     path = path
@@ -594,15 +596,15 @@ function finder.findEnvironmentInstall()
                 type = "manual",
                 path = fs.dirname(match),
             }
-            print("[finder]", "found " .. fs.dirname(match) .. " from hint")
+            log.info("found " .. fs.dirname(match) .. " from hint")
         elseif fs.isDirectory(match) then
             result[#result + 1] = {
                 type = "manual",
                 path = match,
             }
-            print("[finder]", "found " .. match .. " from hint")
+            log.info("found " .. match .. " from hint")
         else
-            print("[finder]", "warning: " .. match .. " hint entry does not exist")
+            log.warning("warning: " .. match .. " hint entry does not exist")
         end
     end
     return result
@@ -633,16 +635,16 @@ function finder.fixRoot(root, appname)
     for i = 1, #dirs do
         local path = dirs[i]
         if fs.isFile(fs.joinpath(path, appname .. ".exe")) then
-            print("[finder]", "found " .. appname .. ".exe root", path)
+            log.info("found " .. appname .. ".exe root", path)
             return path
         elseif fs.isFile(fs.joinpath(path, appname .. ".dll")) then
-            print("[finder]", "found " .. appname .. ".dll root", path)
+            log.info("found " .. appname .. ".dll root", path)
             return path
         end
     end
 
     if root:match("[Cc]eleste") then
-        print("[finder]", "found install root without Celeste.exe or Celeste.dll", root)
+        log.warning("found install root without Celeste.exe or Celeste.dll", root)
     end
     return nil
 end

@@ -5,6 +5,7 @@ using System.IO;
 
 namespace Olympus {
     public class CmdLaunchLoenn : Cmd<string, string> {
+        private static readonly Logger log = new Logger(nameof(CmdLaunchLoenn));
 
         public override bool Taskable => true;
 
@@ -28,7 +29,7 @@ namespace Olympus {
             }
 
 
-            Console.Error.WriteLine($"Starting Loenn process: {loenn.StartInfo.FileName} {loenn.StartInfo.Arguments} (in {root})");
+            log.Info($"Starting Loenn process: {loenn.StartInfo.FileName} {loenn.StartInfo.Arguments} (in {root})");
 
             loenn.HandleLaunchWrapper("LOENN");
 

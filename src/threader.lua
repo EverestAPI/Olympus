@@ -1,3 +1,5 @@
+local log = require('logger')('threader')
+
 local spikerStatus, spiker = pcall(require, "spiker")
 if not spikerStatus then
     spiker = nil
@@ -242,6 +244,7 @@ function routineWrap:start()
 end
 
 function routineWrap:__update(...)
+    local log = require("logger")("threader.routine")
     local co = self.routine
 
     -- Sanity-check the status before resuming the coroutine in question.
@@ -251,8 +254,8 @@ function routineWrap:__update(...)
     if status == "running" then
         -- There is a special place in hell for whenever this happens.
         -- The only reasonable way this should even happen is a threader.update from inside a threader coroutine, but CTRL+F SDL_EventFilters.
-        print("[thread warning]", "coroutine " .. self.id .. " is the currently running coroutine, can't resume!")
-        print(debug.traceback())
+        log.warning("coroutine " .. self.id .. " is the currently running coroutine, can't resume!")
+        log.warning(debug.traceback())
         return nil -- and hope that the caller knows how to handle this.
     end
 
@@ -260,8 +263,8 @@ function routineWrap:__update(...)
     if status == "dead" then
         -- Coroutines should never die outside of our control.
         -- Sadly we don't fully control the environment - CTRL+F SDL_EventFilters.
-        print("[threader warning]", "coroutine " .. self.id .. " died outside of our control - assuming graceful death!")
-        print(debug.traceback())
+        log.warning("coroutine " .. self.id .. " died outside of our control - assuming graceful death!")
+        log.warning(debug.traceback())
         self.running = false
         self.error = nil
         return nil -- and hope that the caller knows how to handle this.
@@ -275,7 +278,7 @@ function routineWrap:__update(...)
     self.running = running
 
     if not passed and rv[2] == nil and rv[1] == "cannot resume dead coroutine" then
-        print("[threader warning]", "coroutine " .. self.id .. " cannot be resumed because it's supposedly dead but the status was " .. status .. " and is " .. coroutine.status(co))
+        log.warning("coroutine " .. self.id .. " cannot be resumed because it's supposedly dead but the status was " .. status .. " and is " .. coroutine.status(co))
     end
 
     local errorMsg = not passed and (rv[1] or "???")
@@ -334,6 +337,8 @@ function threader.new(fun)
             prethread(...)
         end
 
+        local log = require("logger")("threader.thread")
+
         local raw = ...
         local meta = raw.meta
         local args = raw.args
@@ -360,7 +365,7 @@ function threader.new(fun)
                 return {fun(unpack(args))}
             end,
             function(err)
-                print("[thread error]", id, err)
+                log.error(id, err)
                 if type(err) == "userdata" or type(err) == "table" then
                     return err
                 end
@@ -485,7 +490,7 @@ function threader.routine(fun, ...)
                 return {fun(unpack(args))}
             end,
             function(err)
-                print("[thread error]", id, err)
+                logger.error(id, err)
                 if type(err) == "userdata" or type(err) == "table" then
                     return err
                 end
@@ -528,9 +533,9 @@ function threader.update()
     if running then
         local status = coroutine.status(running.routine)
         if status ~= "running" then
-            print("[threader warning]", "threader.update called from within a " .. (running.waiting and "waiting " or "") .. " ZOMBIE threader coroutine (" .. running.id .. ", " .. status .. "), possibly via a native callback during coroutine.yield")
+            logger.warning("threader.update called from within a " .. (running.waiting and "waiting " or "") .. " ZOMBIE threader coroutine (" .. running.id .. ", " .. status .. "), possibly via a native callback during coroutine.yield")
         else
-            print("[threader warning]", "threader.update called from within a " .. (running.waiting and "waiting " or "") .. "threader coroutine (" .. running.id .. "), possibly via a native callback during coroutine.yield")
+            logger.warning("threader.update called from within a " .. (running.waiting and "waiting " or "") .. "threader coroutine (" .. running.id .. "), possibly via a native callback during coroutine.yield")
         end
     end
 

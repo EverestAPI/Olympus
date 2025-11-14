@@ -1,3 +1,5 @@
+local log = require('logger')('utils')
+
 require("love.filesystem")
 local dkjson = require("dkjson")
 local yaml = require("yaml")
@@ -12,8 +14,7 @@ local requestStatus, request
 if requestStatusChannel:peek() ~= 0 then
     requestStatus, request = pcall(require, "luajit-request")
     if not requestStatus then
-        print("luajit-request not loaded")
-        print(request)
+        log.warning("luajit-request not loaded", request)
         requestStatusChannel:push(0)
         request = nil
     end
@@ -185,7 +186,7 @@ function utils.download(url, headers)
     end
 
     if code == 0 then
-        print("luajit-request returned error code 0, switching to downloading via Olympus.Sharp")
+        log.warning("luajit-request returned error code 0, switching to downloading via Olympus.Sharp")
         requestStatusChannel:push(0)
         requestStatus = false
         request = nil

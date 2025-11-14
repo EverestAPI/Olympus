@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace Olympus {
     public static class AhornHelper {
+        private static readonly Logger log = new Logger(nameof(AhornHelper));
 
         private const string PrefixGlobal = @"
 @eval(Base, ttyhascolor(term_type = nothing) = false)
@@ -211,7 +212,7 @@ redirect_stdout(stdoutPrev)
                     process.WaitForExit();
                     err = process.StandardError.ReadToEnd().Trim();
                     if (!string.IsNullOrEmpty(err))
-                        Console.Error.WriteLine(err);
+                        log.Error(err);
                     return process.StandardOutput.ReadToEnd().Trim();
                 }
             } finally {

@@ -1,3 +1,5 @@
+local log = require('logger')('luacom')
+
 local love = _G.love
 if love then
     if love.system.getOS() ~= "Windows" then
@@ -17,7 +19,7 @@ end
 if not _G.luacom then
     local init, err1, err2 = package.loadlib("luacom.dll", "luacom_openlib")
     if not init then
-        print(err1, err2)
+        log.error(err1, err2)
         return false
     end
 

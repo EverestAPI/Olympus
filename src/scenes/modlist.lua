@@ -1,3 +1,5 @@
+local log = require('logger')('modlist')
+
 local ui, uiu, uie = require("ui").quick()
 local utils = require("utils")
 local fs = require("fs")
@@ -1090,7 +1092,7 @@ function scene.reload()
                         end
                     end
                 else
-                    print("modlist.reload encountered nil on poll", task)
+                    log.warning("modlist.reload encountered nil on poll", task)
                 end
             end
         until (batch[1] ~= "running" and batch[2] == 0) or scene.loadingID ~= loadingID

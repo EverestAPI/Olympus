@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 
 namespace Olympus {
     public class CmdUpdateAllMods : Cmd<string, bool, string, bool, IEnumerator> {
+        private static readonly Logger log = new Logger(nameof(CmdTasks));
+
         public override bool Taskable => true;
 
         public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences, bool apiMirror) {
@@ -31,14 +33,14 @@ namespace Olympus {
                 yield return "Checking for outdated mods (" + (int) Math.Round(processedCount * 100f / totalCount) + "%)...";
 
                 if (info.Hash != null && modVersionList.ContainsKey(info.Name)) {
-                    log($"Mod {info.Name}: installed hash {info.Hash}, latest hash(es) {string.Join(", ", modVersionList[info.Name].xxHash)}");
+                    log.Debug($"Mod {info.Name}: installed hash {info.Hash}, latest hash(es) {string.Join(", ", modVersionList[info.Name].xxHash)}");
                     if (!modVersionList[info.Name].xxHash.Contains(info.Hash)) {
                         updates[modVersionList[info.Name]] = info;
                     }
                 }
             }
 
-            log($"{updates.Count} update(s) available");
+            log.Info($"{updates.Count} update(s) available");
 
             int updatingMod = 1;
             foreach (KeyValuePair<ModUpdateInfo, CmdModList.ModInfo> update in updates) {
@@ -112,7 +114,7 @@ namespace Olympus {
             Exception lastException = null;
 
             foreach (string url in GetAllMirrorUrls(info.URL, mirrorPreferences)) {
-                log($"Downloading mod from {url}");
+                log.Info($"Downloading mod from {url}");
                 lastException = null;
 
                 // download the file from the selected mirror
@@ -125,7 +127,7 @@ namespace Olympus {
                         try {
                             hasNext = download.MoveNext();
                         } catch (Exception e) {
-                            log($"An uncaught exception happened while downloading from {url}! Falling back to next mirror.\n" + e);
+                            log.Warning($"An uncaught exception happened while downloading from {url}! Falling back to next mirror.\n" + e);
                             lastException = e;
                             break; // out of the download loop
                         }
@@ -149,7 +151,7 @@ namespace Olympus {
                     verifyChecksum(info, destination);
                     yield break; // download successful!
                 } catch (Exception e) {
-                    log($"Error while checking integrity of file downloaded from {url}! Falling back to next mirror.\n" + e);
+                    log.Warning($"Error while checking integrity of file downloaded from {url}! Falling back to next mirror.\n" + e);
                     lastException = e;
                     continue; // to the next mirror
                 }
@@ -178,10 +180,6 @@ namespace Olympus {
             public IEnumerator GetEnumerator() => Enumerator;
         }
 
-        private static void log(string line) {
-            Console.Error.WriteLine($"[CmdUpdateAllMods] {line}");
-        }
-
         /// <summary>
         /// Downloads the full update list from the update checker server.
         /// Returns null if the download fails for any reason.
@@ -192,7 +190,7 @@ namespace Olympus {
             try {
                 string modUpdaterDatabaseUrl = getModUpdaterDatabaseUrl(apiMirror);
 
-                log($"Downloading last versions list from {modUpdaterDatabaseUrl}");
+                log.Debug($"Downloading last versions list from {modUpdaterDatabaseUrl}");
 
                 using (HttpClient wc = new HttpClientWithCompressionSupport()) {
                     string yamlData = wc.GetStringAsync(modUpdaterDatabaseUrl).Result;
@@ -205,10 +203,10 @@ namespace Olympus {
                             xxHash = updateCatalog[name].xxHash
                         };
                     }
-                    log($"Downloaded {updateCatalog.Count} item(s)");
+                    log.Debug($"Downloaded {updateCatalog.Count} item(s)");
                 }
             } catch (Exception e) {
-                log("Downloading database failed! " + e.ToString());
+                log.Error("Downloading database failed! " + e.ToString());
             }
 
             return updateCatalog;
@@ -226,7 +224,7 @@ namespace Olympus {
                 actualHash = BitConverter.ToString(hasher.ComputeHash(stream)).Replace("-", "").ToLowerInvariant();
 
             string expectedHash = update.xxHash[0];
-            log($"Verifying checksum: actual hash is {actualHash}, expected hash is {expectedHash}");
+            log.Debug($"Verifying checksum: actual hash is {actualHash}, expected hash is {expectedHash}");
             if (expectedHash != actualHash) {
                 throw new IOException($"Checksum error: expected {expectedHash}, got {actualHash}");
             }
@@ -241,10 +239,10 @@ namespace Olympus {
         /// <param name="zipPath">The path to the zip the update has been downloaded to</param>
         private static void installModUpdate(ModUpdateInfo update, CmdModList.ModInfo mod, string zipPath) {
             // delete the old zip, and move the new one.
-            log($"Deleting mod .zip: {mod.Path}");
+            log.Debug($"Deleting mod .zip: {mod.Path}");
             File.Delete(mod.Path);
 
-            log($"Moving {zipPath} to {mod.Path}");
+            log.Debug($"Moving {zipPath} to {mod.Path}");
             File.Move(zipPath, mod.Path);
         }
 
@@ -256,7 +254,7 @@ namespace Olympus {
             if (apiMirror) return "https://everestapi.github.io/updatermirror/everest_update.yaml";
 
             using (HttpClient wc = new HttpClientWithCompressionSupport()) {
-                log("Fetching mod updater database URL");
+                log.Debug("Fetching mod updater database URL");
                 return wc.GetStringAsync("https://everestapi.github.io/modupdater.txt").Result.Trim();
             }
         }

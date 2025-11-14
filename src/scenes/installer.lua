@@ -1,3 +1,5 @@
+local log = require('logger')('installer')
+
 local ui, uiu, uie = require("ui").quick()
 local fs = require("fs")
 local utils = require("utils")
@@ -383,7 +385,7 @@ function scene.sharpTask(id, ...)
                         scene.update(update[1], update[2], update[3], update[4])
                     end
                 else
-                    print("installer.sharpTask encountered nil on poll", task)
+                    log.warning("installer.sharpTask encountered nil on poll", task)
                 end
             end
         until batch[1] ~= "running" and batch[2] == 0

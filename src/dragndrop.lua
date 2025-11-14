@@ -1,3 +1,5 @@
+local log = require('logger')('dragndrop')
+
 local ui, uiu, uie = require("ui").quick()
 local fs = require("fs")
 local threader = require("threader")
@@ -13,7 +15,7 @@ local modupdater = require("modupdater")
 function love.filedropped(file)
     threader.routine(function()
         file = file:getFilename()
-        print("file drag n dropped", file)
+        log.info("file drag n dropped", file)
 
         if #alert.root.children > 0 or scener.locked then
             notify("Olympus is currently busy with something else.")
@@ -50,7 +52,7 @@ Do you want to go to the Celeste installation manager?]],
         end
 
         if not fs.isFile(file) then
-            print("user drag-n-dropped pathless file?")
+            log.warning("user drag-n-dropped pathless file?")
             notify("Olympus can't handle that file - does it exist?")
             return
         end
@@ -86,7 +88,7 @@ Do you want to go to the Celeste installation manager?]],
             end)
 
         else
-            print("user drag-n-dropped file of unknown type", file)
+            log.warning("user drag-n-dropped file of unknown type", file)
             notify("Olympus can't handle that file.")
         end
     end)
