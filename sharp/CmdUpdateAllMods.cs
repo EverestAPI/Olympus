@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 
 namespace Olympus {
     public class CmdUpdateAllMods : Cmd<string, bool, string, bool, IEnumerator> {
-        private static readonly Logger log = new Logger(nameof(CmdTasks));
+        private static readonly Logger log = new Logger(nameof(CmdUpdateAllMods));
 
         public override bool Taskable => true;
 
