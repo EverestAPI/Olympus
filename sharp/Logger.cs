@@ -8,7 +8,7 @@ namespace Olympus {
         public void Error(string msg) => log("err", msg);
 
         private void log(string level, string msg) {
-            Console.Error.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}][{tag}][{level}] {msg}");
+            Console.Error.WriteLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] [{level}] [{tag}] {msg}");
         }
     }
 }

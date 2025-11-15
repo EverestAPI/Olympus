@@ -43,9 +43,8 @@ return function(raw)
         _print(...)
         local input = {...}
         local line = {}
-        line[1] = "[[" .. id .. "]]"
         for i = 1, #input do
-            line[i + 1] = tostring(input[i])
+            line[i] = tostring(input[i])
         end
         log:push(table.concat(line, " "))
     end

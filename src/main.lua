@@ -40,6 +40,7 @@ local canvas
 local drawstats = {}
 
 local function logDump()
+    local contentWritten = false
     while true do
         local logLine = logChannel:pop()
         if not logLine then
@@ -47,6 +48,7 @@ local function logDump()
         end
         if logFile then
             logFile:write(logLine, "\n")
+            contentWritten = true
         end
         if logList and not lldb then
             if logList.children[100] then
@@ -54,6 +56,9 @@ local function logDump()
             end
             logList:addChild(uie.label(logLine))
         end
+    end
+    if contentWritten then
+        logFile:flush()
     end
 end
 
@@ -155,6 +160,9 @@ function love.errhand(...)
 end
 
 function love.load(args)
+    utils = require("utils")
+    log.debug("This is Olympus.Lua version", utils.trim(utils.load("version.txt") or "?"))
+
     love.window.setDisplaySleepEnabled(true)
 
     local userOS = love.system.getOS()
@@ -193,7 +201,6 @@ function love.load(args)
         end
     end
 
-    utils = require("utils")
     threader = require("threader")
 
     fs = require("fs")
@@ -240,8 +247,6 @@ function love.load(args)
         love.versionSDLStr = table.concat(love.versionSDL, ".")
         log.debug("SDL2 version", love.versionSDLStr)
     end
-
-    log.debug("Olympus version", utils.trim(utils.load("version.txt") or "?"))
 
     ui = require("ui")
     uie = require("ui.elements")
