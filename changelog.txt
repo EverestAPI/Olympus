@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Make sure log lines are actually written to log.txt
+∙ Fixed mislabeling of "CmdUpdateAllMods" as "CmdTasks" in log-sharp.txt
