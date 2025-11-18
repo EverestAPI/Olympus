@@ -37,6 +37,8 @@ local canvasWidth = 0
 local canvasHeight = 0
 local canvas
 
+local lang = require("lang")
+
 local drawstats = {}
 
 local function logDump()
@@ -65,16 +67,15 @@ end
 
 local function askExit()
     alert({
-        body = [[
-Do you want to close Olympus?]],
+        body = lang.get("do_you_want_to_close_olympus"),
         buttons = {
             {
-                "Yes",
+                lang.get("yes"),
                 function()
                     love.event.quit()
                 end
             },
-            { "No" }
+            { lang.get("no") }
         }
     })
 end
@@ -208,7 +209,7 @@ function love.load(args)
     sharp = require("sharp")
     local sharpStatus, sharpError = pcall(sharp.init, debugging or debuggingSharp, debuggingSharp)
     if not sharpStatus then
-        love.window.showMessageBox("Olympus.Sharp Startup Error", "Failed loading Olympus.Sharp: " .. tostring(sharpError), "error")
+        love.window.showMessageBox(lang.get("olympus_sharp_startup_error"), lang.get("failed_loading_olympus_sharp") .. tostring(sharpError), "error")
     else
         log.debug("Olympus version was transmitted to sharp: " .. sharp.setOlympusVersion(utils.trim(utils.load("version.txt") or "ERROR")):result())
         threader.routine(function()
@@ -624,19 +625,10 @@ function love.load(args)
 
     if userOS == "OS X" and love.versionSDL and love.versionSDL.major == 2 and love.versionSDL.minor == 0 and love.versionSDL.patch < 12 then
         alert({
-            body = [[
-The Olympus app is out of date.
-Sometimes, new features and huge fixes require updates
-under the hood of Olympus, which it can't apply itself.
-
-Most notably, the one-click installer buttons found on GameBanana
-were broken on macOS. To fix this, you will need to reinstall Olympus.
-
-Please go to the Everest website for further instructions.
-Keeping Olympus outdated can cause crashes in the future.]],
+            body = lang.get("the_olympus_app_is_out_of_date_sometimes"),
             buttons = {
-                { "Open Everest Website", function(container)
-                    container:close("ok")
+                { lang.get("open_everest_website"), function(container)
+                    container:close(lang.get("ok"))
                     scener.set("installer")
                     utils.openURL("https://everestapi.github.io/"):calls(function()
                         threader.routine(function()

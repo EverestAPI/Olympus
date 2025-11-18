@@ -5,23 +5,24 @@ local config = require("config")
 local alert = require("alert")
 local modinstaller = require("modinstaller")
 local sharp = require("sharp")
+local lang = require("lang")
 
 local scene = {
-    name = "GameBanana",
+    name = lang.get("gamebanana"),
     sort = "latest",
     itemtypeFilter = {}
 }
 
 local sortOptions = {
-    { text = "Most Recent", data = "latest" },
-    { text = "Most Downloaded", data = "downloads" },
-    { text = "Most Viewed", data = "views" },
-    { text = "Most Liked", data = "likes" }
+    { text = lang.get("most_recent"), data = "latest" },
+    { text = lang.get("most_downloaded"), data = "downloads" },
+    { text = lang.get("most_viewed"), data = "views" },
+    { text = lang.get("most_liked"), data = "likes" }
 }
 
 -- this will be the type filter dropdown content until the type list is loaded through the API.
 local itemtypeOptionsTemp = {
-    { text = "All", data = "" }
+    { text = lang.get("all"), data = "" }
 }
 
 local function generateModColumns(self)
@@ -76,7 +77,7 @@ local root = uie.column({
             uie.button(
                 uie.row({
                     uie.icon("browser"):with({ scale = 24 / 256 }),
-                    uie.label("Go to gamebanana.com"):with({ y = 2 })
+                    uie.label(lang.get("go_to_gamebanana_com")):with({ y = 2 })
                 }),
                 function()
                     utils.openURL("https://gamebanana.com/games/6460")
@@ -87,7 +88,7 @@ local root = uie.column({
                 uie.button(uie.icon("back"):with({ scale = 24 / 256 }), function()
                     scene.loadPage(scene.page - 1)
                 end):as("pagePrev"),
-                uie.label("Page #?", ui.fontBig):with({
+                uie.label(lang.get("page"), ui.fontBig):with({
                     y = 4
                 }):as("pageLabel"),
                 uie.button(uie.icon("forward"):with({ scale = 24 / 256 }), function()
@@ -155,7 +156,7 @@ local root = uie.column({
                 ):with({
                     width = 200,
                     height = 24,
-                    placeholder = "Search"
+                    placeholder = lang.get("search")
                 }):as("searchBox"),
                 uie.button(uie.icon("search"):with({ scale = 24 / 256 }), function()
                     scene.loadPage(scene.root:findChild("searchBox").text)
@@ -242,9 +243,9 @@ function scene.loadPage(page)
 
         if not isQuery then
             if page == 0 then
-                pageLabel.text = "Featured"
+                pageLabel.text = lang.get("featured")
             else
-                pageLabel.text = "Page #" .. tostring(page)
+                pageLabel.text = lang.get("page") .. tostring(page)
             end
             scene.page = page
         else
@@ -253,7 +254,7 @@ function scene.loadPage(page)
         end
 
         local loading = uie.paneled.row({
-            uie.label("Loading"),
+            uie.label(lang.get("loading")),
             uie.spinner():with({
                 width = 16,
                 height = 16
@@ -283,7 +284,7 @@ function scene.loadPage(page)
         if not entries then
             loading:removeSelf()
             root:addChild(uie.paneled.row({
-                uie.label("Error downloading mod list: " .. tostring(entriesError)),
+                uie.label(lang.get("error_downloading_mod_list") .. tostring(entriesError)),
             }):with({
                 clip = false,
                 cacheable = false
@@ -330,7 +331,7 @@ local function refreshSubcategories(categoryData)
     if not fullData then
         -- Error while calling the API
         root:addChild(uie.paneled.row({
-            uie.label("Error downloading subcategories list: " .. tostring(msg)),
+            uie.label(lang.get("error_downloading_subcategories_list") .. tostring(msg)),
         }):with({
             clip = false,
             cacheable = false
@@ -384,7 +385,7 @@ function scene.load()
         if not data then
             -- Error while calling the API
             root:addChild(uie.paneled.row({
-                uie.label("Error downloading categories list: " .. tostring(msg)),
+                uie.label(lang.get("error_downloading_categories_list") .. tostring(msg)),
             }):with({
                 clip = false,
                 cacheable = false
@@ -567,7 +568,7 @@ function scene.item(info)
                             }):as("imgholder"),
 
                             uie.column({
-                                uie.label({ { 1, 1, 1, 0.5 }, os.date("%Y-%m-%d %H:%M:%S", date) .. "\n" .. uiu.countformat(views, "%d view", "%d views") .. " ∙ " .. uiu.countformat(likes, "%d like", "%d likes") .. "\n" .. uiu.countformat(downloads, "%d download", "%d downloads"), }):as("stats"),
+                                uie.label({ { 1, 1, 1, 0.5 }, os.date(lang.get("y_m_d_h_m_s"), date) .. "\n" .. uiu.countformat(views, lang.get("d_view"), lang.get("d_views")) .. " ∙ " .. uiu.countformat(likes, lang.get("d_like"), lang.get("d_likes")) .. "\n" .. uiu.countformat(downloads, lang.get("d_download"), lang.get("d_downloads")), }):as("stats"),
                             }):with(uiu.fillWidth(16, true))
 
                         }):with({ style = { spacing = 16 } }):with(uiu.fillWidth),
@@ -600,12 +601,12 @@ function scene.item(info)
                                     ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
                                     buttons = {
                                         {
-                                            "Open in browser",
+                                            lang.get("open_in_browser"),
                                             function()
                                                 utils.openURL(website)
                                             end
                                         },
-                                        { "Close" }
+                                        { lang.get("close") }
                                     },
                                     init = function(container)
                                         container:findChild("box"):with({
@@ -631,10 +632,10 @@ function scene.item(info)
                                 for i = 1, #btns do
                                     local file = btns[i]
                                     btns[i] = uie[i == 1 and "buttonGreen" or "button"](
-                                        { { 1, 1, 1, 1 }, file.Name, { 1, 1, 1, 0.5 }, " ∙ " .. os.date("%Y-%m-%d %H:%M:%S", file.CreatedDate) .. " ∙ " .. uiu.countformat(file.Downloads, "%d download", "%d downloads"), { 1, 1, 1, 0.5 }, "\n" .. file.Description},
+                                        { { 1, 1, 1, 1 }, file.Name, { 1, 1, 1, 0.5 }, " ∙ " .. os.date(lang.get("y_m_d_h_m_s"), file.CreatedDate) .. " ∙ " .. uiu.countformat(file.Downloads, lang.get("d_download"), lang.get("d_downloads")), { 1, 1, 1, 0.5 }, "\n" .. file.Description},
                                         function(self)
                                             modinstaller.install(file.URL)
-                                            self:getParent("container"):close("OK")
+                                            self:getParent("container"):close(lang.get("ok"))
                                         end
                                     )
                                 end
@@ -647,8 +648,8 @@ function scene.item(info)
                                     title = name,
                                     body = uie.scrollbox(uie.column(btns)),
                                     init = function(container)
-                                        btns[#btns + 1] = uie.button("Close", function()
-                                            container:close("Close")
+                                        btns[#btns + 1] = uie.button(lang.get("close"), function()
+                                            container:close(lang.get("close"))
                                         end)
                                         container:findChild("buttons"):removeSelf()
 

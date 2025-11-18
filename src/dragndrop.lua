@@ -11,6 +11,7 @@ local alert = require("alert")
 local notify = require("notify")
 local modinstaller = require("modinstaller")
 local modupdater = require("modupdater")
+local lang = require("lang")
 
 function love.filedropped(file)
     threader.routine(function()
@@ -18,25 +19,23 @@ function love.filedropped(file)
         log.info("file drag n dropped", file)
 
         if #alert.root.children > 0 or scener.locked then
-            notify("Olympus is currently busy with something else.")
+            notify(lang.get("olympus_is_currently_busy_with_something"))
             return
         end
 
         local install = config.installs[config.install]
         if not install then
             alert({
-                body = [[
-Your Celeste installation list is still empty.
-Do you want to go to the Celeste installation manager?]],
+                body = lang.get("your_celeste_installation_list_is_still_"),
                 buttons = {
                     {
-                        "Yes",
+                        lang.get("yes"),
                         function(container)
                             scener.push("installmanager")
-                            container:close("OK")
+                            container:close(lang.get("ok"))
                         end
                     },
-                    { "No" }
+                    { lang.get("no") }
                 }
             })
             return
@@ -53,7 +52,7 @@ Do you want to go to the Celeste installation manager?]],
 
         if not fs.isFile(file) then
             log.warning("user drag-n-dropped pathless file?")
-            notify("Olympus can't handle that file - does it exist?")
+            notify(lang.get("olympus_can_t_handle_that_file_does_it_e"))
             return
         end
 
@@ -69,17 +68,17 @@ Do you want to go to the Celeste installation manager?]],
                     return
                 end
 
-                installer.update("Everest successfully installed", 1, "done")
+                installer.update(lang.get("everest_successfully_installed"), 1, "done")
                 installer.done({
                     {
-                        "Launch",
+                        lang.get("launch"),
                         function()
                             modupdater.updateAllMods(install.entry.path, true)
                             scener.pop()
                         end
                     },
                     {
-                        "OK",
+                        lang.get("ok"),
                         function()
                             scener.pop()
                         end
@@ -89,7 +88,7 @@ Do you want to go to the Celeste installation manager?]],
 
         else
             log.warning("user drag-n-dropped file of unknown type", file)
-            notify("Olympus can't handle that file.")
+            notify(lang.get("olympus_can_t_handle_that_file"))
         end
     end)
 end

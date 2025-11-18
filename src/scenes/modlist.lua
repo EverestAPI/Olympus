@@ -10,9 +10,10 @@ local sharp = require("sharp")
 local alert = require("alert")
 local notify = require("notify")
 local modupdater = require("modupdater")
+local lang = require("lang")
 
 local scene = {
-    name = "Mod Manager",
+    name = lang.get("mod_manager"),
     -- the list of displayed mods, in the order they are displayed (mod object = { info = modinfo, row = uirow, visible = bool })
     modlist = {},
     -- mod name -> list[mod object]
@@ -86,7 +87,7 @@ local function displayErrorMessage(text)
         body = string.format(text),
         buttons = {
             {
-                "Close",
+                lang.get("close"),
             },
         }
     })
@@ -172,9 +173,9 @@ local function updateEnabledModCountLabel()
     end
 
     scene.root:findChild("enabledModCountLabel"):setText(string.format(
-        "%s enabled %s",
-        enabledModCount == 0 and "No" or enabledModCount,
-        enabledModCount == 1 and "mod" or "mods"
+        lang.get("s_enabled_s"),
+        enabledModCount == 0 and lang.get("no1") or enabledModCount,
+        enabledModCount == 1 and lang.get("mod") or lang.get("mods")
     ))
 end
 
@@ -234,7 +235,7 @@ local function getLabelTextFor(info)
             color,
             fs.filename(info.Path) .. "\n",
             themeColors.disabledColor,
-            "[No mod info available]"
+            lang.get("no_mod_info_available")
         }
     end
 end
@@ -407,14 +408,14 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
     if numDependencies > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
-                "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
+                lang.get("this_mod_depends_on_s_other_disabled_s_n"),
                 numDependencies,
-                numDependencies == 1 and "mod" or "mods",
-                numDependencies == 1 and "it" or "them"
+                numDependencies == 1 and lang.get("mod1") or lang.get("mods1"),
+                numDependencies == 1 and lang.get("it") or lang.get("them")
             )),
             buttons = {
                 {
-                    "Yes",
+                    lang.get("yes"),
                     function(container)
                         -- enable all the dependencies!
                         enableMods(dependenciesToToggle)
@@ -422,10 +423,10 @@ local function checkDisabledDependenciesOfEnabledMod(mod)
                     end
                 },
                 {
-                    "No"
+                    lang.get("no")
                 },
                 {
-                    "Cancel",
+                    lang.get("cancel"),
                     function(container)
                         -- re-disable the mod
                         disableMod(mod)
@@ -451,14 +452,14 @@ local function checkDisabledDependenciesOfEnabledModFromWarning(info)
     if numDependencies > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesToToggle, string.format(
-                "This mod depends on %s other disabled %s.\nDo you want to enable %s as well?",
+                lang.get("this_mod_depends_on_s_other_disabled_s_n"),
                 numDependencies,
-                numDependencies == 1 and "mod" or "mods",
-                numDependencies == 1 and "it" or "them"
+                numDependencies == 1 and lang.get("mod1") or lang.get("mods1"),
+                numDependencies == 1 and lang.get("it") or lang.get("them")
             )),
             buttons = {
                 {
-                    "Yes",
+                    lang.get("yes"),
                     function(container)
                         -- enable all the dependencies!
                         enableMods(dependenciesToToggle)
@@ -466,7 +467,7 @@ local function checkDisabledDependenciesOfEnabledModFromWarning(info)
                     end
                 },
                 {
-                    "No"
+                    lang.get("no")
                 }
             }
         })
@@ -552,14 +553,14 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
     if numDependencies > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependenciesThatCanBeDisabled, string.format(
-                "%s other %s no longer required for any enabled mod.\nDo you want to disable %s as well?",
+                lang.get("s_other_s_no_longer_required_for_any_ena"),
                 numDependencies,
-                numDependencies == 1 and "mod is" or "mods are",
-                numDependencies == 1 and "it" or "them"
+                numDependencies == 1 and lang.get("mod_is") or lang.get("mods_are"),
+                numDependencies == 1 and lang.get("it") or lang.get("them")
             )),
             buttons = {
                 {
-                    "Yes",
+                    lang.get("yes"),
                     function(container)
                         -- disable them all!
                         disableMods(dependenciesThatCanBeDisabled, false)
@@ -567,7 +568,7 @@ local function checkEnabledDependenciesOfDisabledMods(newlyDisabledMods)
                     end
                 },
                 {
-                    "No"
+                    lang.get("no")
                 }
             }
         })
@@ -588,14 +589,14 @@ local function checkEnabledDependentsOfDisabledMod(mod)
     if numDependents > 0 then
         alert({
             body = getConfirmationMessageBodyForModToggling(dependentsToToggle, string.format(
-                "%s other %s on this mod.\nDo you want to disable %s as well?",
+                lang.get("s_other_s_on_this_mod_ndo_you_want_to_di"),
                 numDependents,
-                numDependents == 1 and "mod depends" or "mods depend",
-                numDependents == 1 and "it" or "them"
+                numDependents == 1 and lang.get("mod_depends") or lang.get("mods_depend"),
+                numDependents == 1 and lang.get("it") or lang.get("them")
             )),
             buttons = {
                 {
-                    "Yes",
+                    lang.get("yes"),
                     function(container)
                         -- disable them all!
                         disableMods(dependentsToToggle, false)
@@ -606,14 +607,14 @@ local function checkEnabledDependentsOfDisabledMod(mod)
                     end
                 },
                 {
-                    "No",
+                    lang.get("no"),
                     function(container)
                         container:close()
                         checkEnabledDependenciesOfDisabledMods({[mod.info.Name] = mod})
                     end
                 },
                 {
-                    "Cancel",
+                    lang.get("cancel"),
                     function(container)
                         -- re-enable the mod
                         enableMod(mod)
@@ -642,20 +643,17 @@ end
 -- called when a mod is to be deleted, prompting the user for confirmation
 local function deleteMod(info)
     alert({
-        body = [[
-Are you sure that you want to delete ]] .. fs.filename(info.Path) .. [[?
-You will need to redownload the mod to use it again.
-Tip: Disabling the mod prevents Everest from loading it, and is as efficient as deleting it to reduce lag.]],
+        body = lang.get("are_you_sure_that_you_want_to_delete") .. fs.filename(info.Path) .. lang.get("you_will_need_to_redownload_the_mod_to_u"),
         buttons = {
             {
-                "Delete",
+                lang.get("delete"),
                 function(container)
                     fs.remove(info.Path)
                     scene.reload()
-                    container:close("OK")
+                    container:close(lang.get("ok"))
                 end
             },
-            { "Keep" }
+            { lang.get("keep") }
         }
     })
 end
@@ -716,7 +714,7 @@ local function applyPreset(name, disableAll)
         end
     end
     if missingMods ~= "" then
-        displayErrorMessage("Some mods couldn't be loaded, make sure they are installed: \n" .. missingMods)
+        displayErrorMessage(lang.get("some_mods_couldn_t_be_loaded_make_sure_t") .. missingMods)
     end
     writeBlacklist()
 end
@@ -724,11 +722,11 @@ end
 -- deletes preset from modpresets.txt
 local function deletePreset(name)
     if not name then
-        displayErrorMessage("Something went wrong, deleted preset's name is nil!")
+        displayErrorMessage(lang.get("something_went_wrong_deleted_preset_s_na"))
         return
     end
     if #name == 0 then
-        displayErrorMessage("Something went wrong, deleted preset's name is empty!")
+        displayErrorMessage(lang.get("something_went_wrong_deleted_preset_s_na"))
         return
     end
 
@@ -761,11 +759,11 @@ end
 -- writes a new preset to a modpresets.txt, returns true if preset was created successfully and false if not
 local function addPreset(name)
     if not name then
-        displayErrorMessage("Something went wrong, name is nil!")
+        displayErrorMessage(lang.get("something_went_wrong_name_is_nil"))
         return false
     end
     if #name == 0 then
-        displayErrorMessage("Preset name can't be empty!")
+        displayErrorMessage(lang.get("preset_name_can_t_be_empty"))
         return false
     end
 
@@ -776,18 +774,18 @@ local function addPreset(name)
         for i, n in ipairs(names) do
             if n == name then
                 alert({
-                    body = "This preset already exists! Do you wish to override it?",
+                    body = lang.get("this_preset_already_exists_do_you_wish_t"),
                     buttons = {
                         {
-                            "Yes",
+                            lang.get("yes"),
                             function (container)
                                 deletePreset(name)
                                 addPreset(name)
-                                container:close("OK")
+                                container:close(lang.get("ok"))
                             end
                         },
                         {
-                            "No",
+                            lang.get("no"),
                         },
                     }
                })
@@ -822,7 +820,7 @@ local function buildPresetsUI()
     end):with({
         width = 200,
         height = 24,
-        placeholder = "New preset name",
+        placeholder = lang.get("new_preset_name"),
         enabled = true
     }):as("presetField")
 
@@ -830,27 +828,26 @@ local function buildPresetsUI()
         local presetRow = uie.paneled.row({
             uie.label(presets[i]):with(verticalCenter),
             uie.row({
-                uie.button("Add", function(self)
+                uie.button(lang.get("add"), function(self)
                     applyPreset(presets[i], false)
                 end),
-                uie.button("Replace", function(self)
+                uie.button(lang.get("replace"), function(self)
                     applyPreset(presets[i], true)
                 end),
-                uie.button("Delete", function(self)
+                uie.button(lang.get("delete"), function(self)
                     alert({
-                        body = [[
-Are you sure that you want to delete ]] .. presets[i] .. [[?]],
+                        body = lang.get("are_you_sure_that_you_want_to_delete") .. presets[i] .. lang.get("questionmark"),
                         buttons = {
                             {
-                                "Delete",
+                                lang.get("delete"),
                                 function(container)
                                     deletePreset(presets[i])
-                                    container:close("OK")
-                                    self:getParent("modPresets"):close("OK")
+                                    container:close(lang.get("ok"))
+                                    self:getParent("modPresets"):close(lang.get("ok"))
                                     scene.displayPresetsUI()
                                 end
                             },
-                            { "Keep" }
+                            { lang.get("keep") }
                         }
                     })
                 end)
@@ -861,16 +858,16 @@ Are you sure that you want to delete ]] .. presets[i] .. [[?]],
 
     return uie.column({
         uie.paneled.row({
-            uie.button("Edit modpresets.txt", function()
+            uie.button(lang.get("edit_modpresets_txt"), function()
                 local root = config.installs[config.install].path
-                utils.openFile(fs.joinpath(root, "Mods", "modpresets.txt"))
+                utils.openFile(fs.joinpath(root, lang.get("mods"), "modpresets.txt"))
             end),
             uie.row({
                 presetField,
-                uie.button("Add preset", function(self)
+                uie.button(lang.get("add_preset"), function(self)
                     local success = addPreset(preset)
                     if success then
-                        self:getParent("modPresets"):close("OK")
+                        self:getParent("modPresets"):close(lang.get("ok"))
                         scene.displayPresetsUI()
                     end
                 end)
@@ -889,12 +886,12 @@ end
 -- shows the Mod Presets screen
 function scene.displayPresetsUI()
     alert({
-        title = "Mod presets",
+        title = lang.get("mod_presets"),
         body = buildPresetsUI(),
         big = true,
         buttons = {
             {
-                "Close"
+                lang.get("close")
             }
         },
         init = function (container)
@@ -931,7 +928,7 @@ function scene.item(info)
                 })
                 :as("favoriteHeart"),
 
-            uie.checkbox("Enabled", not info.IsBlacklisted, function(checkbox, newState)
+            uie.checkbox(lang.get("enabled"), not info.IsBlacklisted, function(checkbox, newState)
                 toggleMod(info, newState)
             end)
                 :with(verticalCenter)
@@ -940,7 +937,7 @@ function scene.item(info)
                 })
                 :as("toggleCheckbox"),
 
-            uie.button("Delete", function()
+            uie.button(lang.get("delete"), function()
                 deleteMod(info)
             end)
                 :with({
@@ -983,7 +980,7 @@ function scene.reload()
         end
 
         local loading = uie.paneled.row({
-            uie.label("Loading"),
+            uie.label(lang.get("loading")),
             uie.spinner():with({
                 width = 16,
                 height = 16
@@ -1003,38 +1000,38 @@ function scene.reload()
         list:addChild(uie.paneled.column({
             uie.row({
                 uie.column({
-                    uie.label("Manage Installed Mods", ui.fontBig),
-                    uie.label("This menu allows you to enable, disable or delete the mods you currently have installed."),
+                    uie.label(lang.get("manage_installed_mods"), ui.fontBig),
+                    uie.label(lang.get("this_menu_allows_you_to_enable_disable_o")),
                 }),
-                uie.buttonGreen("Update All", function()
+                uie.buttonGreen(lang.get("update_all"), function()
                     modupdater.updateAllMods(root, nil, "all", scene.reload, true)
                 end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
             }):with(uiu.fillWidth),
             uie.row({
-                uie.button("Open mods folder", function()
+                uie.button(lang.get("open_mods_folder"), function()
                     utils.openFile(fs.joinpath(root, "Mods"))
                 end),
-                uie.button("Edit blacklist.txt", function()
+                uie.button(lang.get("edit_blacklist_txt"), function()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
                 end),
-                uie.button("Mod presets", function()
+                uie.button(lang.get("mod_presets"), function()
                     scene.displayPresetsUI()
                 end),
-                uie.checkbox("Only show enabled", false, function(checkbox, newState)
+                uie.checkbox(lang.get("only_show_enabled"), false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
-                uie.checkbox("Only show favorites", false, function(checkbox, newState)
+                uie.checkbox(lang.get("only_show_favorites"), false, function(checkbox, newState)
                     scene.onlyShowFavoriteMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowFavoriteModsCheckbox"),
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
-                    uie.button("Enable All", function()
+                    uie.button(lang.get("enable_all"), function()
                         enableMods(scene.modsByPath)
                         writeBlacklist()
                     end):with({ enabled = false }):as("enableAllButton"),
-                    uie.button("Disable All", function()
+                    uie.button(lang.get("disable_all"), function()
                         -- don't disable favorites
                         disableMods(scene.modsByPath, false)
                         writeBlacklist()
@@ -1047,7 +1044,7 @@ function scene.reload()
             scene.search = string.lower(value)
             refreshVisibleMods()
         end):with({
-            placeholder = "Search by file name, mod title or everest.yaml ID",
+            placeholder = lang.get("search_by_file_name_mod_title_or_everest"),
             enabled = false
         }):with(uiu.fillWidth)
         list:addChild(searchField)
@@ -1099,7 +1096,7 @@ function scene.reload()
 
         local status = sharp.free(task)
         if status == "error" then
-            notify("An error occurred while loading the mod list.")
+            notify(lang.get("an_error_occurred_while_loading_the_mod_"))
         end
 
         loading:removeSelf()

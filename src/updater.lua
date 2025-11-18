@@ -7,6 +7,7 @@ local scener = require("scener")
 local sharp = require("sharp")
 local ffi = require("ffix")
 local fs = require("fs")
+local lang = require("lang")
 
 local updater = {}
 
@@ -54,7 +55,7 @@ function updater.check(auto)
         local srcOld, idOld = (extraOld or "?"):match("(.*)-(.*)-.*")
         idOld = tonumber(idOld)
         if not idOld then
-            notify("Cannot determine currently running version of Olympus!")
+            notify(lang.get("cannot_determine_currently_running_versi"))
         end
 
         if auto and srcOld == "dev" then
@@ -65,7 +66,7 @@ function updater.check(auto)
         local options = scener.preload("options")
         local changelog, updatebtn = options.root:findChild("changelog", "updatebtn")
 
-        changelog.text = "Checking for updates..."
+        changelog.text = lang.get("checking_for_updates")
         updatebtn.enabled = false
         updatebtn:reflow()
 
@@ -73,12 +74,12 @@ function updater.check(auto)
         local builds, buildsError = utilsAsync.downloadJSON("https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds"):result()
 
         if not builds then
-            notify("Error downloading builds list: " .. tostring(buildsError))
+            notify(lang.get("error_downloading_builds_list") .. tostring(buildsError))
             return false
         end
         builds = builds.value
         if not builds then
-            notify("Error downloading builds list: Invalid olympus builds json (missing value property)")
+            notify(lang.get("error_downloading_builds_list_invalid_ol"))
             return false
         end
 
@@ -108,11 +109,11 @@ function updater.check(auto)
                         alert({
                             body = "One does not simply update a devbuild.",
                             buttons = {
-                                { "OK", function(container)
+                                { lang.get("ok"), function(container)
                                     if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
                                         updater.update(tostring(build.id))
                                     end
-                                    container:close("OK")
+                                    container:close(lang.get("ok"))
                                 end }
                             },
                             init = function(container)
@@ -132,37 +133,34 @@ function updater.check(auto)
 
                     if auto then
                         alert({
-                            body = string.format([[
-There's a new version of Olympus available.
-Do you want to update to %s now?]], build.buildNumber),
+                            body = string.format(lang.get("there_is_a_new_version_available_update"), build.buildNumber),
                             buttons = {
-                                { "Yes", function(container)
+                                { lang.get("yes"), function(container)
                                     cb()
-                                    container:close("OK")
+                                    container:close(lang.get("ok"))
                                 end},
-                                { "No" }
+                                { lang.get("no") }
                             }
                         })
                     else
-                        notify(string.format([[
-There's a new version of Olympus available: %s]], build.buildNumber))
+                        notify(string.format(lang.get("there_is_a_new_version_available"), build.buildNumber))
                     end
 
                     local changelogTask = utilsAsync.download(string.format("https://raw.githubusercontent.com/EverestAPI/Olympus/%s/changelog.txt", build.sourceVersion))
 
                     local function setChangelog(changelogText)
                         changelog.text = {{ 1, 1, 1, 1 },
-                            "Currently installed:\n" .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
-                            "Newest available:\n" .. build.buildNumber, { 1, 1, 1, 0.5 }, string.format("-azure-%s-%s", build.id, build.sourceVersion and build.sourceVersion:sub(1, 5) or "?????") .. "\n\n", { 1, 1, 1, 1 },
-                            "Changelog:\n" .. changelogText
+                            lang.get("currently_installed_n") .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
+                            lang.get("newest_available_n") .. build.buildNumber, { 1, 1, 1, 0.5 }, string.format("-azure-%s-%s", build.id, build.sourceVersion and build.sourceVersion:sub(1, 5) or "?????") .. "\n\n", { 1, 1, 1, 1 },
+                            lang.get("changelog_n") .. changelogText
                         }
                     end
 
-                    setChangelog("Downloading...")
+                    setChangelog(lang.get("downloading"))
                     changelogTask:calls(function(task, data, error)
                         data = data and data:match("#changelog#\n(.*)")
                         if not data then
-                            setChangelog("Failed to download:\n" .. tostring(error))
+                            setChangelog(lang.get("failed_to_download_n") .. tostring(error))
                             return
                         end
 
@@ -181,8 +179,8 @@ There's a new version of Olympus available: %s]], build.buildNumber))
         end
 
         changelog.text = {{ 1, 1, 1, 1 },
-            "Currently installed:\n" .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
-            "No updates found."
+            lang.get("currently_installed_n") .. versionOld, { 1, 1, 1, 0.5 }, "-" .. extraOld .. "\n\n", { 1, 1, 1, 1 },
+            lang.get("no_updates_found")
         }
         updatebtn.enabled = false
         updatebtn:reflow()
@@ -199,17 +197,17 @@ function updater.update(id)
     end
 
     local installer = scener.push("installer")
-    installer.update("Preparing update of Olympus", false, "")
+    installer.update(lang.get("preparing_update_of_olympus"), false, "")
 
     installer.sharpTask("installOlympus", id):calls(function(task, last)
         if not last then
             return
         end
 
-        installer.update("Olympus successfully updated", 1, "done")
+        installer.update(lang.get("olympus_successfully_updated"), 1, "done")
         installer.done({
             {
-                "Restart Olympus",
+                lang.get("restart_olympus"),
                 function()
                     sharp.restart(love.filesystem.getSource()):result()
                     love.event.quit()

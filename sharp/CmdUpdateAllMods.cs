@@ -8,16 +8,51 @@ using System.Net.Http;
 using System.Security.Cryptography;
 
 namespace Olympus {
-    public class CmdUpdateAllMods : Cmd<string, bool, string, bool, IEnumerator> {
+    public class CmdUpdateAllMods : Cmd<string, bool, string, bool, string, IEnumerator> {
         private static readonly Logger log = new Logger(nameof(CmdUpdateAllMods));
 
         public override bool Taskable => true;
 
-        public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences, bool apiMirror) {
-            yield return "Downloading mod versions list...";
+        private static readonly Dictionary<string, Dictionary<string, string>> translations = new Dictionary<string, Dictionary<string, string>> {
+            {
+                "en", new Dictionary<string, string> {
+                    { "downloading", "Downloading mod versions list" },
+                    { "checking", "Checking for outdated mods" },
+                    { "updating", "Updating" },
+                    { "installing", "installing update" },
+                    { "finished_noop", "Update check finished.\nNo updates were found." },
+                    { "finished", "Update successful!\nThe following mods were updated:" },
+                    { "checksum", "verifying checksum" }
+                }
+            }, {
+                "fr", new Dictionary<string, string> {
+                    { "downloading", "Téléchargement de la liste des mods" },
+                    { "checking", "Vérification des mises à jour" },
+                    { "updating", "Mise à jour" },
+                    { "installing", "installation en cours" },
+                    { "finished_noop", "La vérification est terminée.\nAucune mise à jour n'a été trouvée." },
+                    { "finished", "Mise à jour terminée !\nLes mods suivants ont été mis à jour :" },
+                    { "checksum", "vérification de la somme de contrôle" }
+                }
+            },
+        };
+
+        private static string langGet(string lang, string key) {
+            if (lang.Equals("ne")) {
+                char[] charArray = translations["en"][key].ToCharArray();
+                Array.Reverse(charArray);
+                return new string(charArray);
+            }
+            return translations[lang][key];
+        }
+
+
+
+        public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences, bool apiMirror, string lang) {
+            yield return $"{langGet(lang, "downloading")}...";
             Dictionary<string, ModUpdateInfo> modVersionList = downloadModUpdateList(apiMirror);
 
-            yield return "Checking for outdated mods...";
+            yield return $"{langGet(lang, "checking")}...";
 
             Dictionary<ModUpdateInfo, CmdModList.ModInfo> updates = new Dictionary<ModUpdateInfo, CmdModList.ModInfo>();
 
@@ -30,7 +65,7 @@ namespace Olympus {
 
             foreach (CmdModList.ModInfo info in new EnumeratorEnumerator { Enumerator = new CmdModList().Run(root, readYamls: true, computeHashes: true, onlyUpdatable: true, onlyEnabled) }) {
                 processedCount++;
-                yield return "Checking for outdated mods (" + (int) Math.Round(processedCount * 100f / totalCount) + "%)...";
+                yield return $"{langGet(lang, "checking")} (" + (int) Math.Round(processedCount * 100f / totalCount) + "%)...";
 
                 if (info.Hash != null && modVersionList.ContainsKey(info.Name)) {
                     log.Debug($"Mod {info.Name}: installed hash {info.Hash}, latest hash(es) {string.Join(", ", modVersionList[info.Name].xxHash)}");
@@ -44,7 +79,7 @@ namespace Olympus {
 
             int updatingMod = 1;
             foreach (KeyValuePair<ModUpdateInfo, CmdModList.ModInfo> update in updates) {
-                string messagePrefix = $"[{updatingMod}/{updates.Count}] Updating {update.Value.Name}";
+                string messagePrefix = $"[{updatingMod}/{updates.Count}] {langGet(lang, "updating")} {update.Value.Name}";
 
                 yield return messagePrefix + "...";
 
@@ -54,7 +89,7 @@ namespace Olympus {
                     yield return message;
                 }
 
-                yield return messagePrefix + ": installing update";
+                yield return messagePrefix + $": {langGet(lang, "installing")}";
                 installModUpdate(update.Key, update.Value, tempZip);
 
                 updatingMod++;
@@ -62,9 +97,9 @@ namespace Olympus {
 
             // The last yielded message might be displayed as a recap popup by Olympus when relevant.
             if (updates.Count == 0) {
-                yield return "Update check finished.\nNo updates were found.";
+                yield return langGet(lang, "finished_noop");
             } else {
-                yield return "Update successful!\nThe following mods were updated:"
+                yield return langGet(lang, "finished")
                     + updates.Values.Aggregate("", (a, b) => $"{a}\n- {b.Name}");
             }
         }

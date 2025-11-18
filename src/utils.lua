@@ -118,12 +118,12 @@ function utils.fromURLComponent(value)
 end
 
 function utils.openURL(path)
-    require("notify")("Opening " .. path)
+    require("notify")(require("lang").get("opening") .. path)
     return loveSystemAsync.openURL(path)
 end
 
 function utils.openFile(path)
-    require("notify")("Opening " .. path)
+    require("notify")(require("lang").get("opening") .. path)
     return loveSystemAsync.openURL("file://" .. fs.fslash(path))
 end
 
@@ -333,9 +333,7 @@ local launching = {}
 function utils.launch(path, vanilla, notify, force)
     local key = string.format("%s | %s", path, vanilla and "vanilla" or "everest")
     if launching[key] then
-        require("alert")([[
-            Celeste is already starting up. Please wait.
-            You can close this window.]])
+        require("alert")(require("lang").get("celeste_is_already_starting_up_please_wa"))
         return launching[key]
     end
 
@@ -355,6 +353,7 @@ function utils.launch(path, vanilla, notify, force)
 
         local sharp = require("sharp")
         local alert = require("alert")
+        local lang = require("lang")
         notify = notify and require("notify") or alert
 
         local opengl = false
@@ -367,13 +366,9 @@ function utils.launch(path, vanilla, notify, force)
         local container
 
         if vanilla then
-            container = notify([[
-Celeste is now starting in the background.
-You can close this window.]])
+            container = notify(lang.get("celeste_is_now_starting_in_the_backgroun"))
         else
-            container = notify([[
-Everest is now starting in the background.
-You can close this window.]])
+            container = notify(lang.get("everest_is_now_starting_in_the_backgroun"))
         end
 
         local rv = launch:result()
@@ -382,10 +377,7 @@ You can close this window.]])
                 container:close()
             end
 
-            alert([[
-Olympus couldn't find the Celeste launch binary.
-Please check if the installed version of Celeste matches your OS.
-If you are using Lutris or similar, you are on your own.]])
+            alert(lang.get("olympus_couldn_t_find_the_celeste_launch"))
             launching[key] = nil
             return false
         end
@@ -396,25 +388,21 @@ If you are using Lutris or similar, you are on your own.]])
             end
 
             alert({
-                body = [[
-Celeste (or something looking like Celeste) is already running.
-If you can't see it, it's probably still launching]] .. (
-    (love.system.getOS() == "Windows" and " - check the Task Manager") or
-    (love.system.getOS() == "OS X" and " - check the Activity Monitor") or
-    (love.system.getOS() == "Linux" and " - check htop") or
+                body = lang.get("celeste_or_something_looking_like_celest") .. (
+    (love.system.getOS() == "Windows" and lang.get("check_the_task_manager")) or
+    (love.system.getOS() == "OS X" and lang.get("check_the_activity_monitor")) or
+    (love.system.getOS() == "Linux" and lang.get("check_htop")) or
     ("")
-) .. [[.
-
-Do you want to launch another instance anyway?]],
+) .. lang.get("do_you_want_to_launch_another_instance_a"),
                 buttons = {
                     {
-                        "Launch",
+                        lang.get("launch"),
                         function(container)
                             utils.launch(path, vanilla, notify, true)
-                            container:close("OK")
+                            container:close(lang.get("ok"))
                         end
                     },
-                    { "Cancel" }
+                    { lang.get("cancel") }
                 }
             })
             launching[key] = nil

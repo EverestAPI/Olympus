@@ -9,9 +9,10 @@ local sharp = require("sharp")
 local themer = require("themer")
 local background = require("background")
 local updater = require("updater")
+local lang = require("lang")
 
 local scene = {
-    name = "Options"
+    name = lang.get("options")
 }
 
 
@@ -30,11 +31,11 @@ end
 
 
 local bgs = {
-    { text = "Random (Default)", data = 0 }
+    { text = lang.get("random_default"), data = 0 }
 }
 for i = 1, #background.bgs do
     bgs[i + 1] = {
-        text = "Background #" .. i,
+        text = lang.get("background") .. i,
         data = i,
         bg = background.bgs[i]
     }
@@ -42,25 +43,25 @@ end
 
 
 local qualities = {
-    { text = "High (Default)", data = {
+    { text = lang.get("high_default"), data = {
         id = "high",
         bg = true,
         bgBlur = true,
         bgSnow = true,
     } },
-    { text = "Medium", data = {
+    { text = lang.get("medium"), data = {
         id = "medium",
         bg = true,
         bgBlur = true,
         bgSnow = false,
     } },
-    { text = "Low", data = {
+    { text = lang.get("low"), data = {
         id = "low",
         bg = true,
         bgBlur = false,
         bgSnow = false,
     } },
-    { text = "Minimal", data = {
+    { text = lang.get("minimal"), data = {
         id = "minimal",
         bg = false,
         bgBlur = false,
@@ -70,47 +71,52 @@ local qualities = {
 
 
 local updatepaths = {
-    { text = "Stable (Default)", data = "stable" },
-    { text = "Development", data = "stable,main" }
+    { text = lang.get("stable_default"), data = "stable" },
+    { text = lang.get("development"), data = "stable,main" }
 }
 
 local updateModsOnStartupOptions = {
-    { text = "All Mods", data = "all" },
-    { text = "Enabled Mods Only", data = "enabled" },
-    { text = "Disabled (Default)", data = "none" }
+    { text = lang.get("all_mods"), data = "all" },
+    { text = lang.get("enabled_mods_only"), data = "enabled" },
+    { text = lang.get("disabled_default"), data = "none" }
 }
 
 local useOpenGLOptions = {
-    { text = "Enabled", data = "enabled" },
-    { text = "Disabled (Default)", data = "disabled" }
+    { text = lang.get("enabled"), data = "enabled" },
+    { text = lang.get("disabled_default"), data = "disabled" }
 }
 
 local closeAfterOneClickInstallOptions = {
-    { text = "Enabled", data = "enabled" },
-    { text = "Disabled (Default)", data = "disabled" }
+    { text = lang.get("enabled"), data = "enabled" },
+    { text = lang.get("disabled_default"), data = "disabled" }
 }
 
 -- Keep in sync with https://github.com/EverestAPI/Everest/blob/dev/Celeste.Mod.mm/Mod/Core/CoreModuleSettings.cs :: CreateMirrorPreferencesEntry
 local mirrorPreferences = {
-    { text = "Disabled (Default)", data = "gb,jade,otobot,wegfan" },
-    { text = "Germany (0x0a.de)", data = "jade,otobot,wegfan,gb" },
-    { text = "China (weg.fan)", data = "wegfan,otobot,jade,gb" },
-    { text = "N. America (celestemods.com)", data = "otobot,jade,wegfan,gb" }
+    { text = lang.get("disabled_default"), data = "gb,jade,otobot,wegfan" },
+    { text = lang.get("germany_0x0a_de"), data = "jade,otobot,wegfan,gb" },
+    { text = lang.get("china_weg_fan"), data = "wegfan,otobot,jade,gb" },
+    { text = lang.get("n_america_celestemods_com"), data = "otobot,jade,wegfan,gb" }
 }
 
 local apiMirrors = {
-    { text = "Enabled", data = true },
-    { text = "Disabled (Default)", data = false }
+    { text = lang.get("enabled"), data = true },
+    { text = lang.get("disabled_default"), data = false }
 }
 
 local imageMirrors = {
-    { text = "0x0a.de (Default)", data = "jade" },
-    { text = "celestemods.com", data = "otobot" },
-    { text = "Disabled", data = "none" }
+    { text = lang.get("_x0a_de_default"), data = "jade" },
+    { text = lang.get("celestemods_com"), data = "otobot" },
+    { text = lang.get("disabled"), data = "none" }
+}
+
+local languages = {
+    { text = "English (Default)", data = "en" },
+    { text = "Français (French)", data = "fr" },
 }
 
 local extradatas = {
-    { text = "Noto Sans CJK (~50 MB)", info = "Chinese, Japanese, Korean font files.", path = "olympus-extra-cjk.zip", url = "https://0x0a.de/olympus-extra/olympus-extra-cjk.zip" }
+    { text = lang.get("noto_sans_cjk_50_mb"), info = lang.get("chinese_japanese_korean_font_files"), path = "olympus-extra-cjk.zip", url = "https://0x0a.de/olympus-extra/olympus-extra-cjk.zip" }
 }
 
 
@@ -127,9 +133,7 @@ for i = 1, #themes do
             uie.row({
                 uie.panel({
                     uie.column({
-                        uie.label([[
-This is your current theme.
-The quick brown fox jumps]]),
+                        uie.label(lang.get("this_is_your_current_theme_the_quick_bro")),
 
                         uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                             return string.format("Item %i!", i)
@@ -146,9 +150,7 @@ The quick brown fox jumps]]),
 
                 uie.panel({
                     uie.column({
-                        uie.label([[
-This is the new theme.
-over the lazy dog.]]),
+                        uie.label(lang.get("this_is_the_new_theme_over_the_lazy_dog")),
 
                         uie.list(uiu.map(uiu.listRange(1, 3), function(i)
                             return string.format("Item %i!", i)
@@ -227,15 +229,15 @@ local root = uie.column({
         uie.column({
 
             uie.paneled.column({
-                uie.label("Options", ui.fontBig),
+                uie.label(lang.get("options"), ui.fontBig),
 
                 uie.row({
                     uie.column({
-                        uie.label("Theme"),
+                        uie.label(lang.get("theme")),
                         uie.dropdown(themes):with({
                             onClick = function(self)
                                 local container = alert({
-                                    title = "Select your theme",
+                                    title = lang.get("select_your_theme"),
                                     body = scene.themePicker,
                                     big = true
                                 })
@@ -253,11 +255,11 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Background image"),
+                        uie.label(lang.get("background_image")),
                         uie.dropdown(bgs):with({
                             onClick = function(self)
                                 local container = alert({
-                                    title = "Select your background",
+                                    title = lang.get("select_your_background"),
                                     body = scene.bgPicker,
                                     big = true
                                 })
@@ -275,7 +277,7 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Quality"),
+                        uie.label(lang.get("quality")),
                         uie.dropdown(qualities, function(self, value)
                             config.quality = value
                             config.save()
@@ -291,11 +293,11 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Gradient"),
+                        uie.label(lang.get("gradient")),
                         uie.dropdown({
-                            { text = "Enabled (Default)", data = 1 },
-                            { text = "Low", data = 0.5 },
-                            { text = "Disabled", data = 0 },
+                            { text = lang.get("enabled_default"), data = 1 },
+                            { text = lang.get("low"), data = 0.5 },
+                            { text = lang.get("disabled"), data = 0 },
                         }, function(self, value)
                             config.overlay = value
                             config.save()
@@ -308,12 +310,12 @@ local root = uie.column({
 
                 uie.row({
                     uie.column({
-                        uie.label("Parallax"),
+                        uie.label(lang.get("parallax")),
                         uie.dropdown({
-                            { text = "Enabled (Default)", data = 1 },
-                            { text = "Medium", data = 0.5 },
-                            { text = "Low", data = 0.2 },
-                            { text = "Disabled", data = 0 },
+                            { text = lang.get("enabled_default"), data = 1 },
+                            { text = lang.get("medium"), data = 0.5 },
+                            { text = lang.get("low"), data = 0.2 },
+                            { text = lang.get("disabled"), data = 0 },
                         }, function(self, value)
                             config.parallax = value
                             config.save()
@@ -323,10 +325,10 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Vertical Sync"),
+                        uie.label(lang.get("vertical_sync")),
                         uie.dropdown({
-                            { text = "Enabled (Default)", data = true },
-                            { text = "Disabled", data = false },
+                            { text = lang.get("enabled_default"), data = true },
+                            { text = lang.get("disabled"), data = false },
                         }, function(self, value)
                             config.vsync = value
                             config.save()
@@ -337,7 +339,7 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Updates"),
+                        uie.label(lang.get("updates")),
                         uie.dropdown(updatepaths, function(self, value)
                             config.updates = value
                             config.save()
@@ -349,7 +351,7 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Update Mods on Startup"),
+                        uie.label(lang.get("update_mods_on_startup")),
                         uie.dropdown(updateModsOnStartupOptions, function(self, value)
                             config.updateModsOnStartup = value
                             config.save()
@@ -363,7 +365,7 @@ local root = uie.column({
 
                 uie.row({
                     uie.column({
-                        uie.label("Use OpenGL"),
+                        uie.label(lang.get("use_opengl")),
                         uie.dropdown(useOpenGLOptions, function(self, value)
                             config.useOpenGL = value
                             config.save()
@@ -374,7 +376,7 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
-                        uie.label("Close after One-Click Install"),
+                        uie.label(lang.get("close_after_one_click_install")),
                         uie.dropdown(closeAfterOneClickInstallOptions, function(self, value)
                             config.closeAfterOneClickInstall = value
                             config.save()
@@ -384,6 +386,24 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
+                    uie.column({
+                        uie.label(lang.get("language")),
+                        uie.dropdown(languages, function(self, value)
+                            local old = config.language
+                            config.language = value
+                            config.save()
+                            if old ~= value then
+                                alert({
+                                    body = uie.label(lang.get("restart_to_apply_changes_in_languages")),
+                                    buttons = {{ lang.get("ok") }}
+                                })
+                            end
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.language
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+
                 }):with(uiu.fillWidth),
 
                 uie.group({}),
@@ -391,15 +411,15 @@ local root = uie.column({
 
                 uie.row({
 
-                    uie.button("Open installation folder", function()
+                    uie.button(lang.get("open_installation_folder"), function()
                         utils.openFile(fs.getsrc())
                     end):with(uiu.fillWidth(8 + 1 / 4)),
 
-                    uie.button("Open log and config folder", function()
+                    uie.button(lang.get("open_log_and_config_folder"), function()
                         utils.openFile(fs.getStorageDir())
                     end):with(uiu.fillWidth(8 + 1 / 4)):with(uiu.at(1 / 4)),
 
-                    uie.button("Download extra data", function()
+                    uie.button(lang.get("download_extra_data"), function()
                         local btns = {}
 
                         for i = 1, #extradatas do
@@ -413,10 +433,10 @@ local root = uie.column({
                                             return
                                         end
 
-                                        installer.update(string.format("Extra data %s successfully installed", data.path), 1, "done")
+                                        installer.update(string.format(lang.get("extra_data_s_successfully_installed"), data.path), 1, "done")
                                         installer.done({
                                             {
-                                                "Restart Olympus",
+                                                lang.get("restart_olympus"),
                                                 function()
                                                     sharp.restart(love.filesystem.getSource()):result()
                                                     love.event.quit()
@@ -424,7 +444,7 @@ local root = uie.column({
                                             }
                                         })
                                     end)
-                                    self:getParent("container"):close("OK")
+                                    self:getParent("container"):close(lang.get("ok"))
                                 end
                             ):with({
                                 enabled = not fs.isFile(fs.joinpath(fs.getsrc(), data.path))
@@ -436,8 +456,8 @@ local root = uie.column({
                                 uie.column(btns)
                             ),
                             init = function(container)
-                                btns[#btns + 1] = uie.button("Close", function()
-                                    container:close("Close")
+                                btns[#btns + 1] = uie.button(lang.get("close"), function()
+                                    container:close(lang.get("close"))
                                 end)
                                 container:findChild("buttons"):removeSelf()
 
@@ -472,7 +492,7 @@ local root = uie.column({
                         })
                     end):with(uiu.fillWidth(8 + 1 / 4)):with(uiu.at(2 / 4)),
 
-                    uie.button("Connectivity Test", function()
+                    uie.button(lang.get("connectivity_test"), function()
                         scener.push("gfwtest")
                     end):with(uiu.fillWidth(8 + 1 / 4)):with(uiu.at(3 / 4)),
 
@@ -482,18 +502,15 @@ local root = uie.column({
             }):with(uiu.fillWidth),
 
             uie.paneled.column({
-                uie.label("Mirrors", ui.fontBig),
+                uie.label(lang.get("mirrors"), ui.fontBig),
 
                 uie.label({
-{ 1, 1, 1, 1 }, [[If you have difficulty downloading mods or getting some sections of Olympus to load, you can try these.
-- ]], uie.greentext().style.color, "Download Mirror", { 1, 1, 1, 1 }, [[ can help if mod downloads are slow, or GameBanana is having issues.
-- ]], uie.greentext().style.color, "API Mirror", { 1, 1, 1, 1 }, [[ can help if the "Install Everest" or "Download Mods" pages won't load. The mod browser will be slower and more resource-intensive, though!
-- ]], uie.greentext().style.color, "Image Mirror", { 1, 1, 1, 1 }, [[ changes where the mod images in the mod browser come from. You can choose to use no mirror, but older mods won't have images.]]
+{ 1, 1, 1, 1 }, lang.get("if_you_have_difficulty_downloading_mods_"), uie.greentext().style.color, lang.get("download_mirror"), { 1, 1, 1, 1 }, lang.get("can_help_if_mod_downloads_are_slow_or_ga"), uie.greentext().style.color, lang.get("api_mirror"), { 1, 1, 1, 1 }, lang.get("can_help_if_the_install_everest_or_downl"), uie.greentext().style.color, lang.get("image_mirror"), { 1, 1, 1, 1 }, lang.get("changes_where_the_mod_images_in_the_mod_")
                 }),
 
                 uie.row({
                     uie.column({
-                        uie.label("Download Mirror"),
+                        uie.label(lang.get("download_mirror")),
                         uie.dropdown(mirrorPreferences, function(self, value)
                             config.mirrorPreferences = value
                             config.save()
@@ -504,7 +521,7 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / 3)):with(uiu.at(0 / 3, 0)),
 
                     uie.column({
-                        uie.label("API Mirror"),
+                        uie.label(lang.get("api_mirror")),
                         uie.dropdown(apiMirrors, function(self, value)
                             config.apiMirror = value
                             config.save()
@@ -515,7 +532,7 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / 3)):with(uiu.at(1 / 3, 0)),
 
                     uie.column({
-                        uie.label("Image Mirror"),
+                        uie.label(lang.get("image_mirror")),
                         uie.dropdown(imageMirrors, function(self, value)
                             config.imageMirror = value
                             config.save()
@@ -531,11 +548,11 @@ local root = uie.column({
 
 
             updater.available and uie.paneled.column({
-                uie.label("Updates", ui.fontBig),
+                uie.label(lang.get("updates"), ui.fontBig),
 
                 uie.label("Update machine broke, please fix."):as("changelog"),
 
-                uie.button("Install"):with({
+                uie.button(lang.get("install")):with({
                     enabled = false
                 }):with(uiu.fillWidth):as("updatebtn")
 

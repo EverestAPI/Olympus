@@ -6,9 +6,10 @@ local alert = require("alert")
 local fs = require("fs")
 local config = require("config")
 local sharp = require("sharp")
+local lang = require("lang")
 
 local scene = {
-    name = "Install Manager"
+    name = lang.get("install_manager")
 }
 
 
@@ -93,7 +94,7 @@ end
 
 
 function scene.createEntry(list, entry, manualIndex)
-    local labelVersion = uie.label({{1, 1, 1, 0.5}, "Scanning..."})
+    local labelVersion = uie.label({{1, 1, 1, 0.5}, lang.get("scanning")})
     sharp.getVersionString(entry.path):calls(function(t, version)
         labelVersion.text = {{1, 1, 1, 0.5}, version or "???"}
     end)
@@ -150,7 +151,7 @@ function scene.createEntry(list, entry, manualIndex)
 
                 entry.type ~= "debug" and (
                     manualIndex and
-                    uie.button("Remove", function()
+                    uie.button(lang.get("remove"), function()
                         local installs = config.installs
                         table.remove(installs, manualIndex)
                         config.installs = installs
@@ -159,7 +160,7 @@ function scene.createEntry(list, entry, manualIndex)
                     end)
 
                     or
-                    uie.button("Add", function()
+                    uie.button(lang.get("add"), function()
                         local function add()
                             local installs = config.installs
                             entry.name = string.format("%s (#%d)", entry.type, #installs + 1)
@@ -172,21 +173,13 @@ function scene.createEntry(list, entry, manualIndex)
                         if entry.type == "uwp" then
                             alert({
                                 force = true,
-                                body = [[
-The UWP (Xbox/Microsoft Store) version of Celeste is currently unsupported.
-All game data is encrypted, even dialog text files are uneditable.
-The game code itself is AOT-compiled - no existing code mods would work.
-Even Lönn and Ahorn currently can't load the necessary game data either.
-
-Unless Everest gets rewritten or someone starts working on
-a mod loader just for this special version, don't expect
-anything to work in the near future, if at all.]],
+                                body = lang.get("the_uwp_xbox_microsoft_store_version_of_"),
                                 buttons = {
-                                    { "OK", function(container)
+                                    { lang.get("ok"), function(container)
                                         if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
                                             add()
                                         end
-                                        container:close("OK")
+                                        container:close(lang.get("ok"))
                                     end }
                                 },
                                 init = function(container)
@@ -194,9 +187,9 @@ anything to work in the near future, if at all.]],
                                         update = function(orig, self, dt)
                                             orig(self, dt)
                                             if love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift") then
-                                                self.text = "I know what I'm doing."
+                                                self.text = lang.get("i_know_what_i_m_doing")
                                             else
-                                                self.text = "OK"
+                                                self.text = lang.get("ok")
                                             end
                                         end
                                     })
@@ -215,32 +208,25 @@ anything to work in the near future, if at all.]],
 
             uie.row({
 
-                entry.type == "steam" and uie.button("Verify", function()
+                entry.type == "steam" and uie.button(lang.get("verify"), function()
                     alert({
                         force = true,
-                        body = [[
-Verifying the file integrity will tell Steam to redownload
-any modified files, uninstalling Everest in the process.
-
-Don't use Olympus while Steam is downloading game files.
-You will need to check the download progress yourself.
-
-Do you want to continue?]],
+                        body = lang.get("verifying_the_file_integrity_will_tell_s"),
                         buttons = {
                             {
-                                "Yes",
+                                lang.get("yes"),
                                 function(container)
                                     utils.openURL("steam://validate/504230")
-                                    container:close("yes")
+                                    container:close(lang.get("yes"))
                                 end
                             },
 
-                            { "No" },
+                            { lang.get("no") },
                         }
                     })
                 end),
 
-                uie.button("Browse", function()
+                uie.button(lang.get("browse"), function()
                     utils.openFile(entry.path)
                 end),
 
@@ -272,7 +258,7 @@ function scene.reloadManual()
             listMain:addChild(listManual:as("listManual"))
         end
 
-        listManual:addChild(uie.label("Your Installations", ui.fontBig))
+        listManual:addChild(uie.label(lang.get("your_installations"), ui.fontBig))
         threader.await()
 
         local installs = config.installs
@@ -288,24 +274,15 @@ function scene.reloadManual()
 
         else
             foundAny = false
-            local info = uie.label([[
-Olympus needs to know which Celeste installations you want to manage.
-Automatically found installations will be listed below and can be added to this list.
-Manually select Celeste.exe if no installations have been found automatically.]])
+            local info = uie.label(lang.get("olympus_needs_to_know_which_celeste_inst1"))
             listManual:addChild(info)
 
             local function handleFound(task, all)
                 foundAny = #all > 0
                 if foundAny then
-                    info.text = [[
-Olympus needs to know which Celeste installations you want to manage.
-You can add automatically found installations from the list below to this one.
-]]
+                    info.text = lang.get("olympus_needs_to_know_which_celeste_inst2")
                 else
-                    info.text = [[
-Olympus needs to know which Celeste installations you want to manage.
-No installations were found automatically. Manually select Celeste.exe to add it to Olympus.
-]]
+                    info.text = lang.get("olympus_needs_to_know_which_celeste_inst3")
                 end
             end
 
@@ -317,7 +294,7 @@ No installations were found automatically. Manually select Celeste.exe to add it
             end
         end
 
-        listManual:addChild(uie.button("Manually select Celeste.exe", scene.browse):with(utils.important(24, function() return not foundAny end)))
+        listManual:addChild(uie.button(lang.get("manually_select_celeste_exe"), scene.browse):with(utils.important(24, function() return not foundAny end)))
     end)
 end
 
@@ -347,7 +324,7 @@ function scene.reloadFound()
 
             if not listFound then
                 listFound = uie.paneled.column({
-                    uie.label("Found", ui.fontBig)
+                    uie.label(lang.get("found"), ui.fontBig)
                 }):with(uiu.fillWidth)
 
                 listMain:addChild(listFound:as("listFound"))
@@ -376,7 +353,7 @@ function scene.reloadAll()
     end
 
     loading = uie.paneled.row({
-        uie.label("Loading"),
+        uie.label(lang.get("loading")),
         uie.spinner():with({
             width = 16,
             height = 16

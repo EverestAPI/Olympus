@@ -5,6 +5,7 @@ local alert = require("alert")
 local config = require("config")
 local sharp = require("sharp")
 local fs = require("fs")
+local lang = require("lang")
 
 local modupdater = {}
 
@@ -24,22 +25,22 @@ function modupdater.updateAllMods(path, notify, mode, callback, showRecap)
         return
     end
 
-    local task = sharp.updateAllMods(path or config.installs[config.install].path, mode == "enabled", config.mirrorPreferences, config.apiMirror):result()
+    local task = sharp.updateAllMods(path or config.installs[config.install].path, mode == "enabled", config.mirrorPreferences, config.apiMirror, config.language):result()
 
     local alertMessage = alert({
-        title = mode == "enabled" and "Updating enabled mods" or "Updating all mods",
+        title = mode == "enabled" and lang.get("updating_enabled_mods") or lang.get("updating_all_mods"),
         body = uie.column({
             uie.row({
                 uie.spinner():with({
                     width = 16,
                     height = 16
                 }),
-                uie.label("Please wait..."):as("loadingMessage")
+                uie.label(lang.get("please_wait")):as("loadingMessage")
             })
         }):with(uiu.fillWidth),
         buttons = {
             {
-                willRunGame and "Skip" or "Cancel",
+                willRunGame and lang.get("skip") or lang.get("cancel"),
                 function(container)
                     sharp.free(task)
                     callback()
@@ -85,26 +86,26 @@ function modupdater.updateAllMods(path, notify, mode, callback, showRecap)
                             end
                         }))
                         :with({ maxHeight = 300 }),
-                    buttons = {{ "OK" }}
+                    buttons = {{ lang.get("ok") }}
                 })
             end
         elseif status[1] ~= "interrupted" then
             local buttons = {
                 {
-                    "Retry",
+                    lang.get("retry"),
                     function(container)
                         modupdater.updateAllMods(path, notify, origMode, origCallback)
                         container:close()
                     end
                 },
                 {
-                    "Open logs folder",
+                    lang.get("open_logs_folder"),
                     function(container)
                         utils.openFile(fs.getStorageDir())
                     end
                 },
                 {
-                    willRunGame and "Run anyway" or "Cancel",
+                    willRunGame and lang.get("run_anyway") or lang.get("cancel"),
                     function(container)
                         callback()
                         container:close()
@@ -115,7 +116,7 @@ function modupdater.updateAllMods(path, notify, mode, callback, showRecap)
             if willRunGame then
                 table.insert(buttons,
                 {
-                    "Cancel",
+                    lang.get("cancel"),
                     function(container)
                         container:close()
                     end
@@ -123,7 +124,7 @@ function modupdater.updateAllMods(path, notify, mode, callback, showRecap)
             end
 
             alert({
-                body = "An error occurred while updating your mods.\nMake sure you are connected to the Internet and that Lönn is not running!",
+                body = lang.get("an_error_occurred_while_updating_your_mo"),
                 buttons = buttons
             })
         end

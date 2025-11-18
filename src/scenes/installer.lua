@@ -10,9 +10,10 @@ local sharp = require("sharp")
 local native = require("native")
 local shaper = require("shaper")
 local alert = require("alert")
+local lang = require("lang")
 
 local scene = {
-    name = "Installer"
+    name = lang.get("installer")
 }
 
 
@@ -342,7 +343,7 @@ function scene.done(success, buttons, autoclose)
     else
         -- place+start self destruct countdown
         local countdown = uie.label(
-            string.format("Autoclosing in %d...", scene.autocloseDuration)
+            string.format(lang.get("autoclosing_in_d"), scene.autocloseDuration)
         )
 
 
@@ -354,7 +355,7 @@ function scene.done(success, buttons, autoclose)
                 local totalDuration = scene.autocloseDuration
                 for i = 1, totalDuration do
                     threader.sleep(1)
-                    countdown:setText(string.format("Autoclosing in %d...", totalDuration - i) )
+                    countdown:setText(string.format(lang.get("autoclosing_in_d"), totalDuration - i) )
                 end
                 love.event.quit()
             end
@@ -395,32 +396,27 @@ function scene.sharpTask(id, ...)
             scene.update(last and last[1], 1, "error", true)
             scene.done(false, {
                 {
-                    "Open log",
+                    lang.get("open_log"),
                     function()
                         alert({
-                            body = [[
-You can ask for help in the Celeste Discord server.
-An invite can be found on the Everest website.
-
-Please drag and drop your log files into the #modding_help channel.
-Before uploading, check your logs for sensitive info (f.e. your username).]],
+                            body = lang.get("you_can_ask_for_help_in_the_celeste_disc"),
                             buttons = {
-                                { "Open log folder", function(container)
+                                { lang.get("open_log_folder"), function(container)
                                     utils.openFile(fs.getStorageDir())
                                 end },
 
-                                { "Open Everest Website", function(container)
+                                { lang.get("open_everest_website"), function(container)
                                     utils.openURL("https://everestapi.github.io/")
                                     container:close("website")
                                 end },
 
-                                { "Close" },
+                                { lang.get("close") },
                             }
                         })
                     end
                 },
                 {
-                    "OK",
+                    lang.get("ok"),
                     function()
                         scener.pop(1)
                     end

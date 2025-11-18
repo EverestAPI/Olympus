@@ -3,6 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added more mirror options for people that cannot access maddie480.ovh
-∙ Improved logs for easier troubleshooting
-∙ Manage Installed Mods: "Disable All" does not disable favorited mods anymore
+∙ Added French language option

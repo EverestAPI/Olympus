@@ -10,10 +10,11 @@ local sharp = require("sharp")
 local alert = require("alert")
 local modupdater = require("modupdater")
 local mainmenu = scener.preload("mainmenu")
+local lang = require("lang")
 require("love.system")
 
 local scene = {
-    name = "Everest Installer"
+    name = lang.get("everest_installer")
 }
 
 
@@ -24,8 +25,8 @@ local root = uie.column({
 
         uie.paneled.column({
             uie.row({
-                uie.label("Versions", ui.fontBig),
-                uie.button("Reload versions list", function()
+                uie.label(lang.get("versions"), ui.fontBig),
+                uie.button(lang.get("reload_versions_list"), function()
                     local list = scene.root:findChild("versions")
                     list.children = {}
                     list:reflow()
@@ -34,8 +35,7 @@ local root = uie.column({
             }):with(uiu.fillWidth):as("titlebar"),
             uie.panel({
                 uie.label({{ 1, 1, 1, 1 },
-[[Use the newest version for more features and bugfixes.
-Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8, 0.7, 0.3, 1 }, "beta", { 1, 1, 1, 1 }, [[ version if you hate updating.]]}),
+lang.get("use_the_newest_version_for_more_features"), { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, lang.get("or_"), { 0.8, 0.7, 0.3, 1 }, "beta", { 1, 1, 1, 1 }, lang.get("version_if_you_hate_updating")}),
             }):with({
                 style = {
                     patch = false
@@ -61,7 +61,7 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
     }):with(uiu.fillWidth):with(uiu.fillHeight(true)),
 
     uie.row({
-        uie.buttonGreen(uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label("Install") }):with({
+        uie.buttonGreen(uie.row({ uie.icon("download"):with({ scale = 21 / 256 }), uie.label(lang.get("install")) }):with({
             clip = false,
             cacheable = false
         }):with(uiu.styleDeep), function()
@@ -83,48 +83,42 @@ Use the latest ]], { 0.3, 0.8, 0.5, 1 }, "stable", { 1, 1, 1, 1 }, " or ", { 0.8
                 alert({
                     body = string.format("Detecting the Celeste version failed:\n%s\n\nCheck the path of your install by selecting \"Manage\" in the main menu.", errorMessage),
                     buttons = {
-                        { "Attempt Installation Anyway", function(container)
-                            container:close("OK")
+                        { lang.get("attempt_installation_anyway"), function(container)
+                            container:close(lang.get("ok"))
                             scene.install()
                         end },
-                        { "Cancel", function(container)
-                            container:close("OK")
+                        { lang.get("cancel"), function(container)
+                            container:close(lang.get("ok"))
                         end }
                     }
                 })
             elseif minorVersion ~= nil and minorVersion < 4 then
                 alert({
-                    body = [[
-Your current version of Celeste is outdated.
-Please update to the latest version before installing Everest.]],
+                    body = lang.get("your_current_version_of_celeste_is_outda"),
                     buttons = {
-                        { "Attempt Installation Anyway", function(container)
-                            container:close("OK")
+                        { lang.get("attempt_installation_anyway"), function(container)
+                            container:close(lang.get("ok"))
                             scene.install()
                         end },
-                        { "Cancel", function(container)
-                            container:close("OK")
+                        { lang.get("cancel"), function(container)
+                            container:close(lang.get("ok"))
                         end }
                     }
                 })
             elseif not install.versionEverest and fs.isFile(install.entry.path .. "/Celeste.dll") then
                 alert({
-                    body = [[
-Residual files from a .NET Core build have been detected.
-These files could cause the installation of older Everest versions to fail.
-They should be removed before attempting to install Everest.
-]],
+                    body = lang.get("residual_files_from_a_net_core_build_hav"),
                     buttons = {
-                        { "Remove Residual Files", function(container)
-                            container:close("OK")
+                        { lang.get("remove_residual_files"), function(container)
+                            container:close(lang.get("ok"))
                             scene.uninstall()
                         end },
-                        { "Attempt Installation Anyway", function(container)
-                            container:close("OK")
+                        { lang.get("attempt_installation_anyway"), function(container)
+                            container:close(lang.get("ok"))
                             scene.install()
                         end },
-                        { "Cancel", function(container)
-                            container:close("OK")
+                        { lang.get("cancel"), function(container)
+                            container:close(lang.get("ok"))
                         end }
                     }
                 })
@@ -137,16 +131,16 @@ It is required to install XNA before installing Everest.
 If this copy of Celeste comes from Steam, run Celeste normally to install XNA.
 Otherwise, manually install XNA using the button below.]],
                     buttons = {
-                        { "Install XNA", function(container)
-                            container:close("OK")
+                        { lang.get("install_xna"), function(container)
+                            container:close(lang.get("ok"))
                             utils.openURL("https://www.microsoft.com/en-ca/download/details.aspx?id=20914")
                         end },
-                        { "Attempt Installation Anyway", function(container)
-                            container:close("OK")
+                        { lang.get("attempt_installation_anyway"), function(container)
+                            container:close(lang.get("ok"))
                             scene.install()
                         end },
-                        { "Cancel", function(container)
-                            container:close("OK")
+                        { lang.get("cancel"), function(container)
+                            container:close(lang.get("ok"))
                         end }
                     }
                 })
@@ -187,8 +181,8 @@ Otherwise, manually install XNA using the button below.]],
     Click the button below to download the installer.
     Alternatively, you can manually install the runtime, then attempt the installation again.]],
                         buttons = {
-                            { "Install Runtime", function(container)
-                                container:close("OK")
+                            { lang.get("install_runtime"), function(container)
+                                container:close(lang.get("ok"))
                                 if love.system.getOS() == "Windows" then
                                     arch = os.getenv("PROCESSOR_ARCHITEW6432") or os.getenv("PROCESSOR_ARCHITECTURE")
                                     if arch and arch:match("64") then
@@ -205,11 +199,11 @@ Otherwise, manually install XNA using the button below.]],
                                 end
                             end },
                             { "Attempt Installation Anyway", function(container)
-                                container:close("OK")
+                                container:close(lang.get("ok"))
                                 scene.install()
                             end },
-                            { "Cancel", function(container)
-                                container:close("OK")
+                            { lang.get("cancel"), function(container)
+                                container:close(lang.get("ok"))
                             end }
                         }
                     })
@@ -226,7 +220,7 @@ Otherwise, manually install XNA using the button below.]],
                 selected = selected and selected.data
                 selected = selected and selected.version
                 self.enabled = selected and root:findChild("versions").selected
-                self.text = (selected and selected:match("%+")) and "Update" or "Install"
+                self.text = (selected and selected:match("%+")) and lang.get("update") or lang.get("install")
                 orig(self, ...)
             end
         }):with({
@@ -234,26 +228,16 @@ Otherwise, manually install XNA using the button below.]],
             cacheable = false
         }):with(uiu.fillWidth(true)):with(utils.important(24, function(self) return self.parent.enabled end)):as("install"),
 
-        uie.button("Uninstall", function()
+        uie.button(lang.get("uninstall"), function()
             alert({
                 force = true,
-                body = [[
-Uninstalling Everest will keep all your mods intact,
-unless you manually delete them, fully reinstall Celeste,
-or load into a modded save file in vanilla Celeste.
-
-Holding right on the title screen lets you turn off Everest
-until you start up the game again, which is "speedrun-legal" too.
-
-If even uninstalling Everest doesn't bring the expected result,
-please go to your game manager's library and let it verify the game's files.
-Steam, EGS and the itch.io app let you do that without a full reinstall.]],
+                body = lang.get("uninstall_dialog"),
                 buttons = {
-                    { "Uninstall anyway", function(container)
+                    { lang.get("uninstall_anyway"), function(container)
                         scene.uninstall()
-                        container:close("OK")
+                        container:close(lang.get("ok"))
                     end },
-                    { "Keep Everest" }
+                    { lang.get("keep_everest") }
                 }
             })
         end):hook({
@@ -299,21 +283,21 @@ function scene.install()
 
         local mainDownload, olympusMetaDownload, olympusBuildDownload
         if version == "manual" then
-            installer.update("Select your Everest .zip file", false, "")
+            installer.update(lang.get("select_your_everest_zip_file"), false, "")
 
             local path = fs.openDialog("zip"):result()
             if not path then
-                installer.update("Installation canceled", 1, "error")
+                installer.update(lang.get("installation_canceled"), 1, "error")
                 installer.done(false, {
                     {
-                        "Retry",
+                        lang.get("retry"),
                         function()
                             scener.pop()
                             scene.install()
                         end
                     },
                     {
-                        "OK",
+                        lang.get("ok"),
                         function()
                             scener.pop()
                         end
@@ -327,7 +311,7 @@ function scene.install()
             olympusBuildDownload = "file://" .. path
 
         else
-            installer.update(string.format("Preparing installation of Everest %s", version.version), false, "")
+            installer.update(string.format(lang.get("preparing_installation_of_everest_s"), version.version), false, "")
             mainDownload = version.mainDownload
             olympusMetaDownload = version.olympusMetaDownload
             olympusBuildDownload = version.olympusBuildDownload
@@ -339,20 +323,20 @@ function scene.install()
             end
 
             if version == "manual" then
-                installer.update("Everest successfully installed", 1, "done")
+                installer.update(lang.get("everest_successfully_installed"), 1, "done")
             else
-                installer.update(string.format("Everest %s successfully installed", version.version), 1, "done")
+                installer.update(string.format(lang.get("everest_s_successfully_installed"), version.version), 1, "done")
             end
             installer.done({
                 {
-                    "Launch",
+                    lang.get("launch"),
                     function()
                         modupdater.updateAllMods(install.entry.path)
                         scener.pop(2)
                     end
                 },
                 {
-                    "OK",
+                    lang.get("ok"),
                     function()
                         scener.pop(2)
                     end
@@ -374,24 +358,24 @@ function scene.uninstall()
     end
 
     local installer = scener.push("installer")
-    installer.update("Preparing uninstallation of Everest", false, "backup")
+    installer.update(lang.get("preparing_uninstallation_of_everest"), false, "backup")
 
     installer.sharpTask("uninstallEverest", install.entry.path):calls(function(task, last)
         if not last then
             return
         end
 
-        installer.update("Everest successfully uninstalled", 1, "done")
+        installer.update(lang.get("everest_successfully_uninstalled"), 1, "done")
         installer.done({
             {
-                "Launch",
+                lang.get("launch"),
                 function()
                     sharp.launch(install.entry.path)
                     scener.pop(2)
                 end
             },
             {
-                "OK",
+                lang.get("ok"),
                 function()
                     scener.pop(2)
                 end
@@ -413,10 +397,10 @@ function scene.load()
 
         root:findChild("reloadVersionsList").enabled = false
 
-        -- display a "Loading" spinner
+        -- display a lang.get("loading") spinner
         root:findChild("versionsParent"):addChild(
             uie.paneled.row({
-                uie.label("Loading"),
+                uie.label(lang.get("loading")),
                 uie.spinner():with({
                     width = 16,
                     height = 16
@@ -435,13 +419,13 @@ function scene.load()
 
         local list = root:findChild("versions")
 
-        local manualItem = uie.listItem("Select .zip from disk", "manual"):with(uiu.fillWidth)
+        local manualItem = uie.listItem(lang.get("select_zip_from_disk"), "manual"):with(uiu.fillWidth)
 
         local builds, buildsError = buildsTask:result()
         if not builds then
             root:findChild("loadingVersions"):removeSelf()
             root:findChild("versionsParent"):addChild(uie.paneled.row({
-                uie.label("Error downloading builds list: " .. tostring(buildsError)),
+                uie.label(lang.get("error_downloading_builds_list") .. tostring(buildsError)),
             }):with({
                 clip = false,
                 cacheable = false
@@ -512,7 +496,7 @@ function scene.load()
                 if not pinSpacer then
                     pinSpacer = true
                     list:addChild(uie.row({
-                        uie.label("Newest")
+                        uie.label(lang.get("newest"))
                     }):with({
                         style = {
                             padding = 4
@@ -523,7 +507,7 @@ function scene.load()
                             scale = 16 / 256,
                             y = 2
                         }),
-                        uie.label("Pinned")
+                        uie.label(lang.get("pinned"))
                     }):with({
                         style = {
                             padding = 4

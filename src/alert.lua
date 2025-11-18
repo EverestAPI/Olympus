@@ -1,6 +1,7 @@
 local ui, uiu, uie = require("ui").quick()
 local scener = require("scener")
 local config = require("config")
+local lang = require("lang")
 
 local alert = {}
 
@@ -96,8 +97,8 @@ function alert.show(data)
 
     if not data.buttons then
         data.buttons = {
-            { "OK", function(container)
-                container:close("OK")
+            { lang.get("ok"), function(container)
+                container:close(lang.get("ok"))
             end }
         }
     end

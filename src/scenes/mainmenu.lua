@@ -11,9 +11,10 @@ local sharp = require("sharp")
 local updater = require("updater")
 local modupdater = require("modupdater")
 local fs = require("fs")
+local lang = require("lang")
 
 local scene = {
-    name = "Main Menu"
+    name = lang.get("main_menu")
 }
 
 
@@ -23,18 +24,16 @@ local function checkInstall(forceInstall)
     end
 
     alert({
-        body = [[
-Your Celeste installation list is empty.
-Do you want to go to the Celeste installation manager?]],
+        body = lang.get("your_celeste_installation_list_is_empty_"),
         buttons = {
             {
-                "Yes",
+                lang.get("yes"),
                 function(container)
                     scener.push("installmanager")
-                    container:close("OK")
+                    container:close(lang.get("ok"))
                 end
             },
-            { "No" }
+            { lang.get("no") }
         }
     })
 
@@ -90,7 +89,7 @@ local function newsEntry(data)
             data.link and uie.button(
                 uie.row({
                     uie.icon("browser"):with({ scale = 24 / 256 }),
-                    uie.label(data.linktext or "Open in browser"):with({ y = 2 })
+                    uie.label(data.linktext or lang.get("open_in_browser")):with({ y = 2 })
                 }),
                 function()
                     utils.openURL(data.link)
@@ -105,13 +104,13 @@ local function newsEntry(data)
                         body = uie.label(data.text),
                         buttons = data.link and {
                             {
-                                "Open in browser",
+                                lang.get("open_in_browser"),
                                 function()
                                     utils.openURL(data.link)
                                 end
                             },
-                            { "Close" }
-                        } or { { "Close" }}
+                            { lang.get("close") }
+                        } or { { lang.get("close") }}
                     })
                 end
             ),
@@ -166,7 +165,7 @@ end
 
 function scene.createInstalls()
     return uie.paneled.column({
-        uie.label("Installations", ui.fontBig),
+        uie.label(lang.get("installations"), ui.fontBig),
 
         uie.column({
 
@@ -187,7 +186,7 @@ function scene.createInstalls()
                     }):with(uiu.rightbound):as("installcount")
                 }):with(uiu.fillWidth(true)),
 
-                uie.button("Manage", function()
+                uie.button(lang.get("manage"), function()
                     scener.push("installmanager")
                 end):with({
                     clip = false,
@@ -210,7 +209,7 @@ end
 function scene.reloadInstalls(scene, cb)
     local list, counter = scene.root:findChild("installs", "installcount")
     list.children = {}
-    counter.text = { { 1, 1, 1, 0.5 }, "Scanning..." }
+    counter.text = { { 1, 1, 1, 0.5 }, lang.get("scanning") }
 
     local installs = config.installs
 
@@ -230,7 +229,7 @@ function scene.reloadInstalls(scene, cb)
         if new == 0 then
             counter.text = ""
         else
-            counter.text = { { 1, 1, 1, 0.5 }, uiu.countformat(new, "%d new install found.", "%d new installs found.")}
+            counter.text = { { 1, 1, 1, 0.5 }, uiu.countformat(new, lang.get("d_new_install_found"), lang.get("d_new_installs_found"))}
         end
     end
 
@@ -248,7 +247,7 @@ function scene.reloadInstalls(scene, cb)
 
     for i = 1, #installs do
         local entry = installs[i]
-        local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, "\nScanning..."}, { index = i, entry = entry, version = "???" })
+        local item = uie.listItem({{1, 1, 1, 1}, entry.name, {1, 1, 1, 0.5}, lang.get("nscanning")}, { index = i, entry = entry, version = "???" })
 
         sharp.getVersionString(entry.path):calls(function(t, version)
             version = version or "???"
@@ -278,9 +277,7 @@ function scene.reloadInstalls(scene, cb)
 
     if #installs == 0 then
         list:addChild(uie.group({
-            uie.label([[
-Your Celeste installs list is empty.
-Press the manage button below.]])
+            uie.label(lang.get("your_celeste_installs_list_is_empty_pres"))
         }):with({
             style = {
                 padding = 8
@@ -310,18 +307,18 @@ end
 function scene.openLoennMenu()
     -- open an alert, with a "loading" message at first
     local alertMessage = alert({
-        title = "Lönn (Map Editor)",
+        title = lang.get("l_nn_map_editor"),
         body = uie.column({
             uie.row({
                 uie.spinner():with({
                     width = 16,
                     height = 16
                 }),
-                uie.label("Loading")
+                uie.label(lang.get("loading"))
             }):as("loading")
         }):with(uiu.fillWidth),
         buttons = {
-            { "Close", function(container)
+            { lang.get("close"), function(container)
                 container:close()
             end }
         },
@@ -338,13 +335,13 @@ function scene.openLoennMenu()
         local downloadLink = data.Item2
 
         -- version info
-        local installedVersionLabel = "Lönn is currently not installed."
+        local installedVersionLabel = lang.get("l_nn_is_currently_not_installed")
         if config.loennInstalledVersion ~= "" then
-            installedVersionLabel = "Currently installed version: " .. config.loennInstalledVersion
+            installedVersionLabel = lang.get("currently_installed_version") .. config.loennInstalledVersion
         end
 
         local content = {
-            uie.label(string.format("%s\nLatest version: %s\nInstall folder: %s", installedVersionLabel, latestVersion, config.loennRootPath))
+            uie.label(string.format(lang.get("s_nlatest_version_s_ninstall_folder_s"), installedVersionLabel, latestVersion, config.loennRootPath))
         }
 
         if latestVersion ~= config.loennInstalledVersion and downloadLink ~= "" then
@@ -352,13 +349,13 @@ function scene.openLoennMenu()
             table.insert(content,
                 scene.buttonWithIcon(
                     config.loennInstalledVersion == "" and "download" or "update",
-                    config.loennInstalledVersion == "" and "Install Lönn" or "Update Lönn",
+                    config.loennInstalledVersion == "" and lang.get("install_l_nn") or lang.get("update_l_nn"),
                     true,
                     function(self)
                         alertMessage:close()
 
                         local installer = scener.push("installer")
-                        installer.update("Preparing installation of Lönn " .. latestVersion, false, "")
+                        installer.update(lang.get("preparing_installation_of_l_nn") .. latestVersion, false, "")
 
                         installer.sharpTask("installLoenn", config.loennRootPath, downloadLink):calls(function(task, last)
                             if not last then
@@ -368,17 +365,17 @@ function scene.openLoennMenu()
                             config.loennInstalledVersion = latestVersion
                             config.save()
 
-                            installer.update("Lönn " .. latestVersion .. " successfully installed", 1, "done")
+                            installer.update(lang.get("l_nn") .. latestVersion .. lang.get("successfully_installed"), 1, "done")
                             installer.done({
                                 {
-                                    "Launch",
+                                    lang.get("launch"),
                                     function()
                                         sharp.launchLoenn(config.loennRootPath)
                                         scener.pop(1)
                                     end
                                 },
                                 {
-                                    "OK",
+                                    lang.get("ok"),
                                     function()
                                         scener.pop(1)
                                     end
@@ -393,7 +390,7 @@ function scene.openLoennMenu()
         if config.loennInstalledVersion ~= "" then
             -- "Launch Lönn" (if installed, in green if up-to-date)
             table.insert(content,
-                scene.buttonWithIcon("mainmenu/loenn", "Launch Lönn", latestVersion == config.loennInstalledVersion, function(self)
+                scene.buttonWithIcon("mainmenu/loenn", lang.get("launch_l_nn"), latestVersion == config.loennInstalledVersion, function(self)
                     sharp.launchLoenn(config.loennRootPath)
                     alertMessage:close()
                 end):with(uiu.fillWidth)
@@ -401,22 +398,22 @@ function scene.openLoennMenu()
 
             -- "Uninstall Lönn" (if installed), displays a confirmation message
             table.insert(content,
-                scene.buttonWithIcon("delete", "Uninstall Lönn", false, function(self)
+                scene.buttonWithIcon("delete", lang.get("uninstall_l_nn"), false, function(self)
                     local alertContainer = {}
                     alertContainer.alert = alert({
                         body = uie.paneled.column({
-                            uie.label("Uninstall Lönn", ui.fontBig),
-                            uie.label("This will delete directory " .. config.loennRootPath .. ".\nAre you sure?"),
+                            uie.label(lang.get("uninstall_l_nn"), ui.fontBig),
+                            uie.label(lang.get("this_will_delete_directory") .. config.loennRootPath .. lang.get("nare_you_sure")),
                             uie.row({
-                                uie.button("No", function()
+                                uie.button(lang.get("no"), function()
                                     alertContainer.alert:close()
                                 end),
-                                uie.button("Yes", function()
+                                uie.button(lang.get("yes"), function()
                                     alertContainer.alert:close()
                                     alertMessage:close()
 
                                     local installer = scener.push("installer")
-                                    installer.update("Preparing uninstallation of Lönn", false, "")
+                                    installer.update(lang.get("preparing_uninstallation_of_l_nn"), false, "")
 
                                     installer.sharpTask("uninstallLoenn", config.loennRootPath):calls(function(task, last)
                                         if not last then
@@ -426,10 +423,10 @@ function scene.openLoennMenu()
                                         config.loennInstalledVersion = ""
                                         config.save()
 
-                                        installer.update("Lönn successfully uninstalled", 1, "done")
+                                        installer.update(lang.get("l_nn_successfully_uninstalled"), 1, "done")
                                         installer.done({
                                             {
-                                                "OK",
+                                                lang.get("ok"),
                                                 function()
                                                     scener.pop(1)
                                                 end
@@ -446,8 +443,8 @@ function scene.openLoennMenu()
         end
 
         -- link to readme
-        table.insert(content, uie.label("\nCheck the README for usage instructions, keybinds, help and more:"))
-        table.insert(content, scene.buttonWithIcon("article", "Open Lönn README", false, function()
+        table.insert(content, uie.label(lang.get("ncheck_the_readme_for_usage_instructions")))
+        table.insert(content, scene.buttonWithIcon("article", lang.get("open_l_nn_readme"), false, function()
             utils.openURL("https://github.com/CelestialCartographers/Loenn/blob/master/README.md")
         end):with(uiu.fillWidth))
 
@@ -469,10 +466,10 @@ local root = uie.row({
             scene.createInstalls(),
 
             uie.column({
-                buttonBig("mainmenu/gamebanana", "Download Mods", "gamebanana", true):with(uiu.fillWidth),
-                buttonBig("mainmenu/berry", "Manage Installed Mods", "modlist", true):with(uiu.fillWidth),
+                buttonBig("mainmenu/gamebanana", lang.get("download_mods"), "gamebanana", true):with(uiu.fillWidth),
+                buttonBig("mainmenu/berry", lang.get("manage_installed_mods"), "modlist", true):with(uiu.fillWidth),
                 uie.row({}):with(uiu.fillWidth):as("mapeditor"),
-                buttonBig("cogwheel", updater.available and "Options & Updates" or "Options", "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
+                buttonBig("cogwheel", updater.available and lang.get("options_updates") or lang.get("options"), "options"):with(uiu.fillWidth):with(utils.important(32, function() return updater.latest end)),
                 -- button("cogwheel", "[DEBUG] Scene List", "scenelist"):with(uiu.fillWidth),
             }):with({
                 clip = false
@@ -499,7 +496,7 @@ local root = uie.row({
     }):with(uiu.fillWidth(true)):with(uiu.fillHeight),
 
     uie.paneled.column({
-        uie.label("News", ui.fontBig),
+        uie.label(lang.get("news"), ui.fontBig),
         uie.scrollbox(
             uie.column({
 
@@ -528,10 +525,10 @@ scene.root = root
 scene.installs = root:findChild("installs")
 scene.mainlist = root:findChild("mainlist")
 scene.launchrow = uie.row({
-    buttonBig("mainmenu/everest", "Everest", function()
+    buttonBig("mainmenu/everest", lang.get("everest"), function()
         modupdater.updateAllMods(nil, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(0, 0)),
-    buttonBig("mainmenu/celeste", "Celeste", function()
+    buttonBig("mainmenu/celeste", lang.get("celeste"), function()
         utils.launch(nil, true, true)
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(2.5 - 32 - 2, 0)),
     buttonBig("cogwheel", "", "everest"):with({
@@ -543,7 +540,7 @@ scene.launchrow = uie.row({
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
 
-scene.installbtn = buttonBig("mainmenu/everest", "Install Everest", "everest"):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
+scene.installbtn = buttonBig("mainmenu/everest", lang.get("install_everest"), "everest"):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
 
 
 scene.installs:hook({
@@ -578,7 +575,7 @@ function scene.load()
 
         newsfeed.children = {}
         newsfeed:addChild(uie.row({
-            uie.label("Loading"),
+            uie.label(lang.get("loading")),
             uie.spinner():with({
                 width = 16,
                 height = 16
@@ -591,13 +588,14 @@ function scene.load()
         local all = threader.run(function()
             local utils = require("utils")
             local log = require("logger")("mainmenu.news")
+            local lang = require("lang")
             local list, err = utils.download("https://everestapi.github.io/olympusnews/index.txt")
             if not list then
                 log.warning("failed fetching news index", err)
                 return {
                     {
                         error = true,
-                        preview = "Olympus failed fetching the news feed."
+                        preview = lang.get("olympus_failed_fetching_the_news_feed")
                     }
                 }
             end
@@ -622,7 +620,7 @@ function scene.load()
                     log.warning("failed fetching news entry", entryName, err)
                     all[i] = {
                         error = true,
-                        preview = "Olympus failed fetching a news entry."
+                        preview = lang.get("olympus_failed_fetching_a_news_entry")
                     }
                     goto next
                 end
@@ -633,7 +631,7 @@ function scene.load()
                     log.warning("news entry not in expected format", entryName)
                     all[i] = {
                         error = true,
-                        preview = "A news entry was in an unexpected format."
+                        preview = lang.get("a_news_entry_was_in_an_unexpected_format")
                     }
                     goto next
                 end
@@ -644,7 +642,7 @@ function scene.load()
                     log.warning("news entry contains malformed yaml", entryName, data)
                     all[i] = {
                         error = true,
-                        preview = "A news entry contained invalid metadata."
+                        preview = lang.get("a_news_entry_contained_invalid_metadata")
                     }
                     goto next
                 end
@@ -697,7 +695,7 @@ function scene.enter()
 
     if config.mapeditor == "loenn" or config.mapeditor == "both" then
         if config.loennInstalledVersion ~= "" then
-            loennButton = buttonBig("mainmenu/loenn", "Lönn (Map Editor)", function()
+            loennButton = buttonBig("mainmenu/loenn", lang.get("l_nn_map_editor"), function()
                 sharp.launchLoenn(config.loennRootPath)
             end, true)
             mapeditor:addChild(loennButton)
@@ -714,7 +712,7 @@ function scene.enter()
                 end
             end)
         else
-            loennButton = buttonBig("mainmenu/loenn", "Lönn (Map Editor)", scene.openLoennMenu, true)
+            loennButton = buttonBig("mainmenu/loenn", lang.get("l_nn_map_editor"), scene.openLoennMenu, true)
             mapeditor:addChild(loennButton)
         end
     end
@@ -724,10 +722,10 @@ function scene.enter()
         -- We should also rename the buttons to remove the "(Map Editor)" part so that both buttons fit
         local cogwheelSpace = config.loennInstalledVersion ~= "" and 36 or 0
 
-        ahornButton:findChild("bigButtonLabel"):setText("Ahorn")
+        ahornButton:findChild("bigButtonLabel"):setText(lang.get("ahorn"))
         ahornButton:with(uiu.fillWidth(4.5 + cogwheelSpace)):with(uiu.at(0, 0))
 
-        loennButton:findChild("bigButtonLabel"):setText("Lönn")
+        loennButton:findChild("bigButtonLabel"):setText(lang.get("l_nn"))
         loennButton:with(uiu.fillWidth(4.5 + cogwheelSpace)):with(uiu.at(4.5 - cogwheelSpace, 0))
 
     elseif config.mapeditor == "ahorn" then

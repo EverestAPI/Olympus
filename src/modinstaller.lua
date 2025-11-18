@@ -10,6 +10,7 @@ local scener = require("scener")
 local sharp = require("sharp")
 local registry = require("registry")
 local modupdater = require("modupdater")
+local lang = require("lang")
 
 local modinstaller = {}
 
@@ -84,7 +85,7 @@ function modinstaller.install(modurl, cb, autoclose)
     end
 
     local installer = scener.push("installer")
-    installer.update(string.format("Preparing installation of %s", modname), false, "")
+    installer.update(string.format(lang.get("preparing_installation_of_s"), modname), false, "")
 
     installer.sharpTask("installMod", install, modurl, config.mirrorPreferences):calls(function(task, last)
         if not last then
@@ -94,13 +95,13 @@ function modinstaller.install(modurl, cb, autoclose)
         installer.update(last[1], 1, "done", true)
         installer.done({
             {
-                "Launch",
+                lang.get("launch"),
                 function()
                     cb(modupdater.updateAllMods(install))
                 end
             },
             {
-                "OK",
+                lang.get("ok"),
                 function()
                     cb(false)
                 end
