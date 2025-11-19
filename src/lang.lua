@@ -70,8 +70,8 @@ Do you want to update to %s now?]],
     check_the_task_manager = [[ - check the Task Manager]],
     check_the_activity_monitor = [[ - check the Activity Monitor]],
     check_htop = [[ - check htop]],
-    celeste_is_already_starting_up_please_wa = [[            Celeste is already starting up. Please wait.
-            You can close this window.]],
+    celeste_is_already_starting_up_please_wa = [[Celeste is already starting up. Please wait.
+You can close this window.]],
     celeste_is_now_starting_in_the_backgroun = [[Celeste is now starting in the background.
 You can close this window.]],
     everest_is_now_starting_in_the_backgroun = [[Everest is now starting in the background.
@@ -94,7 +94,7 @@ Do you want to launch another instance anyway?]],
     detecting_the_celeste_version_failed_n_s = [[Detecting the Celeste version failed:
 %s
 
-Check the path of your install by selecting \"Manage\" in the main menu.]],
+Check the path of your install by selecting "Manage" in the main menu.]],
     attempt_installation_anyway = [[Attempt Installation Anyway]],
     remove_residual_files = [[Remove Residual Files]],
     install_xna = [[Install XNA]],
@@ -280,7 +280,7 @@ Press the manage button below.]],
     s_enabled_s = [[%s enabled %s]],
     mod = [[mod]],
     mods = [[mods]],
-    no_mod_info_available = [[[No mod info available]]],
+    no_mod_info_available = [[(No mod info available)]],
     this_mod_depends_on_s_other_disabled_s_n = [[This mod depends on %s other disabled %s.
 Do you want to enable %s as well?]],
     mod1 = [[mod]],
@@ -297,10 +297,10 @@ Do you want to disable %s as well?]],
     mods_depend = [[mods depend]],
     delete = [[Delete]],
     keep = [[Keep]],
-    some_mods_couldn_t_be_loaded_make_sure_t = [[Some mods couldn't be loaded, make sure they are installed: 
+    some_mods_couldn_t_be_loaded_make_sure_t = [[Some mods couldn't be loaded, make sure they are installed:
 ]],
     something_went_wrong_deleted_preset_s_na = [[Something went wrong, deleted preset's name is empty!]],
-    something_went_wrong_name_is_nil = [[Something went wrong, name is nil!]],
+    something_went_wrong_name_is_nil = [[Something went wrong, name is empty!]],
     preset_name_can_t_be_empty = [[Preset name can't be empty!]],
     this_preset_already_exists_do_you_wish_t = [[This preset already exists! Do you wish to override it?]],
     new_preset_name = [[New preset name]],
@@ -393,7 +393,7 @@ local fr = {
     -- dragndrop.lua
     olympus_is_currently_busy_with_something = [[Olympus est actuellement occupé avec autre chose.]],
     olympus_can_t_handle_that_file_does_it_e = [[Olympus ne sait pas gérer ce fichier - est-ce qu'il existe ?]],
-    everest_successfully_installed = [[Everest installé avec succès.]],
+    everest_successfully_installed = [[Everest installé avec succès]],
     launch = [[Lancer]],
     olympus_can_t_handle_that_file = [[Olympus ne sait pas gérer ce fichier.]],
     your_celeste_installation_list_is_still_ = [[Ta liste d'installations de Celeste est toujours vide.
@@ -406,8 +406,8 @@ Veux-tu aller au gestionnaire d'installations ?]],
     do_you_want_to_close_olympus = [[Veux-tu fermer Olympus ?]],
     the_olympus_app_is_out_of_date_sometimes = [[L'application Olympus n'est pas à jour.
 Parfois, de nouvelles fonctionnalités et d'importants correctifs
-demandent une mise à jour en profondeur d'Olympus, qu'il
-ne peut pas installer lui-même.
+demandent une mise à jour en profondeur d'Olympus, et Olympus
+ne peut pas installer ces mises à jour lui-même.
 Notamment, les boutons d'installation 1-Click sur GameBanana étaient
 non fonctionnels sur macOS. Pour corriger ça, tu dois réinstaller Olympus.
 Merci d'aller sur le site d'Everest pour plus d'informations.
@@ -463,7 +463,7 @@ Tu peux fermer cette fenêtre.]],
 Vérifie que la version que tu as installée correspond à ton système d'exploitation.
 Si tu utilises Lutris ou un outil similaire, on ne peut pas t'aider.]],
     celeste_or_something_looking_like_celest = [[Celeste (ou quelque chose qui y ressemble) est déjà en cours d'exécution.
-Si le jeu est invisible, il est peut-être en train de se lancer]],
+Si tu ne vois pas le jeu, il est peut-être encore en train de se lancer]],
     do_you_want_to_launch_another_instance_a = [[.
 Veux-tu ouvrir un autre exemplaire quand même ?]],
     opening = [[Ouverture de ]],
@@ -477,7 +477,7 @@ Veux-tu ouvrir un autre exemplaire quand même ?]],
     detecting_the_celeste_version_failed_n_s = [[La détection de la version de Celeste a échoué :
 %s
 
-Vérifie le chemin de ton installation en sélectionnant \"Gérer\" dans le menu principal.]],
+Vérifie le chemin de ton installation en sélectionnant "Gérer" dans le menu principal.]],
     attempt_installation_anyway = [[Tenter l'installation quand même]],
     remove_residual_files = [[Supprimer les fichiers résiduels]],
     install_xna = [[Installer XNA]],
@@ -492,12 +492,12 @@ Maintiens Droite sur l'écran titre pour désactiver Everest jusqu'au
 prochain lancement, c'est aussi valide pour les speedruns.
 
 Si tu cherches à corriger un problème et que désinstaller Everest ne suffit pas,
-ouvre ta bibliothèque de jeux et fais-lui vérifier les fichiers de ton jeu.
-Steam, EGS et l'app itch.io proposent cette option, qui est plus rapide
+ouvre l'application de ton magasin de jeux et fais-lui vérifier les fichiers de ton jeu.
+Steam, EGS et l'app itch.io proposent cette option, et c'est plus rapide
 qu'une réinstallation complète.]],
     uninstall_anyway = [[Désinstaller quand même]],
     keep_everest = [[Garder Everest]],
-    select_your_everest_zip_file = [[Choisis ton fichier .zip d'Everest]],
+    select_your_everest_zip_file = [[Choisis le fichier .zip d'Everest à installer]],
     installation_canceled = [[Installation annulée]],
     preparing_installation_of_everest_s = [[Préparation de l'installation d'Everest %s]],
     everest_s_successfully_installed = [[Everest %s installé avec succès]],
@@ -506,9 +506,9 @@ qu'une réinstallation complète.]],
     select_zip_from_disk = [[Choisir un .zip depuis le disque dur]],
     newest = [[Dernières versions]],
     pinned = [[Épinglé]],
-    use_the_newest_version_for_more_features = [[Utilise les dernière versions pour plus de fonctionnalités et de corrections de bugs.
+    use_the_newest_version_for_more_features = [[Utilise les dernières versions pour plus de fonctionnalités et de corrections de bugs.
 Utilise la dernière version ]],
-    version_if_you_hate_updating = [[ si tu détestes les mises à jour.]],
+    version_if_you_hate_updating = [[ si tu préfères mettre à jour moins souvent.]],
     your_current_version_of_celeste_is_outda = [[Ta version de Celeste n'est pas à jour.
 Installe la dernière version du jeu avant d'installer Everest.]],
     residual_files_from_a_net_core_build_hav = [[Des fichiers résiduels d'une version .NET Core ont été détectés.
@@ -554,11 +554,11 @@ Il faudrait les supprimer avant d'installer Everest.
     sharp = [[Sharp]],
     reload = [[Recharger]],
     maddie480_ovh_nprovides_the_everest_vers = [[ (maddie480.ovh)
-Fournit la plupart des services en ligne d\'Olympus, active le "Miroir API" en cas de problème]],
+Fournit la plupart des services en ligne d'Olympus, active le "Miroir API" en cas de problème]],
     github_com_nhosts_stable_versions_of_eve = [[ (github.com)
-Héberge les versions stables d\'Everest]],
+Héberge les versions stables d'Everest]],
     dev_azure_com_nhosts_olympus_updates_and = [[ (dev.azure.com)
-Héberge les mises à jour d\'Olympus, et les versions non-stables d\'Everest]],
+Héberge les mises à jour d'Olympus, et les versions non-stables d'Everest]],
     everestapi_github_io_nprovides_olympus_n = [[ (everestapi.github.io)
 Fournit les actualités Olympus, affichées à droite du menu principal]],
     files_gamebanana_com_nhosts_all_celeste_ = [[ (files.gamebanana.com)
@@ -576,7 +576,7 @@ Quelques exemples de situations où des problèmes réseau peuvent se produire :
     open_log = [[Ouvrir le log]],
     open_log_folder = [[Ouvrir le dossier des logs]],
     you_can_ask_for_help_in_the_celeste_disc = [[Tu peux demander de l'aide sur le serveur Discord Celeste (en anglais).
-Tu peux trouver une invitation sur le site d'Everest.
+Le lien d'invitation est sur le site d'Everest.
 Pense bien à joindre tes fichiers de log dans le canal #modding_help.
 Avant de les envoyer, vérifie qu'ils ne contiennent pas d'info sensible,
 comme ton nom d'utilisateur.]],
@@ -586,7 +586,7 @@ comme ton nom d'utilisateur.]],
     scanning = [[Recherche en cours...]],
     remove = [[Supprimer]],
     add = [[Ajouter]],
-    i_know_what_i_m_doing = [[Je sais ce que je suis en train de faire.]],
+    i_know_what_i_m_doing = [[Je sais ce que je fais.]],
     verify = [[Vérifier]],
     browse = [[Parcourir]],
     your_installations = [[Tes installations]],
@@ -665,27 +665,27 @@ Appuie sur le bouton "Gérer" ci-dessous.]],
     no1 = [[0]],
     mod = [[mod activé]],
     mods = [[mods activés]],
-    no_mod_info_available = [[[Information non disponible]]],
+    no_mod_info_available = [[(Information non disponible)]],
     this_mod_depends_on_s_other_disabled_s_n = [[Ce mod dépend de %s %s.
 Veux-tu aussi activer %s ?]],
     mod1 = [[mod non activé]],
     mods1 = [[mods non activés]],
     it = [[celui-ci]],
     them = [[ceux-ci]],
-    s_other_s_no_longer_required_for_any_ena = [[%s %s plus nécessaires pour aucun mod activé.
+    s_other_s_no_longer_required_for_any_ena = [[%s %s pour aucun mod activé.
 Veux-tu aussi désactiver %s ?]],
-    mod_is = [[autre mod n'est]],
-    mods_are = [[autres mods ne sont]],
+    mod_is = [[autre mod n'est plus nécessaire]],
+    mods_are = [[autres mods ne sont plus nécessaires]],
     s_other_s_on_this_mod_ndo_you_want_to_di = [[%s %s de ce mod.
 Veux-tu aussi désactiver %s ?]],
-    mod_depends = [[autre mod dépend]],
-    mods_depend = [[autres mods dépendent]],
+    mod_depends = [[autre mod activé dépend]],
+    mods_depend = [[autres mods activés dépendent]],
     delete = [[Supprimer]],
     keep = [[Garder]],
-    some_mods_couldn_t_be_loaded_make_sure_t = [[Certains mods n'ont pas pu être chargés, assure-toi qu'ils sont installés : 
+    some_mods_couldn_t_be_loaded_make_sure_t = [[Certains mods n'ont pas pu être chargés, assure-toi qu'ils sont installés :
 ]],
     something_went_wrong_deleted_preset_s_na = [[Quelque chose a mal tourné, le nom du groupe de mods à supprimer est vide !]],
-    something_went_wrong_name_is_nil = [[Quelque chose a mal tourné, le nom est nul !]],
+    something_went_wrong_name_is_nil = [[Quelque chose a mal tourné, le nom est vide !]],
     preset_name_can_t_be_empty = [[Le nom du groupe ne peut pas être vide !]],
     this_preset_already_exists_do_you_wish_t = [[Ce groupe existe déjà ! Veux-tu le remplacer ?]],
     new_preset_name = [[Nom du nouveau groupe]],
@@ -696,7 +696,7 @@ Veux-tu aussi désactiver %s ?]],
     enabled = [[Activé]],
     this_menu_allows_you_to_enable_disable_o = [[Ce menu te permet d'activer, désactiver ou supprimer les mods que tu as installés.]],
     update_all = [[Tout mettre à jour]],
-    open_mods_folder = [[Ouvrir le dossier]],
+    open_mods_folder = [[Ouvrir le dossier Mods]],
     edit_blacklist_txt = [[Modifier blacklist.txt]],
     only_show_enabled = [[Activés]],
     only_show_favorites = [[Favoris]],
@@ -704,7 +704,7 @@ Veux-tu aussi désactiver %s ?]],
     disable_all = [[Tout désactiver]],
     search_by_file_name_mod_title_or_everest = [[Rechercher par nom du fichier, titre du mod ou ID everest.yaml]],
     an_error_occurred_while_loading_the_mod_ = [[Une erreur est survenue lors du chargement de la liste des mods.]],
-    are_you_sure_that_you_want_to_delete = [[Es-tu sûr de vouloir supprimer ]],
+    are_you_sure_that_you_want_to_delete = [[Es-tu sûr(e) de vouloir supprimer ]],
     you_will_need_to_redownload_the_mod_to_u = [[ ?
 Il faudra re-télécharger le mod si tu veux t'en resservir.
 Astuce : Si tu désactives le mod, Everest ne le chargera pas, ce qui est tout aussi efficace pour le lag.]],
@@ -712,7 +712,7 @@ Astuce : Si tu désactives le mod, Everest ne le chargera pas, ce qui est tout a
 
     -- scenes/options.lua
     random_default = [[Aléatoire (défaut)]],
-    background = [[Arrière-plan #]],
+    background = [[Arrière-plan n°]],
     high_default = [[Haute (défaut)]],
     medium = [[Moyenne]],
     low = [[Basse]],
@@ -729,7 +729,7 @@ Astuce : Si tu désactives le mod, Everest ne le chargera pas, ce qui est tout a
     celestemods_com = [[celestemods.com]],
     disabled = [[Désactivé]],
     noto_sans_cjk_50_mb = [[Noto Sans CJK (~50 Mo)]],
-    chinese_japanese_korean_font_files = [[Polices pour le chinois, japonais et coréen.]],
+    chinese_japanese_korean_font_files = [[Polices pour le chinois, le japonais et le coréen.]],
     theme = [[Thème]],
     select_your_theme = [[Choisis ton thème]],
     background_image = [[Fond d'écran]],
@@ -744,7 +744,7 @@ Astuce : Si tu désactives le mod, Everest ne le chargera pas, ce qui est tout a
     use_opengl = [[Utiliser OpenGL]],
     close_after_one_click_install = [[Fermer après install. 1-click]],
     open_installation_folder = [[Ouvrir le dossier d'installation]],
-    open_log_and_config_folder = [[Ouvrir le dossier des logs et config.]],
+    open_log_and_config_folder = [[Ouvrir dossier des logs et config.]],
     download_extra_data = [[Téléchargements supp.]],
     extra_data_s_successfully_installed = [[%s installé avec succès]],
     mirrors = [[Miroirs]],
@@ -776,6 +776,7 @@ local function get(key)
     -- "ne" is "en" backwards. It's a joke language, and also a way to check that everything is backwards but everything still works.
     if lang == "ne" then
         local value = en[key]:gsub("ö", "oe") -- ö in Lönn turns into soup backwards
+        value = value:reverse()
         value, _ = value:gsub("s%%", "%%s") -- %s works, s% not that much
         value, _ = value:gsub("Y%%", "%%Y") -- same for date formats
         value, _ = value:gsub("m%%", "%%m")
