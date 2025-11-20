@@ -66,6 +66,7 @@ function tooltipHandler.tooltipWindowUpdate(orig, self, dt)
 
         if hovered then
             local tooltipText = rawget(hovered, "tooltipText")
+            tooltipWaitDuration = rawget(hovered, "tooltipWaitDuration") or 0.5
 
             if tooltipText then
                 tooltipWindow.children[1]:setText(tooltipText)

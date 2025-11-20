@@ -290,6 +290,7 @@ local function updateLabelTextForMod(mod)
     local label, tooltip = getLabelTextFor(mod.info)
     mod.row:findChild("title"):with({
         tooltipText = tooltip,
+        tooltipWaitDuration = 0,
         interactive = tooltip and 1 or 0
     }):setText(label)
 end
@@ -919,6 +920,7 @@ function scene.item(info)
     local item = uie.paneled.row({
         uie.label(label):with({
             tooltipText = tooltip,
+            tooltipWaitDuration = 0,
             interactive = tooltip and 1 or 0
         }):as("title"),
 
