@@ -184,8 +184,10 @@ local function getLabelTextFor(info)
     local themeColors = uie.modNameLabelColors().style
     local color = themeColors.normalColor
 
+    local tooltip = nil
     if info.IsFavorite then
         color = themeColors.favoriteColor
+        tooltip = lang.get("tooltip_favorite")
     else
         local isDependencyOfFavorite = false
         local isDependency = false
@@ -202,12 +204,15 @@ local function getLabelTextFor(info)
 
         if isDependencyOfFavorite then
             color = themeColors.dependencyOfFavoriteColor
+            tooltip = lang.get("tooltip_dependency_of_favorite")
         elseif isDependency then
             color = themeColors.dependencyColor
+            tooltip = lang.get("tooltip_dependency")
         end
     end
 
     color = {color[1], color[2], color[3], info.IsBlacklisted and 0.5 or 1}
+    tooltip = tooltip and { color, tooltip } or nil
 
     if info.Name then
         if info.GameBananaTitle then
@@ -218,7 +223,7 @@ local function getLabelTextFor(info)
                 info.GameBananaTitle .. "\n",
                 themeColors.disabledColor,
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
-            }
+            }, tooltip
         else
             -- MaxHelpingHand
             -- 1.4.5 ∙ Filename.zip
@@ -227,7 +232,7 @@ local function getLabelTextFor(info)
                 info.Name .. "\n",
                 themeColors.disabledColor,
                 (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
-            }
+            }, tooltip
         end
     else
         -- Filename.zip
@@ -236,7 +241,7 @@ local function getLabelTextFor(info)
             fs.filename(info.Path) .. "\n",
             themeColors.disabledColor,
             lang.get("no_mod_info_available")
-        }
+        }, tooltip
     end
 end
 
@@ -282,7 +287,11 @@ local function findDependenciesToEnable(mod)
 end
 
 local function updateLabelTextForMod(mod)
-    mod.row:findChild("title"):setText(getLabelTextFor(mod.info))
+    local label, tooltip = getLabelTextFor(mod.info)
+    mod.row:findChild("title"):with({
+        tooltipText = tooltip,
+        interactive = tooltip and 1 or 0
+    }):setText(label)
 end
 
 local function updateLabelTextForDependencies(mod)
@@ -906,8 +915,12 @@ function scene.item(info)
         return nil
     end
 
+    local label, tooltip = getLabelTextFor(info)
     local item = uie.paneled.row({
-        uie.label(getLabelTextFor(info)):as("title"),
+        uie.label(label):with({
+            tooltipText = tooltip,
+            interactive = tooltip and 1 or 0
+        }):as("title"),
 
         uie.row({
             uie.warning(false, function(warning, newState)

@@ -438,8 +438,9 @@ function love.load(args)
                 interactive = -1
             }):with(function(el)
                 table.remove(el.children, 1).parent = el
-            end):as("logWindow")
+            end):as("logWindow"),
 
+            require("tooltip").getTooltipWindow()
         }):with({
             style = {
                 spacing = 0
@@ -903,6 +904,10 @@ function love.keypressed(key, scancode, isrepeat)
             error("SHIFT + F9")
         elseif love.keyboard.isDown("lctrl") or love.keyboard.isDown("rctrl") then
             sharp.crash()
+        elseif love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt") then
+            threader.routine(function()
+                error("You successfully killed the threader, good job!")
+            end)
         else
             collectgarbage("collect")
             collectgarbage("collect")

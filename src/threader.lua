@@ -490,7 +490,7 @@ function threader.routine(fun, ...)
                 return {fun(unpack(args))}
             end,
             function(err)
-                logger.error(id, err)
+                log.error(id, err)
                 if type(err) == "userdata" or type(err) == "table" then
                     return err
                 end
@@ -533,9 +533,9 @@ function threader.update()
     if running then
         local status = coroutine.status(running.routine)
         if status ~= "running" then
-            logger.warning("threader.update called from within a " .. (running.waiting and "waiting " or "") .. " ZOMBIE threader coroutine (" .. running.id .. ", " .. status .. "), possibly via a native callback during coroutine.yield")
+            log.warning("threader.update called from within a " .. (running.waiting and "waiting " or "") .. " ZOMBIE threader coroutine (" .. running.id .. ", " .. status .. "), possibly via a native callback during coroutine.yield")
         else
-            logger.warning("threader.update called from within a " .. (running.waiting and "waiting " or "") .. "threader coroutine (" .. running.id .. "), possibly via a native callback during coroutine.yield")
+            log.warning("threader.update called from within a " .. (running.waiting and "waiting " or "") .. "threader coroutine (" .. running.id .. "), possibly via a native callback during coroutine.yield")
         end
     end
 
