@@ -16,7 +16,9 @@ namespace Olympus {
         private static readonly Dictionary<string, Dictionary<string, string>> translations = new Dictionary<string, Dictionary<string, string>> {
             {
                 "en", new Dictionary<string, string> {
-                    { "downloading", "Downloading mod versions list" },
+                    { "downloadinglist", "Downloading mod versions list" },
+                    { "downloadingfile", "Downloading " },
+                    { "downloadingprogress", "Downloading:" },
                     { "checking", "Checking for outdated mods" },
                     { "updating", "Updating" },
                     { "installing", "installing update" },
@@ -26,7 +28,9 @@ namespace Olympus {
                 }
             }, {
                 "fr", new Dictionary<string, string> {
-                    { "downloading", "Téléchargement de la liste des mods" },
+                    { "downloadinglist", "Téléchargement de la liste des mods" },
+                    { "downloadingfile", "Téléchargement de " },
+                    { "downloadingprogress", "Téléchargement -" },
                     { "checking", "Vérification des mises à jour" },
                     { "updating", "Mise à jour" },
                     { "installing", "installation en cours" },
@@ -49,7 +53,7 @@ namespace Olympus {
 
 
         public override IEnumerator Run(string root, bool onlyEnabled, string mirrorPreferences, bool apiMirror, string lang) {
-            yield return $"{langGet(lang, "downloading")}...";
+            yield return $"{langGet(lang, "downloadinglist")}...";
             Dictionary<string, ModUpdateInfo> modVersionList = downloadModUpdateList(apiMirror);
 
             yield return $"{langGet(lang, "checking")}...";
@@ -85,7 +89,7 @@ namespace Olympus {
 
                 // download from GameBanana, if that fails download from mirror
                 string tempZip = Path.Combine(root, "mod-update.zip");
-                foreach (string message in new EnumeratorEnumerator { Enumerator = tryDownloadWithMirror(update.Key, messagePrefix, tempZip, mirrorPreferences) }) {
+                foreach (string message in new EnumeratorEnumerator { Enumerator = tryDownloadWithMirror(update.Key, messagePrefix, tempZip, mirrorPreferences, lang) }) {
                     yield return message;
                 }
 
@@ -145,7 +149,7 @@ namespace Olympus {
             }
         }
 
-        private static IEnumerator tryDownloadWithMirror(ModUpdateInfo info, string messagePrefix, string destination, string mirrorPreferences) {
+        private static IEnumerator tryDownloadWithMirror(ModUpdateInfo info, string messagePrefix, string destination, string mirrorPreferences, string lang) {
             Exception lastException = null;
 
             foreach (string url in GetAllMirrorUrls(info.URL, mirrorPreferences)) {
@@ -173,7 +177,9 @@ namespace Olympus {
 
                         object message = ((object[]) download.Current)[0];
                         if (message.ToString() != "") {
-                            yield return messagePrefix + ": " + message;
+                            yield return messagePrefix + ": " + message.ToString()
+                                .Replace(langGet("en", "downloadingfile"), langGet(lang, "downloadingfile"))
+                                .Replace(langGet("en", "downloadingprogress"), langGet(lang, "downloadingprogress"));
                         }
                     }
                 }
