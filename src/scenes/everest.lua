@@ -126,10 +126,7 @@ lang.get("use_the_newest_version_for_more_features"), { 0.3, 0.8, 0.5, 1 }, "sta
             not (registry.getKey([[HKLM\SOFTWARE\WOW6432Node\Microsoft\XNA\Framework\v4.0\Installed]]) or
             registry.getKey([[HKLM\SOFTWARE\Microsoft\XNA\Framework\v4.0\Installed]])) then
                 alert({
-                    body = [[
-It is required to install XNA before installing Everest.
-If this copy of Celeste comes from Steam, run Celeste normally to install XNA.
-Otherwise, manually install XNA using the button below.]],
+                    body = lang.get("it_is_required_to_install_xna_before_ins"),
                     buttons = {
                         { lang.get("install_xna"), function(container)
                             container:close(lang.get("ok"))
@@ -176,10 +173,7 @@ Otherwise, manually install XNA using the button below.]],
 
                 if not (runtimeOutput and runtimeOutput:match("Microsoft.NETCore.App 7.")) then
                     alert({
-                        body = [[
-    It is required to install the .NET 7.0 Runtime before installing .NET Core versions of Everest.
-    Click the button below to download the installer.
-    Alternatively, you can manually install the runtime, then attempt the installation again.]],
+                        body = lang.get("it_is_required_to_install_the_net_7_0_ru"),
                         buttons = {
                             { lang.get("install_runtime"), function(container)
                                 container:close(lang.get("ok"))

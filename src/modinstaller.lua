@@ -52,10 +52,7 @@ function modinstaller.register()
         local p = io.popen([["xdg-mime" "query" "default" "x-scheme-handler/everest"]])
         local data = utils.trim(p:read("*a")) or ""
         if p:close() and data == "" then
-            alert([[
-Olympus isn't fully installed.
-Please run install.sh to install the one-click installer handler.
-install.sh can be found in your Olympus installation folder.]])
+            alert(lang.get("olympus_isn_t_fully_installed_please_run"))
         end
 
         return false

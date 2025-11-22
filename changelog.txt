@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Touch-ups of the French translation (again)
+∙ Detect and warn the user if suppress-output is missing (macOS and Linux only)

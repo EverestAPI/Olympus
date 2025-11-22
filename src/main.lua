@@ -641,6 +641,21 @@ function love.load(args)
         })
     end
 
+    local suppressOutputPath = fs.joinpath(fs.getcwd(), "suppress-output")
+    if userOS ~= "Windows" and not fs.isFile(suppressOutputPath) then
+        log.warning("Output suppresser file missing!", suppressOutputPath)
+        alert({
+            body = lang.get("olympus_is_not_completely_up_to_date_you"),
+            buttons = {
+                { lang.get("open_everest_website"), function(container)
+                    container:close(lang.get("ok"))
+                    utils.openURL("https://everestapi.github.io/#olympus")
+                end },
+                { lang.get("close") }
+            }
+        })
+    end
+
     config.save()
 end
 

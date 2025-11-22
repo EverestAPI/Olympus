@@ -29,9 +29,17 @@ Most notably, the one-click installer buttons found on GameBanana
 were broken on macOS. To fix this, you will need to reinstall Olympus.
 Please go to the Everest website for further instructions.
 Keeping Olympus outdated can cause crashes in the future.]],
+    olympus_is_not_completely_up_to_date_you = [[Olympus is not completely up-to-date.
+You might run into issues when trying to run Celeste or Lönn from Olympus.
+
+This is because the integrated updater cannot update all the files.
+To fix this, reinstall Olympus following the instructions on the Everest website.]],
 
     -- modinstaller.lua
     preparing_installation_of_s = [[Preparing installation of %s]],
+    olympus_isn_t_fully_installed_please_run = [[Olympus isn't fully installed.
+Please run install.sh to install the one-click installer handler.
+install.sh can be found in your Olympus installation folder.]],
 
     -- modupdater.lua
     updating_enabled_mods = [[Updating enabled mods]],
@@ -131,6 +139,12 @@ Please update to the latest version before installing Everest.]],
 These files could cause the installation of older Everest versions to fail.
 They should be removed before attempting to install Everest.
 ]],
+    it_is_required_to_install_xna_before_ins = [[It is required to install XNA before installing Everest.
+If this copy of Celeste comes from Steam, run Celeste normally to install XNA.
+Otherwise, manually install XNA using the button below.]],
+    it_is_required_to_install_the_net_7_0_ru = [[It is required to install the .NET 7.0 Runtime before installing .NET Core versions of Everest.
+Click the button below to download the installer.
+Alternatively, you can manually install the runtime, then attempt the installation again.]],
 
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
@@ -415,9 +429,17 @@ Notamment, les boutons d'installation 1-Click sur GameBanana étaient
 non fonctionnels sur macOS. Pour corriger ça, tu dois réinstaller Olympus.
 Merci d'aller sur le site d'Everest pour plus d'informations.
 Ne pas mettre à jour Olympus pourrait causer des plantages à l'avenir.]],
+    olympus_is_not_completely_up_to_date_you = [[Olympus n'est pas complètement à jour.
+Tu risques de rencontrer des erreurs en essayant de lancer Celeste ou Lönn depuis Olympus.
+
+Les mises à jour intégrées dans Olympus ne mettent pas à jour tous les fichiers.
+Pour corriger le problème, suis les instructions sur le site d'Everest pour réinstaller Olympus.]],
 
     -- modinstaller.lua
     preparing_installation_of_s = [[Préparation de l'installation de %s]],
+    olympus_isn_t_fully_installed_please_run = [[Olympus n'est pas complètement installé.
+Lance install.sh pour installer le gestionnaire d'installation 1-Click.
+install.sh se trouve dans le dossier d'installation d'Olympus.]],
 
     -- modupdater.lua
     updating_enabled_mods = [[Mise à jour des mods activés]],
@@ -518,6 +540,12 @@ Installe la dernière version du jeu avant d'installer Everest.]],
 Ces fichiers pourraient faire échouer l'installation de vieilles versions d'Everest.
 Il faudrait les supprimer avant d'installer Everest.
 ]],
+    it_is_required_to_install_xna_before_ins = [[Il est nécessaire d'installer XNA avant d'installer Everest.
+Si ta copie de Celeste vient de Steam, lance le jeu pour installer XNA.
+Sinon, installe XNA manuellement avec le bouton ci-dessous.]],
+    it_is_required_to_install_the_net_7_0_ru = [[Il est nécessaire d'installer le runtime .NET 7.0 avant d'installer les versions "Core" d'Everest.
+Clique sur le bouton ci-dessous pour télécharger le programme d'installation.
+Tu peux aussi installer le runtime manuellement, puis réessayer d'installer Everest.]],
 
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
@@ -792,7 +820,7 @@ local function get(key)
         value, _ = value:gsub("S%%", "%%S")
         return value
     end
-    return langs[lang][key] or langs["en"][key]
+    return langs[lang][key] or langs["en"][key] or ('[' .. key .. ']')
 end
 
 return { get = get }
