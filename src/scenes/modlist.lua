@@ -29,7 +29,8 @@ local scene = {
     modPathToName = {},
     onlyShowEnabledMods = false,
     onlyShowFavoriteMods = false,
-    search = ""
+    search = "",
+    categoryFilter = "",
 }
 
 scene.loadingID = 0
@@ -144,6 +145,11 @@ local function refreshVisibleMods()
                 or string.find(string.lower(fs.filename(mod.info.Path)), scene.search, 1, true)
                 or (mod.info.Name and string.find(string.lower(mod.info.Name), scene.search, 1, true))
                 or (mod.info.GameBananaTitle and string.find(string.lower(mod.info.GameBananaTitle), scene.search, 1, true)))
+            and
+            -- category filter
+            (scene.categoryFilter == ""
+                or (scene.categoryFilter == "nil" and mod.info.GameBananaCategory == nil)
+                or scene.categoryFilter == mod.info.GameBananaCategory)
 
         if mod.visible and not newVisible then
             -- remove from list
@@ -987,6 +993,7 @@ function scene.reload()
     scene.onlyShowEnabledMods = false
     scene.onlyShowFavoriteMods = false
     scene.search = ""
+    scene.categoryFilter = ""
 
     return threader.routine(function()
         local loading = scene.root:findChild("loadingMods")
@@ -1016,11 +1023,7 @@ function scene.reload()
             uie.row({
                 uie.column({
                     uie.label(lang.get("manage_installed_mods"), ui.fontBig),
-                    uie.label(lang.get("this_menu_allows_you_to_enable_disable_o")),
                 }),
-                uie.buttonGreen(lang.get("update_all"), function()
-                    modupdater.updateAllMods(root, nil, "all", scene.reload, true)
-                end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
             }):with(uiu.fillWidth),
             uie.row({
                 uie.button(lang.get("open_mods_folder"), function()
@@ -1032,6 +1035,21 @@ function scene.reload()
                 uie.button(lang.get("mod_presets"), function()
                     scene.displayPresetsUI()
                 end),
+                uie.buttonGreen(lang.get("update_all"), function()
+                    modupdater.updateAllMods(root, nil, "all", scene.reload, true)
+                end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
+            }):with(uiu.fillWidth),
+            uie.row({
+                uie.label(lang.get("filter_list")):with(verticalCenter),
+                uie.dropdown(
+                    {{ text = lang.get("all_categories"), data = "" }},
+                    function(self, value)
+                        if value ~= scene.categoryFilter then
+                            scene.categoryFilter = value
+                            refreshVisibleMods()
+                        end
+                    end
+                ):with({ enabled = false }):as("categoryFilterDropdown"),
                 uie.checkbox(lang.get("only_show_enabled"), false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
@@ -1066,6 +1084,9 @@ function scene.reload()
 
         -- parameters: string root, bool readYamls, bool computeHashes, bool onlyUpdatable, bool excludeDisabled
         local task = sharp.modlist(root, true, false, false, false):result()
+
+        local hasModsWithNoCategory = false
+        local encounteredCategories = {}
 
         local batch
         repeat
@@ -1103,6 +1124,23 @@ function scene.reload()
                             table.insert(scene.modDependents[depName], info.Name)
                         end
                     end
+
+                    -- add the category to the list if not present already
+                    local category = info.GameBananaCategory
+                    if category then
+                        local found = false
+                        for _, encounteredCategory in ipairs(encounteredCategories) do
+                            if encounteredCategory == category then
+                                found = true
+                                break
+                            end
+                        end
+                        if not found then
+                            table.insert(encounteredCategories, category)
+                        end
+                    else
+                        hasModsWithNoCategory = true
+                    end
                 else
                     log.warning("modlist.reload encountered nil on poll", task)
                 end
@@ -1114,6 +1152,21 @@ function scene.reload()
             notify(lang.get("an_error_occurred_while_loading_the_mod_"))
         end
 
+        -- update the categories filter dropdown with: all, [encountered cats in alphabetical order], no category
+        local categoryFilterOptions = {{ text = lang.get("all_categories"), data = "" }}
+        table.sort(encounteredCategories)
+        for _, category in ipairs(encounteredCategories) do
+            table.insert(categoryFilterOptions, { text = category, data = category })
+        end
+        if hasModsWithNoCategory then
+            table.insert(categoryFilterOptions, { text = lang.get("no_category"), data = "nil" })
+        end
+        local categoryFilterDropdown = scene.root:findChild("categoryFilterDropdown")
+        categoryFilterDropdown._itemsCache = {}
+        categoryFilterDropdown.data = categoryFilterOptions
+        categoryFilterDropdown:setSelected(categoryFilterDropdown:getItem(1))
+        categoryFilterDropdown:reflow()
+
         loading:removeSelf()
 
         -- make the enable/disable mod buttons/checkboxes usable now that the list was loaded
@@ -1122,6 +1175,7 @@ function scene.reload()
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         scene.root:findChild("onlyShowFavoriteModsCheckbox"):setEnabled(true)
+        scene.root:findChild("categoryFilterDropdown"):setEnabled(true)
         searchField:setEnabled(true)
         for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)

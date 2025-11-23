@@ -35,7 +35,11 @@ namespace Olympus {
                 favoritesList = new List<string>();
 
             Dictionary<string, string> modIDsToNamesMap = null;
-            if (readYamls) modIDsToNamesMap = CmdGetModIdToNameMap.GetModIDsToNamesMap();
+            Dictionary<string, string> modIDsToCategoriesMap = null;
+            if (readYamls) {
+                modIDsToNamesMap = CmdGetModIdToNameMap.Instance.GetMap();
+                modIDsToCategoriesMap = CmdGetModIdToCategoryMap.Instance.GetMap();
+            }
 
             if (!onlyUpdatable) {
                 // === mod directories
@@ -65,7 +69,7 @@ namespace Olympus {
                             if (File.Exists(yamlPath)) {
                                 using (FileStream stream = File.Open(yamlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                                 using (StreamReader reader = new StreamReader(stream))
-                                    info.Parse(reader, modIDsToNamesMap);
+                                    info.Parse(reader, modIDsToNamesMap, modIDsToCategoriesMap);
                             }
                         } catch (UnauthorizedAccessException) { }
                     }
@@ -102,7 +106,7 @@ namespace Olympus {
                             using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
                             using (Stream stream = (zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml"))?.Open())
                             using (StreamReader reader = stream == null ? null : new StreamReader(stream))
-                                info.Parse(reader, modIDsToNamesMap);
+                                info.Parse(reader, modIDsToNamesMap, modIDsToCategoriesMap);
                         }
 
                         if (computeHashes && info.Name != null) {
@@ -148,6 +152,7 @@ namespace Olympus {
             public bool IsUpdaterBlacklisted;
             public bool IsFavorite;
             public string GameBananaTitle;
+            public string GameBananaCategory;
 
             public string Name;
             public string Version;
@@ -155,7 +160,7 @@ namespace Olympus {
             public string[] Dependencies;
             public bool IsValid;
 
-            public void Parse(TextReader reader, Dictionary<string, string> modIDsToNamesMap) {
+            public void Parse(TextReader reader, Dictionary<string, string> modIDsToNamesMap, Dictionary<string, string> modIDsToCategoriesMap) {
                 try {
                     if (reader != null) {
                         List<EverestModuleMetadata> yaml = YamlHelper.Deserializer.Deserialize<List<EverestModuleMetadata>>(reader);
@@ -165,6 +170,7 @@ namespace Olympus {
                             DLL = yaml[0].DLL;
                             Dependencies = yaml[0].Dependencies.Select(dep => dep.Name).ToArray();
                             GameBananaTitle = modIDsToNamesMap.TryGetValue(Name, out string o) ? o : null;
+                            GameBananaCategory = modIDsToCategoriesMap.TryGetValue(Name, out string o1) ? o1 : null;
 
                             IsValid = Name != null && Version != null;
                         }
