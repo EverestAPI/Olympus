@@ -514,6 +514,10 @@ function scene.item(info)
     local containsEverestYaml = false
 
     for _, file in pairs(files) do
+        -- the emulator tends to turn everything into strings, and "false" is truthy 
+        if file.HasEverestYaml == "false" then
+            file.HasEverestYaml = false
+        end 
         if file.HasEverestYaml then
             containsEverestYaml = true
         end
