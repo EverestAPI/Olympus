@@ -3,9 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Text.RegularExpressions;
 
 namespace Olympus {
-    public class CmdInstallMod : Cmd<string, string, string, IEnumerator> {
+    public partial class CmdInstallMod : Cmd<string, string, string, IEnumerator> {
 
         public override IEnumerator Run(string root, string url, string mirrorPreferences) {
             string mods = Path.Combine(root, "Mods");
@@ -67,6 +68,8 @@ namespace Olympus {
                     !(yamlName is string name))
                     throw new Exception("everest.yaml malformed - is this a Celeste mod?");
 
+                if (forbiddenCharacters().IsMatch(name)) throw new Exception($"The everest.yaml name \"{name}\" contains forbidden characters");
+
                 if (fromIsTmp)
                     yield return Status($"Moving mod to {name}.zip", false, "download", false);
                 else
@@ -89,5 +92,7 @@ namespace Olympus {
             }
         }
 
+        [GeneratedRegex("[/\\*?:\"<>|\r\n]")]
+        private static partial Regex forbiddenCharacters();
     }
 }

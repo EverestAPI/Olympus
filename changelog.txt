@@ -3,5 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Make sure the Download button is greyed out when appropriate in the "Download Mods" section when the API mirror is enabled
-∙ Fixed the "edit modpresets.txt" button when on Linux, or when language is set to French
+∙ Block installation of mods with everest.yaml names that are invalid file names
