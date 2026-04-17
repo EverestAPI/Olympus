@@ -249,7 +249,9 @@ No installations were found automatically. Manually select Celeste.exe to add it
     manage = [[Manage]],
     d_new_install_found = [[%d new install found.]],
     d_new_installs_found = [[%d new installs found.]],
-    nscanning = [[Scanning...]],
+    nscanning = [[
+
+Scanning...]],
     l_nn_map_editor = [[Lönn (Map Editor)]],
     l_nn_is_currently_not_installed = [[Lönn is currently not installed.]],
     currently_installed_version = [[Currently installed version: ]],
@@ -653,7 +655,9 @@ Aucune installation n'a été trouvée automatiquement. Sélectionne Celeste.exe
     manage = [[Gérer]],
     d_new_install_found = [[%d install. trouvée]],
     d_new_installs_found = [[%d install. trouvées]],
-    nscanning = [[Recherche...]],
+    nscanning = [[
+
+Recherche...]],
     l_nn_map_editor = [[Lönn (Éditeur de map)]],
     l_nn_is_currently_not_installed = [[Lönn n'est pas actuellement installé.]],
     currently_installed_version = [[Version installée : ]],

@@ -533,7 +533,7 @@ scene.launchrow = uie.row({
     end):with(uiu.fillWidth(2.5 + 32 + 2 + 4)):with(uiu.at(2.5 - 32 - 2, 0)),
     buttonBig("cogwheel", "", "everest"):with({
         width = 48
-    }):with(uiu.rightbound)
+    }):with(uiu.rightbound):as("everestupdatebutton")
 }):with({
     activated = false,
     clip = false,
@@ -550,6 +550,47 @@ scene.installs:hook({
     end
 })
 
+local function checkEverestUpdateAvailable(versionString)
+    local updateAvailableIcon = scene.root:findChild("everestupdatebutton"):findChild("important")
+    if updateAvailableIcon then
+        updateAvailableIcon:removeSelf()
+    end
+
+    threader.routine(function()
+        local everestVersion = versionString:match("^1.([0-9]+).0-")
+        local everestBranch = versionString:match("-([a-z]+)$")
+        log.debug("Everest version string is", versionString, ", extracted number", everestVersion, "and branch", everestBranch)
+
+        if not everestVersion then
+            log.warning("Aborting check for Everest updates")
+            return
+        end
+        everestVersion = tonumber(everestVersion)
+
+        if everestBranch ~= "dev" and everestBranch ~= "beta" and everestBranch ~= "stable" then
+            log.warning("Defaulting to stable branch!")
+            everestBranch = "stable"
+        end
+
+        local allTheVersions = threader.wrap("utils").downloadJSON(
+                config.apiMirror
+                and "https://everestapi.github.io/updatermirror/everest_versions.json"
+                or "https://maddie480.ovh/celeste/everest-versions"
+        ):result()
+
+        for bi = 1, #allTheVersions do
+            local version = allTheVersions[bi]
+            if version.branch == everestBranch then
+                log.debug("Latest", everestBranch, " version found:", version.version)
+                if everestVersion < version.version then
+                    scene.root:findChild("everestupdatebutton"):with(utils.important(32))
+                end
+                break
+            end
+        end
+    end)
+end
+
 
 function scene.updateMainList(install)
     ui.runOnce(function(config, scene, install)
@@ -564,6 +605,10 @@ function scene.updateMainList(install)
             scene.mainlist:addChild(scene.launchrow, 1)
         else
             scene.mainlist:addChild(scene.installbtn, 1)
+        end
+
+        if install and install.versionEverest then
+            checkEverestUpdateAvailable(install.versionEverest)
         end
     end, config, scene, install)
 end
@@ -677,7 +722,6 @@ function scene.load()
         end
     end)
 end
-
 
 function scene.enter()
     scene.reloadInstalls(scene, scene.updateMainList)
