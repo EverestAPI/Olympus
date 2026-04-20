@@ -107,7 +107,6 @@ Check the path of your install by selecting "Manage" in the main menu.]],
     remove_residual_files = [[Remove Residual Files]],
     install_xna = [[Install XNA]],
     install_runtime = [[Install Runtime]],
-    update = [[Update]],
     uninstall = [[Uninstall]],
     uninstall_dialog = [[Uninstalling Everest will keep all your mods intact,
 unless you manually delete them, fully reinstall Celeste,
@@ -145,6 +144,11 @@ Otherwise, manually install XNA using the button below.]],
     it_is_required_to_install_the_net_7_0_ru = [[It is required to install the .NET 7.0 Runtime before installing .NET Core versions of Everest.
 Click the button below to download the installer.
 Alternatively, you can manually install the runtime, then attempt the installation again.]],
+    install_latest_version = [[Install Everest]],
+    update_to_latest_version = [[Update Everest]],
+    reinstall_latest_version = [[Reinstall Everest]],
+    install_selected_version = [[Install selected version]],
+    loading__ = [[Loading...]],
 
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
@@ -511,7 +515,6 @@ Vérifie le chemin de ton installation en sélectionnant "Gérer" dans le menu p
     remove_residual_files = [[Supprimer les fichiers résiduels]],
     install_xna = [[Installer XNA]],
     install_runtime = [[Installer le runtime]],
-    update = [[Mettre à jour]],
     uninstall = [[Désinstaller]],
     uninstall_dialog = [[La désinstallation d'Everest conservera tous tes mods,
 sauf si tu les supprimes manuellement, que tu réinstalles complètement
@@ -550,6 +553,11 @@ Sinon, installe XNA manuellement avec le bouton ci-dessous.]],
     it_is_required_to_install_the_net_7_0_ru = [[Il est nécessaire d'installer le runtime .NET 7.0 avant d'installer les versions "Core" d'Everest.
 Clique sur le bouton ci-dessous pour télécharger le programme d'installation.
 Tu peux aussi installer le runtime manuellement, puis réessayer d'installer Everest.]],
+    install_latest_version = [[Installer Everest]],
+    update_to_latest_version = [[Mettre à jour Everest]],
+    reinstall_latest_version = [[Réinstaller Everest]],
+    install_selected_version = [[Installer la version sélectionnée]],
+    loading__ = [[Chargement en cours...]],
 
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],

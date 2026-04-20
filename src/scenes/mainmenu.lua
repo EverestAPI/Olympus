@@ -550,22 +550,11 @@ scene.installs:hook({
     end
 })
 
-local function checkEverestUpdateAvailable(versionString)
-    local updateAvailableIcon = scene.root:findChild("everestupdatebutton"):findChild("important")
-    if updateAvailableIcon then
-        updateAvailableIcon:removeSelf()
-    end
-
+function scene.checkEverestUpdateAvailable(versionString, cb)
     threader.routine(function()
-        local everestVersion = versionString:match("^1.([0-9]+).0-")
-        local everestBranch = versionString:match("-([a-z]+)$")
+        local everestVersion = versionString and versionString:match("^1.([0-9]+).0-")
+        local everestBranch = versionString and versionString:match("-([a-z]+)$")
         log.debug("Everest version string is", versionString, ", extracted number", everestVersion, "and branch", everestBranch)
-
-        if not everestVersion then
-            log.warning("Aborting check for Everest updates")
-            return
-        end
-        everestVersion = tonumber(everestVersion)
 
         if everestBranch ~= "dev" and everestBranch ~= "beta" and everestBranch ~= "stable" then
             log.warning("Defaulting to stable branch!")
@@ -582,9 +571,7 @@ local function checkEverestUpdateAvailable(versionString)
             local version = allTheVersions[bi]
             if version.branch == everestBranch then
                 log.debug("Latest", everestBranch, " version found:", version.version)
-                if everestVersion < version.version then
-                    scene.root:findChild("everestupdatebutton"):with(utils.important(32))
-                end
+                cb(everestBranch, everestVersion and tonumber(everestVersion), version)
                 break
             end
         end
@@ -608,7 +595,16 @@ function scene.updateMainList(install)
         end
 
         if install and install.versionEverest then
-            checkEverestUpdateAvailable(install.versionEverest)
+            local updateAvailableIcon = scene.root:findChild("everestupdatebutton"):findChild("important")
+            if updateAvailableIcon then
+                updateAvailableIcon:removeSelf()
+            end
+
+            scene.checkEverestUpdateAvailable(install.versionEverest, function (branch, currentVersion, latestVersion)
+                if currentVersion < latestVersion.version then
+                    scene.root:findChild("everestupdatebutton"):with(utils.important(32))
+                end
+            end)
         end
     end, config, scene, install)
 end
