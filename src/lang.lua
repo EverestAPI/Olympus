@@ -404,6 +404,9 @@ over the lazy dog.]],
     changes_where_the_mod_images_in_the_mod_ = [[ changes where the mod images in the mod browser come from. You can choose to use no mirror, but older mods won't have images.]],
     language = [[Language]],
     restart_to_apply_changes_in_languages = [[You must restart Olympus for the language change to completely take effect.]],
+    note_this_only_covers_olympus_1 = [[NOTE: ]],
+    note_this_only_covers_olympus_2 = [[This section only covers Olympus updates. To update Everest and Lönn, use the]],
+    note_this_only_covers_olympus_3 = [[buttons in the main menu.]],
 }
 
 local fr = {
@@ -814,6 +817,9 @@ over the lazy dog.]],
     changes_where_the_mod_images_in_the_mod_ = [[ détermine d'où viennent les images dans la section "Télécharger des mods".]],
     language = [[Langue]],
     restart_to_apply_changes_in_languages = [[Tu dois redémarrer Olympus pour que le changement de langue s'applique complètement.]],
+    note_this_only_covers_olympus_1 = [[NOTE : ]],
+    note_this_only_covers_olympus_2 = [[Cette section ne concerne que les mises à jour d'Olympus. Pour mettre à jour Everest et Lönn, utilise les boutons]],
+    note_this_only_covers_olympus_3 = [[dans le menu principal.]],
 }
 
 local langs = {

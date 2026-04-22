@@ -550,6 +550,12 @@ local root = uie.column({
             updater.available and uie.paneled.column({
                 uie.label(lang.get("updates"), ui.fontBig),
 
+                uie.row({
+                    uie.label({ { 0.8, 0.5, 0.5, 1 }, lang.get("note_this_only_covers_olympus_1"), { 1, 1, 1, 1 }, lang.get("note_this_only_covers_olympus_2") }),
+                    uie.icon("cogwheel"):with({ scale = 21 / 256 }),
+                    uie.label(lang.get("note_this_only_covers_olympus_3"))
+                }),
+
                 uie.label("Update machine broke, please fix."):as("changelog"),
 
                 uie.button(lang.get("install")):with({
