@@ -339,18 +339,6 @@ local root = uie.column({
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
                     uie.column({
-                        uie.label(lang.get("updates")),
-                        uie.dropdown(updatepaths, function(self, value)
-                            config.updates = value
-                            config.save()
-                            updater.check()
-                        end):with({
-                            placeholder = "???",
-                            selectedData = config.updates
-                        }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
-
-                    uie.column({
                         uie.label(lang.get("update_mods_on_startup")),
                         uie.dropdown(updateModsOnStartupOptions, function(self, value)
                             config.updateModsOnStartup = value
@@ -359,11 +347,8 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.updateModsOnStartup
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
-                }):with(uiu.fillWidth),
-
-                uie.row({
                     uie.column({
                         uie.label(lang.get("use_opengl")),
                         uie.dropdown(useOpenGLOptions, function(self, value)
@@ -373,8 +358,12 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.useOpenGL
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
+
+                }):with(uiu.fillWidth),
+
+                uie.row({
                     uie.column({
                         uie.label(lang.get("close_after_one_click_install")),
                         uie.dropdown(closeAfterOneClickInstallOptions, function(self, value)
@@ -384,7 +373,7 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.closeAfterOneClickInstall
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
 
                     uie.column({
                         uie.label(lang.get("language")),
@@ -402,7 +391,19 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.language
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+
+                    uie.column(updater.available and {
+                        uie.label(lang.get("updates")),
+                        uie.dropdown(updatepaths, function(self, value)
+                            config.updates = value
+                            config.save()
+                            updater.check()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.updates
+                        }):with(uiu.fillWidth)
+                    } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
                 }):with(uiu.fillWidth),
 

@@ -66,9 +66,7 @@ namespace Olympus {
             game.HandleLaunchWrapper("CELESTE");
 
             // Flatpak detection
-            // or string.Equals(Environment.GetEnvironmentVariable("container"), "flatpak");
-            bool isFlatpak = File.Exists("/.flatpak-info");
-            if (isFlatpak) {
+            if (File.Exists("/.flatpak-info")) {
                 if (!string.IsNullOrEmpty(args))
                     game.StartInfo.Arguments = string.Join(" ", "\"" + game.StartInfo.FileName + "\"", args);
                 else
@@ -79,9 +77,7 @@ namespace Olympus {
             log.Info($"Starting Celeste process: {game.StartInfo.FileName} {(string.IsNullOrEmpty(args) ? "(without args)" : args)}");
 
 #if !WIN32
-            if (!isFlatpak) {
-                ProcessHelper.SuppressOutput(game);
-            }
+            ProcessHelper.SuppressOutput(game);
 #endif
 
             game.Start();
