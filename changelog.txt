@@ -3,5 +3,10 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
+∙ Block installation of mods with everest.yaml names that are invalid file names
+∙ Updated the OlympUI dependency to latest version
+∙ Added a (!) icon on the cog button leading to the "Install Everest" screen when updates are available
+∙ Added a big button above the Everest versions list to install or update to the latest version of the current branch
+∙ Added a notice to clarify that the "Updates" section in Options & Updates is only about Olympus
 ∙ Linux: (Hopefully) fix game freezes when running Celeste on Flatpak
 ∙ Linux: Hide the "Updates" setting when using Flatpak, as Olympus doesn't self-update
