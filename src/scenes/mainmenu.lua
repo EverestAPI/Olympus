@@ -561,11 +561,16 @@ function scene.checkEverestUpdateAvailable(versionString, cb)
             everestBranch = "stable"
         end
 
-        local allTheVersions = threader.wrap("utils").downloadJSON(
+        local allTheVersions, err = threader.wrap("utils").downloadJSON(
                 config.apiMirror
                 and "https://everestapi.github.io/updatermirror/everest_versions.json"
                 or "https://maddie480.ovh/celeste/everest-versions"
         ):result()
+
+        if not allTheVersions then
+            log.error("error downloading Everest versions list: ", err)
+            return
+        end
 
         for bi = 1, #allTheVersions do
             local version = allTheVersions[bi]
