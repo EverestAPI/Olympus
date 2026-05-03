@@ -601,7 +601,7 @@ function scene.updateMainList(install)
             end
 
             scene.checkEverestUpdateAvailable(install.versionEverest, function (branch, currentVersion, latestVersion)
-                if currentVersion < latestVersion.version then
+                if currentVersion and currentVersion < latestVersion.version then
                     scene.root:findChild("everestupdatebutton"):with(utils.important(32))
                 end
             end)
