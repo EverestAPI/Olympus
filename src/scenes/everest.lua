@@ -285,7 +285,7 @@ local function installEverest(installer, version)
             return
         end
 
-        if version == "manual" then
+        if version.version == "manual" then
             installer.update(lang.get("everest_successfully_installed"), 1, "done")
         else
             installer.update(string.format(lang.get("everest_s_successfully_installed"), version.version), 1, "done")
@@ -330,7 +330,6 @@ function scene.install()
             scene.installing = nil
         end
 
-        local mainDownload, olympusMetaDownload, olympusBuildDownload
         if version == "manual" then
             installer.update(lang.get("select_your_everest_zip_file"), false, "")
 
@@ -355,15 +354,14 @@ function scene.install()
                 return
             end
 
-            mainDownload = ""
-            olympusMetaDownload = ""
-            olympusBuildDownload = "file://" .. path
-
+            version = {
+                version = "manual",
+                mainDownload = "",
+                olympusMetaDownload = "",
+                olympusBuildDownload = "file://" .. path
+            }
         else
             installer.update(string.format(lang.get("preparing_installation_of_everest_s"), version.version), false, "")
-            mainDownload = version.mainDownload
-            olympusMetaDownload = version.olympusMetaDownload
-            olympusBuildDownload = version.olympusBuildDownload
         end
 
         installEverest(installer, version)
