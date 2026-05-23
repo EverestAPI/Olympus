@@ -154,7 +154,7 @@ namespace Olympus {
                     if (length == 0) {
                         try {
                             HttpResponseMessage head = client.Send(new HttpRequestMessage(HttpMethod.Head, url));
-                            if (head.Content.Headers.TryGetValues("Content-Length", out headers)) {
+                            if ((int) head.StatusCode < 400 && head.Content.Headers.TryGetValues("Content-Length", out headers)) {
                                 length = long.Parse(headers.First());
                             }
                         }
