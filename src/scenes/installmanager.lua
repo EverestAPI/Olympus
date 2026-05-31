@@ -39,22 +39,17 @@ scene.root = root
 
 function scene.browse()
     return threader.routine(function()
-        local type = nil
         local userOS = love.system.getOS()
 
+        local path
         if userOS == "Windows" then
-            type = "exe"
+            path = utils.promptForFile("exe")
 
         elseif userOS == "Linux" then
-            type = "exe,bin.x86,bin.x86_64"
+            path = utils.promptForFile("exe", "bin.x86", "bin.x86_64")
 
         elseif userOS == "OS X" then
-            type = "app,exe,bin.osx"
-        end
-
-        local path = fs.openDialog(type):result()
-        if not path then
-            return
+            path = utils.promptForFile("app", "exe", "bin.osx")
         end
 
         path = require("finder").fixRoot(fs.dirname(path))
