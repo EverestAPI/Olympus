@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env /sh
 #
 # A linux-only script for running a love file using the correct engine binary
 # This script's working directory must be the bundled love's one and it'll set 

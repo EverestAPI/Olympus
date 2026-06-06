@@ -122,6 +122,10 @@ function utils.openURL(path)
     return loveSystemAsync.openURL(path)
 end
 
+function utils.promptForFile(...)
+    return fs.openDialog(table.concat({...}, ",")):result()
+end
+
 function utils.openFile(path)
     require("notify")(require("lang").get("opening") .. path)
     return loveSystemAsync.openURL("file://" .. fs.fslash(path))

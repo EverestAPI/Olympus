@@ -9,6 +9,7 @@ local config = require("config")
 local sharp = require("sharp")
 local alert = require("alert")
 local notify = require("notify")
+local modinstaller = require("modinstaller")
 local modupdater = require("modupdater")
 local lang = require("lang")
 
@@ -1028,6 +1029,12 @@ function scene.reload()
             uie.row({
                 uie.button(lang.get("open_mods_folder"), function()
                     utils.openFile(fs.joinpath(root, "Mods"))
+                end),
+                uie.button(lang.get("install_mod_file"), function()
+                   local file = utils.promptForFile("zip")
+                   if file then
+                       modinstaller.install("file://" .. file)
+                   end
                 end),
                 uie.button(lang.get("edit_blacklist_txt"), function()
                     utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
