@@ -3,4 +3,7 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Tweaks to the Simplified Chinese translation (Connectivity Test screen)
+∙ Added Simplified Chinese language option
+∙ Manage Installed Mods: Added a button to install a mod from a .zip
+∙ Chinese, Japanese and Korean fonts are now shipped with Olympus
+∙ Minor tweak to the French translation
