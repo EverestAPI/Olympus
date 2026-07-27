@@ -61,7 +61,7 @@ function utils._important(name)
                     if self.visible then
                         local time = self.time + dt
                         if time >= 1 then
-                            time = time - 1
+                            time = time % 1
                         end
                         self.time = time
                         self:repaint()
