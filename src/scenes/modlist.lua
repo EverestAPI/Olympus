@@ -1456,6 +1456,29 @@ local function promptPresetDependencies(mod, presets, withDependencies, withoutD
     })
 end
 
+local function enablePresetActionMods(filename, extraFilenames)
+    local root = config.installs[config.install].path
+    local mods = {}
+    local mod = scene.modsByPath[fs.joinpath(root, "Mods", filename)]
+
+    if mod then
+        mods[#mods + 1] = mod
+    end
+
+    for _, modFilename in ipairs(extraFilenames or {}) do
+        local extraMod = scene.modsByPath[fs.joinpath(root, "Mods", modFilename)]
+        if extraMod then
+            mods[#mods + 1] = extraMod
+        end
+    end
+
+    enableMods(mods)
+
+    if mods[1] then
+        checkDisabledDependenciesOfEnabledMod(mods[1])
+    end
+end
+
 local function setModInPreset(presetName, filename, add, extraFilenames)
     if not presetName then
         notify(lang.get("selected_preset_required"))
@@ -1478,11 +1501,13 @@ local function setModInPreset(presetName, filename, add, extraFilenames)
 
         local changed = addFilenamesToPreset(preset, filenames)
         if changed == 0 then
+            enablePresetActionMods(filename, extraFilenames)
             notify(string.format(lang.get("mod_already_in_preset"), filename, presetName))
-            return false
+            return true
         end
 
         writePresets(presets, header)
+        enablePresetActionMods(filename, extraFilenames)
         updatePresetStatusLabel()
         if #filenames > 1 then
             notify(string.format(lang.get("mod_and_deps_added_to_preset"), filename, presetName))
@@ -1546,6 +1571,9 @@ local function setModInAllPresets(filename, add, extraFilenames)
     end
 
     writePresets(presets, header)
+    if add then
+        enablePresetActionMods(filename, extraFilenames)
+    end
     updatePresetStatusLabel()
 
     if add then
