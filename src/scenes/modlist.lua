@@ -31,6 +31,7 @@ local scene = {
     onlyShowFavoriteMods = false,
     search = "",
     categoryFilter = "",
+    selectedPreset = nil,
 }
 
 scene.loadingID = 0
@@ -85,13 +86,322 @@ scene.root = root
 -- creates alert with error message
 local function displayErrorMessage(text)
     alert({
-        body = string.format(text),
+        body = text,
         buttons = {
             {
                 lang.get("close"),
             },
         }
     })
+end
+
+local defaultPresetsContent = "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n"
+
+local function getPresetsPath()
+    local root = config.installs[config.install].path
+    return fs.joinpath(root, "Mods", "modpresets.txt")
+end
+
+local function readPresetsFile(create)
+    local path = getPresetsPath()
+    local contents = fs.read(path)
+
+    if not contents then
+        if not create then
+            return nil
+        end
+
+        contents = defaultPresetsContent
+        fs.write(path, contents)
+    end
+
+    contents = contents:gsub("\r\n", "\n"):gsub("\r", "\n")
+    if contents ~= "" and contents:sub(-1) ~= "\n" then
+        contents = contents .. "\n"
+    end
+
+    return contents
+end
+
+local function makeModSet(mods)
+    local set = {}
+
+    for _, filename in ipairs(mods) do
+        set[filename] = true
+    end
+
+    return set
+end
+
+local function readPresets(create)
+    local presets = {}
+    local header = {}
+    local currentPreset = nil
+    local contents = readPresetsFile(create)
+
+    if not contents then
+        return presets, ""
+    end
+
+    for line in contents:gmatch("([^\n]*)\n") do
+        if line:sub(1, 2) == "**" then
+            currentPreset = {
+                name = line:sub(3),
+                mods = {},
+                modSet = {}
+            }
+            presets[#presets + 1] = currentPreset
+
+        elseif currentPreset then
+            if line ~= "" and not line:match("^%s*#") and not currentPreset.modSet[line] then
+                currentPreset.mods[#currentPreset.mods + 1] = line
+                currentPreset.modSet[line] = true
+            end
+
+        else
+            header[#header + 1] = line
+        end
+    end
+
+    local headerText = table.concat(header, "\n")
+    if headerText ~= "" then
+        headerText = headerText .. "\n"
+    end
+
+    return presets, headerText
+end
+
+local function backupPresetsFile()
+    local path = getPresetsPath()
+    local backupPath = path .. ".bak"
+
+    if fs.read(backupPath) then
+        return
+    end
+
+    local contents = fs.read(path)
+    if contents then
+        fs.write(backupPath, contents)
+    end
+end
+
+local function writePresets(presets, header)
+    backupPresetsFile()
+
+    local contents = header
+    if not contents or contents == "" then
+        contents = defaultPresetsContent
+    end
+    if contents:sub(-1) ~= "\n" then
+        contents = contents .. "\n"
+    end
+    if contents:sub(-2) ~= "\n\n" then
+        contents = contents .. "\n"
+    end
+
+    for _, preset in ipairs(presets) do
+        contents = contents .. "**" .. preset.name .. "\n"
+
+        local seen = {}
+        for _, filename in ipairs(preset.mods) do
+            if filename ~= "" and not seen[filename] then
+                contents = contents .. filename .. "\n"
+                seen[filename] = true
+            end
+        end
+    end
+
+    fs.write(getPresetsPath(), contents)
+end
+
+local function findPreset(presets, name)
+    for i, preset in ipairs(presets) do
+        if preset.name == name then
+            return preset, i
+        end
+    end
+end
+
+local function getEnabledPresetMods()
+    local mods = {}
+    local seen = {}
+
+    for _, mod in ipairs(scene.modlist) do
+        if mod.row:findChild("toggleCheckbox"):getValue() then
+            local filename = fs.filename(mod.info.Path)
+            if not seen[filename] then
+                mods[#mods + 1] = filename
+                seen[filename] = true
+            end
+        end
+    end
+
+    return mods
+end
+
+local function getEnabledModSet()
+    local set = {}
+    local count = 0
+
+    for _, filename in ipairs(getEnabledPresetMods()) do
+        set[filename] = true
+        count = count + 1
+    end
+
+    return set, count
+end
+
+local function getInstalledPresetModSet(preset)
+    local root = config.installs[config.install].path
+    local set = {}
+    local count = 0
+    local missing = {}
+
+    for _, filename in ipairs(preset.mods) do
+        if scene.modsByPath[fs.joinpath(root, "Mods", filename)] then
+            set[filename] = true
+            count = count + 1
+        else
+            missing[#missing + 1] = filename
+        end
+    end
+
+    return set, count, missing
+end
+
+local function setsEqual(left, leftCount, right, rightCount)
+    if leftCount ~= rightCount then
+        return false
+    end
+
+    for key, _ in pairs(left) do
+        if not right[key] then
+            return false
+        end
+    end
+
+    return true
+end
+
+local updatePresetStatusLabel
+
+local function setPresetMods(name, mods, create)
+    if not name then
+        displayErrorMessage(lang.get("something_went_wrong_name_is_nil"))
+        return false
+    end
+    if #name == 0 then
+        displayErrorMessage(lang.get("preset_name_can_t_be_empty"))
+        return false
+    end
+
+    local presets, header = readPresets()
+    local preset = findPreset(presets, name)
+
+    if not preset then
+        if not create then
+            displayErrorMessage(string.format(lang.get("preset_not_found"), name))
+            return false
+        end
+
+        preset = { name = name, mods = {}, modSet = {} }
+        presets[#presets + 1] = preset
+    end
+
+    preset.mods = {}
+    preset.modSet = {}
+    for _, filename in ipairs(mods) do
+        if filename ~= "" and not preset.modSet[filename] then
+            preset.mods[#preset.mods + 1] = filename
+            preset.modSet[filename] = true
+        end
+    end
+
+    writePresets(presets, header)
+    scene.selectedPreset = name
+    updatePresetStatusLabel()
+    return true
+end
+
+local function renamePreset(oldName, newName)
+    if not newName then
+        displayErrorMessage(lang.get("something_went_wrong_name_is_nil"))
+        return false
+    end
+    if #newName == 0 then
+        displayErrorMessage(lang.get("preset_name_can_t_be_empty"))
+        return false
+    end
+
+    local presets, header = readPresets()
+    local preset = findPreset(presets, oldName)
+
+    if not preset then
+        displayErrorMessage(string.format(lang.get("preset_not_found"), oldName))
+        return false
+    end
+
+    if oldName ~= newName and findPreset(presets, newName) then
+        displayErrorMessage(string.format(lang.get("preset_already_exists"), newName))
+        return false
+    end
+
+    preset.name = newName
+    writePresets(presets, header)
+
+    if scene.selectedPreset == oldName then
+        scene.selectedPreset = newName
+    end
+
+    updatePresetStatusLabel()
+    return true
+end
+
+local function getPresetStatusText()
+    local presets = readPresets()
+    local enabledSet, enabledCount = getEnabledModSet()
+
+    if enabledCount == 0 then
+        return lang.get("preset_none")
+    end
+
+    for _, preset in ipairs(presets) do
+        local installedSet, installedCount = getInstalledPresetModSet(preset)
+        if setsEqual(enabledSet, enabledCount, installedSet, installedCount) then
+            scene.selectedPreset = preset.name
+            return preset.name
+        end
+    end
+
+    if scene.selectedPreset then
+        local selected = findPreset(presets, scene.selectedPreset)
+        if selected then
+            local installedSet, installedCount = getInstalledPresetModSet(selected)
+            local includesPreset = installedCount > 0
+
+            for filename, _ in pairs(installedSet) do
+                if not enabledSet[filename] then
+                    includesPreset = false
+                    break
+                end
+            end
+
+            if includesPreset then
+                return string.format(lang.get("preset_modified"), scene.selectedPreset)
+            end
+
+            return string.format(lang.get("preset_editing"), scene.selectedPreset)
+        end
+    end
+
+    return lang.get("preset_custom")
+end
+
+updatePresetStatusLabel = function()
+    local label = scene.root:findChild("presetStatusLabel")
+    if label then
+        label:setText(lang.get("preset") .. ": " .. getPresetStatusText())
+    end
 end
 
 -- writes the blacklist to disk, making the enabled/disabled mods actually take effect
@@ -183,6 +493,7 @@ local function updateEnabledModCountLabel()
         enabledModCount == 0 and lang.get("no1") or enabledModCount,
         enabledModCount == 1 and lang.get("mod") or lang.get("mods")
     ))
+    updatePresetStatusLabel()
 end
 
 -- gives the text for a given mod
@@ -702,37 +1013,55 @@ local function verticalCenter(el)
     })
 end
 
--- disables all mods then enables mods from preset
-local function applyPreset(name, disableAll)
-    if disableAll then
-        -- still don't disable favorites
-        disableMods(scene.modsByPath, false)
+local function refreshPresetsUI(self)
+    local container = self:getParent("modPresets")
+    if container then
+        local scrollbox = container:findChild("presetScrollbox")
+        local scrollY = scrollbox and scrollbox.inner.y
+        container:close(lang.get("ok"))
+        scene.displayPresetsUI(scrollY)
     end
-    name = name:gsub("%p", "%%%1") -- escape special characters
-    local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    if not contents then
+end
+
+-- merges or switches to mods from preset
+local function applyPreset(name, disableAll)
+    local presets = readPresets()
+    local preset = findPreset(presets, name)
+    if not preset then
+        displayErrorMessage(string.format(lang.get("preset_not_found"), name))
         return
     end
-    local presetMods = contents:match("%*%*" .. name .. "\n([^*]*)") -- gets a string with all preset .zip mod file names
-    local missingMods = ""
 
-    for filename in presetMods:gmatch("([^\n]*)\n") do -- splits the string after every newline into mod filenames
+    if disableAll then
+        for _, mod in pairs(scene.modsByPath) do
+            if not mod.info.IsBlacklisted and not mod.info.IsFavorite then
+                handleModEnabledStateChange(mod, false)
+            end
+        end
+    end
+
+    local root = config.installs[config.install].path
+    local missingMods = {}
+
+    for _, filename in ipairs(preset.mods) do
         local path = fs.joinpath(root, "Mods", filename)
         local mod = scene.modsByPath[path]
         if mod then
-            enableMod(mod)
-        else
-            if missingMods ~= "" then
-                missingMods = missingMods .. ", "
+            if mod.info.IsBlacklisted then
+                handleModEnabledStateChange(mod, true)
             end
-            missingMods = missingMods .. filename
+        else
+            missingMods[#missingMods + 1] = filename
         end
     end
-    if missingMods ~= "" then
-        displayErrorMessage(lang.get("some_mods_couldn_t_be_loaded_make_sure_t") .. missingMods)
-    end
+
+    scene.selectedPreset = name
+    updateEnabledModCountLabel()
     writeBlacklist()
+
+    if #missingMods > 0 then
+        displayErrorMessage(lang.get("some_mods_couldn_t_be_loaded_make_sure_t") .. table.concat(missingMods, ", "))
+    end
 end
 
 -- deletes preset from modpresets.txt
@@ -746,34 +1075,23 @@ local function deletePreset(name)
         return
     end
 
-    local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    if contents then
-        name = name:gsub("%p", "%%%1") -- escape special characters
-        contents = contents:gsub("%*%*(" .. name .. "\n[^*]*)","", 1)
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), contents)
-    end
-end
+    local presets, header = readPresets()
+    local _, index = findPreset(presets, name)
 
--- reads modpresets.txt and returns a list of all preset names
-local function readPresetsList()
-    local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-
-    if contents then
-        local names = {}
-        for substring in contents:gmatch("%*%*(.-)%\n") do
-            names[#names+1] = substring
-        end
-        return names
-    else -- create modpresets.txt if it doesnt exist
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
-        return readPresetsList()
+    if index then
+        table.remove(presets, index)
+        writePresets(presets, header)
     end
+
+    if scene.selectedPreset == name then
+        scene.selectedPreset = nil
+    end
+
+    updatePresetStatusLabel()
 end
 
 -- writes a new preset to a modpresets.txt, returns true if preset was created successfully and false if not
-local function addPreset(name)
+local function addPreset(name, parent)
     if not name then
         displayErrorMessage(lang.get("something_went_wrong_name_is_nil"))
         return false
@@ -783,51 +1101,115 @@ local function addPreset(name)
         return false
     end
 
-    -- check if name is already taken
-    -- TODO: make this a table rather than scan
-    local names = readPresetsList()
-    if names then
-        for i, n in ipairs(names) do
-            if n == name then
-                alert({
-                    body = lang.get("this_preset_already_exists_do_you_wish_t"),
-                    buttons = {
-                        {
-                            lang.get("yes"),
-                            function (container)
-                                deletePreset(name)
-                                addPreset(name)
-                                container:close(lang.get("ok"))
+    local presets = readPresets()
+    if findPreset(presets, name) then
+        alert({
+            body = lang.get("this_preset_already_exists_do_you_wish_t"),
+            buttons = {
+                {
+                    lang.get("yes"),
+                    function(container)
+                        if setPresetMods(name, getEnabledPresetMods(), false) then
+                            notify(string.format(lang.get("preset_updated"), name))
+                            if parent then
+                                parent:close(lang.get("ok"))
+                                scene.displayPresetsUI()
                             end
-                        },
-                        {
-                            lang.get("no"),
-                        },
-                    }
-               })
-               return false
-            end
-        end
+                        end
+                        container:close(lang.get("ok"))
+                    end
+                },
+                {
+                    lang.get("no"),
+                },
+            }
+        })
+        return false
     end
+
+    if setPresetMods(name, getEnabledPresetMods(), true) then
+        notify(string.format(lang.get("preset_created"), name))
+        return true
+    end
+
+    return false
+end
+
+local function removeMissingPresetMods(name)
+    local presets, header = readPresets()
+    local preset = findPreset(presets, name)
+    if not preset then
+        displayErrorMessage(string.format(lang.get("preset_not_found"), name))
+        return false
+    end
+
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
-    contents = contents .. "**" .. name .. "\n"
+    local mods = {}
+    local removed = 0
 
-    for _, mod in pairs(scene.modlist) do
-        if mod.row:findChild("toggleCheckbox"):getValue() then
-            contents = contents .. fs.filename(mod.info.Path) .. "\n"
+    for _, filename in ipairs(preset.mods) do
+        if scene.modsByPath[fs.joinpath(root, "Mods", filename)] then
+            mods[#mods + 1] = filename
+        else
+            removed = removed + 1
         end
     end
 
-    fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), contents)
+    if removed == 0 then
+        notify(string.format(lang.get("no_missing_entries"), name))
+        return false
+    end
+
+    preset.mods = mods
+    preset.modSet = makeModSet(mods)
+    writePresets(presets, header)
+    updatePresetStatusLabel()
+    notify(string.format(lang.get("preset_missing_removed"), removed, name))
     return true
+end
+
+local function displayRenamePresetUI(oldName, parent)
+    local newName = oldName
+    local field = uie.field(oldName, function(self, value, prev)
+        newName = value
+    end):with({
+        width = 260,
+        height = 24,
+        placeholder = lang.get("new_preset_name"),
+        enabled = true
+    })
+
+    alert({
+        title = lang.get("preset_rename"),
+        body = uie.column({
+            field
+        }),
+        buttons = {
+            {
+                lang.get("preset_rename"),
+                function(container)
+                    if renamePreset(oldName, newName) then
+                        notify(string.format(lang.get("preset_renamed"), oldName, newName))
+                        container:close(lang.get("ok"))
+                        if parent then
+                            local scrollbox = parent:findChild("presetScrollbox")
+                            local scrollY = scrollbox and scrollbox.inner.y
+                            parent:close(lang.get("ok"))
+                            scene.displayPresetsUI(scrollY)
+                        end
+                    end
+                end
+            },
+            { lang.get("cancel") }
+        }
+    })
 end
 
 
 
 -- builds the Mod Presets screen and returns it, use scene.displayPresetsUI() to show it
-local function buildPresetsUI()
-    local presets = readPresetsList()
+local function buildPresetsUI(scrollY)
+    local presets = readPresets(true)
     local presetsRow = {}
     local preset = ""
 
@@ -840,48 +1222,84 @@ local function buildPresetsUI()
         enabled = true
     }):as("presetField")
 
-    for i = 1, #presets do
+    for _, presetInfo in ipairs(presets) do
+        local presetName = presetInfo.name
+        local _, _, missingMods = getInstalledPresetModSet(presetInfo)
+        local meta = string.format(lang.get("preset_mod_count"), #presetInfo.mods)
+
+        if #missingMods > 0 then
+            meta = meta .. " - " .. string.format(lang.get("preset_missing_count"), #missingMods)
+        end
+        if scene.selectedPreset == presetName then
+            meta = meta .. " - " .. lang.get("preset_selected")
+        end
+
+        local primaryActions = {
+            uie.button(lang.get("preset_select"), function(self)
+                applyPreset(presetName, true)
+            end),
+            uie.button(lang.get("preset_merge"), function(self)
+                applyPreset(presetName, false)
+            end)
+        }
+
+        local secondaryActions = {
+            uie.button(lang.get("preset_update"), function(self)
+                if setPresetMods(presetName, getEnabledPresetMods(), false) then
+                    notify(string.format(lang.get("preset_updated"), presetName))
+                    refreshPresetsUI(self)
+                end
+            end),
+            uie.button(lang.get("preset_rename"), function(self)
+                displayRenamePresetUI(presetName, self:getParent("modPresets"))
+            end),
+            uie.button(lang.get("delete"), function(self)
+                alert({
+                    body = lang.get("are_you_sure_that_you_want_to_delete") .. presetName .. lang.get("questionmark"),
+                    buttons = {
+                        {
+                            lang.get("delete"),
+                            function(container)
+                                deletePreset(presetName)
+                                container:close(lang.get("ok"))
+                                refreshPresetsUI(self)
+                            end
+                        },
+                        { lang.get("keep") }
+                    }
+                })
+            end)
+        }
+
+        if #missingMods > 0 then
+            table.insert(secondaryActions, 2, uie.button(lang.get("preset_remove_missing"), function(self)
+                if removeMissingPresetMods(presetName) then
+                    refreshPresetsUI(self)
+                end
+            end))
+        end
+
         local presetRow = uie.paneled.row({
-            uie.label(presets[i]):with(verticalCenter),
-            uie.row({
-                uie.button(lang.get("add"), function(self)
-                    applyPreset(presets[i], false)
-                end),
-                uie.button(lang.get("replace"), function(self)
-                    applyPreset(presets[i], true)
-                end),
-                uie.button(lang.get("delete"), function(self)
-                    alert({
-                        body = lang.get("are_you_sure_that_you_want_to_delete") .. presets[i] .. lang.get("questionmark"),
-                        buttons = {
-                            {
-                                lang.get("delete"),
-                                function(container)
-                                    deletePreset(presets[i])
-                                    container:close(lang.get("ok"))
-                                    self:getParent("modPresets"):close(lang.get("ok"))
-                                    scene.displayPresetsUI()
-                                end
-                            },
-                            { lang.get("keep") }
-                        }
-                    })
-                end)
+            uie.label(presetName .. "\n" .. meta):with(verticalCenter),
+            uie.column({
+                uie.row(primaryActions):with(uiu.rightbound),
+                uie.row(secondaryActions):with(uiu.rightbound)
             }):with(uiu.rightbound)
         }):with(uiu.fillWidth)
         presetsRow[#presetsRow + 1] = presetRow
     end
 
+    if #presetsRow == 0 then
+        presetsRow[1] = uie.label(lang.get("no_presets"))
+    end
+
     return uie.column({
         uie.paneled.row({
-            uie.button(lang.get("edit_modpresets_txt"), function()
-                local root = config.installs[config.install].path
-                utils.openFile(fs.joinpath(root, "Mods", "modpresets.txt"))
-            end),
+            uie.label(lang.get("create_preset_from_enabled")):with(verticalCenter),
             uie.row({
                 presetField,
                 uie.button(lang.get("add_preset"), function(self)
-                    local success = addPreset(preset)
+                    local success = addPreset(preset, self:getParent("modPresets"))
                     if success then
                         self:getParent("modPresets"):close(lang.get("ok"))
                         scene.displayPresetsUI()
@@ -891,30 +1309,399 @@ local function buildPresetsUI()
         }):with(uiu.fillWidth),
         uie.scrollbox(
             uie.column(presetsRow):with(uiu.fillWidth)
-        ):with(uiu.fillWidth):with(uiu.fillHeight(true)),
+        )
+            :with(uiu.hook({
+                calcSize = function(orig, self, width, height)
+                    uie.group.calcSize(self)
+                end,
+                layoutLateLazy = function(orig, self)
+                    orig(self)
+                    if scrollY then
+                        local y = scrollY
+                        scrollY = nil
+                        self.inner.y = y
+                        self:afterScroll()
+                    end
+                end
+            }))
+            :with({
+                maxHeight = 300
+            })
+            :with(uiu.fillWidth)
+            :as("presetScrollbox"),
+        uie.row({
+            uie.button(lang.get("close"), function(self)
+                self:getParent("modPresets"):close(lang.get("close"))
+            end)
+        }):with(uiu.rightbound)
 
     }):with({
         clip = false,
         cacheable = false
-    }):with(uiu.fillWidth):with(uiu.fillHeight(true))
+    }):with(uiu.fillWidth)
 end
 
 -- shows the Mod Presets screen
-function scene.displayPresetsUI()
+function scene.displayPresetsUI(scrollY)
     alert({
         title = lang.get("mod_presets"),
-        body = buildPresetsUI(),
+        body = buildPresetsUI(scrollY),
         big = true,
-        buttons = {
-            {
-                lang.get("close")
-            }
-        },
+        buttons = {},
         init = function (container)
             container.popup = false
         end
 
     }):as("modPresets")
+end
+
+local function addFilenamesToPreset(preset, filenames)
+    local changed = 0
+
+    for _, filename in ipairs(filenames) do
+        if filename ~= "" and not preset.modSet[filename] then
+            preset.mods[#preset.mods + 1] = filename
+            preset.modSet[filename] = true
+            changed = changed + 1
+        end
+    end
+
+    return changed
+end
+
+local function presetHasDependency(preset, depOptions)
+    for _, dep in ipairs(depOptions) do
+        if preset.modSet[fs.filename(dep.info.Path)] then
+            return true
+        end
+    end
+
+    return false
+end
+
+local function collectMissingPresetDependencyMods(mod, presets)
+    local dependencies = {}
+    local queue = {}
+    local tried = {}
+
+    if not mod.info.Name then
+        return dependencies
+    end
+
+    for _, depName in ipairs(scene.modDependencies[mod.info.Name] or {}) do
+        if not tried[depName] then
+            tried[depName] = true
+            queue[#queue + 1] = depName
+        end
+    end
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local depOptions = scene.modsByName[depName]
+
+        if depOptions then
+            local missingFromAnyPreset = false
+            for _, preset in ipairs(presets) do
+                if not presetHasDependency(preset, depOptions) then
+                    missingFromAnyPreset = true
+                    break
+                end
+            end
+
+            if missingFromAnyPreset and not dependencies[depName] then
+                dependencies[depName] = depOptions[1]
+            end
+        end
+
+        for _, subdep in ipairs(scene.modDependencies[depName] or {}) do
+            if not tried[subdep] then
+                tried[subdep] = true
+                queue[#queue + 1] = subdep
+            end
+        end
+    end
+
+    return dependencies
+end
+
+local function getPresetFilenamesForMods(mods)
+    local filenames = {}
+
+    for _, mod in pairs(mods) do
+        filenames[#filenames + 1] = fs.filename(mod.info.Path)
+    end
+
+    return filenames
+end
+
+local function promptPresetDependencies(mod, presets, withDependencies, withoutDependencies)
+    local dependencies = collectMissingPresetDependencyMods(mod, presets)
+    local numDependencies = dictLength(dependencies)
+
+    if numDependencies == 0 then
+        withoutDependencies()
+        return
+    end
+
+    alert({
+        body = getConfirmationMessageBodyForModToggling(dependencies, string.format(
+            lang.get("this_mod_depends_on_s_other_s_add_to_preset"),
+            numDependencies,
+            numDependencies == 1 and lang.get("mod1") or lang.get("mods1"),
+            numDependencies == 1 and lang.get("it") or lang.get("them")
+        )),
+        buttons = {
+            {
+                lang.get("add_dependencies"),
+                function(container)
+                    withDependencies(getPresetFilenamesForMods(dependencies))
+                    container:close(lang.get("ok"))
+                end
+            },
+            {
+                lang.get("only_this_mod"),
+                function(container)
+                    withoutDependencies()
+                    container:close(lang.get("ok"))
+                end
+            },
+            { lang.get("cancel") }
+        }
+    })
+end
+
+local function enablePresetActionMods(filename, extraFilenames)
+    local root = config.installs[config.install].path
+    local mods = {}
+    local mod = scene.modsByPath[fs.joinpath(root, "Mods", filename)]
+
+    if mod then
+        mods[#mods + 1] = mod
+    end
+
+    for _, modFilename in ipairs(extraFilenames or {}) do
+        local extraMod = scene.modsByPath[fs.joinpath(root, "Mods", modFilename)]
+        if extraMod then
+            mods[#mods + 1] = extraMod
+        end
+    end
+
+    enableMods(mods)
+
+    if mods[1] then
+        checkDisabledDependenciesOfEnabledMod(mods[1])
+    end
+end
+
+local function setModInPreset(presetName, filename, add, extraFilenames)
+    if not presetName then
+        notify(lang.get("selected_preset_required"))
+        return false
+    end
+
+    local presets, header = readPresets()
+    local preset = findPreset(presets, presetName)
+
+    if not preset then
+        displayErrorMessage(string.format(lang.get("preset_not_found"), presetName))
+        return false
+    end
+
+    if add then
+        local filenames = { filename }
+        for _, extraFilename in ipairs(extraFilenames or {}) do
+            filenames[#filenames + 1] = extraFilename
+        end
+
+        local changed = addFilenamesToPreset(preset, filenames)
+        if changed == 0 then
+            enablePresetActionMods(filename, extraFilenames)
+            notify(string.format(lang.get("mod_already_in_preset"), filename, presetName))
+            return true
+        end
+
+        writePresets(presets, header)
+        enablePresetActionMods(filename, extraFilenames)
+        updatePresetStatusLabel()
+        if #filenames > 1 then
+            notify(string.format(lang.get("mod_and_deps_added_to_preset"), filename, presetName))
+        else
+            notify(string.format(lang.get("mod_added_to_preset"), filename, presetName))
+        end
+        return true
+    end
+
+    if not preset.modSet[filename] then
+        notify(string.format(lang.get("mod_not_in_preset"), filename, presetName))
+        return false
+    end
+
+    local mods = {}
+    for _, modFilename in ipairs(preset.mods) do
+        if modFilename ~= filename then
+            mods[#mods + 1] = modFilename
+        end
+    end
+
+    preset.mods = mods
+    preset.modSet = makeModSet(mods)
+    writePresets(presets, header)
+    updatePresetStatusLabel()
+    notify(string.format(lang.get("mod_removed_from_preset"), filename, presetName))
+    return true
+end
+
+local function setModInAllPresets(filename, add, extraFilenames)
+    local presets, header = readPresets()
+    local changed = 0
+
+    for _, preset in ipairs(presets) do
+        if add then
+            local filenames = { filename }
+            for _, extraFilename in ipairs(extraFilenames or {}) do
+                filenames[#filenames + 1] = extraFilename
+            end
+            if addFilenamesToPreset(preset, filenames) > 0 then
+                changed = changed + 1
+            end
+
+        elseif not add and preset.modSet[filename] then
+            local mods = {}
+            for _, modFilename in ipairs(preset.mods) do
+                if modFilename ~= filename then
+                    mods[#mods + 1] = modFilename
+                end
+            end
+
+            preset.mods = mods
+            preset.modSet = makeModSet(mods)
+            changed = changed + 1
+        end
+    end
+
+    if changed == 0 then
+        notify(lang.get("no_presets_to_update"))
+        return false
+    end
+
+    writePresets(presets, header)
+    if add then
+        enablePresetActionMods(filename, extraFilenames)
+    end
+    updatePresetStatusLabel()
+
+    if add then
+        if extraFilenames and #extraFilenames > 0 then
+            notify(string.format(lang.get("mod_and_deps_added_to_s_presets"), filename, changed))
+        else
+            notify(string.format(lang.get("mod_added_to_s_presets"), filename, changed))
+        end
+    else
+        notify(string.format(lang.get("mod_removed_from_s_presets"), filename, changed))
+    end
+
+    return true
+end
+
+local function countPresetsWithMod(filename)
+    local count = 0
+
+    for _, preset in ipairs(readPresets()) do
+        if preset.modSet[filename] then
+            count = count + 1
+        end
+    end
+
+    return count
+end
+
+function scene.displayModPresetUI(info)
+    local filename = fs.filename(info.Path)
+    local presets = readPresets()
+    local selectedPreset = scene.selectedPreset and findPreset(presets, scene.selectedPreset)
+    local mod = scene.modsByPath[info.Path]
+    local container
+
+    local function close()
+        if container then
+            container:close(lang.get("ok"))
+        end
+    end
+
+    local function addToSelected(extraFilenames)
+        if setModInPreset(scene.selectedPreset, filename, true, extraFilenames) then
+            close()
+        end
+    end
+
+    local function addToAll(extraFilenames)
+        if setModInAllPresets(filename, true, extraFilenames) then
+            close()
+        end
+    end
+
+    local selectedActions = uie.row({
+        uie.button(lang.get("add_to_selected_preset"), function()
+            promptPresetDependencies(
+                mod,
+                { selectedPreset },
+                addToSelected,
+                function() addToSelected() end
+            )
+        end):with({ enabled = selectedPreset ~= nil }),
+        uie.button(lang.get("remove_from_selected_preset"), function()
+            if setModInPreset(scene.selectedPreset, filename, false) then
+                close()
+            end
+        end):with({ enabled = selectedPreset ~= nil })
+    })
+
+    local allActions = uie.row({
+        uie.button(lang.get("add_to_all_presets"), function()
+            promptPresetDependencies(
+                mod,
+                presets,
+                addToAll,
+                function() addToAll() end
+            )
+        end),
+        uie.button(lang.get("remove_from_all_presets"), function()
+            local affected = countPresetsWithMod(filename)
+            if affected == 0 then
+                notify(lang.get("no_presets_to_update"))
+                close()
+                return
+            end
+
+            alert({
+                body = string.format(lang.get("confirm_remove_mod_from_all_presets"), filename, affected),
+                buttons = {
+                    {
+                        lang.get("remove"),
+                        function(confirm)
+                            setModInAllPresets(filename, false)
+                            confirm:close(lang.get("ok"))
+                            close()
+                        end
+                    },
+                    { lang.get("keep") }
+                }
+            })
+        end)
+    })
+
+    container = alert({
+        title = lang.get("preset_actions"),
+        body = uie.column({
+            uie.label(filename),
+            uie.label(lang.get("selected_preset") .. ": " .. (scene.selectedPreset or lang.get("preset_none"))),
+            selectedActions,
+            allActions
+        }),
+        buttons = {
+            { lang.get("close") }
+        }
+    })
 end
 
 function scene.item(info)
@@ -958,6 +1745,15 @@ function scene.item(info)
                 })
                 :as("toggleCheckbox"),
 
+            uie.button(lang.get("preset"), function()
+                scene.displayModPresetUI(info)
+            end)
+                :with({
+                    enabled = false
+                })
+                :with(verticalCenter)
+                :as("presetButton"),
+
             uie.button(lang.get("delete"), function()
                 deleteMod(info)
             end)
@@ -994,6 +1790,7 @@ function scene.reload()
     scene.onlyShowFavoriteMods = false
     scene.search = ""
     scene.categoryFilter = ""
+    scene.selectedPreset = nil
 
     return threader.routine(function()
         local loading = scene.root:findChild("loadingMods")
@@ -1024,6 +1821,7 @@ function scene.reload()
                 uie.column({
                     uie.label(lang.get("manage_installed_mods"), ui.fontBig),
                 }),
+                uie.label(""):with(verticalCenter):with(uiu.rightbound):as("presetStatusLabel"),
             }):with(uiu.fillWidth),
             uie.row({
                 uie.button(lang.get("open_mods_folder"), function()
@@ -1188,6 +1986,7 @@ function scene.reload()
         for _, mod in pairs(scene.modlist) do
             mod.row:findChild("toggleCheckbox"):setEnabled(true)
             mod.row:findChild("favoriteHeart"):setEnabled(true)
+            mod.row:findChild("presetButton"):setEnabled(true)
             updateLabelTextForMod(mod)
             updateWarningButtonForMod(mod)
         end
