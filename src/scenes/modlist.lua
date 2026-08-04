@@ -1016,8 +1016,10 @@ end
 local function refreshPresetsUI(self)
     local container = self:getParent("modPresets")
     if container then
+        local scrollbox = container:findChild("presetScrollbox")
+        local scrollY = scrollbox and scrollbox.inner.y
         container:close(lang.get("ok"))
-        scene.displayPresetsUI()
+        scene.displayPresetsUI(scrollY)
     end
 end
 
@@ -1190,8 +1192,10 @@ local function displayRenamePresetUI(oldName, parent)
                         notify(string.format(lang.get("preset_renamed"), oldName, newName))
                         container:close(lang.get("ok"))
                         if parent then
+                            local scrollbox = parent:findChild("presetScrollbox")
+                            local scrollY = scrollbox and scrollbox.inner.y
                             parent:close(lang.get("ok"))
-                            scene.displayPresetsUI()
+                            scene.displayPresetsUI(scrollY)
                         end
                     end
                 end
@@ -1204,7 +1208,7 @@ end
 
 
 -- builds the Mod Presets screen and returns it, use scene.displayPresetsUI() to show it
-local function buildPresetsUI()
+local function buildPresetsUI(scrollY)
     local presets = readPresets(true)
     local presetsRow = {}
     local preset = ""
@@ -1309,12 +1313,22 @@ local function buildPresetsUI()
             :with(uiu.hook({
                 calcSize = function(orig, self, width, height)
                     uie.group.calcSize(self)
+                end,
+                layoutLateLazy = function(orig, self)
+                    orig(self)
+                    if scrollY then
+                        local y = scrollY
+                        scrollY = nil
+                        self.inner.y = y
+                        self:afterScroll()
+                    end
                 end
             }))
             :with({
                 maxHeight = 300
             })
-            :with(uiu.fillWidth),
+            :with(uiu.fillWidth)
+            :as("presetScrollbox"),
         uie.row({
             uie.button(lang.get("close"), function(self)
                 self:getParent("modPresets"):close(lang.get("close"))
@@ -1328,10 +1342,10 @@ local function buildPresetsUI()
 end
 
 -- shows the Mod Presets screen
-function scene.displayPresetsUI()
+function scene.displayPresetsUI(scrollY)
     alert({
         title = lang.get("mod_presets"),
-        body = buildPresetsUI(),
+        body = buildPresetsUI(scrollY),
         big = true,
         buttons = {},
         init = function (container)
