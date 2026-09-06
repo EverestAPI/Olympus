@@ -1,19 +1,16 @@
 -- Focus navigation for the keyboard (Tab / Shift+Tab) and gamepad (d-pad/stick).
 --
--- OlympUI (the src/ui submodule) provides the core focus mechanism:
---   - ui.keyFocusMove(step)   cycles the focus cursor in document order
---   - keyFocus on elements    marks what is focusable
---   - native Enter/Space      activation on buttons, checkboxes, fields, list items
---
--- The submodule however does not maintain the `focused` field that buttons /
--- fields / checkboxes use to render their highlighted state, and movement is
--- document-order only. This file adds, entirely from the Olympus side:
---   - a `focused` visual-field sync (keynav.syncFocus)
+-- Everything here is Olympus-side; the OlympUI submodule is used as-is (stock
+-- has no keyboard-focus concept):
+--   - focus targets are discovered purely by element type (buttons, fields,
+--     list items and menu items), not by any olympui flag
+--   - Tab / Shift+Tab cycle the cursor in document order through ui.keyFocusMove
+--     (defined here, since stock olympui ships no equivalent)
+--   - activation is synthesized through the element's own click/onClick path,
+--     which is the same code path a mouse click takes
+--   - a `focused` visual-field sync (keynav.syncFocus) mirrors the focus cursor
 --   - gamepad-appropriate directional movement (keynav.moveDir)
 --   - keeping focus inside open (modal) alerts
---   - forwarding Tab / Shift+Tab into ui.keyFocusMove
---
--- The submodule is never touched.
 
 local ui = require("ui.main")
 local alert = require("alert")
@@ -22,14 +19,66 @@ local keynav = {}
 
 local prevFocusedEl = false
 
+-- While the cursor sits inside an overlay that keynav moved it into (an alert
+-- picker opened from a dropdown, or an open submenu), these remember the
+-- overlay and the element that opened it, so the cursor can return there once
+-- the overlay closes.
+local popupFocusContainer = false
+local popupFocusOwner = false
+
+
+-- Element types a navigation cursor can land on. Ancestor types are inherited,
+-- so drop-downs, buttonGreen and the like are covered automatically; containers
+-- (rows, columns, groups, scrollboxes, ...) are not.
+local FOCUSABLE = {
+    button = true,
+    field = true,
+    listItem = true,
+    menuItem = true,
+}
+
+local function isActionType(c)
+    local types = c and c.__types
+    if not types then
+        return false
+    end
+    for i = 1, #types do
+        if FOCUSABLE[types[i]] then
+            return true
+        end
+    end
+    return false
+end
+
 
 -- Keep the elements' `focused` field (which drives their highlight styling) in
 -- sync with the actual focus cursor ui.focusing.
 function keynav.syncFocus()
     local focusing = ui.focusing
-    if focusing and not focusing.isRooted then
-        ui.focusing = false
-        focusing = nil
+
+    if (not focusing) or not focusing.isRooted then
+        -- The cursor points at nothing (olympui already dropped it once the
+        -- focused element left the tree) or at a removed element. If keynav had
+        -- pinned it into an overlay that has now closed, walk it back to the
+        -- element that opened the overlay. If the overlay is still alive (a
+        -- freshly spawned overlay is only root-walkable after the next collect
+        -- pass), the cursor is simply left where keynav put it.
+        if popupFocusOwner
+            and popupFocusContainer
+            and not popupFocusContainer.alive
+            and popupFocusOwner.isRooted then
+            ui.focusing = popupFocusOwner
+            focusing = popupFocusOwner
+            popupFocusContainer = false
+            popupFocusOwner = false
+        elseif popupFocusContainer and popupFocusContainer.alive then
+            return
+        else
+            ui.focusing = false
+            focusing = nil
+            popupFocusContainer = false
+            popupFocusOwner = false
+        end
     end
 
     if prevFocusedEl and prevFocusedEl ~= focusing then
@@ -61,10 +110,13 @@ local function collectIn(element, all)
 end
 
 local function isFocusable(c)
-    if c.keyFocus ~= true then
+    if not isActionType(c) then
         return false
     end
     if c.visible == false or not c.onscreen then
+        return false
+    end
+    if not (c.interactive and c.interactive >= 1) then
         return false
     end
     local getEnabled = c.getEnabled
@@ -112,7 +164,10 @@ local function isScrolledOut(c, dx, dy)
 end
 
 local function navFocusable(c, dx, dy)
-    if c.keyFocus ~= true or c.visible == false then
+    if not isActionType(c) or c.visible == false then
+        return false
+    end
+    if not (c.interactive and c.interactive >= 1) then
         return false
     end
     local getEnabled = c.getEnabled
@@ -197,7 +252,7 @@ local function collectNav(dx, dy)
 end
 
 
-local function applyFocus(next)
+local function applyFocusRaw(next)
     local prev = ui.focusing
     if prev and prev ~= next then
         ui.interactiveIterate(prev, "onUnfocus")
@@ -213,6 +268,12 @@ local function applyFocus(next)
         end
     end
 
+    return true
+end
+
+
+local function applyFocus(next)
+    applyFocusRaw(next)
     keynav.syncFocus()
     return true
 end
@@ -306,8 +367,8 @@ function keynav.moveDir(dx, dy)
 end
 
 
--- Document-order cycling within a single subtree (used to keep focus inside a
--- modal alert when navigating with Tab).
+-- Document-order cycling within a single subtree (the whole UI for Tab, or just
+-- a modal alert so focus can't escape it).
 local function moveWithin(step, container, startEl)
     local all = {}
     collectIn(container, all)
@@ -338,25 +399,31 @@ end
 
 
 -- Document-order focus movement (Tab / Shift+Tab). While an alert is open, it
--- only travels within that alert's subtree.
-local origKeyFocusMove = ui.keyFocusMove
-function ui.keyFocusMove(step, startEl)
-    local handled
-    if alert.count and alert.count > 0 then
-        local children = alert.root.children
-        local container = children[#children]
-        handled = container and moveWithin(step, container, startEl)
-    else
-        handled = origKeyFocusMove(step, startEl)
+-- only travels within that alert's subtree. Stock olympui ships no equivalent,
+-- so this is defined from the Olympus side.
+if not ui.keyFocusMove then
+    function ui.keyFocusMove(step, startEl)
+        local container = ui.root
+        if alert.count and alert.count > 0 then
+            local children = alert.root.children
+            if children[#children] then
+                container = children[#children]
+            end
+        end
+        local handled = moveWithin(step, container, startEl)
+        keynav.syncFocus()
+        return handled
     end
-    keynav.syncFocus()
-    return handled
 end
 
 -- Ties Tab/Shift+Tab and the arrow keys into the input pipeline.
 local origKeyPressed = ui.keypressed
 function ui.keypressed(key, scancode, isrepeat)
     local handled = origKeyPressed(key, scancode, isrepeat)
+
+    -- Sync first: returns the cursor to an overlay's owner the moment the
+    -- overlay is gone, before any navigation runs off the stale position.
+    keynav.syncFocus()
 
     if key == "tab" then
         local shift = love.keyboard.isDown("lshift") or love.keyboard.isDown("rshift")
@@ -393,12 +460,14 @@ local function isDropdown(el)
 end
 
 
--- Pin focus to a dropdown's submenu. The submenu's update closes it as soon as
--- ui.focusing points outside of it, so we have to move the focus cursor in right
--- after opening it. `preferred` is the dropdown's current selection: when it is
--- one of the available options it is pre-highlighted, otherwise the first item.
+-- Move the focus cursor into a freshly opened dropdown / topbar submenu. The
+-- submenu is reachable either on the invoker itself (dropdown) or on its parent
+-- (menuItem stores it on the topbar). `preferred` is the current selection and
+-- gets pre-highlighted when it is one of the options.
 local function focusSubmenu(submenu, preferred)
-    if not submenu or not submenu.isRooted then
+    -- A freshly spawned overlay is not root-walkable (parent pointers are only
+    -- refreshed on the next collect), but is still alive; a closed one is dead.
+    if not submenu or not (submenu.isRooted or submenu.alive) then
         return false
     end
     local all = {}
@@ -411,12 +480,70 @@ local function focusSubmenu(submenu, preferred)
                 first = c
             end
             if c == preferred then
-                return applyFocus(c)
+                -- Remember the overlay so picking an option (which removes it)
+                -- can return the cursor to its owner.
+                popupFocusContainer = submenu
+                popupFocusOwner = submenu.owner
+                return applyFocusRaw(c)
             end
         end
     end
     if first then
-        return applyFocus(first)
+        popupFocusContainer = submenu
+        popupFocusOwner = submenu.owner
+        -- applyFocusRaw: a freshly spawned overlay's content only gets its
+        -- parent/root pointers refreshed during the next ui update, so the
+        -- sync pass of applyFocus would (incorrectly) drop the cursor here.
+        return applyFocusRaw(first)
+    end
+    return false
+end
+
+local function focusOpenSubmenu(focus, preferred)
+    local submenu = focus.submenu or (focus.parent and focus.parent.submenu)
+    if not submenu then
+        return false
+    end
+    return focusSubmenu(submenu, preferred)
+end
+
+
+-- A newly spawned modal alert (an "alert picker" such as the theme/background
+-- dropdowns in Olympus) that the cursor can be pinned into. The overlay itself
+-- is still rooted but its content may not have a computed `onscreen` flag yet,
+-- so on-screen-ness is not required when targeting it.
+local function popupFocusable(c)
+    if not isActionType(c) or c.visible == false then
+        return false
+    end
+    if not (c.interactive and c.interactive >= 1) then
+        return false
+    end
+    local getEnabled = c.getEnabled
+    if getEnabled then
+        return getEnabled(c) ~= false
+    end
+    return c._enabled ~= false and c.enabled ~= false
+end
+
+
+-- Focus the first interactive element inside a just-opened alert. Returns false
+-- when nothing new opened (or the topmost overlay is not of the alert kind).
+local function focusNewestAlert(owner)
+    local children = alert.root.children
+    local container = children and children[#children]
+    if not (container and container.popup and container.closing ~= true) then
+        return false
+    end
+    local all = {}
+    collectIn(container, all)
+    for i = 1, #all do
+        local c = all[i]
+        if popupFocusable(c) then
+            popupFocusContainer = container
+            popupFocusOwner = owner or false
+            return applyFocusRaw(c)
+        end
     end
     return false
 end
@@ -428,14 +555,20 @@ end
 -- turned into its mouse click instead (spawning the submenu / opening pickers).
 local function confirmDropdown(focus)
     focus:onClick(focus.screenX + focus.width / 2, focus.screenY + focus.height / 2, 1)
-    focusSubmenu(focus.submenu, focus.selected)
-    return true
+    if focusSubmenu(focus.submenu, focus.selected) then
+        return true
+    end
+    -- Several Olympus dropdowns turn into alert pickers instead of a submenu
+    -- (theme, background, ...); move the cursor into the opened picker.
+    return focusNewestAlert(focus)
 end
 
 
 -- Activate the currently focused element, reusing the exact same code path the
 -- keyboard's Return key takes (press + release through the interactive chain),
--- which is equivalent to a mouse click. Returns true if anything consumed it.
+-- which is equivalent to a mouse click. List/menu items get their click
+-- synthesized directly, because stock olympui only wires up key activation for
+-- buttons, fields and checkboxes. Returns true if anything consumed it.
 function keynav.confirm()
     local focus = ui.focusing
     if not focus then
@@ -445,9 +578,40 @@ function keynav.confirm()
         return confirmDropdown(focus)
     end
 
+    local cx = focus.screenX + focus.width / 2
+    local cy = focus.screenY + focus.height / 2
+
+    if focus.is and focus:is("menuItem") then
+        if focus.onClick then
+            focus:onClick(cx, cy, 1)
+        end
+        -- Open the spawned submenu (topbar menus, nested options dropdowns)
+        -- and pin the focus cursor inside it, like confirmDropdown does. When
+        -- instead something like an alert picker pops up, hop into that.
+        if focusOpenSubmenu(focus, focus.selected) then
+            return true
+        end
+        return focusNewestAlert(focus) or true
+    end
+
+    if focus.is and focus:is("listItem") then
+        if focus.onClick then
+            focus:onClick(cx, cy, 1)
+        end
+        -- Selecting an option commonly closes its overlay (submenu/picker);
+        -- syncFocus() then returns the cursor to the overlay's owner.
+        return true
+    end
+
     local el, handled = ui.interactiveIterate(focus, "onKeyPress", "return", false, false)
     local released = ui.interactiveIterate(focus, "onKeyRelease", "return")
-    return handled or released
+    if handled or released then
+        -- A button was activated; if this opened an alert picker, move the
+        -- cursor into it so the keyboard user can reach its options directly.
+        focusNewestAlert(focus)
+        return true
+    end
+    return focusNewestAlert(focus) or false
 end
 
 
@@ -466,6 +630,8 @@ function keynav.cancel()
                 owner.submenu = false
             end
             p:removeSelf()
+            popupFocusContainer = false
+            popupFocusOwner = false
             if owner then
                 applyFocus(owner)
             end
@@ -477,6 +643,8 @@ function keynav.cancel()
     if isDropdown(focus) and focus.submenu and focus.submenu.isRooted then
         focus.submenu:removeSelf()
         focus.submenu = false
+        popupFocusContainer = false
+        popupFocusOwner = false
         return true
     end
 

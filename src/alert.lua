@@ -176,8 +176,10 @@ function alert.show(data)
         awake = function(orig, self)
             orig(self)
             -- Give keyboard/gamepad navigation somewhere to land: focus the
-            -- first button so Tab / d-pad / A already have a selection.
-            if ui.focusing and ui.focusing.isRooted then
+            -- first button so Tab / d-pad / A already have a selection, but
+            -- only when no cursor exists yet -- keynav may have just pinned
+            -- the cursor inside this very alert (typed buttons, pickers).
+            if ui.focusing then
                 return
             end
             local buttons = box:findChild("buttons")
