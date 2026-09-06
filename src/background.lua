@@ -104,11 +104,18 @@ function background.new()
         layoutLate = function(self)
             self.realX = 0
             self.realY = 0
-            local width, height = love.graphics.getWidth(), love.graphics.getHeight()
+            local width, height
+            if ui and ui._uiScale and ui._uiScale ~= 1 then
+                width = ui._realWidth
+                height = ui._realHeight
+            else
+                width, height = love.graphics.getWidth(), love.graphics.getHeight()
+            end
+            width, height = width + 128, height + 128
             if width > self.innerWidth or height > self.innerHeight then
-                self.effect.resize(width + 128, height + 128)
-                self.innerWidth = width + 128
-                self.innerHeight = height + 128
+                self.effect.resize(width, height)
+                self.innerWidth = width
+                self.innerHeight = height
             end
         end,
 
