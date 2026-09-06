@@ -25,6 +25,9 @@ local ui
 local uie
 local megacanvas
 
+local keynav
+local controller
+
 local debugLabel
 local debugDetailed = false
 local logWindow
@@ -294,6 +297,10 @@ function love.load(args)
     alert = require("alert")
     notify = require("notify")
     themer = require("themer")
+
+    keynav = require("keynav")
+    controller = require("controller")
+    controller.onBack = back
 
     themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
 
@@ -735,6 +742,10 @@ function love.update(dt)
     threader.update()
 
     ui.update()
+
+    if controller then
+        controller.update()
+    end
 
     if profile then
         profile.stop()

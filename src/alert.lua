@@ -173,6 +173,20 @@ function alert.show(data)
 
 
     container:hook({
+        awake = function(orig, self)
+            orig(self)
+            -- Give keyboard/gamepad navigation somewhere to land: focus the
+            -- first button so Tab / d-pad / A already have a selection.
+            if ui.focusing and ui.focusing.isRooted then
+                return
+            end
+            local buttons = box:findChild("buttons")
+            local first = buttons and buttons.children[1]
+            if first then
+                ui.focusing = first
+            end
+        end,
+
         update = function(orig, self, dt)
             orig(self, dt)
             local time = container.time
