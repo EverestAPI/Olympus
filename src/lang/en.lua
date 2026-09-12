@@ -161,6 +161,7 @@ Alternatively, you can manually install the runtime, then attempt the installati
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
     most_recent = [[Most Recent]],
+    last_updated = [[Last Updated]],
     most_downloaded = [[Most Downloaded]],
     most_viewed = [[Most Viewed]],
     most_liked = [[Most Liked]],

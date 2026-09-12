@@ -163,6 +163,7 @@ Tu peux aussi installer le runtime manuellement, puis réessayer d'installer Eve
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
     most_recent = [[Trier par date]],
+    last_updated = [[Trier par dernières mises à jour]],
     most_downloaded = [[Trier par téléchargements]],
     most_viewed = [[Trier par vues]],
     most_liked = [[Trier par likes]],

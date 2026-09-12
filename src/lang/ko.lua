@@ -161,6 +161,7 @@ Everest 설치를 시도하기 전에 제거하는 것이 좋습니다.
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
     most_recent = [[최신순]],
+    last_updated = [[최근 업데이트순]],
     most_downloaded = [[다운로드순]],
     most_viewed = [[조회순]],
     most_liked = [[좋아요순]],

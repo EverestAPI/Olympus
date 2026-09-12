@@ -157,6 +157,7 @@ Steam、EGS 和 itch.io 客户端都支持此操作，无需完全重装。]],
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
     most_recent = [[最新发布]],
+    last_updated = [[最近更新]],
     most_downloaded = [[下载最多]],
     most_viewed = [[浏览最多]],
     most_liked = [[点赞最多]],

@@ -15,6 +15,7 @@ local scene = {
 
 local sortOptions = {
     { text = lang.get("most_recent"), data = "latest" },
+    { text = lang.get("last_updated"), data = "updated" },
     { text = lang.get("most_downloaded"), data = "downloads" },
     { text = lang.get("most_viewed"), data = "views" },
     { text = lang.get("most_liked"), data = "likes" }
