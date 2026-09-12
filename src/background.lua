@@ -104,12 +104,10 @@ function background.new()
         layoutLate = function(self)
             self.realX = 0
             self.realY = 0
-            local width, height
+            local width, height = love.graphics.getWidth(), love.graphics.getHeight()
             if ui and ui._uiScale and ui._uiScale ~= 1 then
-                width = ui._realWidth
-                height = ui._realHeight
-            else
-                width, height = love.graphics.getWidth(), love.graphics.getHeight()
+                width = math.max(width, ui._realWidth)
+                height = math.max(height, ui._realHeight)
             end
             width, height = width + 128, height + 128
             if width > self.innerWidth or height > self.innerHeight then
