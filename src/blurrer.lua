@@ -73,6 +73,10 @@ function blurrer.blur(el, cb)
             orig(self)
             local width = self.width + 32
             local height = self.height + 32
+            if ui._uiScale and ui._uiScale ~= 1 then
+                width = math.min(width, ui._realWidth + 32)
+                height = math.min(height, ui._realHeight + 32)
+            end
             if width > self.blurWidth or height > self.blurHeight then
                 self.blurEffect.resize(width + 128, height + 128)
                 self.blurWidth = width + 128

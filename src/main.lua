@@ -37,6 +37,13 @@ local canvasWidth = 0
 local canvasHeight = 0
 local canvas
 
+local uiScale = 1
+local vw = 0
+local vh = 0
+local getWidthOrig
+local getHeightOrig
+local getMousePosOrig
+
 local lang = require("lang")
 
 local drawstats = {}
@@ -471,6 +478,54 @@ function love.load(args)
     logList = logWindow:findChild("log")
 
     ui.init(root, false)
+
+    -- UI Scale: scale the whole UI within a fixed-size window via virtual-resolution rendering.
+    do
+        uiScale = tonumber(config.uiScale) or 1
+        if uiScale <= 0 then
+            uiScale = 1
+        end
+
+        getWidthOrig = love.graphics.getWidth
+        getHeightOrig = love.graphics.getHeight
+        getMousePosOrig = love.mouse.getPosition
+
+        local function applyVirtual()
+            if vw <= 0 or vh <= 0 then
+                vw = math.max(1, math.floor(getWidthOrig() / uiScale))
+                vh = math.max(1, math.floor(getHeightOrig() / uiScale))
+            end
+            love.graphics.getWidth = function() return vw end
+            love.graphics.getHeight = function() return vh end
+            love.mouse.getPosition = function()
+                local x, y = getMousePosOrig()
+                return x / uiScale, y / uiScale
+            end
+        end
+
+        local function restoreReal()
+            love.graphics.getWidth = getWidthOrig
+            love.graphics.getHeight = getHeightOrig
+            love.mouse.getPosition = getMousePosOrig
+        end
+
+        -- Input hooks pass raw window coords to the toolkit; translate to virtual space.
+        local mousepressedOrig = ui.mousepressed
+        ui.mousepressed = function(x, y, ...)
+            return mousepressedOrig(x / uiScale, y / uiScale, ...)
+        end
+        local mousereleasedOrig = ui.mousereleased
+        ui.mousereleased = function(x, y, ...)
+            return mousereleasedOrig(x / uiScale, y / uiScale, ...)
+        end
+
+        ui._applyVirtual = applyVirtual
+        ui._restoreReal = restoreReal
+        ui._uiScale = uiScale
+        ui._realWidth = getWidthOrig()
+        ui._realHeight = getHeightOrig()
+    end
+
     ui.hookLove(false, true)
 
     if native then
@@ -734,7 +789,9 @@ function love.update(dt)
 
     threader.update()
 
+    ui._applyVirtual()
     ui.update()
+    ui._restoreReal()
 
     if profile then
         profile.stop()
@@ -773,9 +830,15 @@ function love.draw()
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
 
+    if uiScale <= 0 then
+        uiScale = 1
+    end
+    vw = math.max(1, math.floor(width / uiScale))
+    vh = math.max(1, math.floor(height / uiScale))
+
     local redraw = focusStatus == 0 or (love.frame % 3) == 0
 
-    if not canvas or width > canvasWidth or height > canvasHeight or focusStatus == 0 then
+    if not canvas or vw > canvasWidth or vh > canvasHeight or focusStatus == 0 then
         redraw = true
 
         if canvas then
@@ -787,25 +850,31 @@ function love.draw()
             canvasWidth = 0
             canvasHeight = 0
         else
-            canvasWidth = width
-            canvasHeight = height
+            canvasWidth = vw
+            canvasHeight = vh
 
-            if width < 4096 and height < 4096 then
-                canvas = love.graphics.newCanvas(width, height)
+            if vw < 4096 and vh < 4096 then
+                canvas = love.graphics.newCanvas(vw, vh)
             end
         end
     end
 
     if redraw then
-        local canvasPrev
+        local canvasPrev = love.graphics.getCanvas()
         if canvas then
-            canvasPrev = love.graphics.getCanvas()
             love.graphics.setCanvas(canvas)
+        else
+            love.graphics.push()
+            if uiScale ~= 1 then
+                love.graphics.scale(uiScale, uiScale)
+            end
         end
 
         if profile then
             profile.start()
         end
+
+        ui._applyVirtual()
 
         -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
@@ -821,15 +890,17 @@ function love.draw()
             local rgb = a * 0.5
             uiu.setColor(rgb, rgb, rgb, a)
             local t = (love.time / 24) % 1
-            love.graphics.draw(overlay, (t - 1) * width, (t - 1) * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
-            love.graphics.draw(overlay, t       * width, (t - 1) * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
-            love.graphics.draw(overlay, (t - 1) * width, t       * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
-            love.graphics.draw(overlay, t       * width, t       * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
+            love.graphics.draw(overlay, (t - 1) * vw, (t - 1) * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
+            love.graphics.draw(overlay, t       * vw, (t - 1) * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
+            love.graphics.draw(overlay, (t - 1) * vw, t       * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
+            love.graphics.draw(overlay, t       * vw, t       * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
             love.graphics.setBlendMode("alpha", "alphamultiply")
             uiu.setColor(1, 1, 1, 1)
         end
 
         -- love.graphics.setScissor()
+
+        ui._restoreReal()
 
         if profile then
             profile.stop()
@@ -837,11 +908,13 @@ function love.draw()
 
         if canvas then
             love.graphics.setCanvas(canvasPrev)
+        else
+            love.graphics.pop()
         end
     end
 
     if canvas then
-        love.graphics.draw(canvas)
+        love.graphics.draw(canvas, 0, 0, 0, uiScale, uiScale)
     end
 
     if debugDetailed then

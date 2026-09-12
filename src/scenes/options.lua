@@ -120,6 +120,14 @@ local languages = {
     { text = "한국어 (Korean)", data = "ko" },
 }
 
+local uiScales = {
+    { text = "125%", data = 1.25 },
+    { text = "100% (Default)", data = 1 },
+    { text = "75%", data = 0.75 },
+    { text = "50%", data = 0.5 },
+    { text = "25%", data = 0.25 },
+}
+
 
 local themePickerEntries = {}
 for i = 1, #themes do
@@ -411,6 +419,22 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
 
+                }):with(uiu.fillWidth),
+
+                uie.row({
+                    uie.column({
+                        uie.label(lang.get("ui_scale")),
+                        uie.dropdown(uiScales, function(self, value)
+                            config.uiScale = value
+                            config.save()
+                            alert({
+                                body = uie.label(lang.get("restart_to_apply_changes_in_ui_scale")),
+                                buttons = {{ lang.get("ok") }}
+                            })
+                        end):with({
+                            selectedData = config.uiScale
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
                 }):with(uiu.fillWidth),
 
                 uie.group({}),

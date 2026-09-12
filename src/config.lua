@@ -144,6 +144,8 @@ function config.load()
 
     default(data, "language", "en")
 
+    default(data, "uiScale", 1)
+
     local migratedMirrorValue = ({
         ['gb,jade,otobot,wegfan'] = 'gb,jade,risingsunlight,otobot,wegfan',
         ['jade,otobot,wegfan,gb'] = 'jade,risingsunlight,otobot,wegfan,gb',
