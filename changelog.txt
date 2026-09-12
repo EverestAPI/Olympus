@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Manage Installed Mods: refresh mod list when toggling a mod with the "Enabled mods only" filter
+∙ Added "UI Scale" option

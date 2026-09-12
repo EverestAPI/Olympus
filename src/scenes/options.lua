@@ -122,7 +122,7 @@ local languages = {
 
 local uiScales = {
     { text = "125%", data = 1.25 },
-    { text = "100% (Default)", data = 1 },
+    { text = lang.get("ui_scale_default"), data = 1 },
     { text = "75%", data = 0.75 },
     { text = "50%", data = 0.5 },
     { text = "25%", data = 0.25 },
@@ -407,21 +407,6 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
-                    uie.column(updater.available and {
-                        uie.label(lang.get("updates")),
-                        uie.dropdown(updatepaths, function(self, value)
-                            config.updates = value
-                            config.save()
-                            updater.check()
-                        end):with({
-                            placeholder = "???",
-                            selectedData = config.updates
-                        }):with(uiu.fillWidth)
-                    } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
-
-                }):with(uiu.fillWidth),
-
-                uie.row({
                     uie.column({
                         uie.label(lang.get("ui_scale")),
                         uie.dropdown(uiScales, function(self, value)
@@ -434,7 +419,20 @@ local root = uie.column({
                         end):with({
                             selectedData = config.uiScale
                         }):with(uiu.fillWidth)
-                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+
+                    uie.column(updater.available and {
+                        uie.label(lang.get("updates")),
+                        uie.dropdown(updatepaths, function(self, value)
+                            config.updates = value
+                            config.save()
+                            updater.check()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.updates
+                        }):with(uiu.fillWidth)
+                    } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
+
                 }):with(uiu.fillWidth),
 
                 uie.group({}),
