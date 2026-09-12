@@ -338,6 +338,7 @@ local function handleModEnabledStateChange(mod, enabling)
     updateLabelTextForDependencies(mod)
     updateWarningButtonForMod(mod)
     updateWarningButtonForDependents(mod)
+    refreshVisibleMods()
 end
 
 -- enable mods on the UI
@@ -1070,11 +1071,13 @@ function scene.reload()
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button(lang.get("enable_all"), function()
                         enableMods(scene.modsByPath)
+                        refreshVisibleMods()
                         writeBlacklist()
                     end):with({ enabled = false }):as("enableAllButton"),
                     uie.button(lang.get("disable_all"), function()
                         -- don't disable favorites
                         disableMods(scene.modsByPath, false)
+                        refreshVisibleMods()
                         writeBlacklist()
                     end):with({ enabled = false }):as("disableAllButton"),
                 }):with(uiu.rightbound)
