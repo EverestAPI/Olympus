@@ -495,6 +495,8 @@ function love.load(args)
                 vw = math.max(1, math.floor(getWidthOrig() / uiScale))
                 vh = math.max(1, math.floor(getHeightOrig() / uiScale))
             end
+            ui._realWidth = getWidthOrig()
+            ui._realHeight = getHeightOrig()
             love.graphics.getWidth = function() return vw end
             love.graphics.getHeight = function() return vh end
             love.mouse.getPosition = function()
