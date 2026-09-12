@@ -184,7 +184,7 @@ function love.conf(t)
 
     -- Disable unused love2d modules
     t.modules.audio = false
-    t.modules.joystick = false
+    t.modules.joystick = true
     t.modules.physics = false
     t.modules.sound = false
     t.modules.touch = false
