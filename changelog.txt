@@ -3,10 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Added Korean language option
-∙ Removed the "residual files from a .NET Core build" warning when installing "core" versions of Everest
-∙ Fixed an animation glitch with the "!" icon
-∙ Made the download animation fill in linearly as the download progresses
-∙ Cleaner mirror fallback mechanics & Fixes to the mod browser following the mod updater refactor
-∙ Added a new mirror: France (risingsunlight.dev)
-∙ Fix linux changelog script
+∙ Added sort by updated date to the mod browser
