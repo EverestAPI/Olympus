@@ -259,6 +259,16 @@ local function applyFocusRaw(next)
     end
     ui.focusing = next
 
+    -- Input fields enable OS key repeat while focused, but stock olympui only
+    -- does that from a mouse press (input's onPress), so a field focused via
+    -- Tab / gamepad would unfocus into a nil setKeyRepeat argument (its
+    -- onUnfocus restores the key-repeat state it recorded on focus). Mirror
+    -- the mouse path: remember the current state, then switch repeat on.
+    if next.is and next:is("field") and prev ~= next then
+        next.__wasKeyRepeat = love.keyboard.hasKeyRepeat()
+        love.keyboard.setKeyRepeat(true)
+    end
+
     -- Inside a list, focus doubles as the list's selected cursor so the move is
     -- visible and the underlying list keeps track of it.
     if next.is and next:is("listItem") then
