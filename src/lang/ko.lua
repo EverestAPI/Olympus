@@ -306,7 +306,7 @@ Celeste 설치 관리자로 이동하시겠습니까?]],
 
     -- scenes/modlist.lua
     mod_manager = [[모드 관리자]],
-    no1 = [[아니요]],
+    no1 = [[0]],
     s_enabled_s = [[%s %s 활성화됨]],
     mod = [[모드]],
     mods = [[모드]],
