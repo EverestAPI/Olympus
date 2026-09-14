@@ -168,14 +168,16 @@ function love.conf(t)
     local config = require("config")
     config.load()
 
+    local scale = config.uiScale > 0 and config.uiScale or 1
+
     t.window.title = "Olympus"
     if love.system.getOS() ~= "OS X" then
         t.window.icon = "data/icon.png"
     end
-    t.window.width = 1100
-    t.window.minwidth = 1100
-    t.window.height = 600
-    t.window.minheight = 600
+    t.window.width = 1100 * config.uiScale
+    t.window.minwidth = 1100 * config.uiScale
+    t.window.height = 600 * config.uiScale
+    t.window.minheight = 600 * config.uiScale
     t.window.borderless = config.csd
     t.window.resizable = true -- when borderless, true causes a flickering border on Windows
     t.window.vsync = config.vsync and 1 or 0
