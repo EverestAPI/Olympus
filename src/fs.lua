@@ -197,8 +197,9 @@ function fs.stripExtension(path)
 end
 
 function fs.read(path)
-    local fh = io.open(path, "rb")
+    local fh, err = io.open(path, "rb")
     if not fh then
+        log.warning("Could not open file", path, "for reading, skipping:", err)
         return
     end
 
@@ -211,8 +212,9 @@ end
 function fs.write(path, content)
     fs.mkdir(fs.dirname(path))
 
-    local fh = io.open(path, "wb")
+    local fh, err = io.open(path, "wb")
     if not fh then
+        log.warning("Could not open file", path, "for writing, skipping:", err)
         return
     end
 
