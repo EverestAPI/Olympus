@@ -396,6 +396,7 @@ Astuce : Si tu désactives le mod, Everest ne le chargera pas, ce qui est tout a
     update_mods_on_startup = [[MàJ des mods au lancement]],
     use_opengl = [[Utiliser OpenGL]],
     close_after_one_click_install = [[Fermer après install. 1-click]],
+    auto_enable_dependencies_on_download = [[Activer les dépendances au téléchargement]],
     open_installation_folder = [[Ouvrir le dossier d'installation]],
     open_log_and_config_folder = [[Ouvrir dossier des logs et config.]],
     mirrors = [[Miroirs]],
