@@ -106,7 +106,7 @@ local function writeBlacklist()
     end
 
     local root = config.installs[config.install].path
-    fs.write(fs.joinpath(root, "Mods", "blacklist.txt"), contents)
+    fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "blacklist.txt"), contents)
 end
 
 -- writes the favorites to disk
@@ -120,7 +120,7 @@ local function writeFavorites()
     end
 
     local root = config.installs[config.install].path
-    fs.write(fs.joinpath(root, "Mods", "favorites.txt"), contents)
+    fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "favorites.txt"), contents)
 end
 
 -- shows or hides mods depending on search and "only show enabled mods" checkbox
@@ -711,7 +711,7 @@ local function applyPreset(name, disableAll)
     end
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
     if not contents then
         return
     end
@@ -748,18 +748,18 @@ local function deletePreset(name)
     end
 
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
     if contents then
         name = name:gsub("%p", "%%%1") -- escape special characters
         contents = contents:gsub("%*%*(" .. name .. "\n[^*]*)","", 1)
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), contents)
+        fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"), contents)
     end
 end
 
 -- reads modpresets.txt and returns a list of all preset names
 local function readPresetsList()
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
 
     if contents then
         local names = {}
@@ -768,7 +768,7 @@ local function readPresetsList()
         end
         return names
     else -- create modpresets.txt if it doesnt exist
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
+        fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"), "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
         return readPresetsList()
     end
 end
@@ -811,7 +811,7 @@ local function addPreset(name)
         end
     end
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
     contents = contents .. "**" .. name .. "\n"
 
     for _, mod in pairs(scene.modlist) do
