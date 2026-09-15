@@ -108,8 +108,19 @@ end
 -- IE {"foo", "/bar/"} becomes "foo//bar", expected "foo/bar"
 function fs.joinpath(...)
     local parts = {...}
-    local sep = fs.dirSeparator
-    return table.concat(parts, sep)
+    local result
+    if #parts == 2 and sharp.initStatus then
+        result = sharp.joinpathOne(parts[1], parts[2]):result()
+        log.debug("concatenated path using joinpath1:", result)
+    elseif #parts == 3 and sharp.initStatus then
+        result = sharp.joinpathTwo(parts[1], parts[2], parts[3]):result()
+        log.debug("concatenated path using joinpath2:", result)
+    else
+        local sep = fs.dirSeparator
+        result = table.concat(parts, sep)
+        log.debug("concatenated path in lua:", result, ", #parts=", #parts, ", initStatus=", sharp.initStatus)
+    end
+    return result
 end
 
 function fs.splitpath(path)

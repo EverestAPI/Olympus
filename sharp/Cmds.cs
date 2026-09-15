@@ -44,6 +44,8 @@ namespace Olympus {
                 new CmdInstallLoenn(),
                 new CmdInstallMod(),
                 new CmdInstallOlympus(),
+                new CmdJoinpathOne(),
+                new CmdJoinpathTwo(),
                 new CmdLaunch(),
                 new CmdLaunchLoenn(),
                 new CmdModList(),
