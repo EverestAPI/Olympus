@@ -93,6 +93,28 @@ local closeAfterOneClickInstallOptions = {
     { text = lang.get("disabled_default"), data = "disabled" }
 }
 
+local updateEverestOnModUpdateOptions = {
+    { text = lang.get("enabled"), data = "enabled" },
+    { text = lang.get("disabled_default"), data = "disabled" }
+}
+
+local everestUpdateBranches = {
+    { text = lang.get("stable_default"), data = "stable" },
+    { text = lang.get("branch_beta"), data = "beta" },
+    { text = lang.get("branch_dev"), data = "dev" }
+}
+
+local everestBranchColumn = uie.column({
+    uie.label(lang.get("everest_update_branch")),
+    uie.dropdown(everestUpdateBranches, function(self, value)
+        config.everestUpdateBranch = value
+        config.save()
+    end):with({
+        placeholder = "???",
+        selectedData = config.everestUpdateBranch
+    }):with(uiu.fillWidth)
+}):with(uiu.fillWidth(8 + 1 / 2)):with(uiu.at(1 / 2, 0))
+
 -- Keep in sync with https://github.com/EverestAPI/Everest/blob/dev/Celeste.Mod.mm/Mod/Core/CoreModuleSettings.cs :: CreateMirrorPreferencesEntry
 local mirrorPreferences = {
     { text = lang.get("disabled_default"), data = "gb,jade,risingsunlight,otobot,wegfan" },
@@ -371,6 +393,28 @@ local root = uie.column({
 
                 uie.row({
                     uie.column({
+                        uie.label(lang.get("update_everest_when_updating_mods")),
+                        uie.dropdown(updateEverestOnModUpdateOptions, function(self, value)
+                            config.updateEverestOnModUpdate = value
+                            config.save()
+                            local row = everestBranchColumn.parent or self.parent.parent
+                            if value == "enabled" then
+                                row:addChild(everestBranchColumn)
+                            else
+                                everestBranchColumn:removeSelf()
+                            end
+                            row:reflow()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.updateEverestOnModUpdate
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / 2)):with(uiu.at(0 / 2, 0)),
+
+                    everestBranchColumn
+                }):with(uiu.fillWidth),
+
+                uie.row({
+                    uie.column({
                         uie.label(lang.get("close_after_one_click_install")),
                         uie.dropdown(closeAfterOneClickInstallOptions, function(self, value)
                             config.closeAfterOneClickInstall = value
@@ -523,7 +567,9 @@ end
 
 
 function scene.enter()
-
+    if config.updateEverestOnModUpdate ~= "enabled" then
+        everestBranchColumn:removeSelf()
+    end
 end
 
 
