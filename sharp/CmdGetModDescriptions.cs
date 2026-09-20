@@ -4,8 +4,8 @@ using System.Collections.Generic;
 
 namespace Olympus {
     // Fetches the GameBanana descriptions of installed mods, looked up by their
-    // GameBanana title (issue #92: show mod descriptions in the installed mods menu).
-    // Descriptions come from the same search database that powers the mod browser.
+    // GameBanana title Descriptions come from the same search database that powers  
+    // the mod browser.
     public class CmdGetModDescriptions : Cmd<string[], string[]> {
         private static readonly Logger log = new Logger(nameof(CmdGetModDescriptions));
 
@@ -49,7 +49,7 @@ namespace Olympus {
             string[] result = new string[titles.Length];
             for (int i = 0; i < titles.Length; i++) {
                 string title = titles[i];
-                // unknown mods stay as "" so the array stays aligned with the input
+                // unknown mods stay as ""
                 if (title != null && descriptionsByTitle.TryGetValue(title, out string description))
                     result[i] = description;
                 else
