@@ -25,6 +25,9 @@ local ui
 local uie
 local megacanvas
 
+local keynav
+local controller
+
 local debugLabel
 local debugDetailed = false
 local logWindow
@@ -295,6 +298,10 @@ function love.load(args)
     notify = require("notify")
     themer = require("themer")
 
+    keynav = require("keynav")
+    controller = require("controller")
+    controller.onBack = back
+
     themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
 
     local root = uie.column({
@@ -471,6 +478,14 @@ function love.load(args)
     logList = logWindow:findChild("log")
 
     ui.init(root, false)
+
+    -- UI Scale: olympUI lays out and renders the UI in a virtual resolution
+    -- (window / scale) and blits it back scaled to the window.
+    ui.scale = tonumber(config.uiScale) or 1
+    if ui.scale <= 0 then
+        ui.scale = 1
+    end
+
     ui.hookLove(false, true)
 
     if native then
@@ -607,6 +622,8 @@ function love.load(args)
 
         pathbar.children = uiu.map(items, uie.menuItem.map)
 
+        pathbar.children[#pathbar.children + 1] = require("downloadqueueui").makeIndicator()
+
         for i = 1, #pathbar.children do
             pathbar.children[i].enabled = not scener.locked
         end
@@ -618,6 +635,7 @@ function love.load(args)
 
     alert.init(root:findChild("alertroot"))
     notify.init(root:findChild("notifyroot"))
+    require("downloadqueueui").init(root:findChild("main"))
 
     scener.set("mainmenu")
     require("modinstaller").register()
@@ -736,6 +754,10 @@ function love.update(dt)
 
     ui.update()
 
+    if controller then
+        controller.update()
+    end
+
     if profile then
         profile.stop()
     end
@@ -773,9 +795,16 @@ function love.draw()
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
 
+    local scale = ui.scale
+    if scale <= 0 then
+        scale = 1
+    end
+    local vw = math.max(1, math.floor(width / scale))
+    local vh = math.max(1, math.floor(height / scale))
+
     local redraw = focusStatus == 0 or (love.frame % 3) == 0
 
-    if not canvas or width > canvasWidth or height > canvasHeight or focusStatus == 0 then
+    if not canvas or vw > canvasWidth or vh > canvasHeight or focusStatus == 0 then
         redraw = true
 
         if canvas then
@@ -787,20 +816,24 @@ function love.draw()
             canvasWidth = 0
             canvasHeight = 0
         else
-            canvasWidth = width
-            canvasHeight = height
+            canvasWidth = vw
+            canvasHeight = vh
 
-            if width < 4096 and height < 4096 then
-                canvas = love.graphics.newCanvas(width, height)
+            if vw < 4096 and vh < 4096 then
+                canvas = love.graphics.newCanvas(vw, vh)
             end
         end
     end
 
     if redraw then
-        local canvasPrev
+        local canvasPrev = love.graphics.getCanvas()
         if canvas then
-            canvasPrev = love.graphics.getCanvas()
             love.graphics.setCanvas(canvas)
+        else
+            love.graphics.push()
+            if scale ~= 1 then
+                love.graphics.scale(scale, scale)
+            end
         end
 
         if profile then
@@ -821,10 +854,10 @@ function love.draw()
             local rgb = a * 0.5
             uiu.setColor(rgb, rgb, rgb, a)
             local t = (love.time / 24) % 1
-            love.graphics.draw(overlay, (t - 1) * width, (t - 1) * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
-            love.graphics.draw(overlay, t       * width, (t - 1) * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
-            love.graphics.draw(overlay, (t - 1) * width, t       * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
-            love.graphics.draw(overlay, t       * width, t       * height, 0, width / overlay:getWidth(), height / overlay:getHeight())
+            love.graphics.draw(overlay, (t - 1) * vw, (t - 1) * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
+            love.graphics.draw(overlay, t       * vw, (t - 1) * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
+            love.graphics.draw(overlay, (t - 1) * vw, t       * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
+            love.graphics.draw(overlay, t       * vw, t       * vh, 0, vw / overlay:getWidth(), vh / overlay:getHeight())
             love.graphics.setBlendMode("alpha", "alphamultiply")
             uiu.setColor(1, 1, 1, 1)
         end
@@ -837,11 +870,13 @@ function love.draw()
 
         if canvas then
             love.graphics.setCanvas(canvasPrev)
+        else
+            love.graphics.pop()
         end
     end
 
     if canvas then
-        love.graphics.draw(canvas)
+        love.graphics.draw(canvas, 0, 0, 0, scale, scale)
     end
 
     if debugDetailed then

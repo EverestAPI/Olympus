@@ -143,8 +143,11 @@ function config.load()
     default(data, "imageMirror", "jade") -- jade, otobot or none
 
     default(data, "closeAfterOneClickInstall", "disabled")
+    default(data, "autoEnableDependencies", "enabled")
 
     default(data, "language", "en")
+
+    default(data, "uiScale", 1)
 
     local migratedMirrorValue = ({
         ['gb,jade,otobot,wegfan'] = 'gb,jade,risingsunlight,otobot,wegfan',

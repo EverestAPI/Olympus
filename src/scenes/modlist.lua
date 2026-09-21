@@ -106,7 +106,7 @@ local function writeBlacklist()
     end
 
     local root = config.installs[config.install].path
-    fs.write(fs.joinpath(root, "Mods", "blacklist.txt"), contents)
+    fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "blacklist.txt"), contents)
 end
 
 -- writes the favorites to disk
@@ -120,7 +120,7 @@ local function writeFavorites()
     end
 
     local root = config.installs[config.install].path
-    fs.write(fs.joinpath(root, "Mods", "favorites.txt"), contents)
+    fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "favorites.txt"), contents)
 end
 
 -- shows or hides mods depending on search and "only show enabled mods" checkbox
@@ -338,6 +338,7 @@ local function handleModEnabledStateChange(mod, enabling)
     updateLabelTextForDependencies(mod)
     updateWarningButtonForMod(mod)
     updateWarningButtonForDependents(mod)
+    refreshVisibleMods()
 end
 
 -- enable mods on the UI
@@ -710,7 +711,7 @@ local function applyPreset(name, disableAll)
     end
     name = name:gsub("%p", "%%%1") -- escape special characters
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
     if not contents then
         return
     end
@@ -747,18 +748,18 @@ local function deletePreset(name)
     end
 
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
     if contents then
         name = name:gsub("%p", "%%%1") -- escape special characters
         contents = contents:gsub("%*%*(" .. name .. "\n[^*]*)","", 1)
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), contents)
+        fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"), contents)
     end
 end
 
 -- reads modpresets.txt and returns a list of all preset names
 local function readPresetsList()
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
 
     if contents then
         local names = {}
@@ -767,7 +768,7 @@ local function readPresetsList()
         end
         return names
     else -- create modpresets.txt if it doesnt exist
-        fs.write(fs.joinpath(root, "Mods", "modpresets.txt"), "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
+        fs.write(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"), "# This is the file used to save mod presets.\n# File generated through the \"Manage Installed Mods\" screen in Olympus\n\n")
         return readPresetsList()
     end
 end
@@ -810,7 +811,7 @@ local function addPreset(name)
         end
     end
     local root = config.installs[config.install].path
-    local contents = fs.read(fs.joinpath(root, "Mods", "modpresets.txt"))
+    local contents = fs.read(fs.joinpath(fs.fixDirectoryPathEncoding(root), "Mods", "modpresets.txt"))
     contents = contents .. "**" .. name .. "\n"
 
     for _, mod in pairs(scene.modlist) do
@@ -922,13 +923,27 @@ function scene.item(info)
         return nil
     end
 
+    local themeColors = uie.modNameLabelColors().style
     local label, tooltip = getLabelTextFor(info)
     local item = uie.paneled.row({
-        uie.label(label):with({
-            tooltipText = tooltip,
-            tooltipWaitDuration = 0,
-            interactive = tooltip and 1 or 0
-        }):as("title"),
+        uie.column({
+            uie.label(label):with({
+                tooltipText = tooltip,
+                tooltipWaitDuration = 0,
+                interactive = tooltip and 1 or 0
+            }):as("title"),
+
+            -- show the mod description under the mod name, if it has one
+            -- (the label is always there so the GameBanana description, which
+            -- is fetched in the background after the list is loaded, can be
+            -- filled in later; it's empty and takes no space otherwise)
+            uie.label(info.Description or ""):with({
+                wrap = true,
+                style = {
+                    color = themeColors.disabledColor
+                }
+            }):as("description"),
+        }):with(uiu.fillWidth(true)),
 
         uie.row({
             uie.warning(false, function(warning, newState)
@@ -978,6 +993,56 @@ function scene.item(info)
     }):with(uiu.fillWidth)
 
     return item
+end
+
+-- fetches the GameBanana descriptions of the installed mods in the background,
+-- then fills in the description label of each row once the descriptions arrive.
+-- Mods whose everest.yaml already has a description keep that one.
+function scene.fetchModDescriptions(loadingID)
+    threader.routine(function()
+        if scene.loadingID ~= loadingID then
+            return
+        end
+
+        local titles = {}
+        local titlesSeen = {}
+        for _, mod in ipairs(scene.modlist) do
+            local title = mod.info.GameBananaTitle
+            if title and not titlesSeen[title] then
+                titlesSeen[title] = true
+                titles[#titles + 1] = title
+            end
+        end
+
+        if #titles == 0 then
+            return
+        end
+
+        local ok, descriptions = pcall(function()
+            return sharp.getModDescriptions(titles):result()
+        end)
+        if not ok or scene.loadingID ~= loadingID then
+            return
+        end
+
+        local descriptionsByTitle = {}
+        for i = 1, #titles do
+            local description = descriptions[i]
+            if description and #description ~= 0 then
+                descriptionsByTitle[titles[i]] = description
+            end
+        end
+
+        for _, mod in ipairs(scene.modlist) do
+            local label = mod.row:findChild("description")
+            if label and label:getText() == "" then
+                local description = descriptionsByTitle[mod.info.GameBananaTitle]
+                if description then
+                    label:setText(description)
+                end
+            end
+        end
+    end)
 end
 
 function scene.reload()
@@ -1070,11 +1135,13 @@ function scene.reload()
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button(lang.get("enable_all"), function()
                         enableMods(scene.modsByPath)
+                        refreshVisibleMods()
                         writeBlacklist()
                     end):with({ enabled = false }):as("enableAllButton"),
                     uie.button(lang.get("disable_all"), function()
                         -- don't disable favorites
                         disableMods(scene.modsByPath, false)
+                        refreshVisibleMods()
                         writeBlacklist()
                     end):with({ enabled = false }):as("disableAllButton"),
                 }):with(uiu.rightbound)
@@ -1193,6 +1260,8 @@ function scene.reload()
         end
 
         updateEnabledModCountLabel()
+
+        scene.fetchModDescriptions(loadingID)
     end)
 end
 

@@ -115,6 +115,11 @@ local everestBranchColumn = uie.column({
     }):with(uiu.fillWidth)
 }):with(uiu.fillWidth(8 + 1 / 2)):with(uiu.at(1 / 2, 0))
 
+local autoEnableDependenciesOptions = {
+    { text = lang.get("enabled_default"), data = "enabled" },
+    { text = lang.get("disabled"), data = "disabled" }
+}
+
 -- Keep in sync with https://github.com/EverestAPI/Everest/blob/dev/Celeste.Mod.mm/Mod/Core/CoreModuleSettings.cs :: CreateMirrorPreferencesEntry
 local mirrorPreferences = {
     { text = lang.get("disabled_default"), data = "gb,jade,risingsunlight,otobot,wegfan" },
@@ -140,6 +145,14 @@ local languages = {
     { text = "Français (French)", data = "fr" },
     { text = "简体中文（Simplified Chinese)", data = "zh" },
     { text = "한국어 (Korean)", data = "ko" },
+}
+
+local uiScales = {
+    { text = "125%", data = 1.25 },
+    { text = lang.get("ui_scale_default"), data = 1 },
+    { text = "75%", data = 0.75 },
+    { text = "50%", data = 0.5 },
+    { text = "25%", data = 0.25 },
 }
 
 
@@ -443,6 +456,20 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
 
+                    uie.column({
+                        uie.label(lang.get("ui_scale")),
+                        uie.dropdown(uiScales, function(self, value)
+                            config.uiScale = value
+                            config.save()
+                            alert({
+                                body = uie.label(lang.get("restart_to_apply_changes_in_ui_scale")),
+                                buttons = {{ lang.get("ok") }}
+                            })
+                        end):with({
+                            selectedData = config.uiScale
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+
                     uie.column(updater.available and {
                         uie.label(lang.get("updates")),
                         uie.dropdown(updatepaths, function(self, value)
@@ -453,8 +480,25 @@ local root = uie.column({
                             placeholder = "???",
                             selectedData = config.updates
                         }):with(uiu.fillWidth)
-                    } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
+                }):with(uiu.fillWidth),
+
+                uie.row({
+                    uie.column({
+                        uie.label(lang.get("auto_enable_dependencies_on_download")),
+                        uie.dropdown(autoEnableDependenciesOptions, function(self, value)
+                            config.autoEnableDependencies = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.autoEnableDependencies
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+
+                    uie.column({}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+                    uie.column({}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    uie.column({}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
                 }):with(uiu.fillWidth),
 
                 uie.group({}),

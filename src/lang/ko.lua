@@ -49,6 +49,25 @@ Olympus에서 Celeste 또는 Lönn을 실행할 때 문제가 발생할 수 있�
 원클릭 설치 처리기를 설치하려면 install.sh를 실행해 주세요.
 install.sh는 Olympus 설치 폴더에서 찾을 수 있습니다.]],
 
+    -- downloadqueue.lua
+    downloads = [[다운로드]],
+    download_queue = [[다운로드 대기열]],
+    download_queued = [[대기 중]],
+    download_downloading = [[다운로드 중]],
+    download_paused = [[일시 정지됨]],
+    download_done = [[완료]],
+    download_failed_state = [[실패]],
+    download_canceled = [[취소됨]],
+    pause = [[일시 정지]],
+    resume = [[재개]],
+    cancel_download = [[취소]],
+    clear_finished = [[완료 항목 지우기]],
+    no_downloads = [[아직 다운로드가 없습니다.]],
+    download_complete_title = [[다운로드 완료]],
+    download_failed_title = [[다운로드 실패]],
+    download_complete = [[%s 설치 성공]],
+    download_failed = [[%s 설치 실패]],
+
     -- modupdater.lua
     updating_enabled_mods = [[활성화된 모드 업데이트 중]],
     updating_all_mods = [[모든 모드 업데이트 중]],
@@ -161,6 +180,7 @@ Everest 설치를 시도하기 전에 제거하는 것이 좋습니다.
     -- scenes/gamebanana.lua
     gamebanana = [[GameBanana]],
     most_recent = [[최신순]],
+    last_updated = [[최근 업데이트순]],
     most_downloaded = [[다운로드순]],
     most_viewed = [[조회순]],
     most_liked = [[좋아요순]],
@@ -305,7 +325,7 @@ Celeste 설치 관리자로 이동하시겠습니까?]],
 
     -- scenes/modlist.lua
     mod_manager = [[모드 관리자]],
-    no1 = [[아니요]],
+    no1 = [[0]],
     s_enabled_s = [[%s %s 활성화됨]],
     mod = [[모드]],
     mods = [[모드]],
@@ -397,6 +417,7 @@ Celeste 설치 관리자로 이동하시겠습니까?]],
     could_not_find_everest_build_for_branch = [["%s" 브랜치의 Everest 빌드를 찾을 수 없습니다.]],
     use_opengl = [[OpenGL 사용]],
     close_after_one_click_install = [[원클릭 설치 후 닫기]],
+    auto_enable_dependencies_on_download = [[다운로드 시 종속성 자동 활성화]],
     open_installation_folder = [[설치 폴더 열기]],
     open_log_and_config_folder = [[로그 및 설정 폴더 열기]],
     mirrors = [[미러]],

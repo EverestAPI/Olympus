@@ -15,6 +15,7 @@ local scene = {
 
 local sortOptions = {
     { text = lang.get("most_recent"), data = "latest" },
+    { text = lang.get("last_updated"), data = "updated" },
     { text = lang.get("most_downloaded"), data = "downloads" },
     { text = lang.get("most_viewed"), data = "views" },
     { text = lang.get("most_liked"), data = "likes" }
@@ -636,7 +637,7 @@ function scene.item(info)
                                     btns[i] = uie[i == 1 and "buttonGreen" or "button"](
                                         { { 1, 1, 1, 1 }, file.Name, { 1, 1, 1, 0.5 }, " ∙ " .. os.date(lang.get("y_m_d_h_m_s"), file.CreatedDate) .. " ∙ " .. uiu.countformat(file.Downloads, lang.get("d_download"), lang.get("d_downloads")), { 1, 1, 1, 0.5 }, "\n" .. file.Description},
                                         function(self)
-                                            modinstaller.install(file.URL, file.MirrorName)
+                                            modinstaller.install(file.URL, file.MirrorName, nil, nil, name)
                                             self:getParent("container"):close(lang.get("ok"))
                                         end
                                     )

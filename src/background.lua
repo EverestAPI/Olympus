@@ -105,10 +105,15 @@ function background.new()
             self.realX = 0
             self.realY = 0
             local width, height = love.graphics.getWidth(), love.graphics.getHeight()
+            if ui and ui.scale and ui.scale ~= 1 then
+                width = math.max(width, ui.realWidth)
+                height = math.max(height, ui.realHeight)
+            end
+            width, height = width + 128, height + 128
             if width > self.innerWidth or height > self.innerHeight then
-                self.effect.resize(width + 128, height + 128)
-                self.innerWidth = width + 128
-                self.innerHeight = height + 128
+                self.effect.resize(width, height)
+                self.innerWidth = width
+                self.innerHeight = height
             end
         end,
 
