@@ -35,6 +35,7 @@ namespace Olympus {
                 new CmdFree(),
                 new CmdGetEnv(),
                 new CmdGetLoennLatestVersion(),
+                new CmdGetModDescriptions(),
                 new CmdGetModIdToCategoryMap(),
                 new CmdGetModIdToNameMap(),
                 new CmdGetRunningPath(),
