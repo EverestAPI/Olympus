@@ -25,6 +25,9 @@ local ui
 local uie
 local megacanvas
 
+local keynav
+local controller
+
 local debugLabel
 local debugDetailed = false
 local logWindow
@@ -36,13 +39,6 @@ local focusStatus = 0
 local canvasWidth = 0
 local canvasHeight = 0
 local canvas
-
-local uiScale = 1
-local vw = 0
-local vh = 0
-local getWidthOrig
-local getHeightOrig
-local getMousePosOrig
 
 local lang = require("lang")
 
@@ -302,6 +298,10 @@ function love.load(args)
     notify = require("notify")
     themer = require("themer")
 
+    keynav = require("keynav")
+    controller = require("controller")
+    controller.onBack = back
+
     themer.apply((config.theme == "default" or not config.theme) and themer.default or utils.loadJSON("data/themes/" .. config.theme .. ".json"))
 
     local root = uie.column({
@@ -479,53 +479,11 @@ function love.load(args)
 
     ui.init(root, false)
 
-    -- UI Scale: scale the whole UI within a fixed-size window via virtual-resolution rendering.
-    do
-        uiScale = tonumber(config.uiScale) or 1
-        if uiScale <= 0 then
-            uiScale = 1
-        end
-
-        getWidthOrig = love.graphics.getWidth
-        getHeightOrig = love.graphics.getHeight
-        getMousePosOrig = love.mouse.getPosition
-
-        local function applyVirtual()
-            if vw <= 0 or vh <= 0 then
-                vw = math.max(1, math.floor(getWidthOrig() / uiScale))
-                vh = math.max(1, math.floor(getHeightOrig() / uiScale))
-            end
-            ui._realWidth = getWidthOrig()
-            ui._realHeight = getHeightOrig()
-            love.graphics.getWidth = function() return vw end
-            love.graphics.getHeight = function() return vh end
-            love.mouse.getPosition = function()
-                local x, y = getMousePosOrig()
-                return x / uiScale, y / uiScale
-            end
-        end
-
-        local function restoreReal()
-            love.graphics.getWidth = getWidthOrig
-            love.graphics.getHeight = getHeightOrig
-            love.mouse.getPosition = getMousePosOrig
-        end
-
-        -- Input hooks pass raw window coords to the toolkit; translate to virtual space.
-        local mousepressedOrig = ui.mousepressed
-        ui.mousepressed = function(x, y, ...)
-            return mousepressedOrig(x / uiScale, y / uiScale, ...)
-        end
-        local mousereleasedOrig = ui.mousereleased
-        ui.mousereleased = function(x, y, ...)
-            return mousereleasedOrig(x / uiScale, y / uiScale, ...)
-        end
-
-        ui._applyVirtual = applyVirtual
-        ui._restoreReal = restoreReal
-        ui._uiScale = uiScale
-        ui._realWidth = getWidthOrig()
-        ui._realHeight = getHeightOrig()
+    -- UI Scale: olympUI lays out and renders the UI in a virtual resolution
+    -- (window / scale) and blits it back scaled to the window.
+    ui.scale = tonumber(config.uiScale) or 1
+    if ui.scale <= 0 then
+        ui.scale = 1
     end
 
     ui.hookLove(false, true)
@@ -664,6 +622,8 @@ function love.load(args)
 
         pathbar.children = uiu.map(items, uie.menuItem.map)
 
+        pathbar.children[#pathbar.children + 1] = require("downloadqueueui").makeIndicator()
+
         for i = 1, #pathbar.children do
             pathbar.children[i].enabled = not scener.locked
         end
@@ -675,6 +635,7 @@ function love.load(args)
 
     alert.init(root:findChild("alertroot"))
     notify.init(root:findChild("notifyroot"))
+    require("downloadqueueui").init(root:findChild("main"))
 
     scener.set("mainmenu")
     require("modinstaller").register()
@@ -791,9 +752,11 @@ function love.update(dt)
 
     threader.update()
 
-    ui._applyVirtual()
     ui.update()
-    ui._restoreReal()
+
+    if controller then
+        controller.update()
+    end
 
     if profile then
         profile.stop()
@@ -832,11 +795,12 @@ function love.draw()
     local width = love.graphics.getWidth()
     local height = love.graphics.getHeight()
 
-    if uiScale <= 0 then
-        uiScale = 1
+    local scale = ui.scale
+    if scale <= 0 then
+        scale = 1
     end
-    vw = math.max(1, math.floor(width / uiScale))
-    vh = math.max(1, math.floor(height / uiScale))
+    local vw = math.max(1, math.floor(width / scale))
+    local vh = math.max(1, math.floor(height / scale))
 
     local redraw = focusStatus == 0 or (love.frame % 3) == 0
 
@@ -867,16 +831,14 @@ function love.draw()
             love.graphics.setCanvas(canvas)
         else
             love.graphics.push()
-            if uiScale ~= 1 then
-                love.graphics.scale(uiScale, uiScale)
+            if scale ~= 1 then
+                love.graphics.scale(scale, scale)
             end
         end
 
         if profile then
             profile.start()
         end
-
-        ui._applyVirtual()
 
         -- love.graphics.setScissor(0, 0, love.graphics.getWidth(), love.graphics.getHeight())
 
@@ -902,8 +864,6 @@ function love.draw()
 
         -- love.graphics.setScissor()
 
-        ui._restoreReal()
-
         if profile then
             profile.stop()
         end
@@ -916,7 +876,7 @@ function love.draw()
     end
 
     if canvas then
-        love.graphics.draw(canvas, 0, 0, 0, uiScale, uiScale)
+        love.graphics.draw(canvas, 0, 0, 0, scale, scale)
     end
 
     if debugDetailed then

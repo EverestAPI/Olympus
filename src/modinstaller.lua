@@ -3,15 +3,13 @@ local log = require('logger')('modinstaller')
 local utils = require("utils")
 local fs = require("fs")
 local config = require("config")
-local threader = require("threader")
-local notify = require("notify")
 local alert = require("alert")
-local scener = require("scener")
 local sharp = require("sharp")
 local registry = require("registry")
 local modupdater = require("modupdater")
 local modependencies = require("modependencies")
 local lang = require("lang")
+local downloadqueue = require("downloadqueue")
 
 local modinstaller = {}
 
@@ -61,13 +59,17 @@ function modinstaller.register()
 end
 
 
-function modinstaller.install(modurl, mirrorName, cb, autoclose)
-    local install = config.installs[config.install]
-    install = install and install.path
-
-    if not cb then
-        cb = function(launch)
-            scener.pop()
+-- Queues a mod download in the background, so the UI can stay responsive.
+-- The cb and autoclose parameters are kept for backwards compatibility with
+-- existing callers; the background queue replaces the old installer scene.
+-- modname is an optional display name (e.g. the mod title); when omitted we
+-- fall back to the file name for file:// links and the URL otherwise.
+function modinstaller.install(modurl, mirrorName, cb, autoclose, modname)
+    local name = modname
+    if name == nil then
+        name = modurl
+        if modurl:match("^file://") then
+            name = fs.filename(modurl)
         end
     end
 
@@ -127,6 +129,10 @@ function modinstaller.install(modurl, mirrorName, cb, autoclose)
         finish()
     end)
 
+    downloadqueue.enqueue(modurl, mirrorName or "", {
+        name = name,
+        autoclose = autoclose,
+    })
 end
 
 
