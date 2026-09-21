@@ -48,6 +48,25 @@ local keys = {
 请运行 install.sh 以安装一键安装处理程序。
 install.sh 位于你的 Olympus 安装文件夹中。]],
 
+    -- downloadqueue.lua
+    downloads = [[下载]],
+    download_queue = [[下载队列]],
+    download_queued = [[排队中]],
+    download_downloading = [[下载中]],
+    download_paused = [[已暂停]],
+    download_done = [[已完成]],
+    download_failed_state = [[失败]],
+    download_canceled = [[已取消]],
+    pause = [[暂停]],
+    resume = [[继续]],
+    cancel_download = [[取消]],
+    clear_finished = [[清除已完成]],
+    no_downloads = [[暂无下载。]],
+    download_complete_title = [[下载完成]],
+    download_failed_title = [[下载失败]],
+    download_complete = [[%s 安装成功]],
+    download_failed = [[%s 安装失败]],
+
     -- modupdater.lua
     updating_enabled_mods = [[正在更新已启用的模组]],
     updating_all_mods = [[正在更新所有模组]],

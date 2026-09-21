@@ -50,6 +50,25 @@ Pour corriger le problème, suis les instructions sur le site d'Everest pour ré
 Lance install.sh pour installer le gestionnaire d'installation 1-Click.
 install.sh se trouve dans le dossier d'installation d'Olympus.]],
 
+    -- downloadqueue.lua
+    downloads = [[Téléchargements]],
+    download_queue = [[File de téléchargement]],
+    download_queued = [[En attente]],
+    download_downloading = [[Téléchargement...]],
+    download_paused = [[En pause]],
+    download_done = [[Terminé]],
+    download_failed_state = [[Échec]],
+    download_canceled = [[Annulé]],
+    pause = [[Pause]],
+    resume = [[Reprendre]],
+    cancel_download = [[Annuler]],
+    clear_finished = [[Effacer les terminés]],
+    no_downloads = [[Aucun téléchargement pour le moment.]],
+    download_complete_title = [[Téléchargement terminé]],
+    download_failed_title = [[Échec du téléchargement]],
+    download_complete = [[%s installé avec succès]],
+    download_failed = [[Échec de l'installation de %s]],
+
     -- modupdater.lua
     updating_enabled_mods = [[Mise à jour des mods activés]],
     updating_all_mods = [[Mise à jour de tous les mods]],

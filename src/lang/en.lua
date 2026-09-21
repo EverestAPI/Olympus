@@ -49,6 +49,25 @@ To fix this, reinstall Olympus following the instructions on the Everest website
 Please run install.sh to install the one-click installer handler.
 install.sh can be found in your Olympus installation folder.]],
 
+    -- downloadqueue.lua
+    downloads = [[Downloads]],
+    download_queue = [[Download Queue]],
+    download_queued = [[Queued]],
+    download_downloading = [[Downloading]],
+    download_paused = [[Paused]],
+    download_done = [[Done]],
+    download_failed_state = [[Failed]],
+    download_canceled = [[Canceled]],
+    pause = [[Pause]],
+    resume = [[Resume]],
+    cancel_download = [[Cancel]],
+    clear_finished = [[Clear finished]],
+    no_downloads = [[No downloads yet.]],
+    download_complete_title = [[Download complete]],
+    download_failed_title = [[Download failed]],
+    download_complete = [[%s installed successfully]],
+    download_failed = [[%s failed to install]],
+
     -- modupdater.lua
     updating_enabled_mods = [[Updating enabled mods]],
     updating_all_mods = [[Updating all mods]],
