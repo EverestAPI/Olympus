@@ -664,6 +664,8 @@ function love.load(args)
 
         pathbar.children = uiu.map(items, uie.menuItem.map)
 
+        pathbar.children[#pathbar.children + 1] = require("downloadqueueui").makeIndicator()
+
         for i = 1, #pathbar.children do
             pathbar.children[i].enabled = not scener.locked
         end
@@ -675,6 +677,7 @@ function love.load(args)
 
     alert.init(root:findChild("alertroot"))
     notify.init(root:findChild("notifyroot"))
+    require("downloadqueueui").init(root:findChild("main"))
 
     scener.set("mainmenu")
     require("modinstaller").register()
