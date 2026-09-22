@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Olympus {
     // Fetches the GameBanana descriptions of installed mods, looked up by their
-    // GameBanana title Descriptions come from the same search database that powers  
+    // GameBanana title Descriptions come from the same search database that powers
     // the mod browser.
     public class CmdGetModDescriptions : Cmd<string[], string[]> {
         private static readonly Logger log = new Logger(nameof(CmdGetModDescriptions));
