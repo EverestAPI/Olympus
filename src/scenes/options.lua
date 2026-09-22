@@ -115,6 +115,11 @@ local everestBranchColumn = uie.column({
     }):with(uiu.fillWidth)
 }):with(uiu.fillWidth(8 + 1 / 2)):with(uiu.at(1 / 2, 0))
 
+local autoEnableDependenciesOptions = {
+    { text = lang.get("enabled_default"), data = "enabled" },
+    { text = lang.get("disabled"), data = "disabled" }
+}
+
 -- Keep in sync with https://github.com/EverestAPI/Everest/blob/dev/Celeste.Mod.mm/Mod/Core/CoreModuleSettings.cs :: CreateMirrorPreferencesEntry
 local mirrorPreferences = {
     { text = lang.get("disabled_default"), data = "gb,jade,risingsunlight,otobot,wegfan" },
@@ -477,6 +482,23 @@ local root = uie.column({
                         }):with(uiu.fillWidth)
                     } or {}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
 
+                }):with(uiu.fillWidth),
+
+                uie.row({
+                    uie.column({
+                        uie.label(lang.get("auto_enable_dependencies_on_download")),
+                        uie.dropdown(autoEnableDependenciesOptions, function(self, value)
+                            config.autoEnableDependencies = value
+                            config.save()
+                        end):with({
+                            placeholder = "???",
+                            selectedData = config.autoEnableDependencies
+                        }):with(uiu.fillWidth)
+                    }):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(0 / optioncount, 0)),
+
+                    uie.column({}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(1 / optioncount, 0)),
+                    uie.column({}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(2 / optioncount, 0)),
+                    uie.column({}):with(uiu.fillWidth(8 + 1 / optioncount)):with(uiu.at(3 / optioncount, 0)),
                 }):with(uiu.fillWidth),
 
                 uie.group({}),

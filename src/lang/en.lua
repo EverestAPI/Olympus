@@ -49,6 +49,25 @@ To fix this, reinstall Olympus following the instructions on the Everest website
 Please run install.sh to install the one-click installer handler.
 install.sh can be found in your Olympus installation folder.]],
 
+    -- downloadqueue.lua
+    downloads = [[Downloads]],
+    download_queue = [[Download Queue]],
+    download_queued = [[Queued]],
+    download_downloading = [[Downloading]],
+    download_paused = [[Paused]],
+    download_done = [[Done]],
+    download_failed_state = [[Failed]],
+    download_canceled = [[Canceled]],
+    pause = [[Pause]],
+    resume = [[Resume]],
+    cancel_download = [[Cancel]],
+    clear_finished = [[Clear finished]],
+    no_downloads = [[No downloads yet.]],
+    download_complete_title = [[Download complete]],
+    download_failed_title = [[Download failed]],
+    download_complete = [[%s installed successfully]],
+    download_failed = [[%s failed to install]],
+
     -- modupdater.lua
     updating_enabled_mods = [[Updating enabled mods]],
     updating_all_mods = [[Updating all mods]],
@@ -399,6 +418,7 @@ Tip: Disabling the mod prevents Everest from loading it, and is as efficient as 
     could_not_find_everest_build_for_branch = [[Couldn't find an Everest build for the "%s" branch.]],
     use_opengl = [[Use OpenGL]],
     close_after_one_click_install = [[Close after One-Click Install]],
+    auto_enable_dependencies_on_download = [[Enable Dependencies on Download]],
     open_installation_folder = [[Open installation folder]],
     open_log_and_config_folder = [[Open log and config folder]],
     mirrors = [[Mirrors]],
