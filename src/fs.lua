@@ -196,74 +196,9 @@ function fs.stripExtension(path)
     return path:sub(1, #path - #fs.fileExtension(path) - 1)
 end
 
-function fs.fixDirectoryPathEncoding(src)
-    -- this is needed to use fs.read and fs.write in game directories
-    -- that have non-Latin characters in their path
-    -- ... but only on Windows, of course.
-    if love.system.getOS() ~= "Windows" then
-        return src
-    end
-
-    local ffi = require("ffi")
-    local C = ffi.C
-
-    ffi.cdef[[
-        int MultiByteToWideChar(
-            unsigned int CodePage,
-            int dwFlags,
-            char* lpMultiByteStr,
-            int cbMultiByte,
-            wchar_t* lpWideCharStr,
-            int cchWideChar
-        );
-        int WideCharToMultiByte(
-            unsigned int CodePage,
-            int dwFlags,
-            wchar_t* lpWideCharStr,
-            int cchWideChar,
-            char* lpMultiByteStr,
-            int cbMultiByte,
-            char* lpDefaultChar,
-            bool* lpUsedDefaultChar
-        );
-    ]]
-
-    -- CP_UTF8 = 65001
-    -- CP_ACP = 0
-
-    -- put the path string to FFI land
-    local length = #src + 1
-    local srcC = ffi.new("char[?]", length)
-    ffi.copy(srcC, src)
-    srcC[#src] = 0
-
-    -- convert the path from UTF-8 to wide-char
-    local size = C.MultiByteToWideChar(65001, 0, srcC, length, nil, 0)
-    assert(size ~= 0)
-    local srcW = ffi.new("wchar_t[?]", size)
-    length = C.MultiByteToWideChar(65001, 0, srcC, length, srcW, size)
-    assert(size == length)
-
-    -- convert the path from wide-chars to whatever the "default ANSI encoding" is
-    size = C.WideCharToMultiByte(0, 0, srcW, length, nil, 0, nil, nil)
-    assert(size ~= 0)
-    local dstC = ffi.new("char[?]", size)
-    length = C.WideCharToMultiByte(0, 0, srcW, length, dstC, size, nil, nil)
-    assert(size == length)
-
-    -- pull back the resulting string from FFI land
-    local dst = ffi.string(dstC, length - 1)
-
-    if path ~= dst then
-        log.debug("Fixed path encoding:", src, "->", dst)
-    end
-    return dst
-end
-
 function fs.read(path)
-    local fh, err = io.open(path, "rb")
+    local fh = io.open(path, "rb")
     if not fh then
-        log.warning("Could not open file", path, "for reading, skipping:", err)
         return
     end
 
@@ -276,9 +211,8 @@ end
 function fs.write(path, content)
     fs.mkdir(fs.dirname(path))
 
-    local fh, err = io.open(path, "wb")
+    local fh = io.open(path, "wb")
     if not fh then
-        log.warning("Could not open file", path, "for writing, skipping:", err)
         return
     end
 

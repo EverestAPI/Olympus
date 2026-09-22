@@ -43,15 +43,11 @@ namespace Olympus {
         public readonly Task Task;
 
         public readonly ManualResetEvent Event = new ManualResetEvent(false);
-        // Signaled while the task is allowed to run, reset while it is paused.
-        // Starts signaled so freshly created tasks run immediately.
-        public readonly ManualResetEvent PauseEvent = new ManualResetEvent(true);
         public readonly WaitHandle[] EventWaitHandles;
 
         public object Current;
         public string Status;
         public bool Alive;
-        public bool Paused;
 
         public CmdTask(string id, IEnumerator enumerator) {
             EventWaitHandles = new WaitHandle[] { Event };
@@ -106,32 +102,11 @@ namespace Olympus {
         }
 
         private void Run() {
-            while (true) {
-                // While paused the background thread parks here, keeping the enumerator
-                // (and thus any open download streams) alive so resuming continues instead
-                // of restarting the work.
-                PauseEvent.WaitOne();
-                if (!(Alive = Step()))
-                    break;
-            }
+            while (Alive = Step()) ;
             try {
                 Event.Set();
             } catch {
             }
-        }
-
-        public void Pause() {
-            if (!Alive)
-                return;
-            Paused = true;
-            PauseEvent.Reset();
-        }
-
-        public void Resume() {
-            if (!Alive)
-                return;
-            Paused = false;
-            PauseEvent.Set();
         }
 
         public object Dequeue() {
@@ -221,11 +196,6 @@ namespace Olympus {
                 log.Warning($"Task {ID} was interrupted while running");
                 Status = "interrupted";
                 Alive = false;
-                // Wake up a paused task so it can notice the interruption and stop.
-                try {
-                    PauseEvent.Set();
-                } catch {
-                }
                 Event.Set();
             }
 

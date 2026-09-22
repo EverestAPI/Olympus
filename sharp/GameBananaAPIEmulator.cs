@@ -58,9 +58,6 @@ namespace Olympus {
                 case "downloads":
                     sortComparator = new Sorter("Downloads");
                     break;
-                case "updated":
-                    sortComparator = new Sorter("UpdatedDate");
-                    break;
                 default:
                     sortComparator = new Sorter("CreatedDate");
                     break;
