@@ -141,6 +141,7 @@ function config.load()
     default(data, "imageMirror", "jade") -- jade, otobot or none
 
     default(data, "closeAfterOneClickInstall", "disabled")
+    default(data, "autoEnableDependencies", "enabled")
 
     default(data, "language", "en")
 

@@ -412,6 +412,7 @@ Tip: Disabling the mod prevents Everest from loading it, and is as efficient as 
     update_mods_on_startup = [[Update Mods on Startup]],
     use_opengl = [[Use OpenGL]],
     close_after_one_click_install = [[Close after One-Click Install]],
+    auto_enable_dependencies_on_download = [[Enable Dependencies on Download]],
     open_installation_folder = [[Open installation folder]],
     open_log_and_config_folder = [[Open log and config folder]],
     mirrors = [[Mirrors]],

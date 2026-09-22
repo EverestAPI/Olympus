@@ -6,6 +6,8 @@ local config = require("config")
 local alert = require("alert")
 local sharp = require("sharp")
 local registry = require("registry")
+local modupdater = require("modupdater")
+local modependencies = require("modependencies")
 local lang = require("lang")
 local downloadqueue = require("downloadqueue")
 
@@ -74,6 +76,26 @@ function modinstaller.install(modurl, mirrorName, cb, autoclose, modname)
     downloadqueue.enqueue(modurl, mirrorName or "", {
         name = name,
         autoclose = autoclose,
+        onSuccess = function(last)
+            if config.autoEnableDependencies == "enabled" then
+                local status = type(last) == "table" and last[1] or last
+                local modName = tostring(status):match("^Successfully installed (.+)$")
+                if modName then
+                    threader.routine(function()
+                        local ok, enabled = pcall(modependencies.enableDependenciesOf, install, modName)
+                        if ok then
+                            if enabled and #enabled > 0 then
+                                log.info("enabled dependencies of", modName, ":", table.concat(enabled, ", "))
+                            end
+                        else
+                            log.warning("failed to enable dependencies of", modName, ":", tostring(enabled))
+                        end
+                    end)
+                else
+                    log.warning("couldn't determine the name of the installed mod, skipping enable dependencies:", tostring(status))
+                end
+            end
+        end
     })
 end
 
