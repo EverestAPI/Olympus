@@ -923,13 +923,27 @@ function scene.item(info)
         return nil
     end
 
+    local themeColors = uie.modNameLabelColors().style
     local label, tooltip = getLabelTextFor(info)
     local item = uie.paneled.row({
-        uie.label(label):with({
-            tooltipText = tooltip,
-            tooltipWaitDuration = 0,
-            interactive = tooltip and 1 or 0
-        }):as("title"),
+        uie.column({
+            uie.label(label):with({
+                tooltipText = tooltip,
+                tooltipWaitDuration = 0,
+                interactive = tooltip and 1 or 0
+            }):as("title"),
+
+            -- show the mod description under the mod name, if it has one
+            -- (the label is always there so the GameBanana description, which
+            -- is fetched in the background after the list is loaded, can be
+            -- filled in later; it's empty and takes no space otherwise)
+            uie.label(info.Description or ""):with({
+                wrap = true,
+                style = {
+                    color = themeColors.disabledColor
+                }
+            }):as("description"),
+        }):with(uiu.fillWidth(true)),
 
         uie.row({
             uie.warning(false, function(warning, newState)
@@ -979,6 +993,56 @@ function scene.item(info)
     }):with(uiu.fillWidth)
 
     return item
+end
+
+-- fetches the GameBanana descriptions of the installed mods in the background,
+-- then fills in the description label of each row once the descriptions arrive.
+-- Mods whose everest.yaml already has a description keep that one.
+function scene.fetchModDescriptions(loadingID)
+    threader.routine(function()
+        if scene.loadingID ~= loadingID then
+            return
+        end
+
+        local titles = {}
+        local titlesSeen = {}
+        for _, mod in ipairs(scene.modlist) do
+            local title = mod.info.GameBananaTitle
+            if title and not titlesSeen[title] then
+                titlesSeen[title] = true
+                titles[#titles + 1] = title
+            end
+        end
+
+        if #titles == 0 then
+            return
+        end
+
+        local ok, descriptions = pcall(function()
+            return sharp.getModDescriptions(titles):result()
+        end)
+        if not ok or scene.loadingID ~= loadingID then
+            return
+        end
+
+        local descriptionsByTitle = {}
+        for i = 1, #titles do
+            local description = descriptions[i]
+            if description and #description ~= 0 then
+                descriptionsByTitle[titles[i]] = description
+            end
+        end
+
+        for _, mod in ipairs(scene.modlist) do
+            local label = mod.row:findChild("description")
+            if label and label:getText() == "" then
+                local description = descriptionsByTitle[mod.info.GameBananaTitle]
+                if description then
+                    label:setText(description)
+                end
+            end
+        end
+    end)
 end
 
 function scene.reload()
@@ -1196,6 +1260,8 @@ function scene.reload()
         end
 
         updateEnabledModCountLabel()
+
+        scene.fetchModDescriptions(loadingID)
     end)
 end
 
