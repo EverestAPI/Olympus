@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Updated the Korean translation with the latest changes
+∙ Mod descriptions are now displayed in the Manage Installed Mods menu
