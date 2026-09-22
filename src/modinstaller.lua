@@ -3,15 +3,13 @@ local log = require('logger')('modinstaller')
 local utils = require("utils")
 local fs = require("fs")
 local config = require("config")
-local threader = require("threader")
-local notify = require("notify")
 local alert = require("alert")
-local scener = require("scener")
 local sharp = require("sharp")
 local registry = require("registry")
 local modupdater = require("modupdater")
 local modependencies = require("modependencies")
 local lang = require("lang")
+local downloadqueue = require("downloadqueue")
 
 local modinstaller = {}
 
@@ -61,72 +59,44 @@ function modinstaller.register()
 end
 
 
-function modinstaller.install(modurl, mirrorName, cb, autoclose)
-    local install = config.installs[config.install]
-    install = install and install.path
-
-    if not cb then
-        cb = function(launch)
-            scener.pop()
+-- Queues a mod download in the background, so the UI can stay responsive.
+-- The cb and autoclose parameters are kept for backwards compatibility with
+-- existing callers; the background queue replaces the old installer scene.
+-- modname is an optional display name (e.g. the mod title); when omitted we
+-- fall back to the file name for file:// links and the URL otherwise.
+function modinstaller.install(modurl, mirrorName, cb, autoclose, modname)
+    local name = modname
+    if name == nil then
+        name = modurl
+        if modurl:match("^file://") then
+            name = fs.filename(modurl)
         end
     end
 
-    local modname = modurl
-    if modurl:match("^file://") then
-        modname = fs.filename(modurl)
-    end
-
-    local installer = scener.push("installer")
-    installer.update(string.format(lang.get("preparing_installation_of_s"), modname), false, "")
-
-    installer.sharpTask("installMod", install, modurl, mirrorName or "", config.mirrorPreferences):calls(function(task, last)
-        if not last then
-            return
-        end
-
-        installer.update(last[1], 1, "done", true)
-
-        local function finish()
-            installer.done({
-                {
-                    lang.get("launch"),
-                    function()
-                        cb(modupdater.updateAllMods(install))
-                    end
-                },
-                {
-                    lang.get("ok"),
-                    function()
-                        cb(false)
-                    end
-                }
-            }, nil, autoclose)
-        end
-
-        if config.autoEnableDependencies == "enabled" then
-            local modName = tostring(last):match("^Successfully installed (.+)$")
-            if modName then
-                threader.routine(function()
-                    local ok, enabled = pcall(modependencies.enableDependenciesOf, install, modName)
-                    if ok then
-                        if enabled and #enabled > 0 then
-                            log.info("enabled dependencies of", modName, ":", table.concat(enabled, ", "))
+    downloadqueue.enqueue(modurl, mirrorName or "", {
+        name = name,
+        autoclose = autoclose,
+        onSuccess = function(last)
+            if config.autoEnableDependencies == "enabled" then
+                local status = type(last) == "table" and last[1] or last
+                local modName = tostring(status):match("^Successfully installed (.+)$")
+                if modName then
+                    threader.routine(function()
+                        local ok, enabled = pcall(modependencies.enableDependenciesOf, install, modName)
+                        if ok then
+                            if enabled and #enabled > 0 then
+                                log.info("enabled dependencies of", modName, ":", table.concat(enabled, ", "))
+                            end
+                        else
+                            log.warning("failed to enable dependencies of", modName, ":", tostring(enabled))
                         end
-                    else
-                        log.warning("failed to enable dependencies of", modName, ":", tostring(enabled))
-                    end
-                end):calls(function()
-                    finish()
-                end)
-                return
-            else
-                log.warning("couldn't determine the name of the installed mod, skipping enable dependencies:", tostring(last))
+                    end)
+                else
+                    log.warning("couldn't determine the name of the installed mod, skipping enable dependencies:", tostring(status))
+                end
             end
         end
-
-        finish()
-    end)
-
+    })
 end
 
 

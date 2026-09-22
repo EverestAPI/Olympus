@@ -158,6 +158,7 @@ namespace Olympus {
             public string Version;
             public string DLL;
             public string[] Dependencies;
+            public string Description;
             public bool IsValid;
 
             public void Parse(TextReader reader, Dictionary<string, string> modIDsToNamesMap, Dictionary<string, string> modIDsToCategoriesMap) {
@@ -169,6 +170,7 @@ namespace Olympus {
                             Version = yaml[0].Version;
                             DLL = yaml[0].DLL;
                             Dependencies = yaml[0].Dependencies.Select(dep => dep.Name).ToArray();
+                            Description = yaml[0].Description;
                             GameBananaTitle = modIDsToNamesMap.TryGetValue(Name, out string o) ? o : null;
                             GameBananaCategory = modIDsToCategoriesMap.TryGetValue(Name, out string o1) ? o1 : null;
 
@@ -185,6 +187,7 @@ namespace Olympus {
             public string Name;
             public string Version;
             public string DLL;
+            public string Description;
             public List<EverestModuleMetadata> Dependencies;
         }
 

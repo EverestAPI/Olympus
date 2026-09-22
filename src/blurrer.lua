@@ -9,6 +9,9 @@ function blurrer.drawBlurredCanvasContent(canvas, x, y, paddingL, paddingT, blur
     love.graphics.clear(0, 0, 0, 0)
     love.graphics.setColor(blurFade, blurFade, blurFade, blurFade)
     uiu.drawCanvas(canvas, x - paddingL, y - paddingT)
+
+    -- reset scale to avoid scaling the canvas again upon blurring
+    love.graphics.origin()
 end
 
 function blurrer.drawBlurredCanvas(orig, el, canvas, x, y, width, height, paddingL, paddingT, paddingR, paddingB)
@@ -19,6 +22,10 @@ function blurrer.drawBlurredCanvas(orig, el, canvas, x, y, width, height, paddin
 
     love.graphics.push()
     love.graphics.origin()
+    -- we need to set the scale again since we're in a fresh graphics state
+    if ui._uiScale and ui._uiScale ~= 1 then
+        love.graphics.scale(ui._uiScale, ui._uiScale)
+    end
 
     local blurFadeInv = math.sin(math.pi * (1 - blurFade) * 0.5)
     if blurFadeInv > 0.01 then
