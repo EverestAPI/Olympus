@@ -29,6 +29,7 @@ local scene = {
     modPathToName = {},
     onlyShowEnabledMods = false,
     onlyShowFavoriteMods = false,
+    onlyShowLeafMods = false,
     search = "",
     categoryFilter = "",
 }
@@ -139,6 +140,11 @@ local function refreshVisibleMods()
             -- only show favorite mods
             (not scene.onlyShowFavoriteMods
                 or mod.info.IsFavorite)
+            and
+            -- only show leaf mods
+            (not scene.onlyShowLeafMods
+                or (not next(scene.modDependents[mod.info.Name] or {}) 
+                or (mod.info.IsFavorite)))
             and
             -- search terms
             (scene.search == ""
@@ -993,6 +999,7 @@ function scene.reload()
     scene.modPathToName = {}
     scene.onlyShowEnabledMods = false
     scene.onlyShowFavoriteMods = false
+    scene.onlyShowLeafMods = false
     scene.search = ""
     scene.categoryFilter = ""
 
@@ -1067,6 +1074,10 @@ function scene.reload()
                     scene.onlyShowFavoriteMods = newState
                     refreshVisibleMods()
                 end):with({ enabled = false }):with(verticalCenter):as("onlyShowFavoriteModsCheckbox"),
+                uie.checkbox(lang.get("only_show_leafs"), false, function(checkbox, newState)
+                    scene.onlyShowLeafMods = newState
+                    refreshVisibleMods()
+                end):with({ enabled = false }):with(verticalCenter):as("onlyShowLeafMods"),
                 uie.row({
                     uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
                     uie.button(lang.get("enable_all"), function()
@@ -1186,6 +1197,7 @@ function scene.reload()
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         scene.root:findChild("onlyShowFavoriteModsCheckbox"):setEnabled(true)
+        scene.root:findChild("onlyShowLeafMods"):setEnabled(true)
         scene.root:findChild("categoryFilterDropdown"):setEnabled(true)
         searchField:setEnabled(true)
         for _, mod in pairs(scene.modlist) do
