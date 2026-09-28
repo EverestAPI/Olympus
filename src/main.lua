@@ -664,7 +664,12 @@ function love.load(args)
 
         pathbar.children = uiu.map(items, uie.menuItem.map)
 
-        pathbar.children[#pathbar.children + 1] = require("downloadqueueui").makeIndicator()
+        -- The download queue indicator only joins the top bar while there is
+        -- something to download or to look at.
+        local indicator = require("downloadqueueui").makeIndicator(pathbar)
+        if indicator then
+            pathbar.children[#pathbar.children + 1] = indicator
+        end
 
         for i = 1, #pathbar.children do
             pathbar.children[i].enabled = not scener.locked

@@ -82,7 +82,9 @@ local initialized = false
 local panel
 local listInner
 local clearButton
+local pathbar
 local indicatorEl
+local indicatorAttached = false
 
 local rowMap = {}
 local prevState = {}
@@ -179,6 +181,19 @@ local function showToast(title, body)
 end
 
 
+-- Hides the panel without touching userClosed, so it can be brought back by the
+-- next download even if the user never dismissed it themselves.
+local function hidePanel()
+    if not panel or not panel.visible then
+        return
+    end
+    panel.visible = false
+    panel.interactive = -1
+    if ui.root then
+        ui.root:recollect()
+    end
+end
+
 local function openPanel()
     userClosed = false
     if not panel then
@@ -193,14 +208,7 @@ end
 
 local function closePanel()
     userClosed = true
-    if not panel then
-        return
-    end
-    panel.visible = false
-    panel.interactive = -1
-    if ui.root then
-        ui.root:recollect()
-    end
+    hidePanel()
 end
 
 local function togglePanel()
@@ -403,6 +411,35 @@ local function refreshList()
 end
 
 
+-- The top bar lays out every child it has, visible or not, so hiding the
+-- indicator would still leave an empty slot the width of "Downloads" in it.
+-- Instead the element is added to / taken out of the pathbar itself.
+local function setIndicatorAttached(attached)
+    if not indicatorEl or not pathbar or attached == indicatorAttached then
+        return
+    end
+
+    indicatorAttached = attached
+
+    local children = pathbar.children
+    if attached then
+        children[#children + 1] = indicatorEl
+    else
+        for i = 1, #children do
+            if children[i] == indicatorEl then
+                table.remove(children, i)
+                break
+            end
+        end
+    end
+
+    pathbar:reflow()
+    if ui.root then
+        ui.root:recollect()
+    end
+end
+
+
 local function refreshIndicator()
     local el = indicatorEl
     if not el then
@@ -413,11 +450,13 @@ local function refreshIndicator()
     if total == 0 then
         el.visible = false
         el:setEnabled(false)
+        setIndicatorAttached(false)
         return
     end
 
     el.visible = true
     el:setEnabled(true)
+    setIndicatorAttached(true)
     local active = downloadqueue.getActiveCount()
     if active > 0 then
         el:setText(string.format("%s (%d)", lang.get("downloads"), active))
@@ -431,7 +470,13 @@ local function refresh()
     refreshList()
     refreshIndicator()
 
-    if downloadqueue.getActiveCount() > 0 and not userClosed and panel and not panel.visible then
+    if downloadqueue.getCount() == 0 then
+        -- Nothing left in the queue (e.g. "Clear finished" removed the last
+        -- task, or it was canceled): close the panel instead of leaving an
+        -- empty window behind. userClosed is deliberately left alone so a new
+        -- download pops the panel back open.
+        hidePanel()
+    elseif downloadqueue.getActiveCount() > 0 and not userClosed and panel and not panel.visible then
         openPanel()
     end
 end
@@ -594,12 +639,25 @@ function downloadqueueui.init(main)
 end
 
 
-function downloadqueueui.makeIndicator()
+-- Called with the top bar the indicator belongs to. The returned element is
+-- expected to be appended to it by the caller, so nil is returned when the
+-- queue is empty: that way no slot is reserved in the top bar until there is
+-- actually a download to show.
+function downloadqueueui.makeIndicator(topbar)
     local el = uie.menuItem("", function()
         togglePanel()
     end)
     indicatorEl = el
-    refreshIndicator()
+    pathbar = topbar
+
+    if downloadqueue.getCount() == 0 then
+        el.visible = false
+        el:setEnabled(false)
+        indicatorAttached = false
+        return nil
+    end
+
+    indicatorAttached = true
     return el
 end
 
