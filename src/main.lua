@@ -256,6 +256,9 @@ function love.load(args)
         threader.routine(function()
             sharp.getModIdToCategoryMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-categories.json"), config.apiMirror)
         end)
+        threader.routine(function()
+            sharp.getModIdToDescriptionMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-descriptions.json"), config.apiMirror)
+        end)
     end
 
     log.info("Connection with Olympus.Sharp is " .. sharp.echo("OK!"):result())

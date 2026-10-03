@@ -20,6 +20,13 @@ namespace Olympus {
         }
     }
 
+    public class CmdGetModIdToDescriptionMap : CmdGetModIdMap {
+        internal static CmdGetModIdToDescriptionMap Instance;
+        public CmdGetModIdToDescriptionMap() : base("mod_ids_to_descriptions.json") {
+            Instance = this;
+        }
+    }
+
     public abstract class CmdGetModIdMap(string filename) : Cmd<string, bool, bool> {
         private static readonly Logger log = new Logger(nameof(CmdGetModIdMap));
 

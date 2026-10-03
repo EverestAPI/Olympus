@@ -36,9 +36,11 @@ namespace Olympus {
 
             Dictionary<string, string> modIDsToNamesMap = null;
             Dictionary<string, string> modIDsToCategoriesMap = null;
+            Dictionary<string, string> modIDsToDescriptionsMap = null;
             if (readYamls) {
                 modIDsToNamesMap = CmdGetModIdToNameMap.Instance.GetMap();
                 modIDsToCategoriesMap = CmdGetModIdToCategoryMap.Instance.GetMap();
+                modIDsToDescriptionsMap = CmdGetModIdToDescriptionMap.Instance.GetMap();
             }
 
             if (!onlyUpdatable) {
@@ -69,7 +71,7 @@ namespace Olympus {
                             if (File.Exists(yamlPath)) {
                                 using (FileStream stream = File.Open(yamlPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
                                 using (StreamReader reader = new StreamReader(stream))
-                                    info.Parse(reader, modIDsToNamesMap, modIDsToCategoriesMap);
+                                    info.Parse(reader, modIDsToNamesMap, modIDsToCategoriesMap, modIDsToDescriptionsMap);
                             }
                         } catch (UnauthorizedAccessException) { }
                     }
@@ -106,7 +108,7 @@ namespace Olympus {
                             using (ZipArchive zip = new ZipArchive(zipStream, ZipArchiveMode.Read))
                             using (Stream stream = (zip.GetEntry("everest.yaml") ?? zip.GetEntry("everest.yml"))?.Open())
                             using (StreamReader reader = stream == null ? null : new StreamReader(stream))
-                                info.Parse(reader, modIDsToNamesMap, modIDsToCategoriesMap);
+                                info.Parse(reader, modIDsToNamesMap, modIDsToCategoriesMap, modIDsToDescriptionsMap);
                         }
 
                         if (computeHashes && info.Name != null) {
@@ -151,17 +153,17 @@ namespace Olympus {
             public bool IsBlacklisted;
             public bool IsUpdaterBlacklisted;
             public bool IsFavorite;
-            public string GameBananaTitle;
-            public string GameBananaCategory;
+            public string PageTitle;
+            public string PageCategory;
+            public string PageDescription;
 
             public string Name;
             public string Version;
             public string DLL;
             public string[] Dependencies;
-            public string Description;
             public bool IsValid;
 
-            public void Parse(TextReader reader, Dictionary<string, string> modIDsToNamesMap, Dictionary<string, string> modIDsToCategoriesMap) {
+            public void Parse(TextReader reader, Dictionary<string, string> modIDsToNamesMap, Dictionary<string, string> modIDsToCategoriesMap, Dictionary<string, string> modIDsToDescriptionsMap) {
                 try {
                     if (reader != null) {
                         List<EverestModuleMetadata> yaml = YamlHelper.Deserializer.Deserialize<List<EverestModuleMetadata>>(reader);
@@ -170,9 +172,9 @@ namespace Olympus {
                             Version = yaml[0].Version;
                             DLL = yaml[0].DLL;
                             Dependencies = yaml[0].Dependencies.Select(dep => dep.Name).ToArray();
-                            Description = yaml[0].Description;
-                            GameBananaTitle = modIDsToNamesMap.TryGetValue(Name, out string o) ? o : null;
-                            GameBananaCategory = modIDsToCategoriesMap.TryGetValue(Name, out string o1) ? o1 : null;
+                            PageTitle = modIDsToNamesMap.TryGetValue(Name, out string o) ? o : null;
+                            PageCategory = modIDsToCategoriesMap.TryGetValue(Name, out string o1) ? o1 : null;
+                            PageDescription = modIDsToDescriptionsMap.TryGetValue(Name, out string o2) ? o2 : null;
 
                             IsValid = Name != null && Version != null;
                         }
@@ -187,7 +189,6 @@ namespace Olympus {
             public string Name;
             public string Version;
             public string DLL;
-            public string Description;
             public List<EverestModuleMetadata> Dependencies;
         }
 
