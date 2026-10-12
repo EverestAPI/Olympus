@@ -135,4 +135,44 @@ function modependencies.enableDependenciesOf(root, modName)
     return enabledDependencies
 end
 
+-- Returns a set of dependency names of the given mod that are not installed at
+-- all, following the dependency chain through mods that are installed. Names of
+-- core dependencies that can never be downloaded (for example "Celeste") are
+-- reported as missing too; callers are expected to look the names up in the
+-- mod update database and simply skip the ones that aren't there.
+-- Returns nil if the mod list could not be scanned.
+function modependencies.findMissingDependenciesOf(root, modName)
+    local modsByName, modDependencies = collectMods(root)
+    if not modsByName then
+        return nil
+    end
+
+    local queue = {}
+    local tried = {}
+    local missing = {}
+
+    local function enqueue(deps)
+        for _, depName in ipairs(deps or {}) do
+            if not tried[depName] then
+                tried[depName] = true
+                table.insert(queue, depName)
+            end
+        end
+    end
+
+    enqueue(modDependencies[modName])
+
+    while #queue > 0 do
+        local depName = table.remove(queue, 1)
+        local depOptions = modsByName[depName]
+        if not depOptions then
+            missing[depName] = true
+        else
+            enqueue(modDependencies[depName])
+        end
+    end
+
+    return missing
+end
+
 return modependencies

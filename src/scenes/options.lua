@@ -95,6 +95,7 @@ local closeAfterOneClickInstallOptions = {
 
 local autoEnableDependenciesOptions = {
     { text = lang.get("enabled_default"), data = "enabled" },
+    { text = lang.get("only_download"), data = "download" },
     { text = lang.get("disabled"), data = "disabled" }
 }
 

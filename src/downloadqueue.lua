@@ -106,7 +106,8 @@ end
 
 
 -- Enqueues a new mod download.
--- opts: { name = display name, autoclose = quit when it has finished }
+-- opts: { name = display name, autoclose = quit when it has finished,
+--         onSuccess = called when the download finishes, onFailure = called when it fails or gets canceled }
 function downloadqueue.enqueue(url, mirrorName, opts)
     opts = opts or {}
     local task = {
@@ -120,11 +121,27 @@ function downloadqueue.enqueue(url, mirrorName, opts)
         progress = false, -- number 0..1, or false for indeterminate
         interruptRequest = nil, -- "pause" or "cancel"
         sharpTask = false,
+
+        onSuccess = opts.onSuccess,
+        onFailure = opts.onFailure,
     }
     tasks[#tasks + 1] = task
     emit()
     downloadqueue.ensureRunning()
     return task
+end
+
+
+-- Safely fires one of the per-task callbacks. The callback receives the final
+-- status string (like "Successfully installed MyMod") and the task itself.
+local function notifyCallback(cb, task)
+    if not cb then
+        return
+    end
+    local ok, err = pcall(cb, task.status, task)
+    if not ok then
+        log.warning("downloadqueue callback error:", err)
+    end
 end
 
 
@@ -231,6 +248,7 @@ function downloadqueue.processTask(task)
                 task.state = "canceled"
                 task.interruptRequest = nil
                 emit()
+                notifyCallback(task.onFailure, task)
                 return
             end
 
@@ -245,6 +263,7 @@ function downloadqueue.processTask(task)
             task.state = "canceled"
             task.interruptRequest = nil
             emit()
+            notifyCallback(task.onFailure, task)
             return
         end
 
@@ -279,6 +298,7 @@ function downloadqueue.processTask(task)
         task.state = "canceled"
         task.interruptRequest = nil
         emit()
+        notifyCallback(task.onFailure, task)
         return
     end
 
@@ -287,12 +307,14 @@ function downloadqueue.processTask(task)
         task.status = task.status or "error"
         task.progress = false
         emit()
+        notifyCallback(task.onFailure, task)
         return
     end
 
     task.state = "done"
     task.progress = 1
     emit()
+    notifyCallback(task.onSuccess, task)
 
     if task.autoclose then
         threader.sleep(2)
@@ -331,6 +353,7 @@ function downloadqueue.cancel(task)
         end
         task.state = "canceled"
         emit()
+        notifyCallback(task.onFailure, task)
     end
     return task
 end
