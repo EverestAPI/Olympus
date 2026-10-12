@@ -335,15 +335,15 @@ steps:
       Remove-Item -Path love/lovec.exe -Force
       Move-Item -Path love/love.exe -Destination love/main.exe
       Move-Item -Path love/lua51.dll -Destination love/lua51-love11-5.dll
-      git clone https://luajit.org/git/luajit-2.0.git
-      cd luajit-2.0
-      git checkout ec6edc5c39c25e4eb3fca51b753f9995e97215da
+      git clone https://luajit.org/git/luajit.git
+      cd luajit
+      git checkout v2.1
       cd src
       Set-Content -Path build-for-realsies.bat -Value 'call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars32.bat"'
       Add-Content -Path build-for-realsies.bat -Value msvcbuild
       cmd /c build-for-realsies.bat
       cd ../..
-      Copy-Item -Path luajit-2.0/src/lua51.dll -Destination love/lua51.dll
+      Copy-Item -Path luajit/src/lua51.dll -Destination love/lua51.dll
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
@@ -372,12 +372,12 @@ steps:
       plutil -replace CFBundleShortVersionString -string "$BUILD_BUILDNUMBER" $PLIST
       plutil -insert LSArchitecturePriority -array $PLIST
       plutil -insert LSArchitecturePriority -string x86_64 -append $PLIST
-      git clone https://luajit.org/git/luajit-2.0.git
-      pushd luajit-2.0
-      git checkout ec6edc5c39c25e4eb3fca51b753f9995e97215da
+      git clone https://luajit.org/git/luajit.git
+      pushd luajit
+      git checkout v2.1
       MACOSX_DEPLOYMENT_TARGET=10.7 make
       popd
-      cp -f luajit-2.0/src/libluajit.so love/love.app/Contents/Frameworks/Lua.framework/Versions/A/Lua
+      cp -f luajit/src/libluajit.so love/love.app/Contents/Frameworks/Lua.framework/Versions/A/Lua
       cp olympus.sh love/$LOVEBINARYDIRECTORY/olympus.sh
       chmod a+rx love/$LOVEBINARYDIRECTORY/olympus.sh
       cp find-love.sh love/$LOVEBINARYDIRECTORY/find-love
