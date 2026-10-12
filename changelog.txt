@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Close Download Queue when clearing it if there is nothing left to download
+∙ Update LuaJIT on Windows to the same version as macOS (hoping to fix random crashes...)

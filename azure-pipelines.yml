@@ -334,6 +334,16 @@ steps:
       Remove-Item -Path love/love.ico -Force
       Remove-Item -Path love/lovec.exe -Force
       Move-Item -Path love/love.exe -Destination love/main.exe
+      Move-Item -Path love/lua51.dll -Destination love/lua51-love11-5.dll
+      git clone https://luajit.org/git/luajit-2.0.git
+      cd luajit-2.0
+      git checkout ec6edc5c39c25e4eb3fca51b753f9995e97215da
+      cd src
+      Set-Content -Path build-for-realsies.bat -Value 'call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\\Auxiliary\\Build\\vcvars32.bat"'
+      Add-Content -Path build-for-realsies.bat -Value msvcbuild
+      cmd /c build-for-realsies.bat
+      cd ../..
+      Copy-Item -Path luajit-2.0/src/lua51.dll -Destination love/lua51.dll
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main -ItemType Directory
       Compress-Archive -Path love/* -DestinationPath $env:BUILD_ARTIFACTSTAGINGDIRECTORY/main/dist.zip -Force
       New-Item -Path $env:BUILD_ARTIFACTSTAGINGDIRECTORY/update -ItemType Directory
