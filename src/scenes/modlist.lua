@@ -1046,9 +1046,14 @@ function scene.reload()
                 uie.button(lang.get("mod_presets"), function()
                     scene.displayPresetsUI()
                 end),
-                uie.buttonGreen(lang.get("update_all"), function()
-                    modupdater.updateAllMods(root, nil, "all", scene.reload, true)
-                end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
+                uie.row({
+                    uie.button(lang.get("update_enabled_mods_only"), function()
+                        modupdater.updateAllMods(root, nil, "enabled", scene.reload, true)
+                    end):with({ enabled = false }):as("updateEnabledModsButton"),
+                    uie.buttonGreen(lang.get("update_all"), function()
+                        modupdater.updateAllMods(root, nil, "all", scene.reload, true)
+                    end):with({ enabled = false }):as("updateAllButton"),
+                }):with(uiu.bottombound):with(uiu.rightbound),
             }):with(uiu.fillWidth),
             uie.row({
                 uie.label(lang.get("filter_list")):with(verticalCenter),
@@ -1186,6 +1191,7 @@ function scene.reload()
         scene.root:findChild("enableAllButton"):setEnabled(true)
         scene.root:findChild("disableAllButton"):setEnabled(true)
         scene.root:findChild("updateAllButton"):setEnabled(true)
+        scene.root:findChild("updateEnabledModsButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         scene.root:findChild("onlyShowFavoriteModsCheckbox"):setEnabled(true)
         scene.root:findChild("categoryFilterDropdown"):setEnabled(true)
