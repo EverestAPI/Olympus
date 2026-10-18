@@ -541,7 +541,11 @@ scene.launchrow = uie.row({
     cacheable = false
 }):with(uiu.fillWidth):as("launchrow")
 
-scene.installbtn = buttonBig("mainmenu/everest", lang.get("install_everest"), "everest"):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
+scene.installbtn = buttonBig("mainmenu/everest", lang.get("install_everest"), function()
+    if checkInstall(true) then
+        scener.push("everest")
+    end
+end):with(utils.important(32)):with(uiu.fillWidth):as("installbtn")
 
 
 scene.installs:hook({

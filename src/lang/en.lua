@@ -428,7 +428,7 @@ over the lazy dog.]],
 - ]],
     can_help_if_the_install_everest_or_downl = [[ can help if the "Install Everest" or "Download Mods" pages won't load. The mod browser will be slower, though!
 - ]],
-    changes_where_the_mod_images_in_the_mod_ = [[ changes where the mod images in the mod browser come from. You can choose to use no mirror, but older mods won't have images.]],
+    changes_where_the_mod_images_in_the_mod_ = [[ changes where the mod images in the mod browser come from. If you pick "Disabled", some images might be missing.]],
     language = [[Language]],
     restart_to_apply_changes_in_languages = [[You must restart Olympus for the language change to completely take effect.]],
     ui_scale = [[UI Scale]],

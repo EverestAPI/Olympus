@@ -323,8 +323,9 @@ Es-tu sûr(e) ?]],
     ahorn = [[Ahorn]],
     your_celeste_installation_list_is_empty_ = [[Ta liste d'installations de Celeste est vide.
 Veux-tu ouvrir le gestionnaire d'installations ?]],
-    your_celeste_installs_list_is_empty_pres = [[Ta liste d'installations de Celeste est vide.
-Appuie sur le bouton "Gérer" ci-dessous.]],
+    your_celeste_installs_list_is_empty_pres = [[Ta liste d'installations de Celeste
+est vide. Appuie sur le bouton
+"Gérer" ci-dessous.]],
 
     -- scenes/modlist.lua
     mod_manager = [[Gestionnaire de mods]],
