@@ -146,6 +146,8 @@ function config.load()
 
     default(data, "uiScale", 1)
 
+    default(data, "showModDescriptions", true)
+
     local migratedMirrorValue = ({
         ['gb,jade,otobot,wegfan'] = 'gb,jade,risingsunlight,otobot,wegfan',
         ['jade,otobot,wegfan,gb'] = 'jade,risingsunlight,otobot,wegfan,gb',

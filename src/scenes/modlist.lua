@@ -228,7 +228,7 @@ local function getLabelTextFor(info)
                 color,
                 info.PageTitle .. "\n",
                 themeColors.disabledColor,
-                info.PageDescription ~= "" and (info.PageDescription .. "\n") or "",
+                (config.showModDescriptions and info.PageDescription ~= "") and (info.PageDescription .. "\n") or "",
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }, tooltip
         else
@@ -1040,12 +1040,14 @@ function scene.reload()
                         end
                     end)
                 end),
-                uie.button(lang.get("edit_blacklist_txt"), function()
-                    utils.openFile(fs.joinpath(root, "Mods", "blacklist.txt"))
-                end),
                 uie.button(lang.get("mod_presets"), function()
                     scene.displayPresetsUI()
                 end),
+                uie.checkbox(lang.get("show_mod_descriptions"), config.showModDescriptions, function(checkbox, newState)
+                    config.showModDescriptions = newState
+                    config.save()
+                    scene.reload()
+                end):with({ enabled = false }):with(verticalCenter):as("showModDescriptionsCheckbox"),
                 uie.buttonGreen(lang.get("update_all"), function()
                     modupdater.updateAllMods(root, nil, "all", scene.reload, true)
                 end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
@@ -1188,6 +1190,7 @@ function scene.reload()
         scene.root:findChild("updateAllButton"):setEnabled(true)
         scene.root:findChild("onlyShowEnabledModsCheckbox"):setEnabled(true)
         scene.root:findChild("onlyShowFavoriteModsCheckbox"):setEnabled(true)
+        scene.root:findChild("showModDescriptionsCheckbox"):setEnabled(true)
         scene.root:findChild("categoryFilterDropdown"):setEnabled(true)
         searchField:setEnabled(true)
         for _, mod in pairs(scene.modlist) do
