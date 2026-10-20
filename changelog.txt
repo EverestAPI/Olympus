@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ "Install Everest" now sends to the installation manager if the install list is empty
+∙ Korean translation update
