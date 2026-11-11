@@ -510,6 +510,33 @@ function scene.item(info)
     local files = info.Files
     local website = info.PageURL
 
+    local warningColorPalette = {
+        { 0.4, 0.7, 0.9, 1 }, -- blue
+        { 0.8, 0.7, 0.3, 1 }, -- yellow
+        { 0.8, 0.5, 0.5, 1 }, -- red
+    }
+
+    local function formatContentWarning(warnings, introductoryLine)
+        local contentWarnings = ''
+        local maxLevel = 1
+        for _, warn in ipairs(warnings) do
+            if contentWarnings == '' then
+                contentWarnings = {introductoryLine}
+            end
+            local severity = tonumber(warn.Severity) -- the emulator makes it a string
+            table.insert(contentWarnings, warningColorPalette[severity])
+            table.insert(contentWarnings, '\n- ' .. warn.Name)
+            if maxLevel < severity then
+                maxLevel = severity
+            end
+        end
+        return contentWarnings, warningColorPalette[maxLevel]
+    end
+
+    -- Not translating those, because the labels are lifted straight from the source and are going to be in English anyway
+    local contentWarnings, contentWarningsColor = formatContentWarning(info.ContentWarnings, 'Content Warnings:')
+    local aiWarnings, aiWarningsColor = formatContentWarning(info.AIWarnings, 'AI was used for:')
+
     local containsEverestYaml = false
 
     for _, file in pairs(files) do
@@ -584,6 +611,19 @@ function scene.item(info)
                     }):with(uiu.fillWidth),
 
                     uie.row({
+                        (contentWarnings ~= '' and uie.icon("warning"):with({
+                            style = { color = contentWarningsColor },
+                            tooltipText = contentWarnings,
+                            tooltipWaitDuration = 0,
+                            interactive = 1
+                        }):with(utils.verticalCenter) or uie.group()),
+
+                        (aiWarnings ~= '' and uie.icon("aiwarning"):with({
+                            style = { color = aiWarningsColor },
+                            tooltipText = aiWarnings,
+                            tooltipWaitDuration = 0,
+                            interactive = 1
+                        }):with(utils.verticalCenter) or uie.group()),
 
                         uie.button(
                             uie.icon("browser"):with({ scale = 24 / 256 }),

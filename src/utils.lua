@@ -500,4 +500,22 @@ else
     end
 end
 
+
+-- method to be used in :with(...) in order to center an item vertically
+function utils.verticalCenter(el)
+    return uiu.hook(el, {
+        layoutLateLazy = function(orig, self)
+        -- Always reflow this child whenever its parent gets reflowed.
+            self:layoutLate()
+            self:repaint()
+        end,
+
+        layoutLate = function(orig, self)
+            local parent = self.parent
+            self.realY = math.floor((parent.height - (parent.style:get("padding") or 0) - self.height) / 2)
+            orig(self)
+        end
+    })
+end
+
 return utils

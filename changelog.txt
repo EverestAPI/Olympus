@@ -3,4 +3,4 @@ and only contains the latest changes.
 Its purpose is to be shown in Olympus when updating.
 
 #changelog#
-∙ Chinese translation update
+∙ Added Content Warnings and AI Usage indicators to the Download Mods menu

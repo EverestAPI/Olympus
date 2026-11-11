@@ -687,23 +687,6 @@ local function toggleFavorite(info, newState)
     end
 end
 
--- method to be used in :with(...) in order to center an item vertically
-local function verticalCenter(el)
-    return uiu.hook(el, {
-        layoutLateLazy = function(orig, self)
-            -- Always reflow this child whenever its parent gets reflowed.
-            self:layoutLate()
-            self:repaint()
-        end,
-
-        layoutLate = function(orig, self)
-            local parent = self.parent
-            self.realY = math.floor((parent.height - (parent.style:get("padding") or 0) - self.height) / 2)
-            orig(self)
-        end
-    })
-end
-
 -- disables all mods then enables mods from preset
 local function applyPreset(name, disableAll)
     if disableAll then
@@ -844,7 +827,7 @@ local function buildPresetsUI()
 
     for i = 1, #presets do
         local presetRow = uie.paneled.row({
-            uie.label(presets[i]):with(verticalCenter),
+            uie.label(presets[i]):with(utils.verticalCenter),
             uie.row({
                 uie.button(lang.get("add"), function(self)
                     applyPreset(presets[i], false)
@@ -937,7 +920,7 @@ function scene.item(info)
             uie.warning(false, function(warning, newState)
                 checkDisabledDependenciesOfEnabledModFromWarning(info)
             end)
-                :with(verticalCenter)
+                :with(utils.verticalCenter)
                 :with({
                     enabled = false
                 })
@@ -946,7 +929,7 @@ function scene.item(info)
             uie.heart(info.IsFavorite, function(heart, newState)
                 toggleFavorite(info, newState)
             end)
-                :with(verticalCenter)
+                :with(utils.verticalCenter)
                 :with({
                     enabled = false
                 })
@@ -955,7 +938,7 @@ function scene.item(info)
             uie.checkbox(lang.get("enabled"), not info.IsBlacklisted, function(checkbox, newState)
                 toggleMod(info, newState)
             end)
-                :with(verticalCenter)
+                :with(utils.verticalCenter)
                 :with({
                     enabled = false
                 })
@@ -967,7 +950,7 @@ function scene.item(info)
                 :with({
                     enabled = info.IsFile
                 })
-                :with(verticalCenter)
+                :with(utils.verticalCenter)
 
         }):with({
             clip = false,
@@ -1047,13 +1030,13 @@ function scene.reload()
                     config.showModDescriptions = newState
                     config.save()
                     scene.reload()
-                end):with({ enabled = false }):with(verticalCenter):as("showModDescriptionsCheckbox"),
+                end):with({ enabled = false }):with(utils.verticalCenter):as("showModDescriptionsCheckbox"),
                 uie.buttonGreen(lang.get("update_all"), function()
                     modupdater.updateAllMods(root, nil, "all", scene.reload, true)
                 end):with({ enabled = false }):with(uiu.rightbound):with(uiu.bottombound):as("updateAllButton"),
             }):with(uiu.fillWidth),
             uie.row({
-                uie.label(lang.get("filter_list")):with(verticalCenter),
+                uie.label(lang.get("filter_list")):with(utils.verticalCenter),
                 uie.dropdown(
                     {{ text = lang.get("all_categories"), data = "" }},
                     function(self, value)
@@ -1066,13 +1049,13 @@ function scene.reload()
                 uie.checkbox(lang.get("only_show_enabled"), false, function(checkbox, newState)
                     scene.onlyShowEnabledMods = newState
                     refreshVisibleMods()
-                end):with({ enabled = false }):with(verticalCenter):as("onlyShowEnabledModsCheckbox"),
+                end):with({ enabled = false }):with(utils.verticalCenter):as("onlyShowEnabledModsCheckbox"),
                 uie.checkbox(lang.get("only_show_favorites"), false, function(checkbox, newState)
                     scene.onlyShowFavoriteMods = newState
                     refreshVisibleMods()
-                end):with({ enabled = false }):with(verticalCenter):as("onlyShowFavoriteModsCheckbox"),
+                end):with({ enabled = false }):with(utils.verticalCenter):as("onlyShowFavoriteModsCheckbox"),
                 uie.row({
-                    uie.label(""):with(verticalCenter):as("enabledModCountLabel"),
+                    uie.label(""):with(utils.verticalCenter):as("enabledModCountLabel"),
                     uie.button(lang.get("enable_all"), function()
                         enableMods(scene.modsByPath)
                         refreshVisibleMods()
