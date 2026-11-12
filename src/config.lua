@@ -134,6 +134,8 @@ function config.load()
     default(data, "loennInstalledVersion", "")
 
     default(data, "updateModsOnStartup", "none")
+    default(data, "updateEverestOnModUpdate", "disabled")
+    default(data, "everestUpdateBranch", "stable")
     default(data, "useOpenGL", "disabled")
 
     default(data, "mirrorPreferences", "gb,jade,risingsunlight,otobot,wegfan")
