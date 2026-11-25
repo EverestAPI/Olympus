@@ -228,7 +228,7 @@ local function getLabelTextFor(info)
                 color,
                 info.PageTitle .. "\n",
                 themeColors.disabledColor,
-                (config.showModDescriptions and info.PageDescription ~= "") and (info.PageDescription .. "\n") or "",
+                (config.showModDescriptions and info.PageDescription ~= nil and info.PageDescription ~= "") and (info.PageDescription .. "\n") or "",
                 info.Name .. " " .. (info.Version or "?.?.?.?") .. " ∙ " .. fs.filename(info.Path)
             }, tooltip
         else
