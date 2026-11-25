@@ -88,6 +88,7 @@ namespace Olympus {
     }
 
     public abstract class Cmd {
+        private static readonly Logger log = new Logger(nameof(Cmds));
         private static readonly Logger logStatus = new Logger("Cmd.Status");
         private static readonly Logger logUnpack = new Logger("Cmd.Unpack");
 
@@ -137,6 +138,7 @@ namespace Olympus {
         }
 
         public static IEnumerator Download(string url, long length, Stream copy) {
+            log.Info("Downloading " + url + " (expected length " + length + ")");
             yield return Status($"{Lang.Get("downloadingfile")} {Path.GetFileName(url)}", false, "download", false);
             yield return Status("", false, "download", false);
 

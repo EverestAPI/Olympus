@@ -44,15 +44,33 @@ namespace Olympus {
                 .ToArray();
 
             foreach (string name in names) {
-                using (MemoryStream wrapStream = new MemoryStream()) {
-                    yield return Download($"https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds/{id}/artifacts?$format=zip&artifactName={name}", 0, wrapStream);
-                    wrapStream.Seek(0, SeekOrigin.Begin);
-
-                    yield return Status($"Unwrapping {name}.zip", false, "download", false);
-                    using (ZipArchive wrap = new ZipArchive(wrapStream, ZipArchiveMode.Read)) {
-                        yield return Unwrap(wrap, name);
+                string path = Path.Combine(Program.RootDirectory, name) + ".temp.zip";
+                log.Info("Downloading archive " + path);
+                using (FileStream archive = new FileStream(path, FileMode.Create, FileAccess.Write)) {
+                    yield return Download($"https://dev.azure.com/EverestAPI/Olympus/_apis/build/builds/{id}/artifacts?$format=zip&artifactName={name}", 0, archive);
+                }
+                log.Info("Checking archive " + path);
+                using (FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read))
+                using (ZipArchive archive = new ZipArchive(file, ZipArchiveMode.Read)) {
+                    // check integrity by "extracting the archive to /dev/null"
+                    foreach (ZipArchiveEntry entry in archive.Entries) {
+                        using (Stream compressed = entry.Open())
+                        using (MemoryStream devnull = new MemoryStream()) {
+                            compressed.CopyTo(devnull);
+                        }
                     }
                 }
+            }
+
+            foreach (string name in names) {
+                string path = Path.Combine(Program.RootDirectory, name) + ".temp.zip";
+                log.Info("Extracting archive " + path);
+                using (FileStream file = new FileStream(path, FileMode.Open, FileAccess.Read))
+                using (ZipArchive archive = new ZipArchive(file, ZipArchiveMode.Read)) {
+                    yield return Unwrap(archive, name);
+                }
+                log.Info("Deleting archive " + path);
+                File.Delete(path);
             }
         }
 
