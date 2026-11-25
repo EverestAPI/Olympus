@@ -7,13 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace Olympus {
-    public class CmdSetOlympusVersion : Cmd<string, string> {
-        public override string Run(string version) {
-            HttpClientWithCompressionSupport.Version = version;
-            return "ok";
-        }
-    }
-
     /// <summary>
     /// An HttpClient that supports compressed responses to save bandwidth, and uses IPv4 to work around issues for some users.
     /// </summary>

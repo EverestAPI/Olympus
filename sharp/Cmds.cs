@@ -56,7 +56,6 @@ namespace Olympus {
                 new CmdResumeTask(),
                 new CmdScanDragAndDrop(),
                 new CmdSetLanguageMap(),
-                new CmdSetOlympusVersion(),
                 new CmdStatus(),
                 new CmdUninstallEverest(),
                 new CmdUninstallLoenn(),

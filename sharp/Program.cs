@@ -43,6 +43,7 @@ namespace Olympus {
             bool debug = false;
             bool verbose = false;
 
+            // note: there's a build script that replaces "SECRET DEV VERSION" with the actual build number.
             log.Info("Hey! This is Olympus.Sharp SECRET DEV VERSION, " + new[] {
                 "hope you're doing well!",
                 "let's get going!",
@@ -50,6 +51,7 @@ namespace Olympus {
                 "and I managed to boot up. That's a good start.",
                 "and if you're a modding helper, I'm sorry."
             }[Random.Shared.Next(5)]);
+            HttpClientWithCompressionSupport.Version = "SECRET DEV VERSION";
 
 #if !WIN32
             // some things (notably love2d here: https://github.com/love2d/love/blob/main/src/modules/thread/threads.cpp#L163)

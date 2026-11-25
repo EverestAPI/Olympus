@@ -249,7 +249,6 @@ function love.load(args)
     if not sharpStatus then
         love.window.showMessageBox(lang.get("olympus_sharp_startup_error"), lang.get("failed_loading_olympus_sharp") .. tostring(sharpError), "error")
     else
-        log.debug("Olympus version was transmitted to sharp: " .. sharp.setOlympusVersion(utils.trim(utils.load("version.txt") or "ERROR")):result())
         threader.routine(function()
             sharp.getModIdToNameMap(fs.joinpath(fs.getStorageDir(), "cached-mod-ids-to-names.json"), config.apiMirror)
         end)
